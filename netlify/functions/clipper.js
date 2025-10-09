@@ -2,7 +2,7 @@
 
 // This function fetches a URL, uses professional libraries to find the main content,
 // and sends back clean HTML.
-
+const fetch = require('node-fetch'); 
 const { JSDOM } = require('jsdom');
 const { Readability } = require('@mozilla/readability');
 
