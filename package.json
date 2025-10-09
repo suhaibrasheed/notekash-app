@@ -1,0 +1,10 @@
+{
+  "name": "notekash-app",
+  "version": "1.0.0",
+  "description": "Dependencies for Netlify functions",
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "@mozilla/readability": "^0.5.0",
+    "jsdom": "^22.1.0"
+  }
+}

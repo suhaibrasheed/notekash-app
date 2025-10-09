@@ -1,0 +1,12 @@
+# Netlify Build Settings
+[build]
+  # This is the directory to publish. Since your files are in the root, it's "."
+  publish = "."
+  # This is where your serverless function is located.
+  functions = "netlify/functions"
+
+# Redirect rule for Single Page Applications (SPAs)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
