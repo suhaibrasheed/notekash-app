@@ -428,7 +428,7 @@
         .btn-danger:hover { background-color: var(--danger-color-hover); }
         .btn-secondary { background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); }
         .btn-secondary:hover:not(:disabled) { background-color: color-mix(in srgb, var(--border-color) 50%, var(--bg-tertiary)); }
-        .btn-icon { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 6px; border-radius: 50%; width: 36px; height: 36px; position: relative; }
+        .btn-icon { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 5px; border-radius: 50%; width: 36px; height: 36px; position: relative; }
         .btn-icon:hover { background-color: var(--bg-tertiary); color: var(--text-primary); }
         .btn-icon.btn-primary { background-color: var(--primary-color); color: var(--text-on-primary); }
         .btn-icon.btn-primary:hover:not(:disabled) { background-color: var(--primary-color-hover); }
@@ -462,7 +462,12 @@
         .search-and-filter-bar { display: flex; gap: 1.25rem; align-items: center; }
         
         .search-bar-container { position: relative; flex-grow: 1; }
-        #search-input, #flashcard-search-input, #tag-search-input { width: 100%; padding: 12px 16px 12px 40px; font-size: 1rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background-color: var(--bg-secondary); color: var(--text-primary); }
+        #search-input, #flashcard-search-input, #tag-search-input { width: 100%; padding: 12px 16px 12px 40px; font-size: 1rem; border-radius: 9999px; border: 1px solid var(--border-color); background-color: var(--bg-secondary); color: var(--text-primary); transition: border-color 0.2s, box-shadow 0.2s;}
+        #search-input:focus, #flashcard-search-input:focus, #tag-search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
+        }
         .search-bar-container svg { position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: var(--text-secondary); }
         #search-hint { font-size: 0.8rem; color: var(--text-secondary); height: 1.2em; text-align: left; padding-left: 8px; margin-top: 4px; }
         .category-filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: -6px; }
@@ -1033,7 +1038,7 @@
         }
 
 
-        #new-article-btn { width: 30px; height: 30px; padding: 0; border-radius: var(--border-radius); flex-shrink: 0; }
+        #new-article-btn { width: 30px; height: 30px; padding: 0; gap: 3px; border-radius: var(--border-radius); flex-shrink: 0; }
         @keyframes subtle-glow { 0%, 100% { box-shadow: 0 0 4px rgba(96, 165, 250, 0); } 50% { box-shadow: 0 0 12px rgba(96, 165, 250, 0.5); } }
         [data-theme="dark"] #new-article-btn { }
         @keyframes subtle-glow-dark { 0%, 100% { box-shadow: 0 0 4px rgba(147, 197, 253, 0); } 50% { box-shadow: 0 0 12px rgba(147, 197, 253, 0.4); } }
@@ -1454,10 +1459,17 @@
             font-weight: 700;
             margin-bottom: 0.25rem;
             padding-bottom: 0.25rem;
-            font-size: 1.45rem;
+            font-size: 1.4rem;
             border-bottom: 1px solid var(--border-color);
             cursor: pointer;
             flex-shrink: 0;
+        }
+        @media (max-width: 768px) {
+            .focus-mode-title {
+                font-size: clamp(1.25rem, 6vw, 1.1rem);
+                margin-bottom: 0.25rem;
+                padding-bottom: 0.25rem;
+            }
         }
         .focus-mode-body {
             display: flex;
@@ -3716,7 +3728,8 @@
             padding: 0 4px; /* Tighter padding for mobile header */
         }
         .mobile-header-more-btn {
-            display: none; /* Hidden by default */
+            display: none;
+            margin-top: 7px;
         }
         body.mobile-view header .header-main-actions,
         body.mobile-view header .header-actions {
@@ -3743,7 +3756,7 @@
         body.mobile-view.mobile-header-expanded .header-actions {
             position: absolute;
             top: 100%;
-            right: 8px;
+            right: 5px;
             flex-direction: column;
             background-color: var(--bg-secondary);
             border-radius: var(--border-radius);
@@ -3819,12 +3832,29 @@
             padding: 1rem 1rem 20vh 1rem; /* Less horizontal padding */
         }
         body.mobile-view #article-controls {
-            padding: 6px;
-            gap: 6px;
+            padding: 4px;
+            gap: 4px;
         }
+
         body.mobile-view .controls-wrapper {
-            gap: 6px;
+            gap: 4px;
         }
+        body.mobile-view .article-controls {
+            max-width: 95vw; 
+            bottom: 1rem; 
+            padding: 4px;
+        }
+
+        /* NEW: This ensures the tutorial buttons are spaced evenly and look great */
+        body.mobile-view .article-controls .controls-wrapper {
+            width: 100%;
+        }
+        body.mobile-view .article-controls .btn-gradient-text {
+            flex-grow: 1; /* Allows buttons to share the space */
+            padding: 12px 8px; /* Tweak padding for mobile */
+            font-size: 1rem;
+        }
+
         /* Read Mode: Show only essential controls */
         body.mobile-view .read-mode-controls .control-divider,
         body.mobile-view .read-mode-controls [data-action="goToCategory"],
@@ -3885,7 +3915,6 @@
         }
 
         body.mobile-view .productivity-modal {
-            /* Makes the productivity hub a full-screen panel BELOW the header */
             width: 100%;
             max-width: 100%;
             height: 100%; /* Fill the backdrop */
@@ -3902,12 +3931,14 @@
 
         /* --- 2F. General UI Tweaks --- */
         body.mobile-view .btn {
-            padding: 10px 14px; /* Larger touch targets */
+            padding: 8px 10px;
+            white-space: nowrap;
         }
         body.mobile-view .btn-icon {
             width: 40px;
             height: 40px;
         }
+        
         /* --- NEW: Command Palette Mobile Style --- */
         body.mobile-view #command-palette {
             width: 95vw;
@@ -3918,11 +3949,10 @@
         body.mobile-view .modal-buttons,
         body.mobile-view .btn,
         body.mobile-view .category-chip {
-            /* Let the button size itself based on the shorter text and padding */
             text-align: center;
             padding: 8px 12px; /* A balanced padding for a 4-letter word */
         }
-        /* First, prepare the elements to contain the effect */
+
         body.mobile-view .btn,
         body.mobile-view .article-card,
         body.mobile-view .flashcard-tile,
@@ -3931,7 +3961,7 @@
             position: relative; /* Necessary for the pseudo-element */
             overflow: hidden;   /* Keeps the effect contained */
         }
-        /* Softer focus ring for mobile accessibility */
+ 
         body.mobile-view *:focus-visible {
             outline: none;
             box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 40%, transparent);
@@ -5314,6 +5344,10 @@
         body.mobile-view .pdf-more-menu .mobile-only-btn {
             display: flex; /* Show them in the menu on mobile */
         }
+        .tutorial-btn {
+            flex-shrink: 0;     
+            white-space: nowrap; 
+        }
 
 
 
@@ -5378,9 +5412,6 @@
             <button class="btn-icon" id="folder-btn" onclick="App.events.selectDirectory(true)" title="Change Notes Folder (Alt+O)" aria-label="Change notes folder">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3zm-8.322.12C1.72 3.042 1.95 3 2.19 3h5.396l-.707-.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139z"/></svg>
             </button>
-            <button class="btn-icon mobile-header-more-btn" onclick="document.body.classList.toggle('mobile-header-expanded')" title="More actions" aria-label="More header actions">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/></svg>
-            </button>
             <button class="btn-icon" id="settings-btn" onclick="App.ui.showSettingsModal()" title="Settings" aria-label="Open settings">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1 0 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105 0l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.31-.17a1.464 1.464 0 0 1 2.105-.872l-.1-.34c.413-1.4 2.397-1.4 2.81 0l.1.34a1.464 1.464 0 0 1 2.105.872l.31.17c1.283.698-2.686-.705-1.987-1.987l-.169-.311a1.464 1.464 0 0 1 0-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105 0l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.31.17a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg>
             </button>
@@ -5402,6 +5433,13 @@
                     </a>
                 </div>
             </div>
+            <button class="btn-icon mobile-header-more-btn" onclick="document.body.classList.toggle('mobile-header-expanded')" title="More actions" aria-label="More header actions">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
         </div>
     </header>
 
@@ -5669,7 +5707,8 @@
 
     const DUMMY_TUTORIAL_ARTICLE = {
         title: "Welcome to Your Second Brain ✨",
-        isDummy: true, // A special property to identify this article
+        isDummy: true,
+        category: "General",
         get content() {
             const randomQuote = App.util.getRandomMessage(App.util.powerQuotes);
             const randomDevMessage = App.util.getRandomMessage(App.util.wittyDeveloperMessages);
@@ -7599,12 +7638,12 @@
 
             if (article.isDummy) {
                 controlsContainer.innerHTML = `
-                    <div class="controls-wrapper" style="display: flex; justify-content: center; width: 100%; gap: 1rem;">
-                        <button class="btn btn-primary btn-gradient-text" style="font-weight: 700; border: 2px solid transparent; border-radius: var(--border-radius-lg); background-image: linear-gradient(90deg, #0d9488, #581c87, #be185d, #0d9488), linear-gradient(var(--bg-secondary), var(--bg-secondary)), linear-gradient(90deg, #0d9488, #581c87, #be185d, #0d9488); background-origin: border-box; background-clip: text, padding-box, border-box;" onclick="window.open('https://studyrecapped.com/general/the-official-notekash-guide-art-of-building-a-second-brain/', '_blank')">
-                            📚 Go to Tutorial
+                    <div class="controls-wrapper" style="display: flex; justify-content: center; gap: 1rem;">
+                        <button class="btn btn-primary btn-gradient-text tutorial-btn" style="font-weight: 700; border: 2px solid transparent; border-radius: var(--border-radius-lg); background-image: linear-gradient(90deg, #0d9488, #581c87, #be185d, #0d9488), linear-gradient(var(--bg-secondary), var(--bg-secondary)), linear-gradient(90deg, #0d9488, #581c87, #be185d, #0d9488); background-origin: border-box; background-clip: text, padding-box, border-box;" onclick="window.open('https://studyrecapped.com/general/the-official-notekash-guide-art-of-building-a-second-brain/', '_blank')">
+                            📚 Tutorial
                         </button>
-                        <button class="btn btn-primary btn-gradient-text" style="font-weight: 700; border: 2px solid transparent; border-radius: var(--border-radius-lg); background-image: linear-gradient(90deg, #0d9488, #581c87, #be185d, #0d9488), linear-gradient(var(--bg-secondary), var(--bg-secondary)), linear-gradient(90deg, #0d9488, #581c87, #be185d, #0d9488); background-origin: border-box; background-clip: text, padding-box, border-box;" onclick="App.ui.showAscensionModal()">
-                            💎 Unlock All Features
+                        <button class="btn btn-primary btn-gradient-text tutorial-btn" style="font-weight: 700; border: 2px solid transparent; border-radius: var(--border-radius-lg); background-image: linear-gradient(90deg, #0d9488, #581c87, #be185d, #0d9488), linear-gradient(var(--bg-secondary), var(--bg-secondary)), linear-gradient(90deg, #0d9488, #581c87, #be185d, #0d9488); background-origin: border-box; background-clip: text, padding-box, border-box;" onclick="App.ui.showAscensionModal()">
+                            💎 Unlock Pro
                         </button>
                     </div>
                 `;
