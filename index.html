@@ -4720,7 +4720,7 @@
             box-shadow: inset 0 1px 4px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.4);
         }
         .badge-icon .inner-icon {
-            width: 50%; height: 50%; z-index: 1; display: flex; align-items: center; justify-content: center;
+            fill: currentColor; width: 50%; height: 50%; z-index: 1; display: flex; align-items: center; justify-content: center;
         }
 
         /* Badge Animations */
@@ -7358,7 +7358,7 @@
 
                 if (!App.license.isPremium()) {
                     const articlesUsed = App.state.articles.length;
-                    const articleLimit = 369;
+                    const articleLimit = 370;
                     const progressPercentage = Math.min(100, (articlesUsed / articleLimit) * 100);
                     finalHTML += `
                         <div class="article-card library-premium-card" onclick="App.router.navigateTo('article', { articleObject: DUMMY_TUTORIAL_ARTICLE, mode: 'read' })" title="A message from the developer...">
@@ -8109,7 +8109,7 @@
             let filteredFlashcards = App.util.getSortedFlashcardsForDisplay(searchTerm);
             
             const isPremium = App.license.isPremium();
-            const flashcardLimit = 369;
+            const flashcardLimit = 370;
             const totalFlashcards = App.util.getAllFlashcards().length;
 
             if (!isPremium) {
@@ -8918,7 +8918,7 @@
 
             newArticleBtn.disabled = false;
             const isPremium = App.license.isPremium();
-            const articleLimit = 369;
+            const articleLimit = 370;
             const articlesUsed = App.state.articles.length;
             const canCreateArticle = isPremium || articlesUsed < articleLimit;
 
@@ -10864,7 +10864,7 @@
             },
             
             async createNewArticle() {
-                if (!App.license.isPremium() && App.state.articles.length >= 369) {
+                if (!App.license.isPremium() && App.state.articles.length >= 370) {
                     App.ui.showAscensionModal();
                     App.ui.showToast('Note limit reached. Go Premium for unlimited notes.', 'warning');
                     return;
@@ -13642,27 +13642,26 @@
             },
 
             getTierBadgeHTML(tierName, size = 80) {
-                // RATIONALE: Added an optional 'size' parameter to generate badges for different UI contexts.
                 const tiers = {
                     Spark: {
                         tierClass: 'spark',
-                        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><circle cx="12" cy="12" r="5"/></svg>`
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><circle cx="12" cy="12" r="5"/></svg>`
                     },
                     Bronze: {
                         tierClass: 'bronze',
-                        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="3"/><g class="orbiting-dots"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></g></svg>`
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><g class="orbiting-dots"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></g></svg>`
                     },
                     Silver: {
                         tierClass: 'silver',
-                        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`
                     },
                     Gold: {
                         tierClass: 'gold',
-                        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`
                     },
                     Diamond: {
                         tierClass: 'diamond',
-                        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.49,6.51A2.12,2.12,0,0,0,16.88,6L12,2,7.13,6a2.12,2.12,0,0,0-2.62.51L2,11.84l10,10,10-10Z"/></svg>`
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.49,6.51A2.12,2.12,0,0,0,16.88,6L12,2,7.13,6a2.12,2.12,0,0,0-2.62.51L2,11.84l10,10,10-10Z"/></svg>`
                     }
                 };
                 const tier = tiers[tierName] || tiers.Spark;
@@ -13878,7 +13877,7 @@
             extractFlashcards(html, articleId, category, existing) {
                 const isPremium = App.license.isPremium();
                 const totalFlashcards = isPremium ? 0 : this.getAllFlashcards().length;
-                const flashcardLimit = 369;
+                const flashcardLimit = 370;
                 let canCreateMore = isPremium || totalFlashcards < flashcardLimit;
                 let limitReachedMessageShown = false;
                 
