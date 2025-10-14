@@ -1,11 +1,22 @@
-# Netlify Build Settings
+# Netlify configuration file
+
+# This keeps your original build and functions settings.
 [build]
-  # This is the directory to publish. Since your files are in the root, it's "."
   publish = "."
-  # This is where your serverless function is located.
   functions = "netlify/functions"
 
-# Redirect rule for Single Page Applications (SPAs)
+# Rule 1: Proxy for Hugging Face models (MUST COME FIRST)
+# This rule intercepts requests for transcription models (e.g., /Xenova/whisper-tiny/...)
+# and forwards them to the correct server. This fixes the download error.
+[[redirects]]
+  from = "/Xenova/*"
+  to = "https://huggingface.co/Xenova/:splat"
+  status = 200
+  force = true
+
+# Rule 2: Standard Single-Page App (SPA) fallback (MUST COME LAST)
+# This is your original "catch-all" rule. If a request doesn't match a file
+# or the proxy rule above, it serves your main HTML file.
 [[redirects]]
   from = "/*"
   to = "/index.html"
