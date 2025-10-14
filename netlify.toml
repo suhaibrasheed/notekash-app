@@ -1,22 +1,27 @@
 # Netlify configuration file
 
-# This keeps your original build and functions settings.
 [build]
   publish = "."
   functions = "netlify/functions"
 
-# Rule 1: Proxy for Hugging Face models (MUST COME FIRST)
-# This rule intercepts requests for transcription models (e.g., /Xenova/whisper-tiny/...)
-# and forwards them to the correct server. This fixes the download error.
+# Rule 1: Proxy for cached/prefixed model requests (THE NEW FIX)
+# This rule handles requests that the library makes using a /models/ prefix.
+[[redirects]]
+  from = "/models/Xenova/*"
+  to = "https://huggingface.co/Xenova/:splat"
+  status = 200
+  force = true
+
+# Rule 2: Proxy for direct model requests (The original rule)
+# This handles the initial configuration file requests.
 [[redirects]]
   from = "/Xenova/*"
   to = "https://huggingface.co/Xenova/:splat"
   status = 200
   force = true
 
-# Rule 2: Standard Single-Page App (SPA) fallback (MUST COME LAST)
-# This is your original "catch-all" rule. If a request doesn't match a file
-# or the proxy rule above, it serves your main HTML file.
+# Rule 3: Standard Single Page Application (SPA) fallback (MUST BE LAST)
+# This is the "catch-all" rule for your app's routing.
 [[redirects]]
   from = "/*"
   to = "/index.html"
