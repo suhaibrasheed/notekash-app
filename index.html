@@ -807,52 +807,136 @@
             padding: 3.5px; 
         }
 
+        
+        
+        /* --- NEW: Image Caption System (v2.0 ) --- */
+       .image-container {
+            --caption-align-items: flex-end; /* 'flex-end' for bottom, 'center' for middle, 'flex-start' for top */
+        }
+        .image-container[data-caption-align="top"] { --caption-align-items: flex-start; }
+        .image-container[data-caption-align="middle"] { --caption-align-items: center; }
+        .image-container[data-caption-align="bottom"] { --caption-align-items: flex-end; }
+
         .image-caption {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            color: #ffffff; /* near-white for maximum legibility */
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            align-items: var(--caption-align-items);
+            justify-content: center;
             font-family: var(--font-body);
             font-size: 0.95rem;
             line-height: 1.4;
-            padding: 6px 10px;
+            padding: 12px;
             text-align: center;
-            /* Crisp 1px outline in 4 directions + soft drop shadow */
-            text-shadow:
-                -1px -1px 0 rgba(0,0,0,0.85),
-                1px -1px 0 rgba(0,0,0,0.85),
-                -1px  1px 0 rgba(0,0,0,0.85),
-                1px  1px 0 rgba(0,0,0,0.85),
-                0px  2px 6px rgba(0,0,0,0.70);
-            border-radius: var(--border-radius-sm);
             outline: none;
-            max-height: 40%;
+            max-height: 100%;
             overflow-y: auto;
             background-color: transparent;
             pointer-events: none;
             transition: all 0.2s ease;
-            }
+            box-sizing: border-box;
+            color: #ffffff;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 5px rgba(0,0,0,0.7);
+        }
 
+        /* === THE 15 CURATED CAPTION THEMES === */
+        /* 1. Sharp Light:  */
+        .image-container[data-caption-theme="sharp-light"] .image-caption {
+            color: #ffffff;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 4px rgba(0,0,0,0.5);
+        }
+        /* 2. Sharp Dark:*/
+        .image-container[data-caption-theme="sharp-dark"] .image-caption {
+            color: #111111;
+            text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 2px 4px rgba(0,0,0,0.3);
+        }
+        /* 3. Forest: */
+        .image-container[data-caption-theme="forest"] .image-caption {
+            color: #14532d; /* dark-green-900 */
+            text-shadow: 0 1px 3px rgba(6, 40, 19, 0.9);
+        }
+        /* 4. Navy:*/
+        .image-container[data-caption-theme="navy"] .image-caption {
+            color: #1e3a8a; /* dark-blue-900 */
+            text-shadow: 0 1px 3px rgba(23, 37, 84, 0.9);
+        }
+        /* 5. Maroon:  */
+        .image-container[data-caption-theme="maroon"] .image-caption {
+            color: #cb1c52; /* dark-rose-900 */
+            text-shadow: 0 1px 3px rgba(76, 5, 25, 0.9);
+        }
+        /* 6. Chocolate:  */
+        .image-container[data-caption-theme="chocolate"] .image-caption {
+            color: #431407; /* dark-orange-950 */
+            text-shadow: 0 1px 3px rgba(30, 7, 0, 0.95);
+        }
+        /* 7. Charcoal:*/
+        .image-container[data-caption-theme="charcoal"] .image-caption {
+            color: #334155; /* slate-700 */
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+        /* 8. Sunbeam: */
+        .image-container[data-caption-theme="sunbeam"] .image-caption {
+            color: #fef08a; /* yellow-200 */
+            text-shadow: 0 1px 4px rgba(120, 53, 15, 0.85);
+        }
+        /* 9. Aqua: */
+        .image-container[data-caption-theme="aqua"] .image-caption {
+            color: #7dd3fc; /* sky-300 */
+            text-shadow: 0 1px 4px rgba(8, 47, 73, 0.9);
+        }
+        /* 10. Lime: */
+        .image-container[data-caption-theme="lime"] .image-caption {
+            color: #a3e635; /* lime-400 */
+            text-shadow: 0 1px 3px rgba(24, 59, 0, 0.9);
+        }
+        /* 11. Rose: */
+        .image-container[data-caption-theme="rose"] .image-caption {
+            color: #fecaca; /* red-200 */
+            text-shadow: 0 1px 4px rgba(88, 28, 135, 0.8);
+        }
+        /* 12. Lavender:*/
+        .image-container[data-caption-theme="lavender"] .image-caption {
+            color: #e0e7ff; /* indigo-200 */
+            text-shadow: 0 1px 4px rgba(49, 46, 129, 0.8);
+        }
 
-        /* Editable state styling */
+        /* 13. Soft Glow: */
+        .image-container[data-caption-theme="soft-glow"] .image-caption {
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+        }
+        /* 14. Letterpress: */
+        .image-container[data-caption-theme="letterpress"] .image-caption {
+            color: #e2e8f0; /* slate-200 */
+            text-shadow: 0 -1px 1px rgba(0,0,0,0.7);
+        }
+        /* 15. Gold Leaf:*/
+        .image-container[data-caption-theme="gold-leaf"] .image-caption {
+            color: #fffbeb; /* amber-50 */
+            text-shadow: 0 0 8px #f59e0b, 0 0 12px rgba(245, 158, 11, 0.5);
+        }
+
+        /* --- Editable & Placeholder States (Unchanged) --- */
         .image-caption[contenteditable="true"] {
-            background-color: rgba(0, 0, 0, 0.65); /* Darker background when editing */
-            box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.7); /* Highlight focus */
-            pointer-events: auto; /* Make interactive when editable */
+            background-color: rgba(0, 0, 0, 0.65);
+            box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.7);
+            pointer-events: auto;
             cursor: text;
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
         }
-
-        /* Placeholder text for the caption */
         .image-caption:empty:not([contenteditable="true"])::before {
-            content: ''; /* No placeholder when not editing and empty */
+            content: '';
         }
-
         .image-caption:empty[contenteditable="true"]::before {
             content: attr(data-placeholder);
             color: rgba(255, 255, 255, 0.7);
             pointer-events: none;
         }
+
+
+
 
         /* --- NEW: Image Lightbox Styles --- */
         .lightbox-image-wrapper {
@@ -7105,7 +7189,7 @@
                     'span': ['data-tag-text', 'contenteditable', 'data-placeholder', 'data-tag', 'data-pdf-id', 'data-original-name'],
                     'mark': [],
                     'canvas': ['data-chart-config', 'width', 'height', 'style'],
-                    'div': ['contenteditable', 'data-placeholder', 'data-state', 'data-checked', 'data-is-correct', 'data-answered', 'data-color'],
+                    'div': ['contenteditable', 'data-placeholder', 'data-state', 'data-checked', 'data-is-correct', 'data-answered', 'data-color', 'data-caption-theme', 'data-caption-align'],
                     'img': ['src', 'alt', 'width', 'height','style','data-original-width', 'data-original-height'],
                     'td': ['colspan', 'rowspan'],
                     'th': ['colspan', 'rowspan'],
@@ -10335,7 +10419,7 @@
                 const allCommands = [
                     // Selection Commands
                     { id: 'kashwriting', title: 'Improve Writing', desc: 'Refine the selected text', icon: 'fa-solid fa-wand-sparkles', action: () => App.events.ai.executeImproveWriting(), selection: true },
-                    { id: 'kashgrammar', title: 'Fix Grammar', desc: 'Correct spelling and grammar', icon: 'fa-solid fa-pen-nib', action: () => App.events.ai.executeFixGrammar(), selection: true },
+                    { id: 'kashgrammar', title: 'Fix Grammar', desc: 'Correct spelling and Grammar ', icon: 'fa-solid fa-pen-nib', action: () => App.events.ai.executeFixGrammar(), selection: true },
                     { id: 'kashexplain', title: 'Explain This', desc: 'Explain the selected concept', icon: 'fa-solid fa-lightbulb', action: () => App.events.ai.executeKashExplain(), selection: true },
                     { id: 'kashflash', title: 'Generate Flashcard', desc: 'Create a cloze from selection', icon: 'fa-solid fa-clone', action: () => App.events.ai.executeKashFlash(), selection: true },
                     { id: 'kashmnemonic', title: 'Create Mnemonic', desc: 'Generate a memory aid', icon: 'fa-solid fa-brain', action: () => App.events.ai.executeKashMnemonic(), selection: true },
@@ -10922,12 +11006,39 @@
                 const currentSize = parseFloat(App.settings.get('fontSize'));
                 const currentLineHeight = App.settings.get('lineHeight');
                 const currentOpacity = App.settings.get('uiOpacity');
-                const ocrThreshold = App.settings.get('ocrThreshold') || 128; // NEW
+                const ocrThreshold = App.settings.get('ocrThreshold') || 128;
                 const customThemeBase = App.settings.get('customThemeBase');
                 const isMobileViewEnabled = App.settings.get('mobileViewEnabled');
                 const mobileViewLabel = isMobileViewEnabled ? 'Switch to Desktop View' : 'Switch to Mobile View';
                 const mobileViewDescription = isMobileViewEnabled ? 'For utilizing the full power of the app.' : 'Optimized for small screens & touch.';
                 const libraryTitle = App.settings.get('libraryTitle') || 'My Library';
+
+                const captionThemes = [
+                    { id: 'sharp-light', name: 'Sharp Light (Default)' },
+                    { id: 'sharp-dark', name: 'Sharp Dark' },
+                    { id: 'forest', name: 'Forest Green Text' },
+                    { id: 'navy', name: 'Navy Blue Text' },
+                    { id: 'maroon', name: 'Maroon Text' },
+                    { id: 'chocolate', name: 'Chocolate Text' },
+                    { id: 'charcoal', name: 'Charcoal Text' },
+                    { id: 'sunbeam', name: 'Sunbeam Yellow' },
+                    { id: 'aqua', name: 'Aqua Blue' },
+                    { id: 'lime', name: 'Lime Green' },
+                    { id: 'rose', name: 'Rose Pink' },
+                    { id: 'lavender', name: 'Lavender' },
+                    { id: 'soft-glow', name: 'Soft Glow' },
+                    { id: 'letterpress', name: 'Letterpress (Carved)' },
+                    { id: 'gold-leaf', name: 'Gold Leaf (Glow)' }
+                ];
+                const currentCaptionTheme = App.settings.get('captionTheme') || 'sharp-light';
+                const captionThemeOptions = captionThemes.map(t => `<option value="${t.id}" ${currentCaptionTheme === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
+                
+                const captionAlignments = [
+                    { id: 'bottom', name: 'Bottom' }, { id: 'middle', name: 'Middle' }, { id: 'top', name: 'Top' }
+                ];
+                const currentCaptionAlign = App.settings.get('captionAlign') || 'bottom';
+                const captionAlignOptions = captionAlignments.map(a => `<option value="${a.id}" ${currentCaptionAlign === a.id ? 'selected' : ''}>${a.name}</option>`).join('');
+
 
                 const modalHTML = `
                 <div class="modal-backdrop" onclick="if(event.target === this) App.ui.closeModal()">
@@ -10974,6 +11085,17 @@
                         </div>
                         
                         <div class="settings-section">
+                            <h4><i class="fa-solid fa-closed-captioning"></i> Image Caption Style</h4>
+                            <div class="settings-grid">
+                                <label for="caption-theme-select">Caption Color</label>
+                                <select id="caption-theme-select" class="btn btn-secondary">${captionThemeOptions}</select>
+
+                                <label for="caption-align-select">Caption Position</label>
+                                <select id="caption-align-select" class="btn btn-secondary">${captionAlignOptions}</select>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
                              <h4><i class="fa-solid fa-sliders"></i> UI & Image Settings</h4>
                              <div class="settings-grid">
                                 <div class="settings-label" title="Adjusts the transparency of UI elements like modals and toolbars. Set to 0% for a fully transparent look."><b>UI Opacity</b></div>
@@ -11011,8 +11133,11 @@
                 document.getElementById('opacity-slider').addEventListener('input', App.events.changeUiOpacity);
                 document.getElementById('mobile-view-toggle').addEventListener('click', App.events.toggleMobileView);
                 document.getElementById('image-quality-slider').addEventListener('input', App.events.changeImageQuality);
-                document.getElementById('ocr-threshold-slider').addEventListener('input', App.events.changeOcrThreshold); // NEW
+                document.getElementById('ocr-threshold-slider').addEventListener('input', App.events.changeOcrThreshold);
                 document.getElementById('change-bg-btn').addEventListener('click', () => App.events.triggerBgImageUpload());
+            
+                document.getElementById('caption-theme-select').addEventListener('change', (e) => App.settings.set('captionTheme', e.target.value));
+                document.getElementById('caption-align-select').addEventListener('change', (e) => App.settings.set('captionAlign', e.target.value));
             },
 
             showFlashcardSettingsModal() {
@@ -16529,15 +16654,19 @@
                 const container = App.state.selectedImageContainer;
                 if (!container) return;
 
+                const theme = App.settings.get('captionTheme') || 'default';
+                const align = App.settings.get('captionAlign') || 'bottom';
+                container.setAttribute('data-caption-theme', theme);
+                container.setAttribute('data-caption-align', align);
+
+
                 let caption = container.querySelector('.image-caption');
 
                 if (caption) {
-                    // If caption exists, make it editable and focus it
                     caption.setAttribute('contenteditable', 'true');
                     caption.style.pointerEvents = 'auto'; // Make interactive
                     caption.focus();
                 } else {
-                    // If not, create it, append it, make it editable, and then focus it.
                     caption = document.createElement('div');
                     caption.className = 'image-caption';
                     caption.setAttribute('contenteditable', 'true');
@@ -16546,13 +16675,10 @@
                     caption.focus();
                     App.state.isArticleDirty = true;
                 }
-
-                // Add an event listener to remove contenteditable when the user clicks away
                 caption.onblur = async () => {
                     caption.removeAttribute('contenteditable');
                     caption.style.pointerEvents = 'none'; // Revert to non-interactive
                     if (caption.textContent.trim() === '' && caption.parentNode) {
-                        // If caption is empty after editing, remove it
                         caption.parentNode.removeChild(caption);
                     }
                     await App.events.saveArticle({ isAutosave: true }); // CHANGED: Added silent save option
