@@ -465,6 +465,16 @@
             from { opacity: 0; transform: translateX(-50%) translateY(5px); }
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
+        @keyframes growInFromCenter {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
         @keyframes slideOutRight { from { opacity: 1; transform: translateX(0); } to { opacity: 0.5; transform: translateX(40px); } }
         .task-item.exiting { animation: slideOutRight 0.4s ease-out forwards; }
         @keyframes confetti-blast { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100px) rotate(360deg); } }
@@ -1106,7 +1116,11 @@
             z-index: 1001;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         }
-
+        .toolbar-wrapper.vertical .control-divider {
+            width: 80%; 
+            height: 1px;
+            margin: 4px auto;
+        }
         .controls-wrapper {
             display: none;
             align-items: center;
@@ -1259,13 +1273,58 @@
         .guide-content code { background-color: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; font-family: monospace; }
         .guide-content ol, .guide-content ul { padding-left: 20px; }
         .guide-content li { margin-bottom: 0.8rem; }
-        .toolbar-wrapper { display: flex; gap: 4px; align-items:center; padding: 5px; background-color:var(--bg-secondary); border-radius:var(--border-radius); box-shadow:var(--shadow); border:1px solid var(--border-color); }
-        .toolbar-wrapper.vertical { flex-direction: column; width: auto; }
-        .toolbar-drag-handle { cursor: move; color: var(--text-secondary); }
         
-        #selection-toolbar .btn-icon svg {
-            width: 20px; /* This will standardize the size of all icons */
-            height: 20px;
+        /* === ELEGANT FLOATING TOOLBAR (v2 POLISH) === */
+        .toolbar-wrapper {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 6px;
+            background: linear-gradient(145deg, rgba(var(--bg-secondary-rgb), 0.7), rgba(var(--bg-primary-rgb), 0.6));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 9999px;
+            box-shadow: var(--shadow-lg), inset 0 1px 1px rgba(255, 255, 255, 0.1); /* Added inner highlight */
+            border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent); /* Softer border */
+        }
+        .toolbar-wrapper.vertical {
+            flex-direction: column;
+            width: auto;
+            border-radius: var(--border-radius-lg); /* Softer corner for vertical mode */
+        }
+        .toolbar-drag-handle {
+            cursor: move;
+            color: var(--text-secondary);
+            padding: 0 4px;
+            opacity: 0.6;
+            display: flex; /* Ensures SVG inside is centered */
+            align-items: center;
+        }
+        #selection-toolbar .btn-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%; /* Circular buttons inside the pill */
+            transition: all 0.2s ease-in-out;
+        }
+        
+        #selection-toolbar .btn-icon:hover {
+            background-color: color-mix(in srgb, var(--primary-color) 10%, var(--bg-tertiary));
+            color: var(--primary-color);
+            transform: scale(1.15);
+            box-shadow: 0 0 8px color-mix(in srgb, var(--primary-color) 20%, transparent);
+        }
+      
+        #selection-toolbar .highlight-btn {
+            width: 28px !important;
+            height: 28px !important;
+        }
+        #ai-magic-btn {
+            color: var(--primary-color);
+            animation: copilot-glow 4s infinite alternate ease-in-out;
+
+        }
+        #ai-magic-btn:hover {
+            animation-play-state: paused;
         }
        
         /* Changes for Bullet */
@@ -3075,6 +3134,259 @@
             transform: scale(1.15); /* Pop effect on individual button hover */
         }
         
+
+        /* --- NoteKash AI Magic Module (Co-Pilot) - PREMIUM POLISH --- */
+        .ai-magic-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(var(--bg-primary-rgb), 0.5) 0%, rgba(var(--bg-primary-rgb), 0.8) 100%);
+            z-index: 10001;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes copilot-border-glow {
+            from {
+                border-color: color-mix(in srgb, var(--primary-color) 25%, transparent);
+                box-shadow: 0 10px 40px -10px rgba(0,0,0,0.35), 
+                            0 0 8px -2px color-mix(in srgb, var(--primary-color) 30%, transparent);
+            }
+            to {
+                border-color: color-mix(in srgb, var(--primary-color) 65%, transparent);
+                box-shadow: 0 10px 40px -10px rgba(0,0,0,0.35), 
+                            0 0 25px 4px color-mix(in srgb, var(--primary-color) 25%, transparent);
+            }
+        }
+        .ai-magic-modal {
+            width: 100%;
+            max-width: 720px;
+            height: 85vh;
+            max-height: 600px;
+            display: flex;
+            flex-direction: column;
+
+            background-color: rgba(var(--bg-secondary-rgb), 0.6);
+            background-image: 
+                radial-gradient(at 0% 0%, color-mix(in srgb, var(--primary-color) 15%, transparent) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, color-mix(in srgb, var(--cat-color-3-bg) 20%, transparent) 0px, transparent 50%);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1.5px solid;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.35), 
+                        inset 0 1px 1px rgba(255,255,255,0.1); /* Inner top highlight for 3D effect */
+            animation: growInFromCenter 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
+               copilot-border-glow 5s infinite alternate ease-in-out;
+            overflow: hidden;
+        }
+        .ai-magic-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+            background-color: rgba(var(--bg-primary-rgb), 0.7);
+            text-align: center;
+        }
+        
+       .ai-magic-title {
+            font-size: 1.5rem;
+            font-weight: 700; /* BOLD, for clear presence */
+            letter-spacing: 0.3px;
+            margin-bottom: 0.75rem;
+            padding: 0.25rem 0;
+            background-image: none;
+            background-clip: unset;
+            -webkit-background-clip: unset;
+            -webkit-text-fill-color: unset;
+            color: var(--primary-color);
+        }
+     
+
+        .ai-magic-prompt-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 4px 4px 4px 12px;
+            transition: all 0.2s ease-in-out;
+        }
+        #ai-magic-prompt-input {
+            width: 100%;
+            font-size: 0.95rem;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            outline: none;
+            flex-grow: 1;
+            resize: none;
+        }
+        #ai-magic-prompt-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+        .ai-magic-prompt-container:focus-within {
+            border-color: var(--primary-color);
+            background-color: var(--bg-secondary);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 25%, transparent),
+                        inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+        #ai-magic-command-list {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Use the flexible grid by default */
+            gap: 0.75rem;
+        }
+        #ai-magic-command-list.compact-grid {
+            justify-content: start; /* Align grid items to the left */
+            grid-template-columns: repeat(auto-fit, 180px); /* Use fixed-width columns for few items */
+        }
+        .ai-magic-command-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            background: linear-gradient(145deg, rgba(var(--bg-primary-rgb), 0.4), rgba(var(--bg-primary-rgb), 0.7));
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+        .ai-magic-command-item:hover {
+            transform: translateY(-4px) scale(1.02); /* Slightly more subtle scale */
+            border-color: color-mix(in srgb, var(--primary-color) 70%, var(--border-color));
+            background: linear-gradient(145deg, rgba(var(--bg-secondary-rgb), 0.7), rgba(var(--bg-primary-rgb), 0.9)); /* "Lights up" */
+            box-shadow: 0 0 20px 5px color-mix(in srgb, var(--primary-color) 15%, transparent); /* Inner glow effect */
+        }
+        .ai-magic-command-item.selected {
+            transform: translateY(-4px) scale(1.03);
+            background-color: var(--bg-primary);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px -5px color-mix(in srgb, var(--primary-color) 40%, transparent);
+        }
+        .ai-magic-command-item.selected::after {
+            content: '⏎';
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        .ai-magic-command-item .command-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            background-color: var(--bg-tertiary);
+            border-radius: 8px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .ai-magic-command-item .command-text {
+            overflow: hidden;
+        }
+        .ai-magic-command-item .command-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+        .ai-magic-separator {
+            grid-column: 1 / -1;
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 4px 0;
+            opacity: 0.6;
+        }
+        #ai-magic-prompt-send {
+            flex-shrink: 0;
+            background: var(--action-button-gradient); /* Use consistent action gradient */
+            border: 1px solid rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        #ai-magic-prompt-send:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 12px color-mix(in srgb, var(--primary-color) 40%, transparent);
+        }
+        #ai-magic-prompt-send:active {
+            transform: scale(0.95); /* A more subtle but firm press */
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+            transition-duration: 0.1s;
+        }
+        #ai-magic-prompt-send svg {
+            transform: translateX(1px); /* Perfect horizontal centering */
+        }
+
+        /* --- NEW: Premium AI Upsell Card --- */
+        .ai-upsell-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 2rem 1.5rem;
+            height: 100%;
+            box-sizing: border-box;
+            justify-content: center;
+            animation: fadeIn 0.5s ease-out 0.1s backwards;
+            border-radius: var(--border-radius-lg);
+            background: 
+                linear-gradient(rgba(var(--bg-secondary-rgb), 0.8), rgba(var(--bg-secondary-rgb), 0.8)) padding-box,
+                linear-gradient(145deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 40%, transparent)) border-box;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .ai-upsell-card .badge-icon {
+            margin-bottom: 1.5rem;
+            transform: scale(1.15);
+        }
+        .ai-upsell-card h4 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin: 0 0 0.75rem 0;
+            background-image: var(--action-button-gradient);
+            background-size: 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        [data-theme="dark"] .ai-upsell-card h4 {
+            background-image: linear-gradient(45deg, #E0B453, #E6845E);
+        }
+        .ai-upsell-card p {
+            color: var(--text-secondary);
+            max-width: 400px;
+            line-height: 1.6;
+            font-size: 1rem;
+            margin: 0 0 2rem 0;
+        }
+        .ai-upsell-card .btn-primary {
+            padding: 0.8rem 2rem;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 25px -5px color-mix(in srgb, var(--primary-color) 50%, transparent);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .ai-upsell-card .witty-gradient-text {
+            font-size: 1rem;
+            font-style: italic;
+            opacity: 0.85;
+        }
+
+
+
 
         /* --- Command Palette --- */
         #command-palette {
@@ -6176,6 +6488,7 @@
     <button id="focus-mode-toggle" class="btn-icon" onclick="App.events.toggleFocusMode()" title="Exit Focus Mode (Esc)" aria-label="Toggle focus mode"></button>
     <div id="selection-toolbar" style="display:none; position:absolute; z-index:1001;"></div>
     <div id="image-toolbar" style="display:none; position:absolute; z-index:1001;"></div>
+
     <div id="context-menu-container"></div>
     <div id="toast-container"></div>
     <div id="modal-container"></div>
@@ -9756,118 +10069,108 @@
                 studyView.classList.add(`ambiance-${theme}`);
             }
         },
+
         showSelectionToolbar(range) {
             const toolbar = document.getElementById('selection-toolbar');
-            const highlightButtons = App.config.highlightClasses.slice(0, 6).map((cls, i) => {
-                const key = i + 1;
-                return `<button class="btn-icon" 
-                    style="background-color:var(--${cls.replace('highlight-','hl-')}-bg); border:1px solid var(--${cls.replace('highlight-','hl-')}-border); width:28px; height:28px; border-radius:50%;" 
-                    title="Highlight (Cmd/Ctrl+Shift+${key+1})" 
-                    onmousedown="event.preventDefault(); App.events.applyFormatting('class', '${cls}')" 
-                    aria-label="Apply highlight color ${key}">
-                </button>`
-            }).join('');
 
-            toolbar.innerHTML = `<div class="toolbar-wrapper">
-                <div class="toolbar-drag-handle" title="Drag Toolbar" aria-label="Drag Toolbar">⠿</div>
-                <button class="btn-icon" style="border:1px solid var(--border-color);" title="Cycle All Colors (Cmd/Ctrl+Shift+1)" onmousedown="event.preventDefault(); App.events.cycleColorFormatting()" aria-label="Cycle through all colors">${App.util.icons.cycle}</button>
-                <div class="control-divider"></div>
-                ${highlightButtons}
-                <button class="btn-icon" title="Create Visual Tag [[...]]" onmousedown="event.preventDefault(); App.contentTools.tagSelection()" aria-label="Tag selected text">${App.util.icons.tag}</button>
-                <button class="btn-icon" title="Create Cloze" onmousedown="event.preventDefault(); App.events.applyFormatting('cloze')" aria-label="Create cloze flashcard"><b>F</b></button>
-                <button class="btn-icon" title="Remove Formatting" onmousedown="event.preventDefault(); App.events.removeFormatting()" aria-label="Remove formatting">${App.util.icons.clearFormatting}</button>
-                <div class="control-divider"></div>
-                <button class="btn-icon" id="toolbar-orientation-toggle" title="Toggle Layout" aria-label="Toggle toolbar layout">☰</button>
-            </div>`;
+           
+            const icons = {
+                drag: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>`,
+                palette: `<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69z"/></svg>`,
+                tag: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>`,
+                cloze: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><path d="M2 12h20"/><path d="M17 2v5"/><path d="M7 2v5"/></svg>`,
+                aiMagic: `<svg viewBox="0 0 24 24" width="20" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2.35M10.15 6.344l-1.493-1.493M6.344 10.15l-2.187-2.187M3 12h2.35M6.344 13.85l-2.187 2.187M10.15 17.656l-1.493 1.493M12 21v-2.35M13.85 17.656l1.493 1.493M17.656 13.85l2.187 2.187M21 12h-2.35M17.656 10.15l2.187-2.187M13.85 6.344l1.493-1.493"/><circle cx="12" cy="12" r="2.35"/></svg>`,
 
+                clear: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 12.5h10.5M11 12.5a5 5 0 0 1-5-5V4.5"/><path d="M4 4.5h10.5"/><path d="M4 19.5h10.5"/><path d="m18 10-2-2 2-2"/><path d="m21 17-2-2 2-2"/></svg>`,
+                orientation: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>`
+            };
+            
+            
+            const highlightButtons = App.config.highlightClasses.slice(0, 6).map((cls, i) =>
+                `<button class="btn-icon highlight-btn" 
+                    style="background-color:var(--${cls.replace('highlight-','hl-')}-bg); border:1px solid var(--${cls.replace('highlight-','hl-')}-border);" 
+                    title="Highlight (Cmd+Shift+${i+2})" onmousedown="event.preventDefault(); App.events.applyFormatting('class', '${cls}')"></button>`
+            ).join('');
+
+      
+            toolbar.innerHTML = `
+                <div class="toolbar-wrapper">
+                    <div class="toolbar-drag-handle" title="Drag Toolbar">${icons.drag}</div>
+                    <button id="ai-magic-btn" class="btn-icon" title="AI Magic ✨ (Ctrl+J)">${icons.aiMagic}</button>
+                    <div class="control-divider"></div>
+                    <button class="btn-icon" title="Cycle Colors" onmousedown="event.preventDefault(); App.events.cycleColorFormatting()">${icons.palette}</button>
+                    ${highlightButtons}
+                    <div class="control-divider"></div>
+                    <button class="btn-icon" title="Create Tag [[...]]" onmousedown="event.preventDefault(); App.contentTools.tagSelection()">${icons.tag}</button>
+                    <button class="btn-icon" title="Create Cloze Flashcard" onmousedown="event.preventDefault(); App.events.applyFormatting('cloze')">${icons.cloze}</button>  
+                    <button class="btn-icon" title="Remove Formatting" onmousedown="event.preventDefault(); App.events.removeFormatting()">${icons.clear}</button>
+                    <button class="btn-icon" id="toolbar-orientation-toggle" title="Toggle Layout">${icons.orientation}</button>
+                </div>
+            `;
+
+           
             const rect = range.getBoundingClientRect();
             toolbar.style.display = 'block';
-
-            // --- Mobile Adaptation: Reposition Toolbar ---
             const isMobileView = document.body.classList.contains('mobile-view');
             let topPos, leftPos;
-
             if (isMobileView) {
-                // In mobile view, position the toolbar BELOW the selection.
                 topPos = rect.bottom + window.scrollY + 8;
                 leftPos = rect.left + window.scrollX + rect.width / 2 - toolbar.offsetWidth / 2;
             } else {
-                // Fallback to default desktop position (ABOVE selection).
-                leftPos = rect.left + window.scrollX + rect.width / 2 - toolbar.offsetWidth / 2;
                 topPos = rect.top + window.scrollY - toolbar.offsetHeight - 8;
+                leftPos = rect.left + window.scrollX + rect.width / 2 - toolbar.offsetWidth / 2;
             }
-
-            // --- Original Desktop Logic: Draggable & Persistent State (with mobile exception) ---
             const wrapper = toolbar.querySelector('.toolbar-wrapper');
             const dragHandle = toolbar.querySelector('.toolbar-drag-handle');
             const toggleBtn = document.getElementById('toolbar-orientation-toggle');
-
             let state = { x: leftPos, y: topPos, orientation: 'horizontal' };
-
-            // Only try to load the saved position on DESKTOP.
             if (!isMobileView) {
                 try {
                     const savedState = JSON.parse(localStorage.getItem('noteKashToolbarState'));
                     if (savedState) {
                         state.orientation = savedState.orientation ?? 'horizontal';
-                        if (state.orientation === 'vertical') {
-                            wrapper.classList.add('vertical');
+                        const toolbarWidth = toolbar.offsetWidth, toolbarHeight = toolbar.offsetHeight, margin = 10, headerHeight = 48;
+                        if (savedState.x > margin && savedState.x + toolbarWidth < window.innerWidth - margin && savedState.y > headerHeight && savedState.y + toolbarHeight < window.innerHeight - margin) {
+                            state.x = savedState.x; state.y = savedState.y;
                         }
-
-
-                        const toolbarWidth = toolbar.offsetWidth;
-                        const toolbarHeight = toolbar.offsetHeight;
-                        
-                        const margin = 10;
-                        const headerHeight = 48;
-
-                        const isPositionValid = 
-                            savedState.x > margin &&
-                            savedState.x + toolbarWidth < window.innerWidth - margin &&
-                            savedState.y > headerHeight &&
-                            savedState.y + toolbarHeight < window.innerHeight - margin;
-
-                        if (isPositionValid) {
-                            state.x = savedState.x;
-                            state.y = savedState.y;
-                        }
-                      
                     }
                 } catch(e) { console.warn("Could not parse toolbar state."); }
             }
-
-            toolbar.style.left = `${state.x}px`;
+            toolbar.style.left = `${state.x < 5 ? 5 : state.x}px`;
             toolbar.style.top = `${state.y}px`;
             if (state.orientation === 'vertical') {
                 wrapper.classList.add('vertical');
-                toggleBtn.innerHTML = '↔';
+                toggleBtn.querySelector('svg').style.transform = 'rotate(90deg)';
             }
-
             const saveState = () => {
                 const currentRect = toolbar.getBoundingClientRect();
-                const newState = {
-                    x: currentRect.left + window.scrollX,
-                    y: currentRect.top + window.scrollY,
+                localStorage.setItem('noteKashToolbarState', JSON.stringify({
+                    x: currentRect.left + window.scrollX, y: currentRect.top + window.scrollY,
                     orientation: wrapper.classList.contains('vertical') ? 'vertical' : 'horizontal'
-                };
-                localStorage.setItem('noteKashToolbarState', JSON.stringify(newState));
+                }));
             };
+
+            document.getElementById('ai-magic-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                App.ui.hideSelectionToolbar();
+                App.ui.aiMagicModal.open();
+            });
 
             toggleBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 wrapper.classList.toggle('vertical');
-                toggleBtn.innerHTML = wrapper.classList.contains('vertical') ? '↔' : '☰';
+                toggleBtn.querySelector('svg').style.transform = wrapper.classList.contains('vertical') ? 'rotate(90deg)' : 'rotate(0deg)';
                 saveState();
             });
 
             let offsetX, offsetY;
             const move = (e) => { const newX = (e.touches ? e.touches[0].clientX : e.clientX) - offsetX; const newY = (e.touches ? e.touches[0].clientY : e.clientY) - offsetY; toolbar.style.left = `${newX}px`; toolbar.style.top = `${newY}px`; };
             const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up); saveState(); };
-            const down = (e) => { e.preventDefault(); const rect = toolbar.getBoundingClientRect(); offsetX = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left; offsetY = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top; document.addEventListener('mousemove', move); document.addEventListener('mouseup', up); document.addEventListener('touchmove', move); document.addEventListener('touchend', up); };
-
+            const down = (e) => { e.preventDefault(); const r = toolbar.getBoundingClientRect(); offsetX = (e.touches ? e.touches[0].clientX : e.clientX) - r.left; offsetY = (e.touches ? e.touches[0].clientY : e.clientY) - r.top; document.addEventListener('mousemove', move); document.addEventListener('mouseup', up); document.addEventListener('touchmove', move); document.addEventListener('touchend', up); };
             dragHandle.addEventListener('mousedown', down);
-            dragHandle.addEventListener('touchstart', down);
+            dragHandle.addEventListener('touchstart', down, { passive: false });
         },
+
 
         hideSelectionToolbar() { document.getElementById('selection-toolbar').style.display = 'none'; },
         
@@ -9877,7 +10180,7 @@
             const isHighlighted = imageContainer.classList.contains('highlighted-image');
             const isWriteMode = App.state.currentMode === 'write'; // Check the current mode
 
-            // Conditionally build the toolbar buttons based on the mode
+      
             const toolbarButtons = `
                 <button class="btn-icon" title="Align Left" onmousedown="event.preventDefault(); App.events.handleImageAlignment('align-left');">${App.util.icons.alignLeft}</button>
                 <button class="btn-icon" title="Align Center" onmousedown="event.preventDefault(); App.events.handleImageAlignment('align-center');">${App.util.icons.alignCenter}</button>
@@ -9902,7 +10205,324 @@
         },
         
         
+
         hideImageToolbar() { document.getElementById('image-toolbar').style.display = 'none'; },
+
+        aiMagicModal: {
+            state: {
+                isOpen: false,
+                savedRange: null,
+                commands: [],
+                filteredCommands: [],
+                selectedIndex: 0,
+                fuse: null,
+            },
+            
+            init() {
+                this._handleKeyDown = this._handleKeyDown.bind(this);
+            },
+
+            open() {
+                if (this.state.isOpen) return;
+
+                const selection = window.getSelection();
+                this.state.savedRange = (selection && !selection.isCollapsed && selection.rangeCount > 0)
+                    ? selection.getRangeAt(0).cloneRange()
+                    : null;
+
+                this.state.isOpen = true;
+                this.state.commands = this._getCommands();
+                this.state.fuse = new Fuse(this.state.commands.filter(c => c.type !== 'separator'), { keys: ['title', 'desc', 'id'], threshold: 0.4 });
+                this.state.filteredCommands = this.state.commands;
+                this.state.selectedIndex = -1;
+
+                const modalHTML = `
+                    <div class="ai-magic-backdrop">
+                        <div class="ai-magic-modal">
+                            <div class="ai-magic-header">
+                                <h3 class="ai-magic-title witty-gradient-text">NoteKash AI Co-Pilot</h3>
+                                <div class="ai-magic-prompt-container">
+                                    <input type="text" id="ai-magic-prompt-input" placeholder="Search or Ask AI anything ..." autocomplete="off">
+                                    <button id="ai-magic-prompt-send" class="btn-icon btn-primary" title="Ask AI">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                            <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="ai-magic-command-list"></div>
+                        </div>
+                    </div>`;
+                
+                document.getElementById('modal-container').innerHTML = modalHTML;
+
+                // THE FIX: Add the event listener ONLY when the modal opens.
+                document.addEventListener('keydown', this._handleKeyDown, true);
+                
+                this._renderCommands();
+                this._addListeners();
+                document.getElementById('ai-magic-prompt-input').focus();
+            },
+
+            close() {
+                if (!this.state.isOpen) return;
+                this.state.isOpen = false;
+                this.state.savedRange = null;
+                document.getElementById('modal-container').innerHTML = '';
+                
+                document.removeEventListener('keydown', this._handleKeyDown, true);
+            },
+
+            _showUpsellCard() {
+                const commandListEl = document.getElementById('ai-magic-command-list');
+                if (!commandListEl) return;
+                const promptContainer = document.querySelector('.ai-magic-prompt-container');
+                if (promptContainer) promptContainer.style.display = 'none';
+
+                const wittyMessage = App.util.getRandomMessage(App.util.wittyDeveloperMessages);
+                const diamondBadgeHTML = App.util.getTierBadgeHTML('Diamond');
+
+                const upsellHTML = `
+                    <div class="ai-upsell-card">
+                        ${diamondBadgeHTML}
+                        <h4>Unlock Your Thinking Partner</h4>
+                        <p>Go Premium to use all 25+ specialized AI tools. Turn raw notes into structured knowledge, get instant insights, and write faster than ever before.</p>
+                        <button class="btn btn-primary" onclick="App.ui.showAscensionModal(); App.ui.aiMagicModal.close();">Unlock Full AI Power</button>
+                        <p class="witty-gradient-text"><em>"${wittyMessage}"</em></p>
+                    </div>
+                `;
+
+                commandListEl.innerHTML = upsellHTML;
+            },
+
+            _getCommands() {
+                const hasSelection = !!this.state.savedRange;
+                const allCommands = [
+                    // Selection Commands
+                    { id: 'kashwriting', title: 'Improve Writing', desc: 'Refine the selected text', icon: 'fa-solid fa-wand-sparkles', action: () => App.events.ai.executeImproveWriting(), selection: true },
+                    { id: 'kashgrammar', title: 'Fix Grammar', desc: 'Correct spelling and grammar', icon: 'fa-solid fa-pen-nib', action: () => App.events.ai.executeFixGrammar(), selection: true },
+                    { id: 'kashexplain', title: 'Explain This', desc: 'Explain the selected concept', icon: 'fa-solid fa-lightbulb', action: () => App.events.ai.executeKashExplain(), selection: true },
+                    { id: 'kashflash', title: 'Generate Flashcard', desc: 'Create a cloze from selection', icon: 'fa-solid fa-clone', action: () => App.events.ai.executeKashFlash(), selection: true },
+                    { id: 'kashmnemonic', title: 'Create Mnemonic', desc: 'Generate a memory aid', icon: 'fa-solid fa-brain', action: () => App.events.ai.executeKashMnemonic(), selection: true },
+                    { id: 'convertMcq', title: 'Convert to MCQ', desc: 'Turn selection into an MCQ block', icon: 'fa-solid fa-list-check', action: () => App.commandPalette.convertSelectionToMcq(), selection: true },
+                    { id: 'kashtranslate', title: 'Translate...', desc: 'Translate selection to another language', icon: 'fa-solid fa-earth-americas', action: () => { const lang = prompt('Translate to language:'); if(lang) App.events.ai.executeKashTranslate(lang); }, selection: true },
+                    { id: 'kashlist', title: 'Convert to List', desc: 'Restructure selection as a list', icon: 'fa-solid fa-list-ul', action: () => App.events.ai.executeKashListify(), selection: true },
+                    { id: 'kashtable', title: 'Convert to Table', desc: 'Restructure selection into a table', icon: 'fa-solid fa-table-cells', action: () => App.events.ai.executeKashTable(), selection: true },
+
+                    // Article-wide Commands
+                    { id: 'kashexpand', title: 'Continue Writing', desc: 'Let AI continue from your cursor', icon: 'fa-solid fa-pen-fancy', action: () => App.events.ai.executeKashExpand() },
+                    { id: 'kashsummary', title: 'Summarize Article', desc: 'Generate a summary of the entire note', icon: 'fa-solid fa-file-lines', action: () => App.events.ai.executeKashSummary() },
+                    { id: 'kashcurate', title: 'Curate & Beautify', desc: 'Let AI structure and format the note', icon: 'fa-solid fa-wand-magic-sparkles', action: () => App.events.ai.executeKashCurate() },
+                    { id: 'kashaccordion', title: 'Generate Q&A', desc: 'Create Q&A accordions from the note', icon: 'fa-solid fa-clipboard-question', action: () => App.events.ai.executeKashAccordion() },
+                    { id: 'kashmcq', title: 'Generate MCQs', desc: 'Create multiple-choice questions', icon: 'fa-solid fa-list-check', action: () => App.events.ai.executeKashMcqGenerator() },
+                    { id: 'kashhighlight', title: 'Auto-Highlight', desc: 'Highlight key parts of the note', icon: 'fa-solid fa-highlighter', action: () => App.events.ai.executeKashHighlight() },
+                    { id: 'kashtags', title: 'Auto-Tag', desc: 'Automatically generate and apply tags', icon: 'fa-solid fa-tags', action: () => App.events.ai.executeKashTags() },
+                    { id: 'kashkeywords', title: 'Extract Key Concepts', desc: 'Pull out main ideas into a Deck', icon: 'fa-solid fa-key', action: () => App.events.ai.executeKashKeywords() },
+                    { id: 'kashtimeline', title: 'Create Timeline', desc: 'Generate a timeline from the note', icon: 'fa-solid fa-timeline', action: () => App.events.ai.executeKashTimeline() },
+
+                    // --- NEWLY ADDED COMMANDS ---
+                    { id: 'kashcraft', title: 'KashCraft Analysis', desc: 'Transform note into a structured analysis', icon: 'fa-solid fa-graduation-cap', action: () => App.events.ai.executeKashCraft() },
+                    { id: 'kashextract', title: 'Extract Topic...', desc: 'Extract a specific topic from the note', icon: 'fa-solid fa-magnifying-glass-chart', action: () => { const topic = prompt('What topic do you want to extract? (e.g., key arguments, dates)'); if (topic) App.events.ai.executeKashExtract(topic); } },
+                    { id: 'kashlink', title: 'Create & Link Note...', desc: 'Generate a new note on a topic and link it', icon: 'fa-solid fa-link', action: () => { const topic = prompt('What topic for the new note?'); if (topic) App.events.ai.executeKashLink(topic); } },
+                    { id: 'kashlong', title: 'Detailed Summary', desc: 'Generate a long, detailed summary of the note', icon: 'fa-solid fa-file-export', action: () => App.events.ai.executeKashLong() },
+                    { id: 'kashoutline', title: 'Generate Outline...', desc: 'Create an outline for a new topic', icon: 'fa-solid fa-list-ol', action: () => { const topic = prompt('What topic do you want an outline for?'); if (topic) App.events.ai.executeKashOutline(topic); } },
+                    // --- END OF NEW COMMANDS ---
+
+                    { id: 'kashsplit', title: 'Split Note', desc: 'Intelligently split this note into two', icon: 'fa-solid fa-scissors', action: () => App.events.ai.executeKashSplit() },
+                    { id: 'kashquote', title: 'Find a Quote', desc: 'Add a relevant quote to your note', icon: 'fa-solid fa-quote-left', action: () => App.events.ai.executeKashQuote() },
+                    { id: 'kashstory', title: 'Write a Story', desc: 'Turn the note into a memorable story', icon: 'fa-solid fa-book-open', action: () => App.events.ai.executeKashStory() },
+                    { id: 'kashscript', title: 'Write a Script', desc: 'Generate a short video script', icon: 'fa-solid fa-clapperboard', action: () => App.events.ai.executeKashScript() },
+                    { id: 'kashcomedy', title: 'Make it Funny', desc: 'Turn the note into a comedy routine', icon: 'fa-solid fa-masks-theater', action: () => App.events.ai.executeKashComedy() },
+                    { id: 'kashquestion', title: 'Generate Questions', desc: 'Create study questions from the note', icon: 'fa-solid fa-circle-question', action: () => App.events.ai.executeKashQuestion() },
+                    { id: 'kashdebate', title: 'Create a Debate', desc: 'Generate a pros and cons table', icon: 'fa-solid fa-scale-balanced', action: () => App.events.ai.executeKashDebate() },
+                ];
+                
+                const selectionCommands = allCommands.filter(cmd => cmd.selection);
+                const articleCommands = allCommands.filter(cmd => !cmd.selection);
+
+                if (hasSelection) {
+                    return [...selectionCommands, { type: 'separator' }, ...articleCommands];
+                }
+                return articleCommands;
+            },
+
+            _renderCommands() {
+                const listEl = document.getElementById('ai-magic-command-list');
+                if (!listEl) return;
+
+             
+                const numColumns = Math.floor(listEl.offsetWidth / 195); // Approx width of a tile + gap
+                const isCompact = this.state.filteredCommands.length < numColumns && this.state.filteredCommands.length > 0;
+                listEl.classList.toggle('compact-grid', isCompact);
+
+                const html = this.state.filteredCommands.map((cmd, index) => {
+                    if (cmd.type === 'separator') {
+                        return '<div class="ai-magic-separator"></div>';
+                    }
+                    const isSelected = this.state.selectedIndex === index; // Check against visual index
+                    
+                    const itemHTML = `
+                        <div class="ai-magic-command-item ${isSelected ? 'selected' : ''}" data-visual-index="${index}" title="${cmd.desc}">
+                            <i class="command-icon ${cmd.icon}"></i>
+                            <div class="command-text">
+                                <div class="command-title">${cmd.title}</div>
+                            </div>
+                        </div>
+                    `;
+                    return itemHTML;
+                }).join('');
+
+                listEl.innerHTML = html;
+            },
+
+            _addListeners() {
+                const backdrop = document.querySelector('.ai-magic-backdrop');
+                const searchInput = document.getElementById('ai-magic-prompt-input');
+                const sendBtn = document.getElementById('ai-magic-prompt-send');
+                const commandList = document.getElementById('ai-magic-command-list');
+
+                backdrop.addEventListener('click', (e) => { if (e.target === backdrop) this.close(); });
+                
+                const handlePrompt = async () => {
+                    if (!App.license.isPremium()) {
+                        this._showUpsellCard();
+                        return; 
+                    }
+                    const query = searchInput.value.trim();
+                    if(query) {
+                        // --- SURGICAL FIX #2 STARTS HERE ---
+                        const commandListEl = document.getElementById('ai-magic-command-list');
+                        if (commandListEl) {
+                            commandListEl.innerHTML = `
+                            <div class="copilot-empty-state" style="justify-content: center; text-align: center; padding: 2rem;">
+                                <div class="spin" style="font-size: 2.5rem; color: var(--primary-color);">${App.util.icons.cycle}</div>
+                                <h4 class="witty-gradient-text" style="margin-top: 1rem;">Your Second Brain is thinking...</h4>
+                            </div>`;
+                        }
+                        // --- SURGICAL FIX #2 ENDS HERE ---
+
+                        if (this.state.savedRange) {
+                            const selection = window.getSelection();
+                            selection.removeAllRanges();
+                            selection.addRange(this.state.savedRange);
+                        }
+                        const selection = window.getSelection();
+                        const context = (selection && !selection.isCollapsed) ? selection.toString() : document.getElementById('article-content').innerText;
+                        const fullPrompt = `Based on the following context:\n\n---\n${context}\n---\n\nAnswer this question: ${query}`;
+                        
+                        await App.events.ai.executeKashAsk(fullPrompt);
+                        this.close();
+                    }
+                };
+
+                sendBtn.addEventListener('click', handlePrompt);
+                searchInput.addEventListener('input', () => {
+                    const query = searchInput.value;
+                    if (query) {
+                        this.state.filteredCommands = this.state.fuse.search(query).map(r => r.item);
+                    } else {
+                        this.state.filteredCommands = this._getCommands();
+                    }
+                    this.state.selectedIndex = -1;
+                    this._renderCommands();
+                });
+
+                commandList.addEventListener('click', (e) => {
+                    const itemEl = e.target.closest('.ai-magic-command-item');
+                    if (itemEl) {
+                        if (!App.license.isPremium()) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            this._showUpsellCard();
+                            return; 
+                        }
+                        this.state.selectedIndex = parseInt(itemEl.dataset.visualIndex, 10);
+                        this._executeSelected();
+                    }
+                });
+            },
+
+            _handleKeyDown(e) {
+                // CORRECTED: The internal reference must also use the correct name.
+                if (!App.ui.aiMagicModal.state.isOpen) return;
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.close();
+                    return;
+                }
+                const items = Array.from(document.querySelectorAll('.ai-magic-command-item'));
+                if (items.length === 0 && e.key !== 'Enter') return;
+                const isInputFocused = document.activeElement.id === 'ai-magic-prompt-input';
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (isInputFocused) {
+                        document.getElementById('ai-magic-prompt-send').click();
+                    } else {
+                        this._executeSelected();
+                    }
+                    return;
+                }
+                // Arrow key navigation logic remains the same.
+                if (e.key === 'ArrowUp' && this.state.selectedIndex !== -1) {
+                    e.preventDefault();
+                    const numColumns = getComputedStyle(document.getElementById('ai-magic-command-list')).gridTemplateColumns.split(' ').length;
+                    const newIndex = this.state.selectedIndex - numColumns;
+                    if (newIndex < 0) {
+                        this.state.selectedIndex = -1;
+                        document.getElementById('ai-magic-prompt-input').focus();
+                        this._updateSelection();
+                    } else {
+                        this.state.selectedIndex = newIndex;
+                        this._updateSelection();
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const numColumns = getComputedStyle(document.getElementById('ai-magic-command-list')).gridTemplateColumns.split(' ').length;
+                    if (isInputFocused) {
+                        this.state.selectedIndex = 0;
+                    } else {
+                        this.state.selectedIndex = Math.min(this.state.selectedIndex + numColumns, items.length - 1);
+                    }
+                    this._updateSelection();
+                } else if (e.key === 'ArrowLeft' && !isInputFocused) {
+                    e.preventDefault();
+                    this.state.selectedIndex = Math.max(0, this.state.selectedIndex - 1);
+                    this._updateSelection();
+                } else if (e.key === 'ArrowRight' && !isInputFocused) {
+                    e.preventDefault();
+                    this.state.selectedIndex = Math.min(this.state.selectedIndex + 1, items.length - 1);
+                    this._updateSelection();
+                }
+            },
+
+            _updateSelection() {
+                const items = document.querySelectorAll('.ai-magic-command-item');
+                items.forEach((item) => {
+                    const visualIndex = parseInt(item.dataset.visualIndex, 10);
+                    const isSelected = visualIndex === this.state.selectedIndex;
+                    item.classList.toggle('selected', isSelected);
+                    if (isSelected) {
+                        item.scrollIntoView({ block: 'nearest' });
+                    }
+                });
+            },
+
+            _executeSelected() {
+                const command = this.state.filteredCommands[this.state.selectedIndex];
+                if (command && command.action) {
+                    if (this.state.savedRange) {
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(this.state.savedRange);
+                    }
+                    command.action();
+                    this.close();
+                }
+            }
+        },
+
+
         imageLightbox: {
             state: {
                 scale: 1,
@@ -10975,24 +11595,22 @@
                 const preDefinedTemplates = [
                     { id: 'cornell-notes', icon: '🎓', title: 'Cornell Notes 2.0', desc: 'A robust system for structured note-taking and review.' },
                     { id: 'vocab-card', icon: '📚', title: 'Vocabulary Card', desc: 'Build your lexicon with structured vocabulary cards.' },
-                    { id: 'upsc-analysis', icon: '🇮🇳', title: 'UPSC Analysis', desc: 'A template for Current Affairs & syllabus linkage.' },
+                    { id: 'upsc-analysis', icon: '🗞', title: 'UPSC Analysis', desc: 'For Current Affairs & syllabus linkage.' },
                     { id: 'meeting-agenda', icon: '🤝', title: 'Meeting Agenda', desc: 'A clean, professional structure for any meeting.' },
                     { id: 'daily-planner', icon: '📅', title: 'Daily Planner', desc: 'Organize your day with tasks and priorities.' },
-                    { id: 'smart-goals', icon: '🎯', title: 'SMART Goals', desc: 'Define Specific, Measurable, Achievable, Relevant, and Time-bound goals.' },
-                    { id: 'kwl-chart', icon: '🧠', title: 'KWL Chart', desc: 'Track what you Know, Want to know, and what you Learned.' },
-                    { id: 'pros-cons', icon: '👍👎', title: 'Pros & Cons', desc: 'A balanced matrix for making clear, informed decisions.' },
-                    { id: 'swot-analysis', icon: '⚖️', title: 'SWOT Analysis', desc: 'Analyze Strengths, Weaknesses, Opportunities, and Threats.' },
+                    { id: 'smart-goals', icon: '🎯', title: 'SMART Goals', desc: 'Define Specific, Measurable, Relevant goals.' },
+                    { id: 'kwl-chart', icon: '🧠', title: 'KWL Chart', desc: 'Track what you Know, Want, and Learned.' },
+                    { id: 'pros-cons', icon: '‼️', title: 'Pros & Cons', desc: 'A balanced matrix for informed decisions.' },
+                    { id: 'swot-analysis', icon: '⚖️', title: 'SWOT Analysis', desc: 'Analyze Strengths, Weaknesses, Opportunities, Threats.' },
                     { id: 'content-planner', icon: '🚀', title: 'Content Planner', desc: 'A simple Kanban board to track your ideas.' }
                 ];
 
                 const cardsHTML = preDefinedTemplates.map(t => `
-                    <div class="welcome-card" onclick="App.events.ai.executeKashTemplate('${t.id}')">
-                        <div class="welcome-card-header">
-                            <div class="card-icon">${t.icon}</div>
-                            <div>
-                                <h3 class="card-title">${t.title}</h3>
-                                <p class="card-description" style="margin-top: 4px;">${t.desc}</p>
-                            </div>
+                    <div class="template-hub-card" onclick="App.events.ai.executeKashTemplate('${t.id}')">
+                        <div class="template-card-icon">${t.icon}</div>
+                        <div class="template-card-text">
+                            <h3 class="template-card-title">${t.title}</h3>
+                            <p class="template-card-desc">${t.desc}</p>
                         </div>
                     </div>
                 `).join('');
@@ -11001,16 +11619,59 @@
                 const premiumLockClass = isPremium ? '' : 'premium-feature-locked';
 
                 const modalHTML = `
+                <style>
+                    .template-hub-card {
+                        background-color: var(--bg-secondary);
+                        padding: 1rem;
+                        border: 1px solid var(--border-color);
+                        border-radius: var(--border-radius-lg);
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 1rem;
+                        cursor: pointer;
+                        transition: all 0.2s ease-in-out;
+                    }
+                    .template-hub-card:hover {
+                        transform: translateY(-4px);
+                        border-color: var(--primary-color);
+                        box-shadow: 0 0 15px 2px color-mix(in srgb, var(--primary-color) 20%, transparent);
+                    }
+                    .template-card-icon {
+                        width: 40px;
+                        height: 40px;
+                        flex-shrink: 0;
+                        background-color: var(--bg-tertiary);
+                        border-radius: 10px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.5rem;
+                        color: var(--text-primary);
+                    }
+                    .template-card-text { flex-grow: 1; }
+                    .template-card-title {
+                        font-size: 1rem;
+                        font-weight: 600;
+                        margin: 0 0 0.25rem 0;
+                        color: var(--text-primary);
+                    }
+                    .template-card-desc {
+                        font-size: 0.85rem;
+                        color: var(--text-secondary);
+                        line-height: 1.4;
+                        margin: 0;
+                    }
+                </style>
                 <div class="modal-backdrop" onclick="if(event.target === this) App.ui.closeModal()">
-                    <div class="modal-content ui-card" style="max-width: 800px;" onclick="event.stopPropagation()">
+                    <div class="modal-content ui-card" style="max-width: 900px;" onclick="event.stopPropagation()">
                         <button class="modal-close-btn" onclick="App.ui.closeModal()">&times;</button>
-                        <div style="text-align: center; margin-bottom: 2rem;">
-                            <h3 class="witty-gradient-text" style="font-size: 1.8rem; margin-bottom: 0.5rem;">Template Hub</h3>
+                        <div style="text-align: center;">
+                            <h3 class="witty-gradient-text" style="font-size: 1.8rem;">Template Hub</h3>
                             <p style="color: var(--text-secondary);">Choose a pre-made template or ask AI to create a custom one for you.</p>
                         </div>
                         
                         <div class="settings-section ${premiumLockClass}">
-                            <h4><i class="fa-solid fa-wand-magic-sparkles"></i> Create with AI</h4>
+                            <h4><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-color);"></i> Create with AI</h4>
                             <div style="display: flex; gap: 0.75rem;">
                                 <input type="text" id="custom-template-prompt" class="text-input" placeholder="e.g., a simple weekly meal planner...">
                                 <button class="btn btn-primary" id="generate-custom-template-btn">Generate</button>
@@ -11018,8 +11679,8 @@
                         </div>
 
                         <div class="settings-section">
-                            <h4><i class="fa-solid fa-star"></i> Curated Templates</h4>
-                            <div class="welcome-choices" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <h4><i class="fa-solid fa-star" style="color: var(--primary-color);"></i> Curated Templates</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem;">
                                 ${cardsHTML}
                             </div>
                         </div>
@@ -11034,7 +11695,11 @@
                 const generateAction = () => {
                     const prompt = customInput.value.trim();
                     if (prompt) {
-                        App.events.ai.executeKashTemplate(prompt);
+                        if (isPremium) {
+                            App.events.ai.executeKashTemplate(prompt);
+                        } else {
+                            App.ui.showAscensionModal();
+                        }
                     } else {
                         App.ui.showToast("Please describe the template you want.", "warning");
                     }
@@ -11142,8 +11807,13 @@
                 Object.values(App.state.chartInstances).forEach(chart => chart?.destroy());
                 App.state.chartInstances = {};
                 document.removeEventListener('keydown', App.events.handleProductivityHubKeyDown, true);
+                if (App.ui.aiMagicModal.state.isOpen) {
+                    App.ui.aiMagicModal.close();
+                }
+
                 document.getElementById('modal-container').innerHTML = ''; 
             },
+
             updateTheLine(progress) {
                     const line = document.getElementById('the-line');
                     if (line) {
@@ -12706,25 +13376,41 @@
                 }
             },
 
-            handleSelection() { 
-                setTimeout(() => { 
-                    const sel = window.getSelection(); 
-                    if (sel && !sel.isCollapsed && sel.rangeCount > 0) {
-                        const range = sel.getRangeAt(0);
-                        const container = range.commonAncestorContainer;
-                        const parentElement = container.nodeType === 3 ? container.parentNode : container;
-
-                        // Show standard formatting toolbar
-                        if (parentElement && parentElement.closest('#article-content[contenteditable=true]')) {
-                            App.ui.showSelectionToolbar(range);
-                        }
-
-                        // NEW: Show our AI actions menu
-                        if (parentElement && parentElement.closest('#article-content[contenteditable=true]')) {
-                            App.ui.showAiContextMenu(range);
-                        }
+            handleSelection() {
+                // Use a small timeout to let the browser finalize the selection
+                setTimeout(() => {
+                    const selection = window.getSelection();
+                    if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+                        // If selection is lost or collapsed, hide all toolbars
+                        App.ui.hideSelectionToolbar();
+                        App.ui.aiMagic.hide();
+                        return;
                     }
-                }, 10); 
+
+                    const range = selection.getRangeAt(0);
+                    const container = range.commonAncestorContainer;
+                    const parentElement = container.nodeType === 3 ? container.parentNode : container;
+
+                    // Ensure the selection is within our main editor
+                    const editor = document.getElementById('article-content');
+                    if (!editor || !editor.contains(parentElement) || !editor.isContentEditable) {
+                        return;
+                    }
+
+                    // Check if the selection is purely whitespace
+                    if (selection.toString().trim() === '') {
+                        App.ui.hideSelectionToolbar();
+                        App.ui.aiMagic.hide();
+                        return;
+                    }
+
+                    // Show the standard formatting toolbar
+                    App.ui.showSelectionToolbar(range);
+
+                    // Show our new AI Magic Toolbox
+                    App.ui.aiMagic.show(range);
+
+                }, 10);
             },
 
             applyFormatting(type, value) {
@@ -13155,57 +13841,89 @@
                 },
 
                 async executeKashAsk(prompt) {
-                        if (!prompt) {
-                            App.ui.showToast("Please provide a question for the AI.", "warning");
-                            return;
-                        }
+                    if (!prompt) {
+                        App.ui.showToast("Please provide a question for the AI.", "warning");
+                        return;
+                    }
 
-                        const systemPrompt = `You are an intelligent assistant integrated into the 'NoteKash' note-taking app. Your primary function is to answer user prompts and, when requested, wrap the answer in one of NoteKash's special components.
+                    const systemPrompt = `You are 'Kash, the Content Architect,' an expert AI integrated into the NoteKash app. Your mission is to analyze the user's context (the article and any selected text) and their prompt, adopt the persona of a subject matter expert, to write most reliable and meaningful response to Query. Then Act as content architect to generate a beautiful, structured, and aesthetic response using the best components from your HTML Toolkit.
 
-                    **Your Component Toolkit:**
+                        **MANDATORY Core Logic Flow (Synthesis Model):**
 
-                    1.  **Textile:** For a single, focused piece of information.
-                        * **Triggers:** "add a textile", "put in a box", "make a tile".
-                        * **HTML Structure:** \`<div class="nk-text-tile color-default" contenteditable="false"><span class="nk-text-tile-icon">💡</span><div class="nk-text-tile-content" contenteditable="true">YOUR_ANSWER_HERE</div></div>\`
+                        1.  **Analyze the User's Goal:** First, understand the core question in the [User Prompt]. What is the user's primary intent? what he wants from you? Does he mention his answer to be in any particular format/template?
 
-                    2.  **Accordion:** For Q&A or collapsible content.
-                        * **Triggers:** "add an accordion", "make a toggle", "create a Q&A".
-                        * **HTML Structure:** \`<div class="nk-accordion" data-state="open"><div class="nk-accordion-trigger"><span class="nk-accordion-title" contenteditable="true"><b>USER_QUESTION_HERE</b></span>...</div><div class="nk-accordion-content" contenteditable="true"><p>YOUR_ANSWER_HERE</p></div></div>\`
+                        2.  **Analyze Provided Context:** Second, review the provided [Article Content]. Does it contain information directly relevant to the user's question?
 
-                    3.  **Table:** For structured data.
-                        * **Triggers:** "create a table", "in a table format", "add a table".
-                        * **Action:** Generate a standard HTML \`<table>\` with headers (\`<th>\`) and rows (\`<td>\`). Use \`<b>\` tags for emphasis within cells.
+                        3.  **Synthesize and Respond (CRITICAL):**
+                            * IMPORTANT: In both "if and else" cases remember You MUST ALWAYS Act as Subject Matter Expert (SME) (e.g an elite economist for finance, a Indian Historian for Gupta Empire, An Polity Expert for Consitution, Top notch Financial advisor for Mutual funds etc.) So you inshort develop the most relevant and Best Persona according to what is being Asked to Answer in precise, authoritative, logical, purposeful and contextually appropriate manner, reflecting the depth of your knowledge and experience in that domain
+                            * **IF the user's question is general knowledge** (e.g., "What happens when we die?", "Explain quantum physics") and is unrelated to the [Article Content], you MUST answer using your own vast, general knowledge base. Do NOT mention the article's context if it's irrelevant.
+                            * **ELSE (if the question IS related to the context):** You MUST formulate a comprehensive answer by intelligently combining your own expert knowledge with the specific details, facts, and nuances found in the [Article Content]. This creates a richer, more personalized response.
+                           
+                        4.  **Format the Output:** After formulating your expert answer, act as a 'Content Architect'. Choose the single best component from your HTML toolkit to present the information in the most beautiful and effective way.
+                        **Core Principle: Text Styling**
+                        This is critical for readability. In ALL your responses, you MUST use \`<b>\` tags to bolden the most important keywords, names, dates, and facts. Use \`<em>\` (italic) for secondary emphasis. This makes notes visually aesthetic an skimmable.
 
-                    4.  **Colored Text:** For styled paragraphs.
-                        * **Triggers:** "in red text", "in green", "in blue color", "in magenta".
-                        * **Classes:** \`text-red\`, \`text-green\`, \`text-blue\`, \`text-magenta\`.
-                        * **HTML Structure:** \`<p class="CLASS_NAME_HERE">YOUR_ANSWER_HERE</p>\`
+                        **Your Component Toolkit to USE (Must Use):**
 
-                    5.  **Default (Blockquote):** The fallback for any general question.
-                        * **HTML Structure:** \`<blockquote><p>YOUR_ANSWER_HERE</p></blockquote>\`
+                        1.  **Accordion (\`<div class="nk-accordion">\`):**
+                            * **Use Case:** Your primary tool for any explicit or implicit Question & Answer. If the user asks "What is...", "How does...", or "Explain...", this is almost always the best choice.
+                            * **HTML:** \`<div class="nk-accordion" data-state="open"><div class="nk-accordion-trigger"><span class="nk-accordion-title"><b>USER_QUESTION_HERE</b></span>...</div><div class="nk-accordion-content"><p>YOUR_ANSWER_HERE</p></div></div>\`
 
-                    **Your Task & Logic Flow (If-Else Logic):**
+                        2.  **Decktile with Text Tiles (\`<div class="nk-textile-deck">\`):**
+                            * **Use Case:** Use this to group several related, short pieces of information. Excellent for listing key features, components, or related concepts (e.g., "list the types of...", "what are the main pillars of...").
+                            * **HTML:** \`<div class="nk-textile-deck" contenteditable="false"><div class="nk-text-tile color-1">...</div><div class="nk-text-tile color-2">...</div></div>\`
 
-                    1.  Analyze the user's prompt to identify their **core question** and any requested **component** or **style**.
-                    2.  **IF** the user requests a 'textile', 'accordion', or 'table', generate the answer and wrap it in that component's exact HTML structure.
-                    3.  **ELSE IF** the user requests a specific 'text color' (e.g., "in red text"), generate the answer and wrap it in a \`<p>\` tag with the corresponding class (e.g., \`class="text-red"\`).
-                    4.  **ELSE** (for all other general questions without formatting requests), generate the answer and wrap it in the default \`<blockquote>\`.
+                        3.  **Textile (\`<div class="nk-text-tile">\`):**
+                            * **Use Case:** Use sparingly for a single, high-impact fact, definition, or key takeaway that needs to stand out on its own.
+                            * **HTML:** \`<div class="nk-text-tile color-default"><span class="nk-text-tile-icon">💡</span><div class="nk-text-tile-content">YOUR_ANSWER_HERE</div></div>\`
 
-                    **Final Rules:**
-                    * Respond ONLY with the final, complete HTML snippet.
-                    * Do NOT use markdown like \`**\` for bolding. Use \`<b>\` tags inside your HTML.
-                    * Do not add any conversational filler, greetings, or explanations outside of the HTML you generate.`;
+                        4.  **Table (\`<table>\`):**
+                            * **Use Case:** When the user asks for a comparison, a list of items with multiple properties, or structured data (e.g., "list the pros and cons", "table of planets and their moons").
+                            * **Action:** Generate a standard HTML \`<table>\` with \`<th>\` headers.
 
-                        const result = await App.services.ai.queryGenerativeAI(systemPrompt, prompt);
+                        5.  **Bulleted/Numbered List (\`<ul>\`/\`<ol>\`):**
+                            * **Use Case:** When the user asks to "list the steps", "outline the reasons", or any request for multiple distinct points where a table is overly complex.
 
-                        if (result && result.trim()) {
-                            const answerHtml = result.trim().replace(/^```(html)?\n?/, '').replace(/\n?```$/, '') + '<p><br></p>';
-                            document.execCommand('insertHTML', false, answerHtml);
-                            App.state.isArticleDirty = true;
+                        6.  **Default (Blockquote):**
+                            * **Use Case:** Your fallback for general statements, opinions, or when no other component fits perfectly.
+                            * **HTML:** \`<blockquote><p>YOUR_ANSWER_HERE</p></blockquote>\`
+                            
+                        7.  **Colored Text:** For styled sentences and short paragraphs (for most important sentences and parts of our content).
+                            * **Triggers:** "in red text", "in green", "in blue color", "in magenta".
+                            * **Classes:** \`text-red\`, \`text-green\`, \`text-blue\`, \`text-magenta\`.
+                            * **HTML Structure:** \`<p class="CLASS_NAME_HERE">YOUR_ANSWER_HERE</p>\`
+
+                        **Final Rules (CRITICAL):**
+                        * Respond ONLY with the final, complete HTML snippet.
+                        * Do NOT include any conversational filler, greetings, or explanations outside of the HTML you generate.`;
+
+                    const result = await App.services.ai.queryGenerativeAI(systemPrompt, prompt);
+
+                    if (result && result.trim()) {
+                        const answerHtml = result.trim().replace(/^```(html)?\n?/, '').replace(/\n?```$/, '');
+                        
+                        // --- Smart Insertion Logic ---
+                        const selection = window.getSelection();
+                        if (selection && selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+                            const container = range.commonAncestorContainer;
+                            const parentBlock = (container.nodeType === 3 ? container.parentElement : container)
+                                .closest('p, li, h1, h2, h3, h4, h5, h6, blockquote, div');
+
+                            if (parentBlock && document.getElementById('article-content').contains(parentBlock)) {
+                                parentBlock.insertAdjacentHTML('afterend', answerHtml);
+                            } else {
+                                document.execCommand('insertHTML', false, answerHtml);
+                            }
                         } else {
-                            App.ui.showToast("The AI did not provide an answer. Please try again.", "warning");
+                            document.execCommand('insertHTML', false, answerHtml);
                         }
-                    },
+                        
+                        App.state.isArticleDirty = true;
+                    } else {
+                        App.ui.showToast("The AI did not provide an answer. Please try again.", "warning");
+                    }
+                },
 
                 async executeKashTranslate(language) {
                     const selection = window.getSelection();
@@ -13902,6 +14620,8 @@
                         App.ui.showToast("AI could not generate a mnemonic. Please try again.", "warning");
                     }
                 },
+
+                
 
                 async executeKashAccordion() {
                     const contentDiv = document.getElementById('article-content');
@@ -19250,6 +19970,7 @@
                     { id: 'fontsize', title: 'Set Font Size', desc: 'e.g., fontsize 24, fontsize large', icon: 'Aa' },
                     { id: 'fontfamily', title: 'Set Font Family', desc: 'e.g., fontfamily serif', icon: 'Ab' },
                     //--- AI Tools ---
+                    { id: 'aimagic', title: 'Open AI Magic', desc: 'Access the AI Co-Pilot modal for quick commands', icon: '💎', execute: () => App.ui.aiMagicModal.open() },
                     { id: 'kashsummary', title: 'Kash Summary', desc: 'Generate an AI summary of the current note', icon: '✨', execute: () => App.events.ai.executeKashSummary(), isPremium: true },
                     { id: 'kashflash', title: 'Kash Flash', desc: 'Generate cloze flashcards from selected text', icon: '📇', selection: true, execute: () => App.events.ai.executeKashFlash() },
                     { id: 'kashwriting', title: 'Kash Writing', desc: 'Improve the writing of the selected text', icon: '✍️', selection: true, execute: () => App.events.ai.executeImproveWriting(), isPremium: true },
@@ -24883,7 +25604,7 @@
                     return;
                 }
 
-                this.results = [{ type: 'suggestion', displayText: 'KashAI is thinking...', categoryText: 'Please wait a moment.' }];
+                this.results = [{ type: 'suggestion', displayText: 'Your Second Brain is thinking...', categoryText: 'Please wait a moment.' }];
                 this._renderResults(this.results);
 
                 try {
@@ -24957,9 +25678,10 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         App.init();
+        App.globalSearch.init();
         App.commandPalette.init();
         App.coPilot.init();
-        App.globalSearch.init(); // Initialize our new search module
+        App.ui.aiMagic.init();
     });
 
     
