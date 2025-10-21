@@ -26,7 +26,7 @@
     <script type="module" src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mozilla/readability@0.5.0/Readability.min.js"></script>
-
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
 
 
     <style>
@@ -1127,6 +1127,21 @@
             gap: 4px; 
         }
 
+        /* --- NEW: Consistent Slider Control Styling --- */
+        .slider-control-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .slider-control-wrapper input[type="range"] {
+            flex-grow: 1;
+        }
+        .slider-control-wrapper span {
+            min-width: 50px; /* Prevents layout shifts as value changes */
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
         /* --- Polished Button Styles within the Toolbar --- */
         .article-controls .btn-icon {
             width: 40px;
@@ -1349,13 +1364,21 @@
             transition: all 0.2s ease-out 0.5s;
             transition-property: visibility, opacity, transform;
         }
-        #list-group:hover .list-popover {
+        .list-toolbar-group:hover .list-popover {
             visibility: visible;
             opacity: 1;
             transform: translateX(-50%) translateY(0);
             transition-delay: 0s;
         }
+        /* --- NEW: Compact Image Toolbar Styles --- */
+        #image-toolbar .toolbar-wrapper {
+            padding: 4px; /* Reduced padding for a tighter fit */
+        }
 
+        #image-toolbar .btn-icon {
+            width: 36px; /* Slightly smaller icons */
+            height: 36px;
+        }
         /* Changes for Toolbar B,I,U */
         .format-toolbar-group {
             position: relative;
@@ -7199,6 +7222,7 @@
                 studySessionSize: 25,
                 studyCardFontSize: '1.6rem',
                 jpegQuality: 0.9,
+                ocrThreshold: 128,
                 audioBitrate: 32000,
                 pdfTextViewFontSize: '1.1rem',
                 pdfTextViewTheme: 'default',
@@ -10178,23 +10202,34 @@
         showImageToolbar(imageContainer) {
             const toolbar = document.getElementById('image-toolbar');
             const isHighlighted = imageContainer.classList.contains('highlighted-image');
-            const isWriteMode = App.state.currentMode === 'write'; // Check the current mode
+            const isWriteMode = App.state.currentMode === 'write';
 
-      
+            const toolsPopover = `
+                <div class="list-toolbar-group" id="image-tools-group">
+                    <button class="btn-icon" title="More Image Tools" aria-label="More image tools">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    <div class="list-popover">
+                        <button class="btn-icon ${!App.license.isPremium() ? 'premium-feature-locked' : ''}" title="Extract Text from Image (OCR)" onmousedown="event.preventDefault(); if (App.license.isPremium()) App.services.image.runOCR(); else App.ui.showAscensionModal();">
+                            <i class="fa-solid fa-file-pen"></i>
+                        </button>
+                        <button class="btn-icon" title="Copy Image" onmousedown="event.preventDefault(); App.services.image.copy(App.state.selectedImageContainer);">${App.util.icons.copy}</button>
+                        <button class="btn-icon" title="Reset Size" onmousedown="event.preventDefault(); App.events.handleImageAlignment('reset-size');">${App.util.icons.reset}</button>
+                        ${isWriteMode ? `<button class="btn-icon" title="Delete Image" onmousedown="event.preventDefault(); App.services.image.delete(App.state.selectedImageContainer);">${App.util.icons.trash}</button>` : ''}
+                    </div>
+                </div>
+            `;
+
             const toolbarButtons = `
                 <button class="btn-icon" title="Align Left" onmousedown="event.preventDefault(); App.events.handleImageAlignment('align-left');">${App.util.icons.alignLeft}</button>
                 <button class="btn-icon" title="Align Center" onmousedown="event.preventDefault(); App.events.handleImageAlignment('align-center');">${App.util.icons.alignCenter}</button>
                 <button class="btn-icon" title="Align Right" onmousedown="event.preventDefault(); App.events.handleImageAlignment('align-right');">${App.util.icons.alignRight}</button>
                 <div class="control-divider"></div>
                 <button class="btn-icon" title="Highlight Image" onmousedown="event.preventDefault(); App.events.highlightImage();" style="color: ${isHighlighted ? 'var(--primary-color)' : 'inherit'}">${isHighlighted ? App.util.icons.star : App.util.icons.starOutline}</button>
-                <button class="btn-icon" title="Copy Image" onmousedown="event.preventDefault(); App.services.image.copy(App.state.selectedImageContainer);">${App.util.icons.copy}</button>
                 <button class="btn-icon" title="View Fullscreen" onmousedown="event.preventDefault(); App.ui.imageLightbox.open(App.state.selectedImageContainer);">${App.util.icons.expand}</button>
-
-                ${isWriteMode ? `
-                    <button class="btn-icon" title="Add/Edit Caption" onmousedown="event.preventDefault(); App.events.addImageCaption();">${App.util.icons.caption}</button>
-                    <button class="btn-icon" title="Delete Image" onmousedown="event.preventDefault(); App.services.image.delete(App.state.selectedImageContainer);">${App.util.icons.trash}</button>
-                ` : ''}
-                <button class="btn-icon" title="Reset Size" onmousedown="event.preventDefault(); App.events.handleImageAlignment('reset-size');">${App.util.icons.reset}</button>
+                ${isWriteMode ? `<button class="btn-icon" title="Add/Edit Caption" onmousedown="event.preventDefault(); App.events.addImageCaption();">${App.util.icons.caption}</button>` : ''}
+                <div class="control-divider"></div>
+                ${toolsPopover}
             `;
 
             toolbar.innerHTML = `<div class="toolbar-wrapper">${toolbarButtons}</div>`;
@@ -10887,6 +10922,7 @@
                 const currentSize = parseFloat(App.settings.get('fontSize'));
                 const currentLineHeight = App.settings.get('lineHeight');
                 const currentOpacity = App.settings.get('uiOpacity');
+                const ocrThreshold = App.settings.get('ocrThreshold') || 128; // NEW
                 const customThemeBase = App.settings.get('customThemeBase');
                 const isMobileViewEnabled = App.settings.get('mobileViewEnabled');
                 const mobileViewLabel = isMobileViewEnabled ? 'Switch to Desktop View' : 'Switch to Mobile View';
@@ -10895,7 +10931,7 @@
 
                 const modalHTML = `
                 <div class="modal-backdrop" onclick="if(event.target === this) App.ui.closeModal()">
-                    <div class="modal-content ui-card" style="max-width: 550px;" onclick="event.stopPropagation()">
+                    <div class="modal-content ui-card" style="max-width: 600px;" onclick="event.stopPropagation()">
                         <h3 style="text-align: center;">Appearance</h3>
                         
                         <div class="settings-section">
@@ -10928,16 +10964,26 @@
                             <div class="settings-grid">
                                 <label for="font-family-select">Font Family</label>
                                 <select id="font-family-select" class="btn btn-secondary">${fontOptions}</select>
-                                <div class="control-span"><label for="font-size-slider">Font Size</label><input type="range" id="font-size-slider" min="0.8" max="2.2" step="0.1" value="${currentSize}"><span id="font-size-value">${currentSize}rem</span></div>
-                                <div class="control-span"><label for="line-height-slider">Line Spacing</label><input type="range" id="line-height-slider" min="1.4" max="2.2" step="0.1" value="${currentLineHeight}"><span id="line-height-value">${currentLineHeight}</span></div>
+                                
+                                <div class="settings-label" title="Controls the default text size within notes."><b>Font Size</b></div>
+                                <div class="slider-control-wrapper"><input type="range" id="font-size-slider" min="0.8" max="2.2" step="0.05" value="${currentSize}"><span id="font-size-value">${currentSize.toFixed(2)}rem</span></div>
+
+                                <div class="settings-label" title="Adjusts the vertical spacing between lines of text for better readability."><b>Line Spacing</b></div>
+                                <div class="slider-control-wrapper"><input type="range" id="line-height-slider" min="1.4" max="2.2" step="0.05" value="${currentLineHeight}"><span id="line-height-value">${currentLineHeight}</span></div>
                             </div>
                         </div>
                         
                         <div class="settings-section">
-                             <h4><i class="fa-solid fa-sliders"></i> UI Edit</h4>
+                             <h4><i class="fa-solid fa-sliders"></i> UI & Image Settings</h4>
                              <div class="settings-grid">
-                                <div class="control-span"><label for="opacity-slider">UI Opacity</label><input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="${currentOpacity}"><span id="opacity-value">${Math.round(currentOpacity * 100)}%</span></div>
-                                <div class="control-span"><label for="image-quality-slider">Import Image Quality</label><input type="range" id="image-quality-slider" min="0.1" max="1" step="0.05" value="${App.settings.get('jpegQuality')}"><span id="image-quality-value">${Math.round(App.settings.get('jpegQuality') * 100)}%</span></div>
+                                <div class="settings-label" title="Adjusts the transparency of UI elements like modals and toolbars. Set to 0% for a fully transparent look."><b>UI Opacity</b></div>
+                                <div class="slider-control-wrapper"><input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="${currentOpacity}"><span id="opacity-value">${Math.round(currentOpacity * 100)}%</span></div>
+
+                                <div class="settings-label" title="Controls the compression level for pasted or dropped images. Lower quality means smaller file sizes."><b>Import Image Quality</b></div>
+                                <div class="slider-control-wrapper"><input type="range" id="image-quality-slider" min="0.1" max="1" step="0.05" value="${App.settings.get('jpegQuality')}"><span id="image-quality-value">${Math.round(App.settings.get('jpegQuality') * 100)}%</span></div>
+                                
+                                <div class="settings-label" title="Adjusts the black/white contrast for OCR. Higher values work for light text on dark backgrounds; lower values for dark text on light backgrounds."><b>OCR Contrast</b></div>
+                                <div class="slider-control-wrapper"><input type="range" id="ocr-threshold-slider" min="50" max="200" step="1" value="${ocrThreshold}"><span id="ocr-threshold-value">${ocrThreshold}</span></div>
                             </div>
                         </div>
                         
@@ -10965,6 +11011,7 @@
                 document.getElementById('opacity-slider').addEventListener('input', App.events.changeUiOpacity);
                 document.getElementById('mobile-view-toggle').addEventListener('click', App.events.toggleMobileView);
                 document.getElementById('image-quality-slider').addEventListener('input', App.events.changeImageQuality);
+                document.getElementById('ocr-threshold-slider').addEventListener('input', App.events.changeOcrThreshold); // NEW
                 document.getElementById('change-bg-btn').addEventListener('click', () => App.events.triggerBgImageUpload());
             },
 
@@ -15847,6 +15894,16 @@
                 document.getElementById('image-quality-value').textContent = `${Math.round(quality * 100)}%`;
                 App.settings.set('jpegQuality', parseFloat(quality));
             },
+            
+            changeOcrThreshold(e) {
+                const threshold = e.target.value;
+                const valueDisplay = document.getElementById('ocr-threshold-value');
+                if (valueDisplay) {
+                    valueDisplay.textContent = threshold;
+                }
+                App.settings.set('ocrThreshold', parseInt(threshold, 10));
+            },
+
             showTagModal(tag) {
                 const articlesWithTag = App.state.articles.filter(a => a.tags && a.tags.includes(tag)).sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
                 const tagDisplayName = App.state.tags[tag]?.displayName || tag;
@@ -17636,7 +17693,6 @@
             },
             image: {
                 async processAndInsert(file) {
-                    // Size check is performed first, providing an immediate failure message if needed.
                     if (file.size > App.config.image.maxUploadSize) {
                         App.ui.showToast(`Image exceeds max size of ${App.config.image.maxUploadSize / 1024 / 1024}MB`, { type: 'error' });
                         return;
@@ -17690,6 +17746,99 @@
                     }
                 },
 
+                async runOCR() {
+                    const imageContainer = App.state.selectedImageContainer;
+                    if (!imageContainer) return;
+                    const img = imageContainer.querySelector('img');
+                    if (!img || !img.src) {
+                        App.ui.showToast('Image source not found.', { type: 'error' });
+                        return;
+                    }
+
+                    if (typeof Tesseract === 'undefined') {
+                        App.ui.showToast('OCR library is not loaded. Please check your internet connection.', 'error');
+                        return;
+                    }
+
+                    let ocrToastId = App.ui.showToast('Preprocessing image...', { type: 'info', duration: 0 });
+
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+                        const imageToProcess = new Image();
+                        imageToProcess.crossOrigin = "Anonymous"; 
+                        
+                        await new Promise((resolve, reject) => {
+                            imageToProcess.onload = resolve;
+                            imageToProcess.onerror = reject;
+                            imageToProcess.src = img.src;
+                        });
+
+                        canvas.width = imageToProcess.width;
+                        canvas.height = imageToProcess.height;
+                        ctx.drawImage(imageToProcess, 0, 0);
+
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const data = imageData.data;
+
+                        const threshold = App.settings.get('ocrThreshold') || 128; // A good starting point, can be made adjustable
+                        for (let i = 0; i < data.length; i += 4) {
+                            // Grayscale conversion using luminance formula
+                            const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                            const color = luminance < threshold ? 0 : 255; // Apply threshold
+                            data[i] = data[i + 1] = data[i + 2] = color;
+                        }
+                        ctx.putImageData(imageData, 0, 0);
+
+                        App.ui.updateToast(ocrToastId, 'Initializing OCR engine...');
+
+                        const worker = await Tesseract.createWorker('eng', 1, {
+                            logger: m => {
+                                if (m.status === 'recognizing text') {
+                                    const progress = (m.progress * 100).toFixed(0);
+                                    App.ui.updateToast(ocrToastId, `Recognizing text... ${progress}%`);
+                                } else if (m.status !== 'initializing tesseract') {
+                                    // Avoid showing less useful intermediate statuses
+                                    App.ui.updateToast(ocrToastId, `Status: ${m.status}`);
+                                }
+                            }
+                        });
+                        
+                        // RATIONALE: We now pass the preprocessed canvas to Tesseract, not the original image.
+                        const { data: { text } } = await worker.recognize(canvas);
+                        await worker.terminate();
+                        App.ui.hideToast(ocrToastId);
+
+                        if (!text.trim()) {
+                            App.ui.showToast('No text could be extracted from this image.', 'warning');
+                            return;
+                        }
+
+                        const ocrHtml = `
+                            <blockquote>
+                                <p>${App.util.escapeHtml(text)}</p>
+                                <footer><small>— Text extracted from image</small></footer>
+                            </blockquote>
+                            <p><br></p>`;
+
+                        const imageParentBlock = imageContainer.closest('p');
+                        if (imageParentBlock) {
+                            imageParentBlock.insertAdjacentHTML('afterend', ocrHtml);
+                            App.state.isArticleDirty = true;
+                            App.ui.showToast('Text extracted and added to note!', 'success');
+                        } else {
+                            document.execCommand('insertHTML', false, ocrHtml);
+                            App.state.isArticleDirty = true;
+                        }
+
+                    } catch (error) {
+                        if (ocrToastId) App.ui.hideToast(ocrToastId);
+                        console.error('Tesseract.js OCR Error:', error);
+                        App.ui.showToast('Could not perform OCR. Check console for details.', 'error');
+                    }
+                },
+    
                 copy(imageContainer) {
                     if (!imageContainer) return;
                     const img = imageContainer.querySelector('img');
