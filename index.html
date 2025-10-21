@@ -15865,17 +15865,35 @@
                 async executeFixGrammar() {
                     const selection = window.getSelection();
                     const selectedText = selection.toString().trim();
-                    if (!selectedText) { App.ui.showToast("No text selected.", "warning"); return; }
-
-                    const systemPrompt = "You are a meticulous proofreader. Correct any spelling mistakes and grammatical errors in the following text. Respond only with the corrected text, without any explanations.";
-                    const result = await App.services.ai.queryGenerativeAI(systemPrompt, selectedText);
-
-                    if (result) {
-                        const cleanedText = result.trim().replace(/^```(\w+\n)?/, '').replace(/\n?```$/, '');
-                        document.execCommand('insertHTML', false, App.util.escapeHtml(cleanedText));
-                        App.ui.showToast("Grammar fixed!", "success");
+                    if (!selectedText) {
+                        App.ui.showToast("Please select text to fix and restructure.", "warning");
+                        return;
                     }
-                }
+
+                    const systemPrompt = `You are an expert editor and communication specialist. Your task is to perform two critical actions on the user's selected text:
+                        1.  **Correct:** Meticulously fix all spelling mistakes, grammatical errors, vocabulary issue and punctuation issues.
+                        2.  **Restructure for Clarity:** Rewrite the corrected text into logical, short, meaningful and easy-to-read paragraph.
+
+                        **CRITICAL RULES:**
+                        - You MUST preserve the original meaning and all information from the source text. Do not add or remove facts.
+                        - Your response MUST BE ONLY the final, rewritten text formatted into clean HTML paragraph or paragraphs (if its too long).
+                        - If selected text has few sentence make a logical paragaph, if it has many sentences you can write in paragraphs too according to what content demands.
+                        - Your code will be used as replacement to selected text so, Do NOT include any conversational filler, explanations, or markdown code fences.`;
+
+                    const toastId = App.ui.showToast('🤖 AI is improving your text...', { type: 'info', duration: 0 });
+                    const result = await App.services.ai.queryGenerativeAI(systemPrompt, selectedText);
+                    App.ui.hideToast(toastId);
+
+                    if (result && result.trim()) {
+                        const resultHtml = result.trim().replace(/^```(html)?\n?/, '').replace(/\n?```$/, '');
+                        
+                        document.execCommand('insertHTML', false, resultHtml);
+                        App.ui.showToast("Text fixed and restructured!", "success");
+                        App.state.isArticleDirty = true;
+                    } else {
+                        App.ui.showToast("AI could not process the text. Please try again.", "warning");
+                    }
+                },
 
             },
 
