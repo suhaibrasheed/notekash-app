@@ -530,17 +530,17 @@
         }
         .category-pill {
             padding: 4px 12px;
-            border-radius: 9999px; /* Perfect pill shape */
-            font-weight: 600; /* Slightly bolder for better readability */
-            font-size: 0.8rem; /* Corrected from 0.85rem for consistency */
-            color: var(--category-pill-text); /* Use our new dedicated variable */
+            border-radius: 9999px; 
+            font-weight: 600; 
+            font-size: 0.9rem; 
+            color: var(--category-pill-text); 
             display: inline-flex;
             align-items: center;
             white-space: nowrap;
-            transition: background-color 0.2s ease-in-out; /* Smooth color transitions */
+            transition: background-color 0.2s ease-in-out; 
         }
+         
                 
-        
         #install-pwa-btn { display: none; }
         .welcome-container { text-align: center; max-width: 600px; margin: 5rem auto; padding: 2rem; }
         .welcome-actions { display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-top: 1rem; }
@@ -574,8 +574,8 @@
         }
         .search-bar-container svg { position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: var(--text-secondary); }
         #search-hint { font-size: 0.8rem; color: var(--text-secondary); height: 1.2em; text-align: left; padding-left: 8px; margin-top: 4px; }
-        .category-filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: -6px; }
-        .category-chip { padding: 8px 16px; border-radius: 18px; font-size: 0.9rem; font-weight: 600; border: 1px solid transparent; cursor: pointer; transition: all 0.2s; }
+        .category-filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: -6px; align-items: center; }
+        .category-chip { padding: 4px 12px; border-radius: 18px; font-size: 0.9rem; font-weight: 600; border: 1px solid transparent; cursor: pointer; transition: all 0.2s; }
         .category-chip:hover { transform: translateY(-2px); box-shadow: var(--shadow); filter: brightness(1.1); }
         /* NEW: Unified styling for All, Tags, & Flash buttons (Gradient Text) */
         .category-action-btn {
@@ -587,7 +587,7 @@
             font-weight: 700;
             transition: all 0.2s ease-in-out;
         }
-
+        
         .category-action-btn:hover {
             border-color: rgba(0, 0, 0, 0.25);
             box-shadow: 0 0 15px rgba(var(--primary-color-rgb), 0.4);
@@ -607,7 +607,13 @@
             background-color: var(--primary-color) !important; /* Use !important to override inline styles */
             color: var(--text-on-primary) !important;
         }
-                        
+        /* FIX: Unify all category filter button heights */
+        .category-filters .category-chip,
+        .category-filters .category-pill {
+            padding: 8px 14px; 
+            font-size: 1rem;  
+            height: auto;    
+        }            
 
 
         #article-grid-container { position: relative; min-height: 40vh; }
@@ -2698,7 +2704,7 @@
         .category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.75rem;}
         .category-section-container { background-color: var(--bg-primary); padding: 0.5rem 1.5rem 1.5rem 1.5rem; border-radius: var(--border-radius-lg); margin-top: 1rem; }
         .category-grid .category-card { padding: 0.85rem 1.15rem; }
-        .category-grid .category-pill { padding: 6px 14px; font-size: 0.85rem; }
+        .category-grid .category-pill { padding: 6px 12px; font-size: 0.9rem; }
         .category-card { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-secondary); padding: 1rem 1.25rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); transition: var(--transition-fast); }
         .category-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
         .category-card-info { display: flex; align-items: center; gap: 12px; }
@@ -7032,24 +7038,6 @@
 
                 const savedToken = App.settings.get('licenseToken');
 
-
-                if (savedToken === 'testingnow') {
-                    this.state.token = 'testingnow';
-                    this.state.isPremium = true;
-                    this.state.tier = 'Diamond';
-                    this.state.userName = 'Developer';
-                    // Set an expiry date far in the future for testing purposes
-                    const futureDate = new Date();
-                    futureDate.setFullYear(futureDate.getFullYear() + 10);
-                    this.state.expiry = futureDate.toISOString();
-
-                    // Bypass the rest of the validation logic
-                    this.updateUIAfterStateChange();
-                    return;
-                }
-
-
-
                 if (savedToken) {
                     try {
                         const payload = JSON.parse(atob(savedToken.split('.')[1]));
@@ -7107,7 +7095,7 @@
         // 3.1. CONFIGURATION
         // ==========================================================================
         config: {
-            categories: ["General", "Geography", "History", "Society", "Polity", "Security", "Science", "Ecology", "Economy", "Essay", "Ethics", "Opinion", "Misc", "X", "Y", "Z"],
+            categories: ["General", "Geography", "History", "Society", "Polity", "Security", "Science", "Ecology", "Economy", "Essay", "Ethics", "Opinion", "Misc"],
             highlightClasses: ['highlight-1', 'highlight-2', 'highlight-3', 'highlight-4', 'highlight-5', 'highlight-6', 'highlight-7'],
             textClasses: ['text-red', 'text-green', 'text-blue', 'text-magenta'],
             colorCycle: ['highlight-1', 'highlight-2', 'highlight-3', 'highlight-4', 'highlight-5', 'highlight-6', 'highlight-7', 'text-red', 'text-green', 'text-blue', 'text-magenta'],
@@ -7283,6 +7271,7 @@
                 categoryLayout: 'list',
                 categoryHighlightsVisible: true,
                 libraryTitle: 'My Library', 
+                categoryNameStyle: 'full',
                 focusModeFontSize: '1.1rem', 
                 theme: 'light',
                 readerTheme: 'default',
@@ -8275,9 +8264,37 @@
                     data: `'${catObj.name}'`
                 }));
 
-                const allCategoryButtons = [...mainCategories, ...otherCategories];
+                const nameStyle = App.settings.get('categoryNameStyle') || 'full';
 
-                // NEW: Get the custom or default library title
+                // --- NEW: Theme-aware icon selection logic ---
+                const currentTheme = App.settings.get('theme');
+                const customBase = App.settings.get('customThemeBase');
+                let toggleIcon;
+
+                switch (currentTheme) {
+                    case 'sepia':
+                        toggleIcon = '🟤';
+                        break;
+                    case 'dark':
+                        toggleIcon = '🟠';
+                        break;
+                    case 'custom':
+                        // Use specific icons based on the custom theme's base
+                        toggleIcon = (customBase === 'dark') ? '🟠' : '🟢';
+                        break;
+                    case 'light':
+                    default:
+                        toggleIcon = '🟢';
+                        break;
+                }
+
+                const toggleButtonHTML = `
+                    <button class="category-chip category-action-btn" id="category-name-toggle" title="Toggle Category Name Length" onclick="App.events.toggleCategoryNameStyle()">
+                        ${toggleIcon}
+                    </button>
+                `;
+
+                const allCategoryButtons = [...mainCategories, ...otherCategories];
                 const libraryTitle = App.util.escapeHtml(App.settings.get('libraryTitle') || 'My Library');
 
                 container.innerHTML = `
@@ -8300,11 +8317,10 @@
                             </select>
                         </div>
                         <div class="category-filters">
-                            
+                            ${toggleButtonHTML}
                             ${allCategoryButtons.map(cat => {
                              
                                 let className, style = '', buttonText, titleText;
-
                                 titleText = (cat.name === 'Tags' || cat.name === 'Flashcards') ? cat.name : App.util.getCategoryDisplayName(cat.name);
 
                                 if (cat.name === 'Tags') {
@@ -8318,7 +8334,7 @@
                                     const backgroundColor = `var(--cat-color-${cat.colorIndex}-bg)`;
                                     const textColor = `var(--category-pill-text)`;
                                     style = `style="background-color: ${backgroundColor}; color: ${textColor};"`;
-                                    buttonText = titleText.substring(0, 4); // Use the shortened display name for the button face
+                                    buttonText = (nameStyle === 'full') ? titleText : titleText.substring(0, 4);
                                 }
 
                                 return `<button class="${className}" ${style} onclick="App.router.navigateTo('${cat.action}', ${cat.data})" title="${titleText}">${buttonText}</button>`;
@@ -8439,32 +8455,28 @@
                         </div>`;
                 }
 
-
-                finalHTML += articlesToDisplay.map(article => this.getArticleCardHTML(article)).join('');
-
-                if (articlesToDisplay.length === 0) {
+                if (articlesToDisplay.length > 0) {
+                    finalHTML += articlesToDisplay.map(article => this.getArticleCardHTML(article)).join('');
+                } 
+                else {
                     if (App.state.articles.length === 0) {
-                        grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">
+                        finalHTML += `<div class="empty-state" style="grid-column: 1 / -1;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"/><path d="M12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
                             <h3>Your Second Brain Awaits!</h3>
                             <p>Click the <strong>+</strong> button in the top right to create your first note.</p>
                         </div>`;
                     } else {
-                        grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><h3>Ouch, No Results Found</h3><p>Try a different title, tag, or filter combination.</p></div>`;
+                        finalHTML += `<div class="empty-state" style="grid-column: 1 / -1;"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><h3>Ouch, No Results Found</h3><p>Try a different title, tag, or filter combination.</p></div>`;
                     }
-                } else {
-                    grid.innerHTML = finalHTML;
                 }
+                grid.innerHTML = finalHTML;
 
                 const visibleCards = Array.from(grid.querySelectorAll('.article-card:not(.library-premium-card)'));
-
                 const shouldHighlight = !!currentSearchTerm || readCountFilter !== null || !!categoryMatch;
                 visibleCards.forEach(card => card.classList.toggle('search-highlight-card', shouldHighlight));
                 document.querySelectorAll('.search-selected-card').forEach(c => c.classList.remove('search-selected-card'));
-
                 App.state.libraryRender.searchResults = visibleCards;
                 App.state.libraryRender.selectedIndex = -1;
-
                 if (shouldHighlight && visibleCards.length > 0) {
                     App.state.libraryRender.selectedIndex = 0;
                     visibleCards[0].classList.add('search-selected-card');
@@ -8473,7 +8485,6 @@
                     }
                 }
             },
-                        
             
             async startLibraryRender() {
                 const grid = document.getElementById('article-grid');
@@ -9131,25 +9142,33 @@
             const category = App.settings.get('flashcardCategory') || 'All';
             const sortBy = App.settings.get('flashcardSortBy');
             
-  
+            const nameStyle = App.settings.get('categoryNameStyle') || 'full';
+
             const userCategories = App.settings.get('userCategories');
             const allCategoryNames = ['All', ...userCategories.map(c => c.name)];
 
             const categoryChips = allCategoryNames.map(catName => {
                 const isActive = category === catName;
-                const displayName = (catName === 'All' || catName.length <= 4) ? catName : App.util.getCategoryDisplayName(catName).substring(0, 4);
-
+                let buttonText;
+                    const fullDisplayName = App.util.getCategoryDisplayName(catName);
+                    if (catName === 'All') {
+                        buttonText = 'All';
+                    } else {
+                        buttonText = (nameStyle === 'full') ? fullDisplayName : fullDisplayName.substring(0, 4);
+                    }
+                  
+                const titleText = (catName === 'All') ? 'All' : fullDisplayName;
                 const categoryObj = userCategories.find(c => c.name === catName);
-                const colorIndex = categoryObj ? categoryObj.colorIndex : 0; // Default to color 0 if not found
+                const colorIndex = categoryObj ? categoryObj.colorIndex : 0;
 
                 const style = catName === 'All' 
-                    ? '' 
-                    : `style="background-color: var(--cat-color-${colorIndex}-bg); color: var(--category-pill-text);"`;
+                        ? '' 
+                        : `style="background-color: var(--cat-color-${colorIndex}-bg); color: var(--category-pill-text);"`;
 
-                return `<button class="btn category-chip ${isActive ? 'active' : ''}" ${style} onclick="App.events.changeFlashcardCategory('${catName}')">${displayName}</button>`;
-            }).join('');
+                    return `<button class="btn category-chip ${isActive ? 'active' : ''}" ${style} onclick="App.events.changeFlashcardCategory('${catName}')" title="${titleText}">${buttonText}</button>`;
+                }).join('');
 
-            container.innerHTML = `
+                container.innerHTML = `
                 <div class="flashcard-view-header">
                     <div style="display: flex; align-items: stretch; gap: 0.75rem; flex-wrap: wrap; width: 100%;">
                         <div style="display: flex; align-items: stretch; ">
@@ -9161,7 +9180,7 @@
                         <button class="btn btn-primary btn-quiz" onclick="App.quiz.start({ mode: 'mcq' })">MCQ Quiz</button>
                         <button class="btn btn-danger" onclick="App.events.resetFilteredFlashcardsConfirmation()" title="Reset progress for all cards in the current filter">Reset</button>
                         <button class="btn-icon" onclick="App.ui.showFlashcardSettingsModal()" title="Flashcard Settings">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1 0 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105 0l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.31-.17a1.464 1.464 0 0 1 2.105-.872l-.1-.34c.413-1.4 2.397-1.4 2.81 0l.1.34a1.464 1.464 0 0 1 2.105.872l.31.17c1.283-.698-2.686-.705-1.987-1.987l-.169-.311a1.464 1.464 0 0 1 0-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105 0l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.31.17a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1 0 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105 0l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.31-.17a1.464 1.464 0 0 1 2.105-.872l-.1-.34c.413-1.4 2.397-1.4 2.81 0l.1.34a1.464 1.464 0 0 1 2.105.872l.31.17c1.283.698-2.686-.705-1.987-1.987l-.169-.311a1.464 1.464 0 0 1 0-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105 0l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.31.17a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg>
                         </button>
                     </div>
                     <div class="category-filters" style="width: 100%;">${categoryChips}</div>
@@ -10083,12 +10102,30 @@
                 if(primaryColorRgb) document.documentElement.style.setProperty('--primary-color-rgb', primaryColorRgb.join(','));
 
                 const activeView = App.router.getActiveView();
-                if (activeView === 'article') {
+                if (activeView === 'library') {
+                    const toggleButton = document.getElementById('category-name-toggle');
+                    if (toggleButton) {
+                        let newIcon;
+                        switch (theme) {
+                            case 'sepia': newIcon = '🟤'; break;
+                            case 'dark': newIcon = '🟠'; break;
+                            case 'custom':
+                                const customBase = App.settings.get('customThemeBase');
+                                newIcon = (customBase === 'dark') ? '🟠' : '🟢';
+                                break;
+                            case 'light': default: newIcon = '🟢'; break;
+                        }
+                        toggleButton.innerHTML = newIcon;
+                    }
+                }
+
+                const currentAactiveView = App.router.getActiveView();
+                if (currentAactiveView === 'article') {
                     const contentDiv = document.getElementById('article-content');
                     if (contentDiv) {
                         contentDiv.querySelectorAll('canvas[data-chart-config]').forEach(canvas => App.ui.renderChartOnCanvas(canvas));
                     }
-                } else if (activeView === 'stats-dashboard') {
+                } else if (currentActiveView === 'stats-dashboard') {
                     const viewContainer = document.getElementById('stats-dashboard-view');
                     const monthSelect = document.getElementById('stats-month-select');
                     const yearSelect = document.getElementById('stats-year-select');
@@ -12718,7 +12755,15 @@
                 }
             },
 
-           handleGlobalKeyDown(e) {
+            toggleCategoryNameStyle() {
+                const currentStyle = App.settings.get('categoryNameStyle') || 'full';
+                const newStyle = currentStyle === 'full' ? 'short' : 'full';
+                App.settings.set('categoryNameStyle', newStyle);
+                // Re-render the library view to apply the change instantly
+                App.router.navigateTo('library');
+            },
+
+            handleGlobalKeyDown(e) {
                 if (e.key === 'Escape' && App.commandPalette.state.isPreviewActive) {
                     e.preventDefault();
                     e.stopPropagation();
