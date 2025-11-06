@@ -2,11 +2,11 @@
   "name": "NoteKash v2",
   "short_name": "NoteKash",
   "description": "Your Second Brain for thinking, learning, and creating.",
-  "start_url": "./index.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#f8f9fa",
   "theme_color": "#4a5568",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
     {
       "src": "icons/icon-192x192.png",
