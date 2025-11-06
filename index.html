@@ -8266,10 +8266,7 @@
                 if (!isSilent) App.ui.showToast("Syncing...", { duration: 0 });
 
                 try {
-                    // =================================================================
-                    // STEPS 1-4: GATHER & COMPARE DATA (Unchanged)
-                    // =================================================================
-
+                   
                     // STEP 1: GET LOCAL DATA
                     const localArticles = await App.storage._getAllArticlesFromCurrentStore();
                     const localDeletedRecords = await App.storage.getDeletedRecords();
@@ -8356,10 +8353,7 @@
                         }
                     }
 
-                    // =================================================================
                     // STEP 5: EXECUTE SYNC OPERATIONS (FIX #1: Using the Queue)
-                    // =================================================================
-
                     // 5a. Article Uploads Action
                     const uploadArticleAction = (article) => this.apiCall('files/upload', JSON.stringify(article), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${article.id}.json`, mode: 'overwrite' }) } });
 
@@ -8411,9 +8405,7 @@
                         await this.apiCall('files/upload', JSON.stringify(finalDeletedRecords), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${App.storage.DELETED_RECORDS_FILENAME}`, mode: 'overwrite' }) } });
                     }
 
-                    // =================================================================
-                    // STEP 6: FINALIZE & RELOAD UI (FIX #2: The TypeError)
-                    // =================================================================
+                    // STEP 6: FINALIZE & RELOAD UI 
                     const articleChanges = toUploadArticles.length + toDownloadArticles.length + toDeleteLocal.length > 0;
                     const singletonChanges = toUploadSingletons.length + toDownloadSingletons.length > 0;
 
@@ -11848,8 +11840,7 @@
                 let cloudSyncHTML = '';
 
                 if (!isPremium) {
-                    // --- STATE A: SPARK (FREE) USER ---
-                    // Show a clear upsell message.
+                   
                     cloudSyncHTML = `
                         <div class="premium-cta-text" style="text-align: center; padding: 1rem; background: var(--bg-tertiary); border-radius: var(--border-radius-lg);">
                             Cloud Sync is a Premium feature.
@@ -11857,9 +11848,6 @@
                         </div>
                     `;
                 } else {
-                    // --- STATE B-E: PREMIUM USER ---
-                    // The user is Premium, so we show the step-by-step setup.
-
                     // STEP 1: API Key Input (Always visible for premium users)
                     const step1_ApiKeyHTML = `
                         <div class="settings-item">
