@@ -6874,7 +6874,7 @@
         };
     </script>
     <input type="file" id="background-image-input" accept="image/*" style="display: none;">
-    <input type="file" id="import-zip-input" accept=".zip" style="display:none">
+    <input type="file" id="import-files-input" accept=".zip,.notekash,.json" multiple style="display:none">
     <input type="file" id="pdf-import-input" accept=".pdf" style="display:none">
     <div id="pdf-viewer-container"></div>
    <script id="transcription-worker-script" type="text/js-worker">
@@ -7614,6 +7614,19 @@
         },
 
         async init() {
+
+            if ('launchQueue' in window && 'files' in LaunchParams.prototype) {
+                window.launchQueue.setConsumer(async (launchParams) => {
+                    if (!launchParams.files || launchParams.files.length === 0) {
+                        return;
+                    }
+                    const fileHandles = launchParams.files;
+                    const files = await Promise.all(fileHandles.map(handle => handle.getFile()));
+                    App.ui.showToast(`Importing ${files.length} shared note(s)...`, { type: 'info' });
+                    App.services.backup.handleFileImport(files);
+                });
+            }
+
             if (window.pdfjsLib) {
                 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
             }
@@ -9142,6 +9155,11 @@
                             <button class="btn-icon" data-action="copyHighlights" title="Copy Title & Highlights">${App.util.icons.copy}</button>
                             <button class="btn-icon" data-action="exportHtml" title="Export as HTML File">${App.util.icons.html}</button>
                             ${shareButtonHTML}
+                            <button class="btn-icon" data-action="exportNoteKash" title="Export as .notekash File">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                     <div class="control-divider"></div>
@@ -17224,6 +17242,7 @@
                     case 'copyHighlights': App.services.export.copyCurrentArticleHighlights(); break;
                     case 'exportHtml': App.services.export.exportArticleAsHtml(); break;
                     case 'shareArticle': App.services.share.article(); break;
+                    case 'exportNoteKash': App.services.export.exportAsNoteKashFile(); break; // <-- ADD THIS LINE
                     case 'resetReadCount': App.events.resetReadCount(); break;
                     case 'toggleFocusMode': App.events.toggleFocusMode(); break;
                     case 'saveAndRead': App.events.saveArticle({ switchToRead: true }); break;
@@ -18079,15 +18098,15 @@
             triggerZipImport() {
                 App.ui.showConfirmationModal({
                     title: 'Confirm Import',
-                    message: 'This will merge data from the selected .zip file. Existing items will be updated only if the imported version is newer. This action cannot be undone.',
+                    message: 'Select a <b>.zip</b> backup or one or more <b>.notekash</b> / <b>.json</b> note files to import. Existing notes will be intelligently merged.',
                     confirmText: 'Proceed',
                     onConfirm: () => {
-                        const input = document.getElementById('import-zip-input');
-                        input.onchange = (e) => { if (e.target.files[0]) App.services.backup.importFromZip(e.target.files[0]); };
+                        const input = document.getElementById('import-files-input'); // <-- Use new ID
+                        input.onchange = (e) => { App.services.backup.handleFileImport(e.target.files); }; // <-- Call new handler
                         input.click();
                     }
                 });
-            }
+            },
         },
   
 
@@ -18298,6 +18317,60 @@
                     const fullHtml = this._getHtmlExportTemplate(article.title, bodyContent, App.settings.get('theme'));
                     App.util.downloadBlob(new Blob([fullHtml], { type: 'text/html' }), `${App.util.slugify(article.title)}.html`);
                 },
+
+                async exportAsNoteKashFile() {
+                    const articleId = App.state.activeArticleId;
+                    if (!articleId || articleId === 'temp_new_article') {
+                        App.ui.showToast('Please save the note once before exporting.', { type: 'error' });
+                        return;
+                    }
+
+                    const article = App.storage.getArticle(articleId);
+                    if (!article) {
+                        App.ui.showToast('Article data is missing, cannot export.', { type: 'error' });
+                        return;
+                    }
+
+                    const filename = `${App.util.slugify(article.title)}.notekash`;
+                    const fileContent = JSON.stringify(article, null, 2);
+                    const blob = new Blob([fileContent], { type: 'application/json' });
+                    const file = new File([blob], filename, { type: 'application/json' });
+                    
+                    const shareData = {
+                        title: `NoteKash Note: ${article.title}`,
+                        text: `Here is the NoteKash note "${article.title}"`,
+                        files: [file],
+                    };
+
+                    let shareSucceeded = false;
+                    
+                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share(shareData);
+                            shareSucceeded = true; // Mark as successful
+                            App.ui.showToast('Note shared!', { type: 'success' });
+                        } catch (err) {
+                            if (err.name === 'AbortError') {
+                                shareSucceeded = true; // Mark as "handled"
+                                App.ui.showToast('Share cancelled.', { type: 'info' });
+                            } else {
+                                console.warn('Web Share API failed, falling back to download:', err);
+                                shareSucceeded = false;
+                            }
+                        }
+                    }
+                    if (!shareSucceeded) {
+                        try {
+                            App.util.downloadBlob(blob, filename);
+                            App.ui.showToast('NoteKash file downloaded!', { type: 'success' });
+                        } catch (downloadErr) {
+                            console.error('Fallback download also failed:', downloadErr);
+                            App.ui.showToast('Could not share or download the file.', { type: 'error' });
+                        }
+                    }
+                },
+
+
                 exportCategoryAsHtml(category) {
                     const sortedArticles = this.getSortedArticlesForCategory(category);
                     const articlesWithHighlights = sortedArticles
@@ -18688,6 +18761,87 @@
                     } finally {
                         // Ensures the loading screen is always hidden
                         setTimeout(() => App.ui.migrationScreen.hide(), 1000);
+                    }
+                },
+
+                async handleFileImport(files) {
+                    if (!files || files.length === 0) return;
+
+                    const zipFiles = Array.from(files).filter(f => f.name.endsWith('.zip'));
+                    const noteFiles = Array.from(files).filter(f => f.name.endsWith('.notekash') || f.name.endsWith('.json'));
+
+                    if (zipFiles.length > 0) {
+                        // If a zip is present, process it (as before) and ignore other files.
+                        App.services.backup.importFromZip(zipFiles[0]);
+                        if (noteFiles.length > 0) {
+                            App.ui.showToast('Importing .zip file. Other selected notes were ignored.', 'info');
+                        }
+                        return;
+                    }
+
+                    if (noteFiles.length > 0) {
+                        // This is the new logic for importing .notekash / .json files
+                        App.ui.migrationScreen.show("Importing Notes");
+                        let importedCount = 0;
+                        let skippedCount = 0;
+                        
+                        const allLocalArticles = (App.state.storageMode === 'fileSystem')
+                            ? (await App.storage.getAll()).articles
+                            : await App.browserStore.getAllArticles();
+                        const localArticlesMap = new Map(allLocalArticles.map(a => [a.id, a]));
+
+                        for (let i = 0; i < noteFiles.length; i++) {
+                            const file = noteFiles[i];
+                            if (App.ui.migrationScreen.state.isCancelled) break;
+                            const progress = Math.round(((i + 1) / noteFiles.length) * 100);
+                            App.ui.migrationScreen.update(progress, `Importing "${file.name}"...`);
+
+                            try {
+                                const content = await file.text();
+                                const article = JSON.parse(content);
+                                
+                                // Basic validation
+                                if (article.id && article.title && article.content) {
+                                    const localArticle = localArticlesMap.get(article.id);
+                                    
+                                    // Generate a new ID if it's a new note, but keep original ID logic for updates
+                                    let newArticleId = article.id;
+                                    let isNewNote = !localArticle;
+                                    let isUpdate = localArticle && (new Date(article.updatedAt) > new Date(localArticle.updatedAt));
+
+                                    if (isNewNote) {
+                                        // It's a new note, but we must check if the ID already exists (e.g., duplicate import)
+                                        // If ID is already in use, we must assign a new one to prevent conflicts.
+                                        if(localArticlesMap.has(article.id)) {
+                                            article.id = 'art_' + crypto.randomUUID(); // Assign new ID
+                                        }
+                                        await App.storage.createArticle(article);
+                                        importedCount++;
+                                    } else if (isUpdate) {
+                                        // It's an update to an existing note
+                                        await App.storage.updateArticle(article.id, article);
+                                        importedCount++;
+                                    } else {
+                                        // Local version is same or newer, so we skip
+                                        skippedCount++;
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn(`Could not import file: ${file.name}`, e);
+                                skippedCount++;
+                            }
+                        }
+
+                        if (App.ui.migrationScreen.state.isCancelled) {
+                            App.ui.migrationScreen.hide();
+                            return;
+                        }
+
+                        App.ui.migrationScreen.hide();
+                        App.ui.showToast(`Import complete! ${importedCount} notes added/updated, ${skippedCount} skipped. Reloading...`, 'success');
+                        
+                        // Reload the app to reflect all changes
+                        setTimeout(() => window.location.reload(), 1500);
                     }
                 },
 
