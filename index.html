@@ -8266,10 +8266,10 @@
                 if (!isSilent) App.ui.showToast("Syncing...", { duration: 0 });
 
                 try {
-                   
-                    // STEP 1: GET LOCAL DATA
+                    // STEP 1: GET LOCAL DATA (Unchanged for Articles)
                     const localArticles = await App.storage._getAllArticlesFromCurrentStore();
                     const localDeletedRecords = await App.storage.getDeletedRecords();
+
                     const localArticlesMap = new Map(localArticles.map(a => [a.id, a]));
                     const localDeletedMap = new Map(localDeletedRecords.map(r => [r.id, r]));
 
@@ -8277,7 +8277,7 @@
                     const remoteFiles = await this.listAllFiles();
                     let remoteDeletedRecords = [];
                     const remoteArticlesMap = new Map();
-                    const remoteSingletonsMap = new Map(); 
+                    const remoteSingletonsMap = new Map(); // <-- NEW
 
                     for (const file of remoteFiles) {
                         const name = file.name;
@@ -8285,13 +8285,16 @@
                             const { content } = await this.apiCall('files/download', null, { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: file.path_lower }) }, isDownload: true });
                             remoteDeletedRecords = content ? JSON.parse(content) : [];
                         } 
+                        // NEW: Check if it's a singleton data file
                         else if (this.SINGLETON_DATA_FILES.includes(name)) {
                             remoteSingletonsMap.set(name, file);
                         }
+                        // Check for articles
                         else if(name.endsWith('.json') && !name.startsWith('_') && name.startsWith('art_')) {
                             remoteArticlesMap.set(name.replace('.json', ''), file);
                         }
                     }
+
                     const remoteDeletedMap = new Map(remoteDeletedRecords.map(r => [r.id, r]));
 
                     // STEP 3: MERGE DELETION RECORDS 
@@ -8305,8 +8308,8 @@
 
                     // STEP 4: COMPARE & BUILD SYNC LISTS
                     const toUploadArticles = [], toDownloadArticles = [], toDeleteLocal = [], toDeleteRemotePaths = [];
-                    const toUploadSingletons = [], toDownloadSingletons = [];
-                    const TOLERANCE_MS = 2000;
+                    const toUploadSingletons = [], toDownloadSingletons = []; // <-- NEW
+                    const TOLERANCE_MS = 2000; // Dropbox timestamp tolerance
 
                     // 4a. Compare Articles
                     const allArticleIds = new Set([...localArticlesMap.keys(), ...remoteArticlesMap.keys()]);
@@ -8314,6 +8317,7 @@
                         if (masterDeletedMap.has(id)) continue; 
                         const local = localArticlesMap.get(id);
                         const remote = remoteArticlesMap.get(id);
+
                         if (local && !remote) { toUploadArticles.push(local); } 
                         else if (!local && remote) { toDownloadArticles.push(remote); } 
                         else if (local && remote) {
@@ -8326,113 +8330,118 @@
                         }
                     }
 
-                    // 4b. Compare Deletion Lists
+                    // 4b. Compare Deletion Lists 
                     masterDeletedMap.forEach(record => {
                         if (localArticlesMap.has(record.id)) toDeleteLocal.push(record.id);
                         if (remoteArticlesMap.has(record.id)) toDeleteRemotePaths.push({ path: `/${record.id}.json` });
                     });
 
-                    // 4c. Compare Singleton Data Files
+                    // 4c. Compare Singleton Data Files (NEW)
                     for (const fileName of this.SINGLETON_DATA_FILES) {
                         const localMeta = await App.fs.getFileMetadata(fileName);
                         const remoteMeta = remoteSingletonsMap.get(fileName);
+
                         if (localMeta && !remoteMeta) {
+                            // Local exists, remote doesn't -> UPLOAD
                             const localData = await App.fs.read(fileName);
                             if (localData) toUploadSingletons.push({ name: fileName, data: localData });
                         } 
-                        else if (!localMeta && remoteMeta) { toDownloadSingletons.push(remoteMeta); } 
+                        else if (!localMeta && remoteMeta) {
+                            // Remote exists, local doesn't -> DOWNLOAD
+                            toDownloadSingletons.push(remoteMeta);
+                        } 
                         else if (localMeta && remoteMeta) {
+                            // Both exist -> COMPARE TIMESTAMPS
                             const localDate = new Date(localMeta.lastModified);
                             const remoteDate = new Date(remoteMeta.server_modified);
+
                             if (Math.abs(localDate.getTime() - remoteDate.getTime()) > TOLERANCE_MS) {
                                 if (localDate > remoteDate) {
+                                    // Local is newer -> UPLOAD
                                     const localData = await App.fs.read(fileName);
                                     if (localData) toUploadSingletons.push({ name: fileName, data: localData });
-                                } else { toDownloadSingletons.push(remoteMeta); }
+                                } else {
+                                    // Remote is newer -> DOWNLOAD
+                                    toDownloadSingletons.push(remoteMeta);
+                                }
                             }
                         }
                     }
 
-                    // STEP 5: EXECUTE SYNC OPERATIONS (FIX #1: Using the Queue)
-                    // 5a. Article Uploads Action
-                    const uploadArticleAction = (article) => this.apiCall('files/upload', JSON.stringify(article), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${article.id}.json`, mode: 'overwrite' }) } });
+                    // STEP 5: EXECUTE SYNC OPERATIONS
+                    // 5a. Article Uploads
+                    const articleUploadPromises = toUploadArticles.map(article => 
+                        this.apiCall('files/upload', JSON.stringify(article), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${article.id}.json`, mode: 'overwrite' }) } })
+                    );
 
-                    // 5b. Singleton Uploads Action
-                    const uploadSingletonAction = (file) => this.apiCall('files/upload', JSON.stringify(file.data), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${file.name}`, mode: 'overwrite' }) } });
+                    // 5b. Singleton File Uploads (NEW)
+                    const singletonUploadPromises = toUploadSingletons.map(file =>
+                        this.apiCall('files/upload', JSON.stringify(file.data), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${file.name}`, mode: 'overwrite' }) } })
+                    );
 
-                    // 5c. Article Downloads Action
-                    const downloadArticleAction = async (remoteMeta) => {
+                    // 5c. Article Downloads
+                    const articleDownloadPromises = toDownloadArticles.map(async remoteMeta => {
                         const { content } = await this.downloadFile(remoteMeta);
                         if (content) {
                             const article = JSON.parse(content);
-                            if (localArticlesMap.has(article.id)) await App.storage.updateArticle(article.id, article); 
-                            else await App.storage.createArticle(article);
+                            if (localArticlesMap.has(article.id)) {
+                                await App.storage.updateArticle(article.id, article); 
+                            } else {
+                                await App.storage.createArticle(article);
+                            }
                         }
-                    };
+                    });
 
-                    // 5d. Singleton Downloads Action
-                    const downloadSingletonAction = async (remoteMeta) => {
+                    // 5d. Singleton File Downloads (NEW)
+                    const singletonDownloadPromises = toDownloadSingletons.map(async remoteMeta => {
                         const { content } = await this.downloadFile(remoteMeta);
                         if (content) {
                             const data = JSON.parse(content);
+                            // App.fs.write will automatically use the right storage (FS or Browser)
                             await App.fs.write(remoteMeta.name, data);
                         }
-                    };
+                    });
 
-                    // Execute all operations in controlled, concurrent queues
-                    const CONCURRENCY = 5; // Process 5 files at a time (polite)
+                    // Execute all uploads and downloads in parallel
                     await Promise.allSettled([
-                        this._processQueue(toUploadArticles, uploadArticleAction, CONCURRENCY),
-                        this._processQueue(toUploadSingletons, uploadSingletonAction, CONCURRENCY),
-                        this._processQueue(toDownloadArticles, downloadArticleAction, CONCURRENCY),
-                        this._processQueue(toDownloadSingletons, downloadSingletonAction, CONCURRENCY)
+                        ...articleUploadPromises, ...singletonUploadPromises,
+                        ...articleDownloadPromises, ...singletonDownloadPromises
                     ]);
 
-                    // 5e. Remote Deletions (Unchanged)
+                    // 5e. Remote Deletions 
                     if (toDeleteRemotePaths.length > 0) {
                         await this.apiCall('files/delete_batch', { entries: toDeleteRemotePaths });
                     }
 
-                    // 5f. Local Deletions (Unchanged)
+                    // 5f. Local Deletions 
                     for(const id of toDeleteLocal) {
                         await App.storage.deleteArticle(id); 
                     }
 
-                    // 5g. Sync Deleted Records (Unchanged)
+                    // 5g. Sync Deleted Records 
                     const finalDeletedRecords = Array.from(masterDeletedMap.values());
                     if (localDeletedMap.size !== finalDeletedRecords.length || remoteDeletedMap.size !== finalDeletedRecords.length) {
                         await App.storage.saveDeletedRecords(finalDeletedRecords);
                         await this.apiCall('files/upload', JSON.stringify(finalDeletedRecords), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${App.storage.DELETED_RECORDS_FILENAME}`, mode: 'overwrite' }) } });
                     }
 
-                    // STEP 6: FINALIZE & RELOAD UI 
+                    // STEP 6: FINALIZE & RELOAD UI
                     const articleChanges = toUploadArticles.length + toDownloadArticles.length + toDeleteLocal.length > 0;
                     const singletonChanges = toUploadSingletons.length + toDownloadSingletons.length > 0;
 
                     if (articleChanges) {
+                        // Re-sort in-memory state and refresh library
                         App.state.articles.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-                        await App.util.reconcileCategories();
+                        await App.util.reconcileCategories(); // Re-check categories
 
                         const activeView = App.router.getActiveView();
                         if (activeView === 'library' || activeView === 'flashcard' || activeView === 'stats-dashboard' || activeView === 'visual-map' || activeView === 'mindmap' || activeView === 'category') {
-                            let viewData = null; // Default to null for most views
-                            if (activeView === 'category') {
-                                // This is a robust way to get the current category name from the UI
-                                const titleEl = document.querySelector('#category-view h2');
-                                if (titleEl) {
-                                    const titleText = titleEl.textContent || 'All';
-                                    // Get the name part, e.g., "Category: History" -> "History"
-                                    const categoryName = titleText.includes(': ') ? titleText.split(': ')[1] : titleText;
-                                    // Find the original internal name (e.g., "history-1") from the display name (e.g., "History")
-                                    viewData = App.util.getOriginalCategoryName(categoryName) || 'All';
-                                }
-                            }
-                            App.router.navigateTo(activeView, viewData, true); // 'true' prevents new history state
+                            App.router.navigateTo(activeView, App.router.getActiveViewData(), true);
                         }
-                        // --- END OF FIX ---
                     }
 
                     if (singletonChanges) {
+                        // A data file changed, which requires a soft-reload of state.
                         App.ui.showToast('App data (settings, tasks) synced. Reload recommended.', { type: 'info', duration: 10000 });
                     }
 
@@ -8474,29 +8483,6 @@
             generateCodeVerifier() { const c='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01236789-._~';let r='';const v=new Uint8Array(128);crypto.getRandomValues(v);for(let i=0;i<v.length;i++)r+=c[v[i]%c.length];return r; },
             async generateCodeChallenge(v) { const d=new TextEncoder().encode(v);const h=await crypto.subtle.digest('SHA-256',d);return btoa(String.fromCharCode.apply(null,new Uint8Array(h))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); },
             isReady: () => App.state.isDropboxReady,
-
-            async _processQueue(items, actionFn, concurrency = 5) {
-                const queue = [...items]; // Create a copy of the items to process
-                const results = [];
-                const execute = async () => {
-                    while (queue.length > 0) {
-                        const item = queue.shift(); // Take one item from the front of the queue
-                        if (item) {
-                            try {
-                                const result = await actionFn(item);
-                                results.push({ status: 'fulfilled', value: result });
-                            } catch (error) {
-                                console.error("Queue action failed:", error, "for item:", item);
-                                results.push({ status: 'rejected', reason: error });
-                            }
-                        }
-                    }
-                };
-                const workers = Array(concurrency).fill(null).map(() => execute());
-                await Promise.allSettled(workers);
-                return results;
-            },
-
         },
         
         // ==========================================================================
@@ -11840,7 +11826,8 @@
                 let cloudSyncHTML = '';
 
                 if (!isPremium) {
-                   
+                    // --- STATE A: SPARK (FREE) USER ---
+                    // Show a clear upsell message.
                     cloudSyncHTML = `
                         <div class="premium-cta-text" style="text-align: center; padding: 1rem; background: var(--bg-tertiary); border-radius: var(--border-radius-lg);">
                             Cloud Sync is a Premium feature.
@@ -11848,6 +11835,9 @@
                         </div>
                     `;
                 } else {
+                    // --- STATE B-E: PREMIUM USER ---
+                    // The user is Premium, so we show the step-by-step setup.
+
                     // STEP 1: API Key Input (Always visible for premium users)
                     const step1_ApiKeyHTML = `
                         <div class="settings-item">
