@@ -7268,6 +7268,21 @@
             async loadState() {
 
                 const savedToken = App.settings.get('licenseToken');
+                // NEW: Intercept the developer key before validation
+                if (savedToken === 'testingnow') {
+                this.state.token = 'testingnow';
+                this.state.isPremium = true;
+                this.state.tier = 'Diamond';
+                this.state.userName = 'Developer';
+                // Set an expiry date far in the future for testing purposes
+                const futureDate = new Date();
+                futureDate.setFullYear(futureDate.getFullYear() + 10);
+                this.state.expiry = futureDate.toISOString();
+
+                // Bypass the rest of the validation logic
+                this.updateUIAfterStateChange();
+                return;
+                }
 
                 if (savedToken) {
                     try {
@@ -7863,7 +7878,14 @@
                     store.delete(articleId).onsuccess = resolve;
                 });
             },
-
+            async getFileMetadata(fileName) {
+                const store = await this._getStore('files', 'readonly');
+                return new Promise((resolve) => {
+                    const request = store.get(fileName);
+                    request.onsuccess = () => resolve(request.result ? { lastModified: request.result.lastModified } : null);
+                    request.onerror = () => resolve(null);
+                });
+            },
             // --- File-specific methods (for settings.json, etc.) ---
             async getFile(fileName) {
                 const store = await this._getStore('files', 'readonly');
@@ -7876,15 +7898,20 @@
 
             async setFile(fileName, data) {
                 const store = await this._getStore('files', 'readwrite');
+                const wrapper = {
+                    fileName: fileName,
+                    data: data,
+                    lastModified: new Date().toISOString()
+                };
                 return new Promise((resolve, reject) => {
-                    const request = store.put({ fileName, data });
+                    const request = store.put(wrapper);
                     request.onsuccess = resolve;
                     request.onerror = (event) => {
                         console.error("Error setting file in IndexedDB:", event.target.error);
                         reject(event.target.error);
                     };
                 });
-            }
+            },
         },
 
         // ==========================================================================
@@ -7924,7 +7951,23 @@
                 } else {
                     await App.browserStore.setFile(fileName, data);
                 }
-            }
+            },
+            async getFileMetadata(fileName) {
+                if (App.state.storageMode === 'fileSystem' && App.state.directoryHandle) {
+                    try {
+                        const fileHandle = await App.state.directoryHandle.getFileHandle(fileName);
+                        const file = await fileHandle.getFile();
+                        return { lastModified: new Date(file.lastModified).toISOString() };
+                    } catch (err) {
+                        if (err.name === 'NotFoundError') return null; // File doesn't exist
+                        console.error(`Error getting metadata for ${fileName}:`, err);
+                        return null;
+                    }
+                } else if (App.state.storageMode === 'browser') {
+                    return await App.browserStore.getFileMetadata(fileName);
+                }
+                return null;
+            },
         },
 
 
@@ -8091,6 +8134,15 @@
                 if (!records.some(r => r.id === id)) { records.push({ id, deletedAt: now }); }
                 await this.saveDeletedRecords(records); App.state.deletedRecords = records;
             },
+            async _getAllArticlesFromCurrentStore() {
+                if (App.state.storageMode === 'fileSystem' && App.state.directoryHandle) {
+                    const { articles } = await this.getAll();
+                    return articles;
+                } else if (App.state.storageMode === 'browser') {
+                    return await App.browserStore.getAllArticles();
+                }
+                return []; 
+            },
             getArticle(id) { return App.state.articles.find(a => a.id === id); },
         },
                 
@@ -8098,6 +8150,7 @@
         // 3.8. DROPBOX SYNC ENGINE
         // ==========================================================================
         dropbox: {
+            SINGLETON_DATA_FILES: ['settings.json', 'todos.json', 'pomodoro.json', 'quiz_stats.json', 'tags.json', 'visual-map-state.json', 'mind-map-state.json'],
             async init() {
                 const urlParams = new URLSearchParams(window.location.search);
                 if (urlParams.has('code')) {
@@ -8127,7 +8180,17 @@
                 const clientId = App.settings.get('dropboxClientId');
                 if (!authCode || !codeVerifier || !clientId) return;
                 try {
-                    const response = await fetch('https://api.dropboxapi.com/oauth2/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code: authCode, grant_type: 'authorization_code', redirect_uri: window.location.href.split('?')[0], code_verifier: codeVerifier, client_id: clientId, }) });
+                    const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({
+                            code: authCode,
+                            grant_type: 'authorization_code',
+                            redirect_uri: 'https://notekash.com',
+                            code_verifier: codeVerifier,
+                            client_id: clientId,
+                        })
+                    });
                     if (!response.ok) throw new Error('Failed to get token');
                     const data = await response.json();
                     await App.settings.set('dropboxToken', data.access_token);
@@ -8187,33 +8250,54 @@
                     throw e;
                 }
             },
-            async syncChanges(isSilent = false) {
-                if (App.state.isSyncing) { if (!isSilent) App.ui.showToast("Sync already in progress.", { type: 'warning' }); return; }
-                if (!this.isReady() || !App.state.directoryHandle) return;
-                
-                App.state.isSyncing = true;
 
+            async syncChanges(isSilent = false) {
+                if (App.state.isSyncing) {
+                    if (!isSilent) App.ui.showToast("Sync already in progress.", { type: 'warning' });
+                    return;
+                }
+                if (!this.isReady()) {
+                    console.warn("Dropbox sync called but not ready. Aborting.");
+                    return;
+                }
+
+                App.state.isSyncing = true;
                 if (document.getElementById('settings-modal-content')) App.ui.showSettingsModal();
-                if (!isSilent) App.ui.showToast("Syncing...");
-                
+                if (!isSilent) App.ui.showToast("Syncing...", { duration: 0 });
+
                 try {
-                    await App.storage.load();
-                    const localArticlesMap = new Map(App.state.articles.map(a => [a.id, a]));
-                    const localDeletedMap = new Map(App.state.deletedRecords.map(r => [r.id, r]));
+                    // STEP 1: GET LOCAL DATA (Unchanged for Articles)
+                    const localArticles = await App.storage._getAllArticlesFromCurrentStore();
+                    const localDeletedRecords = await App.storage.getDeletedRecords();
+
+                    const localArticlesMap = new Map(localArticles.map(a => [a.id, a]));
+                    const localDeletedMap = new Map(localDeletedRecords.map(r => [r.id, r]));
+
+                    // STEP 2: GET REMOTE DATA & SEGREGATE
                     const remoteFiles = await this.listAllFiles();
                     let remoteDeletedRecords = [];
                     const remoteArticlesMap = new Map();
+                    const remoteSingletonsMap = new Map(); // <-- NEW
 
                     for (const file of remoteFiles) {
-                        if (file.name === App.storage.DELETED_RECORDS_FILENAME) {
+                        const name = file.name;
+                        if (name === App.storage.DELETED_RECORDS_FILENAME) {
                             const { content } = await this.apiCall('files/download', null, { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: file.path_lower }) }, isDownload: true });
                             remoteDeletedRecords = content ? JSON.parse(content) : [];
-                        } else if(file.name.endsWith('.json') && !file.name.startsWith('_')) {
-                            remoteArticlesMap.set(file.name.replace('.json', ''), file);
+                        } 
+                        // NEW: Check if it's a singleton data file
+                        else if (this.SINGLETON_DATA_FILES.includes(name)) {
+                            remoteSingletonsMap.set(name, file);
+                        }
+                        // Check for articles
+                        else if(name.endsWith('.json') && !name.startsWith('_') && name.startsWith('art_')) {
+                            remoteArticlesMap.set(name.replace('.json', ''), file);
                         }
                     }
 
                     const remoteDeletedMap = new Map(remoteDeletedRecords.map(r => [r.id, r]));
+
+                    // STEP 3: MERGE DELETION RECORDS 
                     const masterDeletedMap = new Map(localDeletedMap);
                     remoteDeletedMap.forEach((remoteRecord, id) => {
                         const localRecord = masterDeletedMap.get(id);
@@ -8222,64 +8306,162 @@
                         }
                     });
 
-                    const toUpload = [], toDownload = [], toDeleteLocal = [], toDeleteRemotePaths = [];
-                    const allIds = new Set([...localArticlesMap.keys(), ...remoteArticlesMap.keys()]);
+                    // STEP 4: COMPARE & BUILD SYNC LISTS
+                    const toUploadArticles = [], toDownloadArticles = [], toDeleteLocal = [], toDeleteRemotePaths = [];
+                    const toUploadSingletons = [], toDownloadSingletons = []; // <-- NEW
+                    const TOLERANCE_MS = 2000; // Dropbox timestamp tolerance
 
-                    for (const id of allIds) {
+                    // 4a. Compare Articles
+                    const allArticleIds = new Set([...localArticlesMap.keys(), ...remoteArticlesMap.keys()]);
+                    for (const id of allArticleIds) {
                         if (masterDeletedMap.has(id)) continue; 
                         const local = localArticlesMap.get(id);
                         const remote = remoteArticlesMap.get(id);
 
-                        if (local && !remote) { toUpload.push(local); } 
-                        else if (!local && remote) { toDownload.push(remote); } 
+                        if (local && !remote) { toUploadArticles.push(local); } 
+                        else if (!local && remote) { toDownloadArticles.push(remote); } 
                         else if (local && remote) {
                             const localDate = new Date(local.updatedAt);
                             const remoteDate = new Date(remote.server_modified);
-                            const TOLERANCE_MS = 2000;
                             if (Math.abs(localDate.getTime() - remoteDate.getTime()) > TOLERANCE_MS) {
-                                if (localDate > remoteDate) { toUpload.push(local); } 
-                                else { toDownload.push(remote); }
+                                if (localDate > remoteDate) { toUploadArticles.push(local); } 
+                                else { toDownloadArticles.push(remote); }
                             }
                         }
                     }
-                    
+
+                    // 4b. Compare Deletion Lists 
                     masterDeletedMap.forEach(record => {
                         if (localArticlesMap.has(record.id)) toDeleteLocal.push(record.id);
                         if (remoteArticlesMap.has(record.id)) toDeleteRemotePaths.push({ path: `/${record.id}.json` });
                     });
-                    
-                    const uploadPromises = toUpload.map(article => this.apiCall('files/upload', JSON.stringify(article), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${article.id}.json`, mode: 'overwrite' }) } }));
-                    const downloadPromises = toDownload.map(async remoteMeta => {
+
+                    // 4c. Compare Singleton Data Files (NEW)
+                    for (const fileName of this.SINGLETON_DATA_FILES) {
+                        const localMeta = await App.fs.getFileMetadata(fileName);
+                        const remoteMeta = remoteSingletonsMap.get(fileName);
+
+                        if (localMeta && !remoteMeta) {
+                            // Local exists, remote doesn't -> UPLOAD
+                            const localData = await App.fs.read(fileName);
+                            if (localData) toUploadSingletons.push({ name: fileName, data: localData });
+                        } 
+                        else if (!localMeta && remoteMeta) {
+                            // Remote exists, local doesn't -> DOWNLOAD
+                            toDownloadSingletons.push(remoteMeta);
+                        } 
+                        else if (localMeta && remoteMeta) {
+                            // Both exist -> COMPARE TIMESTAMPS
+                            const localDate = new Date(localMeta.lastModified);
+                            const remoteDate = new Date(remoteMeta.server_modified);
+
+                            if (Math.abs(localDate.getTime() - remoteDate.getTime()) > TOLERANCE_MS) {
+                                if (localDate > remoteDate) {
+                                    // Local is newer -> UPLOAD
+                                    const localData = await App.fs.read(fileName);
+                                    if (localData) toUploadSingletons.push({ name: fileName, data: localData });
+                                } else {
+                                    // Remote is newer -> DOWNLOAD
+                                    toDownloadSingletons.push(remoteMeta);
+                                }
+                            }
+                        }
+                    }
+
+                    // STEP 5: EXECUTE SYNC OPERATIONS
+                    // 5a. Article Uploads
+                    const articleUploadPromises = toUploadArticles.map(article => 
+                        this.apiCall('files/upload', JSON.stringify(article), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${article.id}.json`, mode: 'overwrite' }) } })
+                    );
+
+                    // 5b. Singleton File Uploads (NEW)
+                    const singletonUploadPromises = toUploadSingletons.map(file =>
+                        this.apiCall('files/upload', JSON.stringify(file.data), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${file.name}`, mode: 'overwrite' }) } })
+                    );
+
+                    // 5c. Article Downloads
+                    const articleDownloadPromises = toDownloadArticles.map(async remoteMeta => {
                         const { content } = await this.downloadFile(remoteMeta);
-                        if (content) await App.storage.saveArticle(JSON.parse(content));
+                        if (content) {
+                            const article = JSON.parse(content);
+                            if (localArticlesMap.has(article.id)) {
+                                await App.storage.updateArticle(article.id, article); 
+                            } else {
+                                await App.storage.createArticle(article);
+                            }
+                        }
                     });
-                    await Promise.allSettled([...uploadPromises, ...downloadPromises]);
-                    if (toDeleteRemotePaths.length > 0) await this.apiCall('files/delete_batch', { entries: toDeleteRemotePaths });
-                    for(const id of toDeleteLocal) await App.storage.removeArticleFile(id);
+
+                    // 5d. Singleton File Downloads (NEW)
+                    const singletonDownloadPromises = toDownloadSingletons.map(async remoteMeta => {
+                        const { content } = await this.downloadFile(remoteMeta);
+                        if (content) {
+                            const data = JSON.parse(content);
+                            // App.fs.write will automatically use the right storage (FS or Browser)
+                            await App.fs.write(remoteMeta.name, data);
+                        }
+                    });
+
+                    // Execute all uploads and downloads in parallel
+                    await Promise.allSettled([
+                        ...articleUploadPromises, ...singletonUploadPromises,
+                        ...articleDownloadPromises, ...singletonDownloadPromises
+                    ]);
+
+                    // 5e. Remote Deletions 
+                    if (toDeleteRemotePaths.length > 0) {
+                        await this.apiCall('files/delete_batch', { entries: toDeleteRemotePaths });
+                    }
+
+                    // 5f. Local Deletions 
+                    for(const id of toDeleteLocal) {
+                        await App.storage.deleteArticle(id); 
+                    }
+
+                    // 5g. Sync Deleted Records 
                     const finalDeletedRecords = Array.from(masterDeletedMap.values());
                     if (localDeletedMap.size !== finalDeletedRecords.length || remoteDeletedMap.size !== finalDeletedRecords.length) {
-                         await App.storage.saveDeletedRecords(finalDeletedRecords);
-                         await this.apiCall('files/upload', JSON.stringify(finalDeletedRecords), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${App.storage.DELETED_RECORDS_FILENAME}`, mode: 'overwrite' }) } });
+                        await App.storage.saveDeletedRecords(finalDeletedRecords);
+                        await this.apiCall('files/upload', JSON.stringify(finalDeletedRecords), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${App.storage.DELETED_RECORDS_FILENAME}`, mode: 'overwrite' }) } });
                     }
-                    
-                    if (toUpload.length + toDownload.length > 0) {
-                        await App.storage.load();
-                        await App.util.reconcileCategories();
-                        if(App.router.getActiveView() === 'library') App.router.navigateTo('library');
-                        if (!isSilent) App.ui.showToast('Notes Synced', { type: 'success' }); 
+
+                    // STEP 6: FINALIZE & RELOAD UI
+                    const articleChanges = toUploadArticles.length + toDownloadArticles.length + toDeleteLocal.length > 0;
+                    const singletonChanges = toUploadSingletons.length + toDownloadSingletons.length > 0;
+
+                    if (articleChanges) {
+                        // Re-sort in-memory state and refresh library
+                        App.state.articles.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                        await App.util.reconcileCategories(); // Re-check categories
+
+                        const activeView = App.router.getActiveView();
+                        if (activeView === 'library' || activeView === 'flashcard' || activeView === 'stats-dashboard' || activeView === 'visual-map' || activeView === 'mindmap' || activeView === 'category') {
+                            App.router.navigateTo(activeView, App.router.getActiveViewData(), true);
+                        }
+                    }
+
+                    if (singletonChanges) {
+                        // A data file changed, which requires a soft-reload of state.
+                        App.ui.showToast('App data (settings, tasks) synced. Reload recommended.', { type: 'info', duration: 10000 });
+                    }
+
+                    if (articleChanges || singletonChanges) {
+                        if (!isSilent) App.ui.showToast('Sync Complete!', { type: 'success' }); 
                     } else if (!isSilent) {
                         App.ui.showToast("Everything is up to date.", { type: 'success' });
                     }
+
                     await App.settings.set('lastSyncTimestamp', new Date().toISOString());
 
                 } catch (error) {
                     console.error("Sync Error:", error);
-                    if (!isSilent) App.ui.showToast("Sync failed. Check console.", { type: 'error' });
+                    if (!isSilent) App.ui.showToast(`Sync failed: ${error.message}`, { type: 'error' });
                 } finally {
                     App.state.isSyncing = false;
                     if (document.getElementById('settings-modal-content')) App.ui.showSettingsModal();
                 }
             },
+
             async downloadFile(remoteMeta) {
                 return await this.apiCall('files/download', null, { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: remoteMeta.path_lower }) }, isDownload: true });
             },
@@ -11628,96 +11810,154 @@
             },
 
 
-            showStorageModal() {
-
+            async showStorageModal() {
+                // --- 1. GET CURRENT STATE ---
+                const isPremium = App.license.isPremium();
                 const clientId = App.settings.get('dropboxClientId') || '';
                 const isConnected = App.state.isDropboxReady;
                 const hasKey = !!clientId.trim();
                 const syncEnabled = App.settings.get('enableDropboxSync');
                 const lastSyncTime = App.util.formatTimestamp(App.settings.get('lastSyncTimestamp'));
 
-                let syncSectionHTML = `
-                    <div class="settings-item">
-                        <div class="settings-label"><b>Enable Dropbox Sync</b><small>Automatically back up and sync notes.</small></div>
-                        <div id="sync-toggle" class="toggle-switch ${syncEnabled ? 'active' : ''}"></div>
-                    </div>`;
+                // --- 2. BUILD THE CLOUD SYNC SECTION HTML ---
 
-                if (syncEnabled) {
-                    syncSectionHTML += `
+                // This class locks the entire section if the user is not premium.
+                const premiumLockClass = !isPremium ? 'premium-feature-locked' : '';
+                let cloudSyncHTML = '';
+
+                if (!isPremium) {
+                    // --- STATE A: SPARK (FREE) USER ---
+                    // Show a clear upsell message.
+                    cloudSyncHTML = `
+                        <div class="premium-cta-text" style="text-align: center; padding: 1rem; background: var(--bg-tertiary); border-radius: var(--border-radius-lg);">
+                            Cloud Sync is a Premium feature.
+                            <button class="btn btn-primary" style="margin-top: 0.75rem;" onclick="App.ui.showAscensionModal()">Unlock All Features</button>
+                        </div>
+                    `;
+                } else {
+                    // --- STATE B-E: PREMIUM USER ---
+                    // The user is Premium, so we show the step-by-step setup.
+
+                    // STEP 1: API Key Input (Always visible for premium users)
+                    const step1_ApiKeyHTML = `
                         <div class="settings-item">
                             <div class="settings-label">
-                                <b>Status</b>
-                                <small style="display:flex; align-items:center; gap: 6px;">
-                                    <span class="sync-status-dot ${isConnected ? 'active' : ''}"></span>
-                                    ${isConnected && App.state.dropboxUser ? `Connected as ${App.state.dropboxUser.email}` : 'Not Connected'}
-                                </small>
+                                <b>Step 1: Set Your API Key</b>
+                                <small>Get this from your Dropbox App Console.</small>
                             </div>
                         </div>
+                        <div style="display:flex; gap: 8px; align-items: stretch; margin-top: -0.5rem; margin-bottom: 1rem;">
+                            <input type="password" id="dropbox-client-id-input" class="text-input" placeholder="Paste your App Key (Client ID) here" value="${clientId}">
+                            <button class="btn btn-secondary" onclick="${hasKey ? 'App.events.removeDropboxClientId()' : 'App.events.saveDropboxClientId()'}">${hasKey ? 'Remove' : 'Save'}</button>
+                        </div>
+                    `;
+
+                    // STEP 2: Connect Button (Enabled only if key is saved)
+                    const step2_ConnectHTML = `
                         <div class="settings-item">
-                            <div class="settings-label"><b>Manual Sync</b><small>Last successful sync: ${lastSyncTime}</small></div>
-                            <button id="sync-now-btn" class="btn btn-primary" onclick="App.dropbox.syncChanges()" ${!App.state.directoryHandle || !isConnected ? 'disabled' : ''}>
+                            <div class="settings-label">
+                                <b>Step 2: Connect to Dropbox</b>
+                                <small>${isConnected ? `Connected as ${App.state.dropboxUser.email}` : 'Please save an API key and connect.'}</small>
+                            </div>
+                            ${isConnected ? 
+                                `<button class="btn btn-danger" onclick="App.dropbox.disconnect(); App.ui.showStorageModal();">Disconnect</button>` : 
+                                `<button class="btn btn-primary" onclick="App.dropbox.connect()" ${!hasKey ? 'disabled' : ''}>Connect</button>`
+                            }
+                        </div>
+                    `;
+
+                    // STEP 3: Enable Toggle (Enabled only if connected)
+                    const step3_EnableHTML = `
+                        <div class="settings-item" style="${!isConnected ? 'opacity: 0.5; pointer-events: none;' : ''}">
+                            <div class="settings-label">
+                                <b>Step 3: Enable Sync</b>
+                                <small>${!isConnected ? 'You must be connected to enable sync.' : 'Turn on automatic syncing.'}</small>
+                            </div>
+                            <div id="sync-toggle" class="toggle-switch ${syncEnabled ? 'active' : ''} ${!isConnected ? 'is-disabled' : ''}"></div>
+                        </div>
+                    `;
+
+                    // STEP 4: Manual Sync Button (Visible only if enabled)
+                    const step4_ManualSyncHTML = (isConnected && syncEnabled) ? `
+                        <div class="settings-item">
+                            <div class="settings-label">
+                                <b>Manual Sync</b>
+                                <small>Last sync: ${lastSyncTime}</small>
+                            </div>
+                            <button id="sync-now-btn" class="btn btn-primary" onclick="App.dropbox.syncChanges()" ${!App.state.directoryHandle && App.state.storageMode !== 'browser' ? 'disabled' : ''} title="${!App.state.directoryHandle && App.state.storageMode !== 'browser' ? 'Please select a folder or use browser storage first.' : 'Sync Now'}">
                                 ${App.state.isSyncing ? `<i class="fa-solid fa-arrows-rotate spin"></i> Syncing...` : 'Sync Now'}
                             </button>
                         </div>
-                        <div class="settings-item">
-                            <div class="settings-label"><b>Setup</b><small>Manage your Dropbox connection and API key.</small></div>
-                            <div style="display:flex; gap: 8px;">
-                                <button class="btn btn-secondary" onclick="document.getElementById('dropbox-guide-content').style.display = document.getElementById('dropbox-guide-content').style.display === 'block' ? 'none' : 'block';">Setup Guide</button>
-                                ${isConnected ? `<button class="btn btn-danger" onclick="App.dropbox.disconnect(); App.ui.closeModal(); App.ui.showStorageModal();">Disconnect</button>` : `<button class="btn btn-primary" onclick="App.dropbox.connect()" ${!hasKey ? 'disabled' : ''}>Connect</button>`}
+                    ` : '';
+
+                    // HELP GUIDE: Separate from the inputs, always available at the bottom.
+                    const helpGuideHTML = `
+                        <div class="settings-item" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                            <div class="settings-label">
+                                <b>Need help?</b>
+                                <small>Follow these steps to get your API key.</small>
                             </div>
+                            <button class="btn btn-secondary" onclick="document.getElementById('dropbox-guide-content').style.display = document.getElementById('dropbox-guide-content').style.display === 'block' ? 'none' : 'block';">
+                                Show Setup Guide
+                            </button>
                         </div>
-                        <div class="guide-content" id="dropbox-guide-content">
-                             <h5>1. API Key</h5>
-                             <p>Get your Client ID from the Dropbox App Console and paste it below.</p>
-                             <div style="display:flex; gap: 8px; align-items: stretch;">
-                                <input type="${hasKey ? 'password' : 'text'}" id="dropbox-client-id-input" class="text-input" placeholder="Paste your App Key (Client ID) here" value="${clientId}" ${hasKey ? 'readonly' : ''} style="flex-grow: 1;">
-                                <button class="btn btn-secondary" onclick="${hasKey ? 'App.events.removeDropboxClientId()' : 'App.events.saveDropboxClientId()'}">${hasKey ? 'Remove' : 'Save'}</button>
-                             </div>
-                             <h5 style="margin-top: 1rem;">2. Create Dropbox App</h5>
-                             <p>If you don't have an App Key, follow these steps:</p>
-                             <ol>
-                                 <li>Go to the <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer">Dropbox App Console</a> and click <strong>Create app</strong>.</li>
-                                 <li>Select <strong>Scoped access</strong> &rarr; <strong>App folder</strong>. Name your app.</li>
-                                 <li>In <strong>Permissions</strong>, check <code>files.content.read</code> and <code>files.content.write</code>. Submit.</li>
-                                 <li>In <strong>Settings</strong>, add your Redirect URI: <code>${window.location.origin + window.location.pathname}</code></li>
-                                 <li>Copy the <strong>App key (Client ID)</strong> and save it above.</li>
-                             </ol>
+                        <div class="guide-content" id="dropbox-guide-content" style="display: none;">
+                            <h3>1. Create Dropbox App</h3>
+                            <ol>
+                                <li>Go to the <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer">Dropbox App Console</a> and click <strong>Create app</strong>.</li>
+                                <li>Select <strong>Scoped access</strong> &rarr; <strong>App folder</strong>. Name your app (e.g., "NoteKashSync").</li>
+                                <li>In <strong>Permissions</strong>, check <code>files.content.read</code> and <code>files.content.write</code>. Click Submit. (you can allow more items as well)</li>
+                                <li>In <strong>Settings</strong>, find "Redirect URIs" and add this exact URL: <code>https://notekash.com</code> or you can copy from "web address" as well. </li> 
+                                <li>Copy the <strong>App key (Client ID)</strong> from this page.</li>
+                            </ol>
+                            <h3>2. Save Your Key</h3>
+                            <p>Paste the <strong>App key (Client ID)</strong> into the "Step 1" input box above and click <strong>Save</strong> then click <strong> Connect </strong> and you have sucessfully connected the <strong> powerful Automatic Multi Device Sync </strong>.</p>
                         </div>
-                        `;
+                    `;
+
+                    // Combine all parts for the premium user
+                    cloudSyncHTML = step1_ApiKeyHTML + step2_ConnectHTML + step3_EnableHTML + step4_ManualSyncHTML + helpGuideHTML;
                 }
-                
+
+                // --- 3. ASSEMBLE THE FINAL MODAL ---
                 const modalHTML = `
-                <div class="modal-backdrop" onclick="if(event.target === this) App.ui.closeModal()">
-                    <div class="modal-content ui-card" style="max-width: 550px;" onclick="event.stopPropagation()">
-                        <h3 style="text-align: center;">Storage & Sync</h3>
-                        
-                        <div class="settings-section">
-                            <h4><i class="fa-solid fa-folder-open"></i> Local Storage</h4>
-                            <div class="settings-item">
-                                <div class="settings-label"><b>Notes Folder</b><small>${App.state.directoryHandle ? `Using folder: '${App.state.directoryHandle.name}'` : 'Using Browser Storage.'}</small></div>
-                                <button class="btn btn-secondary" onclick="App.ui.closeModal(); App.router.navigateTo('welcome');">Change</button>
-                            </div>
-                            <div class="settings-item">
-                                <div class="settings-label"><b>Backup</b><small>Save or restore all data from a .zip file.</small></div>
-                                <div style="display:flex; gap: 8px;">
-                                    <button class="btn btn-secondary" onclick="App.events.triggerZipImport()">Import</button>
-                                    <button class="btn btn-secondary" onclick="App.services.backup.exportToZip()">Export</button>
+                    <div class="modal-backdrop" onclick="if(event.target === this) App.ui.closeModal()">
+                        <div class="modal-content ui-card" style="max-width: 550px;" onclick="event.stopPropagation()">
+                            <h3 style="text-align: center;">Storage & Sync</h3>
+
+                            <div class="settings-section">
+                                <h4><i class="fa-solid fa-folder-open"></i> Local Storage</h4>
+                                <div class="settings-item">
+                                    <div class="settings-label"><b>Notes Folder</b><small>${App.state.directoryHandle ? `Using folder: '${App.state.directoryHandle.name}'` : 'Using Browser Storage.'}</small></div>
+                                    <button class="btn btn-secondary" onclick="App.ui.closeModal(); App.router.navigateTo('welcome');">Change</button>
+                                </div>
+                                <div class="settings-item">
+                                    <div class="settings-label"><b>Backup</b><small>Save or Restore your Note or All Data files.</small></div>
+                                    <div style="display:flex; gap: 8px;">
+                                        <button class="btn btn-secondary" onclick="App.events.triggerZipImport()">Import</button>
+                                        <button class="btn btn-secondary" onclick="App.services.backup.exportToZip()">Export</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="settings-section">
-                            <h4><i class="fa-brands fa-dropbox"></i> Cloud Sync</h4>
-                            ${syncSectionHTML}
+                            <div classs="settings-section ${premiumLockClass}">
+                                <h4><i class="fa-brands fa-dropbox"></i> Cloud Sync</h4>
+                                ${cloudSyncHTML}
+                            </div>
+
+                            <div class="modal-buttons">
+                                <button class="btn btn-secondary" onclick="App.ui.closeModal(); App.ui.showSettingsModal();">Back to Settings</button>
+                            </div>
                         </div>
-                        
-                        <div class="modal-buttons">
-                            <button class="btn btn-secondary" onclick="App.ui.closeModal(); App.ui.showSettingsModal();">Back to Settings</button>
-                        </div>
-                    </div>
-                </div>`;
+                    </div>`;
+
                 document.getElementById('modal-container').innerHTML = modalHTML;
-                document.getElementById('sync-toggle')?.addEventListener('click', App.events.handleSyncToggle);
+
+                // --- 4. RE-ATTACH LISTENERS ---
+                const syncToggle = document.getElementById('sync-toggle');
+                if (syncToggle && !syncToggle.classList.contains('is-disabled')) {
+                    syncToggle.addEventListener('click', App.events.handleSyncToggle);
+                }
             },
 
 
@@ -12562,11 +12802,7 @@
                 }
                 const syncEnabled = App.settings.get('enableDropboxSync');
                 App.settings.set('enableDropboxSync', !syncEnabled);
-                const modalContent = document.getElementById('settings-modal-content');
-                if (modalContent) {
-                    App.ui.showSettingsModal(); // Re-render the modal content in place
-                }
-
+                App.ui.showStorageModal();
                 if (!syncEnabled && App.dropbox.isReady()) {
                     App.dropbox.syncChanges(true);
                 }
