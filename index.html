@@ -1193,7 +1193,7 @@
         /* === ELEGANT FLOATING TOOLBAR (v2 POLISH) === */
         .article-controls {
             position: fixed;
-            bottom: 1.5rem; 
+            bottom: 0.8rem; 
             left: 50%;
             transform: translateX(-50%); 
             width: auto; 
@@ -1205,7 +1205,7 @@
             backdrop-filter: blur(var(--blur-intensity));
             -webkit-backdrop-filter: blur(var(--blur-intensity));
 
-            padding: 6px; 
+            padding: 4px; /* POLISH: Tighter padding */
             border-radius: 9999px; 
             border: 1px solid var(--border-color);
             box-shadow: var(--shadow-lg); 
@@ -1213,6 +1213,7 @@
             z-index: 1001;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         }
+
         .toolbar-wrapper.vertical .control-divider {
             width: 80%; 
             height: 1px;
@@ -1241,8 +1242,8 @@
 
         /* --- Polished Button Styles within the Toolbar --- */
         .article-controls .btn-icon {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background-color: transparent; 
             color: var(--text-secondary);
@@ -1270,7 +1271,7 @@
         /* Mobile-specific adjustments for the floating bar */
         body.mobile-view .article-controls {
             max-width: 95vw; /* Prevents touching screen edges */
-            bottom: 1rem; /* A bit closer for easier thumb reach */
+            bottom: 0.5rem; /* A bit closer for easier thumb reach */
             padding: 4px;
         }
         
@@ -1282,7 +1283,7 @@
         @keyframes heart-pop { 0% { transform: scale(1); } 25% { transform: scale(1.4); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         body.fullscreen-active header, body.fullscreen-active .article-controls { transform: translateY(100%); opacity: 0; pointer-events: none; }
         body.fullscreen-active header { display: none; }
-        #focus-mode-toggle { position: fixed; bottom: 20px; right: 20px; z-index: 1002; display: none; animation: fadeIn 0.3s; }
+        #focus-mode-toggle { position: fixed; bottom: 1.1rem; right: 1.5rem; z-index: 1002; display: none; animation: fadeIn 0.3s; }
         body.fullscreen-active #focus-mode-toggle { display: block; }
         #focus-mode-toggle.exit-active { animation: slow-pulse 4s infinite; }
         @keyframes slow-pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
@@ -2074,11 +2075,18 @@
             box-shadow: var(--shadow-lg);
         }
         .focus-mode-controls .btn-icon, .focus-mode-controls .toggle-switch {
-            width: 40px;
-            height: 40px;
+            width: 38px;  /* POLISH: Slightly smaller */
+            height: 38px; /* POLISH: Slightly smaller */
             background-color: var(--bg-secondary);
             box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .focus-mode-controls .btn-icon svg {
+            width: 22px;
+            height: 22px;
         }
         .focus-mode-controls .btn-icon:hover {
             background-color: var(--bg-tertiary);
@@ -2158,9 +2166,18 @@
 
         .stage-mode-controls .btn-icon,
         .stage-mode-controls .toggle-switch {
-            width: 36px; 
-            height: 36px; 
+            width: 34px;  /* POLISH: Slightly smaller */
+            height: 34px; /* POLISH: Slightly smaller */
+            display: flex; 
+            align-items: center;
+            justify-content: center;
         }
+        .stage-mode-controls .btn-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+
         .stage-snippet-counter {
             font-weight: 500; color: var(--text-secondary);
             font-variant-numeric: tabular-nums; user-select: none;
@@ -2316,6 +2333,212 @@
             color: var(--text-on-primary);
             background-color: var(--primary-color);
         }
+
+        /* --- UPGRADED: Teleprompter Mode (for Stage Mode) --- */
+        .focus-mode-overlay.teleprompter-active {
+            flex-direction: row;
+            padding: 0; /* Full bleed for the two columns */
+        }
+
+        #teleprompter-sidebar {
+            position: relative; /* This is new, to anchor the controls */
+            width: 30%;
+            height: 100%;
+            flex-shrink: 0;
+            background-color: rgba(var(--bg-secondary-rgb), 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 3rem 0.3rem 1.5rem 0.6rem;
+            font-family: var(--font-serif);
+            font-size: var(--teleprompter-font-size, 1.1rem);
+            line-height: 1.6;
+            animation: fadeIn 0.3s ease-out;
+            z-index: 20002;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            color: var(--text-primary);
+            mask-image: linear-gradient(to bottom, 
+                transparent 0%, 
+                black 15%, 
+                black 85%, 
+                transparent 100%
+            );
+            scroll-behavior: smooth; 
+        }
+        /* --- NEW: Aesthetic Teleprompter Scrollbar --- */
+        #teleprompter-sidebar::-webkit-scrollbar {
+            width: 8px; /* Make scrollbar very thin */
+        }
+        #teleprompter-sidebar::-webkit-scrollbar-track {
+            background: transparent; /* No visible track */
+        }
+
+        #teleprompter-sidebar::-webkit-scrollbar-thumb {
+            background-color: var(--border-color); /* Use a subtle theme color */
+            border-radius: 4px;
+            border: 2px solid transparent; /* Creates a "padding" effect */
+            background-clip: content-box;
+        }
+        #teleprompter-sidebar::-webkit-scrollbar-thumb:hover {
+            background-color: var(--primary-color);
+        }
+        #teleprompter-sidebar blockquote {
+            margin-left: 0.25em;  /* A tiny indent */
+            padding-left: 0.5em; /* A much smaller padding */
+            border-left: 3px solid var(--border-color); /* A more subtle border */
+            font-style: italic;
+        }
+        /* --- NEW: "Smart" Text Highlight Logic --- */
+        #teleprompter-sidebar :is(h1, h2, h3, h4, h5, h6, b, strong, [class*="highlight-"], [class*="text-"]) {
+            color: var(--primary-color) !important;
+            font-weight: 600 !important;
+            background: none !important; /* Remove highlight backgrounds */
+            border: none !important;
+        }
+
+        /* Hide complex blocks from the simple teleprompter view */
+        #teleprompter-sidebar .nk-mcq-block,
+        #teleprompter-sidebar .nk-timeline-block,
+        #teleprompter-sidebar .chart-container,
+        #teleprompter-sidebar .nk-accordion,
+        #teleprompter-sidebar .nk-textile-deck,
+        #teleprompter-sidebar .nk-audio-player,
+        #teleprompter-sidebar .pdf-attachment-pill,
+        #teleprompter-sidebar .image-container {
+            display: none;
+        }
+
+        /* Ensure clean text flow */
+        #teleprompter-sidebar p,
+        #teleprompter-sidebar li {
+            font-size: inherit !important;
+            line-height: inherit !important;
+            color: inherit !important;
+        }
+        #teleprompter-sidebar ul,
+        #teleprompter-sidebar ol {
+            padding-left: 1.5em; /* Base small indent */
+        }
+
+        #teleprompter-sidebar ul ul,
+        #teleprompter-sidebar ol ol,
+        #teleprompter-sidebar ol ul,
+        #teleprompter-sidebar ul ol {
+            padding-left: 0.25em; 
+            margin-left: 0;
+            list-style-type: square !important; 
+        }
+
+        .focus-mode-overlay.teleprompter-active .focus-mode-content {
+            width: 70%;
+            flex-grow: 1;
+        }
+
+        /* Re-center the stage controls over the 70% presentation panel */
+        .focus-mode-overlay.teleprompter-active .stage-mode-controls {
+            left: 65%;
+        }
+
+        /* Re-center the annotation toolbar */
+        .focus-mode-overlay.teleprompter-active #annotation-toolbar {
+            left: 65%;
+        }
+
+        /* --- UPGRADED: Mobile Teleprompter (Bottom Bar) --- */
+        body.mobile-view .focus-mode-overlay.teleprompter-active {
+            flex-direction: column; /* Stack vertically */
+        }
+
+        body.mobile-view .focus-mode-overlay.teleprompter-active .focus-mode-content {
+            order: 1; /* Content (70%) comes first */
+            width: 100%;
+            height: 70%;
+        }
+
+        body.mobile-view #teleprompter-sidebar {
+            order: 2; /* Teleprompter (30%) comes second */
+            width: 100%;
+            height: 30%;
+            border-right: none; /* No side border */
+            border-top: 1px solid var(--border-color); /* Top border instead */
+        }
+
+        /* Re-position controls to sit *above* the 30% teleprompter bar */
+        body.mobile-view .focus-mode-overlay.teleprompter-active .stage-mode-controls,
+        body.mobile-view .focus-mode-overlay.teleprompter-active #annotation-toolbar {
+            left: 50%;
+            bottom: 30%; /* Sit on top of the 30% bar */
+            margin-bottom: 0.5rem; /* Add a small margin */
+            transform: translateX(-50%); /* Keep it centered */
+        }
+
+        /* --- NEW: Teleprompter-Specific Controls (V2 Design) --- */
+        #teleprompter-controls {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            z-index: 10;
+            display: none; /* Hidden by default */
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
+            background-color: rgba(var(--bg-secondary-rgb), 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow);
+        }
+
+        /* Only show the controls when the teleprompter is active */
+        .focus-mode-overlay.teleprompter-active #teleprompter-controls {
+            display: flex;
+        }
+
+        #teleprompter-controls .btn-icon {
+            width: 32px;
+            height: 32px;
+            background-color: var(--bg-tertiary);
+        }
+/* --- NEW: Teleprompter Resizer Handle --- */
+        #teleprompter-resizer {
+            position: absolute;
+            z-index: 15; /* Sits on top of the sidebar */
+            background-color: transparent;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        #teleprompter-resizer:hover,
+        #teleprompter-resizer.is-resizing {
+            background-color: var(--primary-color);
+            opacity: 0.7;
+        }
+
+        /* Desktop (Vertical Handle) */
+        body:not(.mobile-view) #teleprompter-resizer {
+            top: 0;
+            bottom: 0;
+            left: 100%; /* Sits on the right edge of the sidebar */
+            width: 8px;
+            cursor: col-resize;
+            transform: translateX(-50%); /* Center the 8px handle on the edge */
+        }
+        
+        /* Mobile (Horizontal Handle) */
+        body.mobile-view #teleprompter-resizer {
+            left: 0;
+            right: 0;
+            top: 100%; /* Sits on the bottom edge of the sidebar */
+            height: 8px;
+            cursor: row-resize;
+            transform: translateY(-50%); /* Center the 8px handle on the edge */
+        }
+
+
         /* --- NEW: Annotation Toolbar Styles --- */
         #annotation-toolbar {
             position: fixed;
@@ -2922,7 +3145,8 @@
         ========================================================================== */
 
         html, body {
-            height: 100vh;
+            height: 100vh; /* fallback */
+            height: 100dvh; /* Modern unit */
             margin: 0;
             overflow: hidden;
         }
@@ -7254,7 +7478,10 @@
                 isStageMode: false,
                 currentSlideIndex: 0,
                 scrollStops: [],
-                isCinematicActive: false
+                isCinematicActive: false,
+                teleprompterActive: false,
+                teleprompterSize: 30,
+                teleprompterFontSize: 1.1, 
             },
             autosaveInterval: null,
             // New states from ProtoTags
@@ -9892,11 +10119,16 @@
                     <div class="stage-progress-indicator" title="Jump to slide">${progressDots}</div>
                     <button class="btn-icon" onclick="App.events.navigateStageSlide(1)" title="Next Slide (→)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg></button>
                     <div class="control-divider"></div>
+
+                    <button class="btn-icon" id="teleprompter-toggle-btn" onclick="App.events.presentation.toggleTeleprompter()" title="Toggle Teleprompter (i)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 3h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM4 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1v-1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h1V2H4z"/><path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg>
+                    </button>
                     <button class="btn-icon ${highlightsVisible ? 'active' : ''}" onclick="App.events.toggleStageModeHighlights(this)" title="Toggle Highlight Colors (H)">${highlighterIcon}</button>
+
                     <div class="${premiumLockClass}">
                         <button class="btn-icon ${cinematicActive ? 'active' : ''}" onclick="${cinematicOnClick}" title="Toggle Cinematic Reveal">${cinematicIcon}</button>
                     </div>
-                   <div class="${premiumLockClass}">
+                <div class="${premiumLockClass}">
                         <button class="btn-icon annotation-btn" onclick="${annotationOnClick}" title="Toggle Annotation (D)">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
                         </button>
@@ -12695,9 +12927,6 @@
                     const targetSnippet = snippets[newIndex];
 
                     if (targetSnippet) {
-                        // --- THIS IS THE FIX ---
-                        // Hide all snippets first, then reveal only the target one.
-                        // This ensures the "one-at-a-time" cinematic effect is restored.
                         snippets.forEach(s => s.classList.remove('is-revealing'));
                         targetSnippet.classList.add('is-revealing');
                         
@@ -12711,7 +12940,195 @@
                     
                     this.currentSnippetIndex = newIndex;
                 },
+
+
+                _handleTeleprompterDragStart(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const resizer = document.getElementById('teleprompter-resizer');
+                    if (resizer) resizer.classList.add('is-resizing');
+
+                    document.addEventListener('mousemove', App.events.presentation._handleTeleprompterDrag);
+                    document.addEventListener('mouseup', App.events.presentation._handleTeleprompterDragEnd);
+                    document.addEventListener('touchmove', App.events.presentation._handleTeleprompterDrag, { passive: false });
+                    document.addEventListener('touchend', App.events.presentation._handleTeleprompterDragEnd);
+                },
+
+                _handleTeleprompterDrag(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const session = App.state.focusSession;
+                    if (!session.teleprompterActive) return;
+
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                    const sidebar = document.getElementById('teleprompter-sidebar');
+                    const content = document.querySelector('.focus-mode-overlay.teleprompter-active .focus-mode-content');
+                    if (!sidebar || !content) return;
+
+                    let newPercentage = 30;
+
+                    if (document.body.classList.contains('mobile-view')) {
+                        // Mobile: Vertical resize (based on height)
+                        const headerHeight = document.querySelector('header')?.offsetHeight || 48;
+                        const newHeight = clientY - headerHeight;
+                        newPercentage = (newHeight / window.innerHeight) * 100;
+                        newPercentage = Math.max(15, Math.min(85, newPercentage)); // Clamp between 15% and 85% height
+                        
+                        sidebar.style.height = `${100 - newPercentage}%`;
+                        content.style.height = `${newPercentage}%`;
+                    } else {
+                        // Desktop: Horizontal resize (based on width)
+                        newPercentage = (clientX / window.innerWidth) * 100;
+                        newPercentage = Math.max(15, Math.min(60, newPercentage)); // Clamp between 15% and 60% width
+
+                        sidebar.style.width = `${newPercentage}%`;
+                        content.style.width = `${100 - newPercentage}%`;
+                    }
+
+                    session.teleprompterSize = newPercentage;
+                    
+                    // Recalculate stage mode layout *after* the DOM has updated
+                    requestAnimationFrame(() => {
+                        const bodyEl = document.querySelector('.focus-mode-body');
+                        if (bodyEl && session.isStageMode) {
+                            session.scrollStops = App.ui._calculateScrollStops(bodyEl);
+                        }
+                    });
+                },
+
+                _handleTeleprompterDragEnd(e) {
+                    const resizer = document.getElementById('teleprompter-resizer');
+                    if (resizer) resizer.classList.remove('is-resizing');
+
+                    document.removeEventListener('mousemove', App.events.presentation._handleTeleprompterDrag);
+                    document.removeEventListener('mouseup', App.events.presentation._handleTeleprompterDragEnd);
+                    document.removeEventListener('touchmove', App.events.presentation._handleTeleprompterDrag);
+                    document.removeEventListener('touchend', App.events.presentation._handleTeleprompterDragEnd);
+
+                    // Final recalculation to ensure scroll stops are perfect
+                    const session = App.state.focusSession;
+                    const bodyEl = document.querySelector('.focus-mode-body');
+                    if (bodyEl && session.isStageMode) {
+                        session.scrollStops = App.ui._calculateScrollStops(bodyEl);
+                    }
+                },
+
+                adjustTeleprompterFont(delta) {
+                    const session = App.state.focusSession;
+                    const sidebar = document.getElementById('teleprompter-sidebar');
+                    if (!session.isActive || !session.teleprompterActive || !sidebar) return;
+                    const currentSizeString = getComputedStyle(sidebar).getPropertyValue('--teleprompter-font-size') || '1.1rem';
+            
+                    let currentSizeNum = parseFloat(currentSizeString);
+                    if (isNaN(currentSizeNum)) {
+                        currentSizeNum = 1.1;
+                    }
+                    let newSize = currentSizeNum + delta;
+                    newSize = Math.max(0.5, Math.min(3.0, newSize)); // Clamp size
+
+                    session.teleprompterFontSize = newSize; // Store the new number
+                    sidebar.style.setProperty('--teleprompter-font-size', `${newSize}rem`);
+                },
+
+                toggleTeleprompter() {
+                    const session = App.state.focusSession;
+                    if (!session.isActive) return;
+
+                    session.teleprompterActive = !session.teleprompterActive;
+                    const overlay = document.getElementById('focus-mode-overlay');
+                    const toggleBtn = document.getElementById('teleprompter-toggle-btn');
+                    const contentEl = overlay.querySelector('.focus-mode-content');
+
+                    overlay.classList.toggle('teleprompter-active', session.teleprompterActive);
+                    if (toggleBtn) {
+                        toggleBtn.classList.toggle('active', session.teleprompterActive);
+                    }
+
+                    let sidebar = document.getElementById('teleprompter-sidebar');
+
+                    if (session.teleprompterActive) {
+                        if (!sidebar) {
+                            sidebar = document.createElement('div');
+                            sidebar.id = 'teleprompter-sidebar';
+                            overlay.insertBefore(sidebar, contentEl);
+                        }
+                        
+                        const size = session.teleprompterSize || 30;
+                        const contentSize = 100 - size;
+
+                        if (document.body.classList.contains('mobile-view')) {
+                            // Mobile: Apply height
+                            sidebar.style.height = `${contentSize}%`; // Teleprompter is on bottom
+                            contentEl.style.height = `${size}%`;     // Content is on top
+                        } else {
+                            // Desktop: Apply width
+                            sidebar.style.width = `${size}%`;
+                            contentEl.style.width = `${contentSize}%`;
+                        }
+
+                        sidebar.style.setProperty('--teleprompter-font-size', `${session.teleprompterFontSize}rem`);
+                        
+                        const article = App.storage.getArticle(session.articles[session.currentIndex].id);
+                       if (article && article.content) {
+                            let parsedContent = App.util.parseShortcuts(article.content);
+                            let teleprompterFriendlyContent = App.util._transformMcqsForTeleprompter(parsedContent);
+                            teleprompterFriendlyContent = App.util._transformAccordionsForTeleprompter(teleprompterFriendlyContent);
+                            let finalContentHTML = App.util.sanitizeForTeleprompter(teleprompterFriendlyContent);
+
+                            sidebar.innerHTML = finalContentHTML;
+                        } else {
+                            sidebar.innerHTML = "<p>Could not load article content.</p>";
+                        }
+                        
+                        const controlsHTML = `
+                            <div id="teleprompter-controls">
+                                <button class="btn-icon" id="tp-font-dec" onclick="App.events.presentation.adjustTeleprompterFont(-0.1)" title="Decrease Font Size (-)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8z"/></svg>
+                                </button>
+                                <button class="btn-icon" id="tp-font-inc" onclick="App.events.presentation.adjustTeleprompterFont(0.1)" title="Increase Font Size (+)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                                </button>
+                            </div>
+                        `;
+                        sidebar.insertAdjacentHTML('afterbegin', controlsHTML);
+                        
+                        const resizer = document.createElement('div');
+                        resizer.id = 'teleprompter-resizer';
+                        sidebar.appendChild(resizer); // Append to sidebar for correct positioning
+                        
+                        resizer.addEventListener('mousedown', App.events.presentation._handleTeleprompterDragStart);
+                        resizer.addEventListener('touchstart', App.events.presentation._handleTeleprompterDragStart, { passive: false });
+
+                        App.ui.showToast('Teleprompter On', 'info');
+
+                    } else {
+                        if (sidebar) {
+                            sidebar.remove(); // This removes the sidebar and its child resizer
+                        }
+                        if (document.body.classList.contains('mobile-view')) {
+                            contentEl.style.height = '100%';
+                        } else {
+                            contentEl.style.width = '100%';
+                        }
+
+                        App.ui.showToast('Teleprompter Off', 'info');
+                    }
+
+                    setTimeout(() => {
+                        const bodyEl = overlay.querySelector('.focus-mode-body');
+                        if (bodyEl) {
+                            session.scrollStops = App.ui._calculateScrollStops(bodyEl);
+                            bodyEl.scrollTo({ top: session.scrollStops[session.currentSlideIndex], behavior: 'auto' });
+                        }
+                    }, 100);
+                },
             },
+
+
 
             unmountViewListeners() {
             
@@ -17231,6 +17648,7 @@
                     scrollStops: [],
                     activeTheme: 'default',
                     isCinematicActive: false,
+                    teleprompterActive: false,
                     annotations: articleForAnnotations.stageAnnotations ? JSON.parse(JSON.stringify(articleForAnnotations.stageAnnotations)) : {},
                 };
 
@@ -17280,7 +17698,7 @@
                     scrollStops: [],
                     activeTheme: 'default',
                     isCinematicActive: false,
-                    // Annotations are tied to single articles, so we initialize empty for a category view
+                    teleprompterActive: false,
                     annotations: {}, 
                 };
 
@@ -17546,6 +17964,15 @@
                         case 'w': App.events.annotation.toggleWhiteboard(document.querySelector('#annotation-toolbar .btn-icon[onclick*="toggleWhiteboard"]')); break;
                         
                         case 'h': document.querySelector('.stage-mode-controls .btn-icon[onclick*="toggleStageModeHighlights"]')?.click(); break;
+                        case 'i': App.events.presentation.toggleTeleprompter(); break;
+                        case '+':
+                        case '=':
+                            App.events.presentation.adjustTeleprompterFont(0.1);
+                            break;
+                        case '-':
+                            App.events.presentation.adjustTeleprompterFont(-0.1);
+                            break;
+
                         case 'escape':
                             const overlay = document.querySelector('.focus-mode-overlay');
                             if (overlay?.classList.contains('annotation-active')) App.events.annotation.toggle();
@@ -19203,6 +19630,41 @@
                 if (result.includes('\t') || result.includes('\n') || result.includes('"')) result = '"' + result.replace(/"/g, '""') + '"';
                 return result;
             },
+
+            sanitizeForTeleprompter(htmlString) {
+                const allowedTags = [
+                    'P', 'BR', 'B', 'I', 'U', 'STRONG', 'EM', 'SPAN', 
+                    'UL', 'OL', 'LI', 'BLOCKQUOTE', 'HR',
+                    'H1', 'H2', 'H3', 'H4', 'H5', 'H6'
+                ];
+                const allowedAttributes = {
+                    'span': ['class'] // Only allow 'class' for highlights/text-colors
+                };
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlString;
+                const allNodes = tempDiv.querySelectorAll('*');
+
+                allNodes.forEach(node => {
+                    const tagName = node.tagName.toUpperCase();
+                    if (!allowedTags.includes(tagName)) {
+                        // We use unwrapNode to keep the text content (e.g., from a link)
+                        App.util.unwrapNode(node);
+                        return;
+                    }
+                    for (const attr of [...node.attributes]) {
+                        const attrName = attr.name.toLowerCase();
+                        const allowedForTag = allowedAttributes[tagName.toLowerCase()] || [];
+
+                        if (!allowedForTag.includes(attrName)) {
+                            node.removeAttribute(attr.name);
+                        }
+                    }
+                });
+
+                return tempDiv.innerHTML;
+            },
+
             sanitizeHTML(htmlString) {
                 const { allowedTags, allowedAttributes } = App.config.sanitizer;
                 const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlString;
@@ -19570,6 +20032,73 @@
                 return newCategoriesAdded;
             },
             
+            _transformMcqsForTeleprompter(htmlString) {
+                if (!htmlString || !htmlString.includes('nk-mcq-block')) {
+                    return htmlString; // No MCQs, return immediately.
+                }
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlString;
+
+                const mcqBlocks = tempDiv.querySelectorAll('.nk-mcq-block');
+                if (mcqBlocks.length === 0) {
+                    return htmlString; // No MCQs found by selector, return.
+                }
+
+                mcqBlocks.forEach(block => {
+                    const questionEl = block.querySelector('.nk-mcq-question');
+                    const options = block.querySelectorAll('.nk-mcq-option');
+
+                    if (!questionEl || options.length === 0) return; // Malformed MCQ, skip it.
+                    const questionText = questionEl.innerHTML;
+                    const optionsHTML = Array.from(options).map(opt => {
+                        const optionTextEl = opt.querySelector('.nk-mcq-option-text');
+                        if (!optionTextEl) return '';
+                        
+                        const optionText = optionTextEl.innerHTML; // Get innerHTML to preserve styles
+                        const isCorrect = opt.dataset.isCorrect === 'true';
+                        return `<li>${isCorrect ? `<b>${optionText}</b>` : optionText}</li>`;
+                    }).join('');
+                    const newHtml = `
+                        <p style="margin-top: 1em;"><b>Question:</b> ${questionText}</p>
+                        <ul>${optionsHTML}</ul>
+                    `;
+                    block.outerHTML = newHtml;
+                });
+
+                return tempDiv.innerHTML;
+            },
+            _transformAccordionsForTeleprompter(htmlString) {
+                if (!htmlString || !htmlString.includes('nk-accordion')) {
+                    return htmlString; // No accordions, return immediately.
+                }
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlString;
+
+                const accordionBlocks = tempDiv.querySelectorAll('.nk-accordion');
+                if (accordionBlocks.length === 0) {
+                    return htmlString;
+                }
+
+                accordionBlocks.forEach(block => {
+                    const titleEl = block.querySelector('.nk-accordion-title');
+                    const contentEl = block.querySelector('.nk-accordion-content');
+
+                    if (!titleEl || !contentEl) return; // Malformed, skip it.
+                    const titleText = titleEl.innerHTML;
+                    const contentText = contentEl.innerHTML;
+                    const newHtml = `
+                        <hr style="border-top: 1px dashed var(--border-color); margin: 1em 0;">
+                        <p><b>Question:</b> ${titleText}</p>
+                        <p><b>Answer:</b> ${contentText}</p>
+                    `;
+                    block.outerHTML = newHtml;
+                });
+
+                return tempDiv.innerHTML;
+            },
+
             hexToRgba(hex, alpha) {
                 if (!hex) return `rgba(0,0,0,${alpha})`;
                 let r = 0, g = 0, b = 0;
