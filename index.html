@@ -7741,7 +7741,7 @@
             }
 
             App.state.isHydrated = true;
-            requestIdleCallback(App.util.cleanupTombstones);
+
             await this.hub.loadData();
             await this.quiz.loadStats();
             App.state.tags = await App.fs.read('tags.json') || {};
@@ -8134,26 +8134,6 @@
                 if (!records.some(r => r.id === id)) { records.push({ id, deletedAt: now }); }
                 await this.saveDeletedRecords(records); App.state.deletedRecords = records;
             },
-
-            async getLocalIndex() {
-                if (App.state.storageMode === 'fileSystem' && App.state.directoryHandle) {
-                    const indexFile = await App.fs.read('_index.json');
-                    return indexFile || [];
-                } else if (App.state.storageMode === 'browser') {
-                    return App.state.articles.map(article => ({
-                        id: article.id,
-                        title: article.title,
-                        category: article.category,
-                        tags: article.tags || [],
-                        readCount: article.readCount || 0,
-                        createdAt: article.createdAt,
-                        updatedAt: article.updatedAt,
-                        wordCount: article.wordCount || 0
-                    }));
-                }
-                return [];
-            },
-
             async _getAllArticlesFromCurrentStore() {
                 if (App.state.storageMode === 'fileSystem' && App.state.directoryHandle) {
                     const { articles } = await this.getAll();
@@ -8286,11 +8266,14 @@
                 if (!isSilent) App.ui.showToast("Syncing...", { duration: 0 });
 
                 try {
-                   
+                    // =================================================================
+                    // STEPS 1-4: GATHER & COMPARE DATA (Unchanged)
+                    // =================================================================
+
                     // STEP 1: GET LOCAL DATA
-                    const localIndex = await App.storage.getLocalIndex(); // <-- MODIFIED
+                    const localArticles = await App.storage._getAllArticlesFromCurrentStore();
                     const localDeletedRecords = await App.storage.getDeletedRecords();
-                    const localArticlesMap = new Map(localIndex.map(a => [a.id, a]));
+                    const localArticlesMap = new Map(localArticles.map(a => [a.id, a]));
                     const localDeletedMap = new Map(localDeletedRecords.map(r => [r.id, r]));
 
                     // STEP 2: GET REMOTE DATA & SEGREGATE
@@ -8373,61 +8356,15 @@
                         }
                     }
 
+                    // =================================================================
                     // STEP 5: EXECUTE SYNC OPERATIONS (FIX #1: Using the Queue)
+                    // =================================================================
+
                     // 5a. Article Uploads Action
                     const uploadArticleAction = (article) => this.apiCall('files/upload', JSON.stringify(article), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${article.id}.json`, mode: 'overwrite' }) } });
 
                     // 5b. Singleton Uploads Action
-                    const uploadSingletonAction = async (file) => {
-                        const fileName = file.name;
-                        const localData = file.data;
-                        const arrayMergeFiles = ['todos.json', 'quiz_stats.json'];
-                        
-                        if (arrayMergeFiles.includes(fileName)) {
-                            let mergedData;
-                    
-                            let remoteData = null;
-                            try {
-                                const remoteMeta = remoteSingletonsMap.get(fileName);
-                                if (remoteMeta) {
-                                    const { content } = await this.downloadFile(remoteMeta);
-                                    if (content) remoteData = JSON.parse(content);
-                                }
-                            } catch (e) {
-                                console.warn(`Could not read remote ${fileName} for merging, proceeding with local version.`, e);
-                            }
-                            if (fileName === 'todos.json') {
-                                const localMap = new Map((localData || []).map(t => [t.id, t]));
-                                (remoteData || []).forEach(remoteTask => {
-                                    const localTask = localMap.get(remoteTask.id);
-                                    if (!localTask) {
-                                        localMap.set(remoteTask.id, remoteTask);
-                                    } else if (new Date(remoteTask.updatedAt || 0) > new Date(localTask.updatedAt || 0)) {
-                                        localMap.set(remoteTask.id, remoteTask);
-                                    }
-                                });
-                                mergedData = Array.from(localMap.values());
-                            } 
-                            else if (fileName === 'quiz_stats.json') {
-                                const local = localData || { ...App.quiz.defaults };
-                                const remote = remoteData || { ...App.quiz.defaults };
-                                mergedData = {
-                                    ...local, ...remote, // Remote values (like lastScore) take precedence
-                                    bestScore: Math.max(local.bestScore, remote.bestScore),
-                                    totalScore: local.totalScore + remote.totalScore,
-                                    totalQuizzes: local.totalQuizzes + remote.totalQuizzes,
-                                    quizHistory: [...new Set([...(local.quizHistory || []), ...(remote.quizHistory || [])])].sort()
-                                };
-                                mergedData.avgScore = mergedData.totalQuizzes > 0 ? mergedData.totalScore / mergedData.totalQuizzes : 0;
-                            }
-                            
-                            await App.fs.write(fileName, mergedData);
-                            return this.apiCall('files/upload', JSON.stringify(mergedData), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${fileName}`, mode: 'overwrite' }) } });
-
-                        } else {
-                            return this.apiCall('files/upload', JSON.stringify(localData), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${fileName}`, mode: 'overwrite' }) } });
-                        }
-                    };
+                    const uploadSingletonAction = (file) => this.apiCall('files/upload', JSON.stringify(file.data), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${file.name}`, mode: 'overwrite' }) } });
 
                     // 5c. Article Downloads Action
                     const downloadArticleAction = async (remoteMeta) => {
@@ -8443,36 +8380,8 @@
                     const downloadSingletonAction = async (remoteMeta) => {
                         const { content } = await this.downloadFile(remoteMeta);
                         if (content) {
-                            const remoteData = JSON.parse(content);
-                            const fileName = remoteMeta.name;
-                            if (fileName === 'todos.json') {
-                                const localData = await App.fs.read('todos.json') || [];
-                                const localMap = new Map(localData.map(t => [t.id, t]));
-                                remoteData.forEach(remoteTask => {
-                                    if (!localMap.has(remoteTask.id)) {
-                                        localMap.set(remoteTask.id, remoteTask);
-                                    }
-                                });
-                                const mergedData = Array.from(localMap.values());
-                                await App.fs.write(fileName, mergedData);
-                            } 
-                            else if (fileName === 'quiz_stats.json') {
-                                const localData = await App.fs.read('quiz_stats.json') || { ...App.quiz.defaults };
-                                const mergedStats = {
-                                    ...localData,
-                                    ...remoteData, 
-                                    bestScore: Math.max(localData.bestScore, remoteData.bestScore),
-                                    totalScore: localData.totalScore + remoteData.totalScore,
-                                    totalQuizzes: localData.totalQuizzes + remoteData.totalQuizzes,
-                                    quizHistory: [...new Set([...(localData.quizHistory || []), ...(remoteData.quizHistory || [])])].sort()
-                                };
-                                mergedStats.avgScore = mergedStats.totalQuizzes > 0 ? mergedStats.totalScore / mergedStats.totalQuizzes : 0;
-
-                                await App.fs.write(fileName, mergedStats);
-                            }
-                            else {
-                                await App.fs.write(fileName, remoteData);
-                            }
+                            const data = JSON.parse(content);
+                            await App.fs.write(remoteMeta.name, data);
                         }
                     };
 
@@ -8502,7 +8411,9 @@
                         await this.apiCall('files/upload', JSON.stringify(finalDeletedRecords), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${App.storage.DELETED_RECORDS_FILENAME}`, mode: 'overwrite' }) } });
                     }
 
-                    // STEP 6: FINALIZE & RELOAD UI 
+                    // =================================================================
+                    // STEP 6: FINALIZE & RELOAD UI (FIX #2: The TypeError)
+                    // =================================================================
                     const articleChanges = toUploadArticles.length + toDownloadArticles.length + toDeleteLocal.length > 0;
                     const singletonChanges = toUploadSingletons.length + toDownloadSingletons.length > 0;
 
@@ -8526,6 +8437,7 @@
                             }
                             App.router.navigateTo(activeView, viewData, true); // 'true' prevents new history state
                         }
+                        // --- END OF FIX ---
                     }
 
                     if (singletonChanges) {
@@ -11936,7 +11848,8 @@
                 let cloudSyncHTML = '';
 
                 if (!isPremium) {
-                   
+                    // --- STATE A: SPARK (FREE) USER ---
+                    // Show a clear upsell message.
                     cloudSyncHTML = `
                         <div class="premium-cta-text" style="text-align: center; padding: 1rem; background: var(--bg-tertiary); border-radius: var(--border-radius-lg);">
                             Cloud Sync is a Premium feature.
@@ -11944,6 +11857,9 @@
                         </div>
                     `;
                 } else {
+                    // --- STATE B-E: PREMIUM USER ---
+                    // The user is Premium, so we show the step-by-step setup.
+
                     // STEP 1: API Key Input (Always visible for premium users)
                     const step1_ApiKeyHTML = `
                         <div class="settings-item">
@@ -20593,38 +20509,6 @@
                 });
 
                 return tempDiv.innerHTML;
-            },
-
-            async cleanupTombstones() {
-                console.log("Running tombstone cleanup...");
-                let records;
-                try {
-                    records = await App.storage.getDeletedRecords();
-                } catch (e) {
-                    console.error("Could not read deleted records for cleanup:", e);
-                    return; // Can't proceed
-                }
-                
-                if (!records || records.length === 0) {
-                    console.log("Tombstone cleanup: No records to clean.");
-                    return;
-                }
-
-                const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-                const freshRecords = records.filter(r => r.deletedAt > ninetyDaysAgo);
-
-                if (freshRecords.length < records.length) {
-                    console.log(`Tombstone cleanup: Removed ${records.length - freshRecords.length} old records.`);
-                    await App.storage.saveDeletedRecords(freshRecords);
-                    
-                    if (App.dropbox.isReady() && App.settings.get('enableDropboxSync')) {
-                        App.dropbox.apiCall('files/upload', JSON.stringify(freshRecords), { 
-                            headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${App.storage.DELETED_RECORDS_FILENAME}`, mode: 'overwrite' }) } 
-                        }).catch(err => console.error("Failed to sync cleaned tombstones:", err));
-                    }
-                } else {
-                    console.log("Tombstone cleanup: No old records to remove.");
-                }
             },
 
             hexToRgba(hex, alpha) {
