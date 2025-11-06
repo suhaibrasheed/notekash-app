@@ -8168,7 +8168,7 @@
                 const authUrl = new URL('https://www.dropbox.com/oauth2/authorize');
                 authUrl.searchParams.set('client_id', clientId);
                 authUrl.searchParams.set('response_type', 'code');
-                authUrl.searchParams.set('redirect_uri', window.location.href.split('?')[0]);
+               authUrl.searchParams.set('redirect_uri', 'https://notekash.com'); 
                 authUrl.searchParams.set('code_challenge_method', 'S256');
                 authUrl.searchParams.set('code_challenge', codeChallenge);
                 window.location.href = authUrl.toString();
