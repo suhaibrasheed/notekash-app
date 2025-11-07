@@ -7687,10 +7687,16 @@
             this.pwa.init();
             this.events.setupGlobalListeners();
 
-            // --- : HANDLE DROPBOX REDIRECT ---
+            try {
+                await App.settings.load();
+            } catch (e) {
+                console.error("Critical: Failed to load settings on initial boot.", e);
+                this.ui.applyTheme('light', true); 
+            }
+
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('code')) {
-                await App.dropbox.handleRedirect();
+                await App.dropbox.handleRedirect(); // <-- This will now work
                 return; 
             }
 
@@ -7707,16 +7713,12 @@
                     const permissionStatus = await savedHandle.queryPermission({ mode: 'readwrite' });
 
                     if (permissionStatus === 'granted') {
-                        // Permission is already granted, so we can start the session.
                         await this._startFileSystemSession();
                     } else {
-                    
                         this.ui.applyTheme(App.settings.get('theme') || 'light', true);
                         this.router.navigateTo('welcome', { permissionState: permissionStatus });
                     }
                 } else {
-                    // This is the path for first-time users or browser storage users.
-                    await App.settings.load();
                     this.ui.applyTheme(App.settings.get('theme'), true);
 
                     if (App.settings.get('lastStorageMode') === 'browser') {
@@ -7729,7 +7731,6 @@
                 }
             } catch (error) {
                 console.error("Initialization error:", error);
-                try { await App.settings.load(); } catch(e) {}
                 this.ui.applyTheme(App.settings.get('theme') || 'light', true);
                 this.router.navigateTo('welcome', { permissionState: 'none' });
             }
@@ -8208,15 +8209,15 @@
                 const clientId = App.settings.get('dropboxClientId');
                 if (!clientId) { App.ui.showToast("Please set your Dropbox Client ID first.", { type: 'error' }); return; }
                 const codeVerifier = this.generateCodeVerifier();
-                sessionStorage.setItem('dropbox-code-verifier', codeVerifier);
+                localStorage.setItem('dropbox-code-verifier', codeVerifier); // <-- FIX #2
                 const codeChallenge = await this.generateCodeChallenge(codeVerifier);
                 const authUrl = new URL('https://www.dropbox.com/oauth2/authorize');
-    
-                const dynamicRedirectUri = window.location.origin; // Use the root
+        
+                const dynamicRedirectUri = window.location.origin; 
                 
                 authUrl.searchParams.set('client_id', clientId);
                 authUrl.searchParams.set('response_type', 'code');
-                authUrl.searchParams.set('redirect_uri', dynamicRedirectUri); // Use corrected dynamic URI
+                authUrl.searchParams.set('redirect_uri', dynamicRedirectUri);
                 authUrl.searchParams.set('code_challenge_method', 'S256');
                 authUrl.searchParams.set('code_challenge', codeChallenge);
                 window.location.href = authUrl.toString();
@@ -8225,17 +8226,22 @@
             async handleRedirect() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const authCode = urlParams.get('code');
-                const codeVerifier = sessionStorage.getItem('dropbox-code-verifier');
+                const codeVerifier = localStorage.getItem('dropbox-code-verifier'); // <-- FIX #3a
                 const clientId = App.settings.get('dropboxClientId');
                 
                 App.ui.showToast("Finalizing Dropbox connection...", { type: 'info', duration: 0 });
 
                 if (!authCode || !codeVerifier || !clientId) {
                     App.ui.showToast("Dropbox connection failed: Missing auth data.", { type: 'error' });
+                    console.error('Auth Data Missing:', {
+                        hasCode: !!authCode,
+                        hasVerifier: !!codeVerifier,
+                        hasClientId: !!clientId 
+                    });
                     return;
                 }
                 try {
-                    const dynamicRedirectUri = window.location.origin; // Use the root
+                    const dynamicRedirectUri = window.location.origin;
 
                     const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
                         method: 'POST',
@@ -8243,7 +8249,7 @@
                         body: new URLSearchParams({
                             code: authCode,
                             grant_type: 'authorization_code',
-                            redirect_uri: dynamicRedirectUri, // Use corrected dynamic URI (root)
+                            redirect_uri: dynamicRedirectUri, 
                             code_verifier: codeVerifier,
                             client_id: clientId,
                         })
@@ -8252,17 +8258,14 @@
                     const data = await response.json();
                     await App.settings.set('dropboxToken', data.access_token);
                     App.state.dropboxToken = data.access_token;
-                    await this.validateToken(); // This will show the "Connected as..." toast
+                    await this.validateToken(); 
                 } catch (error) {
                     App.ui.showToast("Dropbox connection failed.", { type: 'error' });
                 } finally {
-                    
                     window.history.replaceState({}, document.title, window.location.pathname);
-                    sessionStorage.removeItem('dropbox-code-verifier');
+                    localStorage.removeItem('dropbox-code-verifier'); // <-- FIX #3b
                     
-                    await App.settings.load();
                     App.ui.applyTheme(App.settings.get('theme'), true);
-                    
                     App.ui.showStorageModal();
                 }
             },
