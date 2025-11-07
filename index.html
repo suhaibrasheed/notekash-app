@@ -29,20 +29,6 @@
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-KGXNNGWKEX"></script>
     <script>
-        function onGoogleiIdentityScriptLoad() {
-            console.log('Google Identity Script loaded (queued).');
-            (window.googleApiQueue = window.googleApiQueue || []).push('gis');
-        }
-        function onGoogleApiScriptLoad() {
-            console.log('Google API Script loaded (queued).');
-            (window.googleApiQueue = window.googleApiQueue || []).push('gapi');
-        }
-    </script>
-    
-    <script src="https://accounts.google.com/gsi/client?onload=onGoogleiIdentityScriptLoad" async defer></script>
-    <script src="https://apis.google.com/js/api.js?onload=onGoogleApiScriptLoad" async defer></script>
-    
-    <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
@@ -1879,6 +1865,10 @@
         @keyframes glow-red { 0%, 100% { box-shadow: 0 0 0px var(--sm2-red); } 50% { box-shadow: 0 0 20px var(--sm2-red); } } @keyframes glow-orange { 0%, 100% { box-shadow: 0 0 0px var(--sm2-orange); } 50% { box-shadow: 0 0 20px var(--sm2-orange); } } @keyframes glow-purple { 0%, 100% { box-shadow: 0 0 0px var(--sm2-purple); } 50% { box-shadow: 0 0 20px var(--sm2-purple); } } @keyframes glow-skyblue { 0%, 100% { box-shadow: 0 0 0px var(--sm2-skyblue); } 50% { box-shadow: 0 0 20px var(--sm2-skyblue); } } @keyframes glow-green { 0%, 100% { box-shadow: 0 0 0px var(--sm2-green); } 50% { box-shadow: 0 0 20px var(--sm2-green); } }
         .btn-again { background: linear-gradient(45deg, #C70039, #900C3F); } .btn-hard { background: linear-gradient(45deg, #FF5733, #FF8D1A); } .btn-hold { background: linear-gradient(45deg, var(--sm2-purple), #c084fc); } .btn-good { background: linear-gradient(45deg, var(--sm2-skyblue), #7dd3fc); } .btn-easy { background: linear-gradient(45deg, var(--sm2-green), #4ade80); }
         
+
+
+       
+
         /* CATEGORY SECTIONAL DESIGN */
         /* --- A. The New View Container & Controls (No Change) --- */
         .category-view-container { display: flex; flex-direction: column; gap: 1.5rem; }
@@ -2518,7 +2508,7 @@
             height: 32px;
             background-color: var(--bg-tertiary);
         }
-/* --- NEW: Teleprompter Resizer Handle --- */
+        /* --- NEW: Teleprompter Resizer Handle --- */
         #teleprompter-resizer {
             position: absolute;
             z-index: 15; /* Sits on top of the sidebar */
@@ -2606,6 +2596,41 @@
             pointer-events: none;
         }
 
+        /* --- NEW: Interactive Cloze for Focus Mode --- */
+        .focus-cloze {
+            display: inline-block;
+            cursor: pointer;
+            background-color: var(--cloze-bg);
+            border-bottom: 2px dotted var(--cloze-border);
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+        .focus-cloze:hover {
+            background-color: color-mix(in srgb, var(--cloze-border) 30%, var(--cloze-bg));
+        }
+
+        /* By default, the revealed text is hidden */
+        .focus-cloze .focus-cloze-revealed {
+            display: none;
+            color: var(--cloze-revealed-text);
+            font-weight: bold;
+        }
+
+        /* The placeholder [...] is shown by default */
+        .focus-cloze .focus-cloze-hidden {
+            display: inline;
+            color: var(--cloze-hidden-text);
+            font-weight: bold;
+        }
+
+        /* When the 'revealed' class is added, swap visibility */
+        .focus-cloze.revealed .focus-cloze-revealed {
+            display: inline;
+        }
+        .focus-cloze.revealed .focus-cloze-hidden {
+            display: none;
+        }
 
         /* --- NEW: Presentation/Reader Ambiance Themes --- */
         /* Gallery 1: High-Energy Brights */
@@ -6692,9 +6717,6 @@
             <button class="btn-icon" id="folder-btn" onclick="App.router.navigateTo('welcome')" title="Change Notes Folder (Alt+O)" aria-label="Change notes folder">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3zm-8.322.12C1.72 3.042 1.95 3 2.19 3h5.396l-.707-.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139z"/></svg>
             </button>
-            <button class="btn-icon" id="sync-status-icon" onclick="App.googleDrive.syncChanges()" title="Sync Status: Idle" aria-label="Check sync status or start manual sync" style="display: none;">
-                <i class="fa-solid fa-cloud"></i>
-            </button>
             <button class="btn-icon" id="settings-btn" onclick="App.ui.showSettingsModal()" title="Settings" aria-label="Open settings">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1 0 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105 0l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.31-.17a1.464 1.464 0 0 1 2.105-.872l-.1-.34c.413-1.4 2.397-1.4 2.81 0l.1.34a1.464 1.464 0 0 1 2.105.872l.31.17c1.283.698-2.686-.705-1.987-1.987l-.169-.311a1.464 1.464 0 0 1 0-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105 0l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.31.17a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg>
             </button>
@@ -6945,7 +6967,7 @@
      * .indexedDB - Handles storing the directory handle.
      * .fs        - Centralized file system operations for all JSON files.
      * .storage   - Handles all article-specific FS ops, including tombstone logic.
-     * .google    - full google drive engine
+     * .dropbox   - Full Dropbox sync engine.
      * .router    - Manages navigation between views.
      * .ui        - Renders and updates the DOM.
      * .events    - User-triggered event handlers and listeners.
@@ -7496,9 +7518,9 @@
             selectedImageContainer: null,
             savedRange: null,
             pwa: { installPromptEvent: null },
-            googleDriveToken: null,
-            googleDriveUser: null,
-            isGoogleDriveReady: false,
+            dropboxToken: null,
+            dropboxUser: null,
+            isDropboxReady: false,
             isSyncing: false,
             isArticleDirty: false,
             isPristineNewArticle: false,
@@ -7552,7 +7574,9 @@
                 colorCycleIndex: 0,
                 showTagsOnTiles: true,
                 categoryRenames: {},
-                enableGoogleDriveSync: false, 
+                enableDropboxSync: false,
+                dropboxToken: null,
+                dropboxClientId: null,
                 lastSyncTimestamp: null,
                 pomodoroWork: 25,
                 pomodoroBreak: 5,
@@ -7580,6 +7604,7 @@
                   
                     await this.set('userCategories', migratedCategories);
                 }
+                App.state.dropboxToken = App.state.settings.dropboxToken;
             },
             async save() {
                 await App.fs.write('settings.json', App.state.settings);
@@ -7644,18 +7669,30 @@
 
         async init() {
 
+            if ('launchQueue' in window && 'files' in LaunchParams.prototype) {
+                window.launchQueue.setConsumer(async (launchParams) => {
+                    if (!launchParams.files || launchParams.files.length === 0) {
+                        return;
+                    }
+                    const fileHandles = launchParams.files;
+                    const files = await Promise.all(fileHandles.map(handle => handle.getFile()));
+                    App.ui.showToast(`Importing ${files.length} shared note(s)...`, { type: 'info' });
+                    App.services.backup.handleFileImport(files);
+                });
+            }
+
             if (window.pdfjsLib) {
                 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
             }
             this.pwa.init();
             this.events.setupGlobalListeners();
 
-            setInterval(() => {
-                if (App.googleDrive.isReady() && (App.state.directoryHandle || App.state.storageMode === 'browser') && App.settings.get('enableGoogleDriveSync')) {
-                    console.log("Running periodic background sync...");
-                    App.googleDrive.syncChanges(true); // true for silent
-                }
-            }, 300000);
+            // --- : HANDLE DROPBOX REDIRECT ---
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('code')) {
+                await App.dropbox.handleRedirect();
+                return; 
+            }
 
             const mobileImportInput = document.getElementById('mobile-import-input');
             if (mobileImportInput) mobileImportInput.addEventListener('change', (e) => App.storage.handleMobileImport(e));
@@ -7766,10 +7803,9 @@
             }
 
             App.ui.updateHeaderState();
-            await this.googleDrive.init();
-
-            if (this.googleDrive.isReady() && (App.state.directoryHandle || App.state.storageMode === 'browser') && App.settings.get('enableGoogleDriveSync')) {
-                this.googleDrive.syncChanges(true);
+            await this.dropbox.init();
+            if (this.dropbox.isReady() && App.state.directoryHandle && this.settings.get('enableDropboxSync')) {
+                this.dropbox.syncChanges(true);
             }
 
             await App.util.reconcileCategories();
@@ -8158,512 +8194,406 @@
         },
                 
         // ==========================================================================
-        // 3.8. GOOGLE SYNC ENGINE
+        // 3.8. DROPBOX SYNC ENGINE
         // ==========================================================================
-        googleDrive: {
-            CLIENT_ID: '626822581640-j5hmtrju13svsocfqj3brr5iaekvaji5.apps.googleusercontent.com', 
-            API_KEY: 'AIzaSyB5_GG_2nC1m0nsTKoJo-ZfZ3QGrlnHLns',                      
-            APP_FOLDER_NAME: 'NoteKash_App_Data', // The private folder name on the user's Drive
+        dropbox: {
+            SINGLETON_DATA_FILES: ['settings.json', 'todos.json', 'pomodoro.json', 'quiz_stats.json', 'tags.json', 'visual-map-state.json', 'mind-map-state.json'],
+            async init() {
+                if (App.state.dropboxToken) {
+                    await this.validateToken();
+                }
+            },
 
-            // --- INTERNAL STATE ---
-            tokenClient: null,
-            gapiInited: false,
-            gisInited: false,
-            appFolderId: null,
-            SINGLETON_DATA_FILES: ['settings.json', 'todos.json', 'pomodoro.json', 'quiz_stats.json', 'tags.json', 'visual-map-state.json', 'mind-map-state.json', '_deleted.json'],
-
-            init() {
+            async connect() {
+                const clientId = App.settings.get('dropboxClientId');
+                if (!clientId) { App.ui.showToast("Please set your Dropbox Client ID first.", { type: 'error' }); return; }
+                const codeVerifier = this.generateCodeVerifier();
+                sessionStorage.setItem('dropbox-code-verifier', codeVerifier);
+                const codeChallenge = await this.generateCodeChallenge(codeVerifier);
+                const authUrl = new URL('https://www.dropbox.com/oauth2/authorize');
+    
+                const dynamicRedirectUri = window.location.origin; // Use the root
                 
-                window.onGoogleiIdentityScriptLoad = () => this.gisInit();
-                window.onGoogleApiScriptLoad = () => this.gapiInit();
+                authUrl.searchParams.set('client_id', clientId);
+                authUrl.searchParams.set('response_type', 'code');
+                authUrl.searchParams.set('redirect_uri', dynamicRedirectUri); // Use corrected dynamic URI
+                authUrl.searchParams.set('code_challenge_method', 'S256');
+                authUrl.searchParams.set('code_challenge', codeChallenge);
+                window.location.href = authUrl.toString();
+            },
 
-                if (window.googleApiQueue && window.googleApiQueue.length > 0) {
-                    console.log('Processing queued Google API inits...');
-                    window.googleApiQueue.forEach(api => {
-                        if (api === 'gis') {
-                           
-                            this.gisInit();
-                        }
-                        if (api === 'gapi') {
-                            
-                            this.gapiInit();
-                        }
-                    });
-                    
-                    window.googleApiQueue = [];
-                }
-           
-                const savedToken = App.settings.get('googleDriveToken');
-                if (savedToken) {
-                    App.state.googleDriveToken = savedToken;
-                }
+            async handleRedirect() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const authCode = urlParams.get('code');
+                const codeVerifier = sessionStorage.getItem('dropbox-code-verifier');
+                const clientId = App.settings.get('dropboxClientId');
                 
-                if (this.gapiInited && this.gisInited && App.state.googleDriveToken) {
-                    this.validateToken();
-                }
-            },
-            
-            loadGoogleApis() {
-                // (This function is now obsolete)
-            },
+                App.ui.showToast("Finalizing Dropbox connection...", { type: 'info', duration: 0 });
 
-            gisInit() {
-                try {
-                    if (this.gisInited) return;
-                    console.log('Attempting Google Identity (GIS) initialization...');
-                    
-                    this.tokenClient = google.identity.oauth2.initTokenClient({
-                        client_id: this.CLIENT_ID,
-                        scope: 'https://www.googleapis.com/auth/drive.file',
-                        callback: (tokenResponse) => this.authCallback(tokenResponse),
-                        error_callback: (error) => {
-                            console.error('Google Auth Error Callback:', error);
-                            App.ui.showToast(`Google login failed: ${error.details || error.message || 'User cancelled.'}`, 'error');
-                        },
-                    });
-
-                    this.gisInited = true;
-                    console.log('Google Identity (GIS) initialized successfully.');
-                    
-                    if (this.gapiInited && App.state.googleDriveToken) {
-                        this.validateToken();
-                    }
-                } catch (error) {
-                    console.error('FATAL: Google Identity (GIS) failed to initialize.', error);
-                    App.ui.showToast('Google API init failed. Check console for origin errors.', 'error');
-                    this.gisInited = true; 
-                }
-            },
-
-            gapiInit() {
-                try {
-                    if (this.gapiInited) return;
-                    console.log('Attempting Google API (GAPI) initialization...');
-
-                    gapi.load('client', async () => {
-                        try {
-                            await gapi.client.init({
-                                apiKey: this.API_KEY,
-                                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-                            });
-
-                            this.gapiInited = true;
-                            console.log('Google API (GAPI) initialized successfully.');
-                            
-                            if (this.gisInited && App.state.googleDriveToken) {
-                                this.validateToken();
-                            }
-                        } catch (initError) {
-                            console.error('FATAL: GAPI client.init() failed.', initError);
-                            App.ui.showToast('Google client lib failed to init. Check API key.', 'error');
-                            this.gapiInited = true; // Mark as "attempted" to prevent retries
-                        }
-                    });
-                } catch (error) {
-                    console.error('FATAL: GAPI gapi.load() failed.', error);
-                    App.ui.showToast('Google client lib failed to load.', 'error');
-                    this.gapiInited = true; // Mark as "attempted" to prevent retries
-                }
-            },
-
-            connect() {
-                if (!this.tokenClient) {
-                    App.ui.showToast('Google login is not ready. Please wait.', 'warning');
+                if (!authCode || !codeVerifier || !clientId) {
+                    App.ui.showToast("Dropbox connection failed: Missing auth data.", { type: 'error' });
                     return;
                 }
-                this.tokenClient.requestAccessToken({ prompt: 'consent' });
-            },
+                try {
+                    const dynamicRedirectUri = window.location.origin; // Use the root
 
-            async authCallback(tokenResponse) {
-                App.state.googleDriveToken = tokenResponse.access_token;
-                await App.settings.set('googleDriveToken', tokenResponse.access_token);
-                gapi.client.setToken({ access_token: tokenResponse.access_token });
-
-                // Now that we're authorized, find or create our private app folder.
-                this.appFolderId = await this.findAppFolder();
-                if (this.appFolderId) {
-                    await this.validateToken(); // Get user info
-                    App.ui.showStorageModal(); // Refresh the modal to show "Connected"
-                    if (App.settings.get('enableGoogleDriveSync')) {
-                        this.syncChanges(true); // Trigger a silent sync
-                    }
+                    const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({
+                            code: authCode,
+                            grant_type: 'authorization_code',
+                            redirect_uri: dynamicRedirectUri, // Use corrected dynamic URI (root)
+                            code_verifier: codeVerifier,
+                            client_id: clientId,
+                        })
+                    });
+                    if (!response.ok) throw new Error('Failed to get token');
+                    const data = await response.json();
+                    await App.settings.set('dropboxToken', data.access_token);
+                    App.state.dropboxToken = data.access_token;
+                    await this.validateToken(); // This will show the "Connected as..." toast
+                } catch (error) {
+                    App.ui.showToast("Dropbox connection failed.", { type: 'error' });
+                } finally {
+                    
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    sessionStorage.removeItem('dropbox-code-verifier');
+                    
+                    await App.settings.load();
+                    App.ui.applyTheme(App.settings.get('theme'), true);
+                    
+                    App.ui.showStorageModal();
                 }
             },
 
-            /* Gets user info to confirm the connection is valid.*/
             async validateToken() {
                 try {
-                    // We set the token first, as gapiInit might not have had it.
-                    gapi.client.setToken({ access_token: App.state.googleDriveToken });
-                    const user = await this.apiCall('drive.about.get', { fields: 'user' });
-                    App.state.googleDriveUser = user.user;
-                    App.state.isGoogleDriveReady = true;
-                    this.appFolderId = await this.findAppFolder();
-                    App.ui.showToast(`Connected as ${user.user.displayName}.`, { type: 'success' });
-                    App.ui.updateSyncIcon('idle', 'Sync Status: Connected'); 
+                    const user = await this.apiCall('users/get_current_account', null);
+                    App.state.dropboxUser = user;
+                    App.state.isDropboxReady = true;
+                    App.ui.showToast(`Connected as ${user.name.display_name}.`, { type: 'success' });
                 } catch (error) {
-                    console.error('Google Drive Token validation failed:', error);
+                    console.error("Token validation failed:", error);
                     this.disconnect();
                 }
             },
-
-            /* Disconnects from Google Drive by revoking the token. */
             async disconnect() {
-                const token = App.state.googleDriveToken;
-                if (token) {
-                    google.accounts.oauth2.revoke(token, () => {
-                        console.log('Google token revoked.');
-                    });
-                }
-                await App.settings.set('googleDriveToken', null);
-                App.state.googleDriveToken = null;
-                App.state.googleDriveUser = null;
-                App.state.isGoogleDriveReady = false;
-                this.appFolderId = null;
-                App.ui.showToast('Disconnected from Google Drive.');
-                App.ui.showStorageModal(); // Refresh modal
+                await App.settings.set('dropboxToken', null);
+                App.state.dropboxToken = null;
+                App.state.dropboxUser = null; 
+                App.state.isDropboxReady = false;
+                App.ui.showToast("Disconnected from Dropbox.");
             },
 
-            /* Finds the 'NoteKash_App_Data' folder, or creates it if it doesn't exist. */
-            async findAppFolder() {
+            async apiCall(endpoint, body, options = {}) {
+                if (!App.state.dropboxToken) {
+                    return Promise.reject(new Error("Not connected to Dropbox."));
+                }
+
+                const isUpload = endpoint.includes('files/upload');
+                const isDownload = endpoint.includes('files/download');
+
+                const apiUrl = (isUpload || isDownload) 
+                    ? `https://content.dropboxapi.com/2/${endpoint}` 
+                    : `https://api.dropboxapi.com/2/${endpoint}`;
+                
+                const headers = { 'Authorization': `Bearer ${App.state.dropboxToken}`, ...options.headers };
+                const fetchOptions = { method: 'POST', headers };
+
+                if (isUpload) {
+                    // Uploads (like articles) send data in the body
+                    headers['Content-Type'] = 'application/octet-stream';
+                    fetchOptions.body = body;
+                } else if (isDownload) {
+            
+                } else if (body) {
+                    // Standard API calls (like list_folder) send JSON
+                    headers['Content-Type'] = 'application/json';
+                    fetchOptions.body = JSON.stringify(body);
+                }
+              
+
                 try {
-                    const response = await this.apiCall('drive.files.list', {
-                        q: `name='${this.APP_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-                        spaces: 'drive',
-                        fields: 'files(id, name)',
-                    });
+                    const response = await fetch(apiUrl, fetchOptions);
 
-                    if (response.files && response.files.length > 0) {
-                        return response.files[0].id; // Folder found
-                    } else {
-                        // Folder not found, create it
-                        const fileMetadata = {
-                            name: this.APP_FOLDER_NAME,
-                            mimeType: 'application/vnd.google-apps.folder',
-                        };
-                        const folder = await this.apiCall('drive.files.create', {
-                            resource: fileMetadata,
-                            fields: 'id',
-                        });
-                        return folder.id;
+                    if (!response.ok) {
+                        
+                        if (response.status === 401) { 
+                            this.disconnect(); 
+                            App.ui.showToast("Dropbox connection expired. Please reconnect.", { type: 'error' }); 
+                        }
+
+                        let errorMessage = `API Error: ${response.status} ${response.statusText}`;
+                        try {
+                            const errorJson = await response.json();
+                            if (errorJson.error_summary) {
+                                errorMessage = errorJson.error_summary; // e.g., "path/not_found/..."
+                            } else if (errorJson.error && errorJson.error.reason) {
+                                errorMessage = JSON.stringify(errorJson.error.reason); // Deeper error object
+                            } else if (errorJson.error) {
+                                errorMessage = errorJson.error;
+                            }
+                        } catch (e) {
+                        }
+
+                        if (errorMessage.includes('insufficient_space')) { 
+                            App.ui.showToast("Your Dropbox is full. Sync failed.", { type: 'error' }); 
+                        }
+                        
+                        throw new Error(errorMessage);
                     }
-                } catch (error) {
-                    console.error('Error finding/creating app folder:', error);
-                    App.ui.showToast('Could not access Google Drive app folder.', 'error');
-                    return null;
+
+                    if (options.isDownload) {
+                        const content = await response.text();
+                        return { content };
+                    }
+                    if (response.headers.get('content-length') === '0' || response.status === 204) {
+                        return null;
+                    }
+
+                    return response.json();
+
+                } catch (e) {
+                     if (e instanceof TypeError) { 
+                         App.ui.showToast("Network error. Sync paused.", { type: 'warning' }); 
+                     }
+                    throw e;
                 }
             },
 
-            /* A robust, last-write-wins sync logic.*/
             async syncChanges(isSilent = false) {
                 if (App.state.isSyncing) {
-                    if (!isSilent) App.ui.showToast('Sync already in progress.', 'warning');
+                    if (!isSilent) App.ui.showToast("Sync already in progress.", { type: 'warning' });
                     return;
                 }
-                if (!this.isReady() || !this.appFolderId) {
-                    if (!isSilent) App.ui.showToast('Not connected to Google Drive.', 'error');
+                if (!this.isReady()) {
+                    console.warn("Dropbox sync called but not ready. Aborting.");
                     return;
                 }
 
                 App.state.isSyncing = true;
-                App.ui.updateSyncIcon('syncing', 'Syncing...');
-                if (document.getElementById('settings-modal-content')) App.ui.showStorageModal();
-                if (!isSilent) App.ui.showToast('Syncing with Google Drive...', { duration: 0 });
+                if (document.getElementById('settings-modal-content')) App.ui.showSettingsModal();
+                if (!isSilent) App.ui.showToast("Syncing...", { duration: 0 });
 
                 try {
-                    // STEP 1: Get all local files (articles + data files)
-                    const localFilesMap = new Map();
-                    const allLocalArticles = await App.storage._getAllArticlesFromCurrentStore();
-                    allLocalArticles.forEach(article => {
-                        localFilesMap.set(`${article.id}.json`, {
-                            id: article.id,
-                            name: `${article.id}.json`,
-                            data: article,
-                            updatedAt: article.updatedAt,
-                            type: 'article'
-                        });
-                    });
+                    // STEP 1: GET LOCAL DATA (Unchanged for Articles)
+                    const localArticles = await App.storage._getAllArticlesFromCurrentStore();
+                    const localDeletedRecords = await App.storage.getDeletedRecords();
 
-                    for (const fileName of this.SINGLETON_DATA_FILES) {
-                        const data = await App.fs.read(fileName);
-                        const metadata = await App.fs.getFileMetadata(fileName);
-                        if (data && metadata) {
-                            localFilesMap.set(fileName, {
-                                id: fileName,
-                                name: fileName,
-                                data: data,
-                                updatedAt: metadata.lastModified,
-                                type: 'data'
-                            });
+                    const localArticlesMap = new Map(localArticles.map(a => [a.id, a]));
+                    const localDeletedMap = new Map(localDeletedRecords.map(r => [r.id, r]));
+
+                    // STEP 2: GET REMOTE DATA & SEGREGATE
+                    const remoteFiles = await this.listAllFiles();
+                    let remoteDeletedRecords = [];
+                    const remoteArticlesMap = new Map();
+                    const remoteSingletonsMap = new Map(); // <-- NEW
+
+                    for (const file of remoteFiles) {
+                        const name = file.name;
+                        if (name === App.storage.DELETED_RECORDS_FILENAME) {
+                            const { content } = await this.apiCall('files/download', null, { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: file.path_lower }) }, isDownload: true });
+                            remoteDeletedRecords = content ? JSON.parse(content) : [];
+                        } 
+                        // NEW: Check if it's a singleton data file
+                        else if (this.SINGLETON_DATA_FILES.includes(name)) {
+                            remoteSingletonsMap.set(name, file);
+                        }
+                        // Check for articles
+                        else if(name.endsWith('.json') && !name.startsWith('_') && name.startsWith('art_')) {
+                            remoteArticlesMap.set(name.replace('.json', ''), file);
                         }
                     }
 
-                    // STEP 2: Get all remote files
-                    const remoteFiles = await this.listAllFiles();
-                    const remoteFilesMap = new Map(remoteFiles.map(f => [f.name, f]));
+                    const remoteDeletedMap = new Map(remoteDeletedRecords.map(r => [r.id, r]));
 
-                    // STEP 3: Handle Deletions (Tombstone logic)
-                    const localDeleted = localFilesMap.get('_deleted.json')?.data || [];
-                    const remoteDeleted = remoteFilesMap.get('_deleted.json') ? 
-                        JSON.parse(await this.downloadFile(remoteFilesMap.get('_deleted.json'))) : [];
-
-                    const localDeletedMap = new Map(localDeleted.map(r => [r.id, r]));
-                    const remoteDeletedMap = new Map(remoteDeleted.map(r => [r.id, r]));
+                    // STEP 3: MERGE DELETION RECORDS 
                     const masterDeletedMap = new Map(localDeletedMap);
-
-                    let deletionsChanged = false;
                     remoteDeletedMap.forEach((remoteRecord, id) => {
-                        if (!masterDeletedMap.has(id)) {
+                        const localRecord = masterDeletedMap.get(id);
+                        if (!localRecord || new Date(remoteRecord.deletedAt) > new Date(localRecord.deletedAt)) {
                             masterDeletedMap.set(id, remoteRecord);
-                            deletionsChanged = true;
                         }
                     });
 
-                    const toDeleteLocal = [];
-                    const toDeleteRemote = [];
+                    // STEP 4: COMPARE & BUILD SYNC LISTS
+                    const toUploadArticles = [], toDownloadArticles = [], toDeleteLocal = [], toDeleteRemotePaths = [];
+                    const toUploadSingletons = [], toDownloadSingletons = []; // <-- NEW
+                    const TOLERANCE_MS = 2000; // Dropbox timestamp tolerance
 
-                    masterDeletedMap.forEach((record, id) => {
-                        const articleName = `${id}.json`;
-                        if (localFilesMap.has(articleName)) {
-                            toDeleteLocal.push(id); // Delete local article
-                        }
-                        if (remoteFilesMap.has(articleName)) {
-                            toDeleteRemote.push(remoteFilesMap.get(articleName).id); // Delete remote article
-                        }
-                    });
+                    // 4a. Compare Articles
+                    const allArticleIds = new Set([...localArticlesMap.keys(), ...remoteArticlesMap.keys()]);
+                    for (const id of allArticleIds) {
+                        if (masterDeletedMap.has(id)) continue; 
+                        const local = localArticlesMap.get(id);
+                        const remote = remoteArticlesMap.get(id);
 
-                    if (localDeleted.length !== masterDeletedMap.size) deletionsChanged = true;
-
-                    // STEP 4: Compare & Build Sync Queues
-                    const toUpload = [];
-                    const toDownload = [];
-                    const TOLERANCE_MS = 3000;
-                    const allFileNames = new Set([...localFilesMap.keys(), ...remoteFilesMap.keys()]);
-
-                    for (const name of allFileNames) {
-                        if (masterDeletedMap.has(name.replace('.json', ''))) continue; // Skip if it's marked for deletion
-
-                        const local = localFilesMap.get(name);
-                        const remote = remoteFilesMap.get(name);
-
-                        if (local && !remote) {
-                            toUpload.push({ name: local.name, data: local.data, fileId: null });
-                        } else if (!local && remote) {
-                            toDownload.push(remote);
-                        } else if (local && remote) {
+                        if (local && !remote) { toUploadArticles.push(local); } 
+                        else if (!local && remote) { toDownloadArticles.push(remote); } 
+                        else if (local && remote) {
                             const localDate = new Date(local.updatedAt);
-                            const remoteDate = new Date(remote.modifiedTime);
+                            const remoteDate = new Date(remote.server_modified);
+                            if (Math.abs(localDate.getTime() - remoteDate.getTime()) > TOLERANCE_MS) {
+                                if (localDate > remoteDate) { toUploadArticles.push(local); } 
+                                else { toDownloadArticles.push(remote); }
+                            }
+                        }
+                    }
+
+                    // 4b. Compare Deletion Lists 
+                    masterDeletedMap.forEach(record => {
+                        if (localArticlesMap.has(record.id)) toDeleteLocal.push(record.id);
+                        if (remoteArticlesMap.has(record.id)) toDeleteRemotePaths.push({ path: `/${record.id}.json` });
+                    });
+
+                    // 4c. Compare Singleton Data Files (NEW)
+                    for (const fileName of this.SINGLETON_DATA_FILES) {
+                        const localMeta = await App.fs.getFileMetadata(fileName);
+                        const remoteMeta = remoteSingletonsMap.get(fileName);
+
+                        if (localMeta && !remoteMeta) {
+                            // Local exists, remote doesn't -> UPLOAD
+                            const localData = await App.fs.read(fileName);
+                            if (localData) toUploadSingletons.push({ name: fileName, data: localData });
+                        } 
+                        else if (!localMeta && remoteMeta) {
+                            // Remote exists, local doesn't -> DOWNLOAD
+                            toDownloadSingletons.push(remoteMeta);
+                        } 
+                        else if (localMeta && remoteMeta) {
+                            // Both exist -> COMPARE TIMESTAMPS
+                            const localDate = new Date(localMeta.lastModified);
+                            const remoteDate = new Date(remoteMeta.server_modified);
 
                             if (Math.abs(localDate.getTime() - remoteDate.getTime()) > TOLERANCE_MS) {
                                 if (localDate > remoteDate) {
-                                    toUpload.push({ name: local.name, data: local.data, fileId: remote.id });
+                                    // Local is newer -> UPLOAD
+                                    const localData = await App.fs.read(fileName);
+                                    if (localData) toUploadSingletons.push({ name: fileName, data: localData });
                                 } else {
-                                    toDownload.push(remote);
+                                    // Remote is newer -> DOWNLOAD
+                                    toDownloadSingletons.push(remoteMeta);
                                 }
                             }
                         }
                     }
 
-                    // STEP 5: Execute Sync Operations with a Concurrent Queue
-                    const CONCURRENCY_LIMIT = 10;
-                    const allTasks = [
-                        ...toUpload.map(f => () => this.uploadFile(f.name, f.data, f.fileId)),
-                        ...toDownload.map(f => async () => {
-                            const content = await this.downloadFile(f);
-                            if (content) {
-                                const data = JSON.parse(content);
-                                if (f.name.startsWith('art_')) {
-                                    await App.storage.updateArticle(data.id, data);
-                                } else {
-                                    await App.fs.write(f.name, data);
-                                }
+                    // STEP 5: EXECUTE SYNC OPERATIONS
+                    // 5a. Article Uploads
+                    const articleUploadPromises = toUploadArticles.map(article => 
+                        this.apiCall('files/upload', JSON.stringify(article), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${article.id}.json`, mode: 'overwrite' }) } })
+                    );
+
+                    // 5b. Singleton File Uploads (NEW)
+                    const singletonUploadPromises = toUploadSingletons.map(file =>
+                        this.apiCall('files/upload', JSON.stringify(file.data), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${file.name}`, mode: 'overwrite' }) } })
+                    );
+
+                    // 5c. Article Downloads
+                    const articleDownloadPromises = toDownloadArticles.map(async remoteMeta => {
+                        const { content } = await this.downloadFile(remoteMeta);
+                        if (content) {
+                            const article = JSON.parse(content);
+                            if (localArticlesMap.has(article.id)) {
+                                await App.storage.updateArticle(article.id, article); 
+                            } else {
+                                await App.storage.createArticle(article);
                             }
-                        }),
-                        ...toDeleteLocal.map(id => () => App.storage.deleteArticle(id))
-                    ];
-
-                    if (toDeleteRemote.length > 0) {
-                        allTasks.push(() => this.apiCall('drive.files.batchDelete', { fileIds: toDeleteRemote }));
-                    }
-                    if (deletionsChanged) {
-                        const newDeletedData = Array.from(masterDeletedMap.values());
-                        allTasks.push(() => App.fs.write('_deleted.json', newDeletedData));
-                        allTasks.push(() => this.uploadFile('_deleted.json', newDeletedData, remoteFilesMap.get('_deleted.json')?.id));
-                    }
-
-                    let activeWorkers = 0;
-                    let taskIndex = 0;
-                    const totalTasks = allTasks.length;
-
-                    await new Promise((resolve) => {
-                        const executeTask = async () => {
-                            while (taskIndex < totalTasks && activeWorkers < CONCURRENCY_LIMIT) {
-                                activeWorkers++;
-                                const currentTaskIndex = taskIndex++;
-                                const task = allTasks[currentTaskIndex];
-
-                                try {
-                                    await task();
-                                } catch (e) {
-                                    console.error("A sync task failed:", e);
-                                } finally {
-                                    activeWorkers--;
-                                    if (!isSilent) {
-                                        const percent = Math.round((taskIndex / totalTasks) * 100);
-                                        App.ui.updateToast(App.ui.showToast("Syncing with Google Drive...", { duration: 0 }), `Syncing... ${percent}%`);
-                                    }
-                                    if (taskIndex === totalTasks && activeWorkers === 0) {
-                                        resolve();
-                                    } else {
-                                        executeTask(); // Start next task
-                                    }
-                                }
-                            }
-                        };
-                        // Start initial workers
-                        for (let i = 0; i < CONCURRENCY_LIMIT; i++) {
-                            executeTask();
                         }
-                        if (totalTasks === 0) resolve();
                     });
 
-                    // STEP 6: Finalize
-                    const changes = allTasks.length;
+                    // 5d. Singleton File Downloads (NEW)
+                    const singletonDownloadPromises = toDownloadSingletons.map(async remoteMeta => {
+                        const { content } = await this.downloadFile(remoteMeta);
+                        if (content) {
+                            const data = JSON.parse(content);
+                            // App.fs.write will automatically use the right storage (FS or Browser)
+                            await App.fs.write(remoteMeta.name, data);
+                        }
+                    });
 
-                    if (changes > 0) {
-                        if (!isSilent) App.ui.showToast('Sync Complete!', 'success');
-                        App.ui.updateSyncIcon('success', 'Sync Complete!');
-                        await App.loadInitialData(); // Reload local state
-                        App.router.navigateTo(App.router.getActiveView() || 'library', null, true); // Refresh view
+                    // Execute all uploads and downloads in parallel
+                    await Promise.allSettled([
+                        ...articleUploadPromises, ...singletonUploadPromises,
+                        ...articleDownloadPromises, ...singletonDownloadPromises
+                    ]);
+
+                    // 5e. Remote Deletions 
+                    if (toDeleteRemotePaths.length > 0) {
+                        await this.apiCall('files/delete_batch', { entries: toDeleteRemotePaths });
+                    }
+
+                    // 5f. Local Deletions 
+                    for(const id of toDeleteLocal) {
+                        await App.storage.deleteArticle(id); 
+                    }
+
+                    // 5g. Sync Deleted Records 
+                    const finalDeletedRecords = Array.from(masterDeletedMap.values());
+                    if (localDeletedMap.size !== finalDeletedRecords.length || remoteDeletedMap.size !== finalDeletedRecords.length) {
+                        await App.storage.saveDeletedRecords(finalDeletedRecords);
+                        await this.apiCall('files/upload', JSON.stringify(finalDeletedRecords), { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: `/${App.storage.DELETED_RECORDS_FILENAME}`, mode: 'overwrite' }) } });
+                    }
+
+                    // STEP 6: FINALIZE & RELOAD UI
+                    const articleChanges = toUploadArticles.length + toDownloadArticles.length + toDeleteLocal.length > 0;
+                    const singletonChanges = toUploadSingletons.length + toDownloadSingletons.length > 0;
+
+                    if (articleChanges) {
+                        // Re-sort in-memory state and refresh library
+                        App.state.articles.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                        await App.util.reconcileCategories(); // Re-check categories
+
+                        const activeView = App.router.getActiveView();
+                        if (activeView === 'library' || activeView === 'flashcard' || activeView === 'stats-dashboard' || activeView === 'visual-map' || activeView === 'mindmap' || activeView === 'category') {
+                            App.router.navigateTo(activeView, App.router.getActiveViewData(), true);
+                        }
+                    }
+
+                    if (singletonChanges) {
+                        // A data file changed, which requires a soft-reload of state.
+                        App.ui.showToast('App data (settings, tasks) synced. Reload recommended.', { type: 'info', duration: 10000 });
+                    }
+
+                    if (articleChanges || singletonChanges) {
+                        if (!isSilent) App.ui.showToast('Sync Complete!', { type: 'success' }); 
                     } else if (!isSilent) {
-                        App.ui.showToast('Everything is up to date.', 'success');
-                        App.ui.updateSyncIcon('success', 'Everything is up to date.');
+                        App.ui.showToast("Everything is up to date.", { type: 'success' });
                     }
 
                     await App.settings.set('lastSyncTimestamp', new Date().toISOString());
 
                 } catch (error) {
-                    console.error('Google Drive Sync Error:', error);
-                    if (!isSilent) App.ui.showToast(`Sync failed: ${error.message}`, 'error');
-                    App.ui.updateSyncIcon('error', `Sync failed: ${error.message}`);
+                    console.error("Sync Error:", error);
+                    if (!isSilent) App.ui.showToast(`Sync failed: ${error.message}`, { type: 'error' });
                 } finally {
                     App.state.isSyncing = false;
-                    if (document.getElementById('settings-modal-content')) App.ui.showStorageModal();
+                    if (document.getElementById('settings-modal-content')) App.ui.showSettingsModal();
                 }
             },
 
-            /* Generic helper for Google API calls with error handling.*/
-            async apiCall(endpoint, params) {
-                let response;
-                try {
-                    if (endpoint === 'drive.files.list') {
-                        response = await gapi.client.drive.files.list(params);
-                    } else if (endpoint === 'drive.about.get') {
-                        response = await gapi.client.drive.about.get(params);
-                    } else if (endpoint === 'drive.files.create') {
-                        response = await gapi.client.drive.files.create(params.resource, { fields: params.fields });
-                    } else if (endpoint === 'drive.files.get') {
-                        response = await gapi.client.drive.files.get(params);
-                    } else if (endpoint === 'drive.files.batchDelete') {
-                        // Batch delete is special
-                        const batch = gapi.client.newBatch();
-                        params.fileIds.forEach(fileId => {
-                            batch.add(gapi.client.drive.files.delete({ fileId }));
-                        });
-                        response = await batch;
-                    } else {
-                        throw new Error(`Unknown API endpoint: ${endpoint}`);
-                    }
-
-                    return response.result;
-
-                } catch (e) {
-                    // This catches token expiry errors
-                    if (e.status === 401) {
-                        this.disconnect();
-                    }
-                    console.error(`Google API call to '${endpoint}' failed:`, e);
-                    throw new Error(e.result?.error?.message || e.message || 'Google API error');
-                }
+            async downloadFile(remoteMeta) {
+                return await this.apiCall('files/download', null, { headers: { 'Dropbox-API-Arg': JSON.stringify({ path: remoteMeta.path_lower }) }, isDownload: true });
             },
-
             async listAllFiles() {
-                if (!this.appFolderId) return [];
-                let allFiles = [];
-                let pageToken = null;
+                if (!this.isReady()) return [];
                 try {
-                    do {
-                        const response = await this.apiCall('drive.files.list', {
-                            q: `'${this.appFolderId}' in parents and trashed=false`,
-                            fields: 'nextPageToken, files(id, name, modifiedTime)',
-                            pageSize: 100,
-                            pageToken: pageToken,
-                        });
-                        allFiles = allFiles.concat(response.files);
-                        pageToken = response.nextPageToken;
-                    } while (pageToken);
-                    return allFiles;
-                } catch (error) {
-                    console.error('Failed to list files:', error);
-                    return [];
+                    let result = await this.apiCall('files/list_folder', { path: '' });
+                    const allFiles = [...result.entries];
+                    while (result.has_more) {
+                        result = await this.apiCall('files/list_folder/continue', { cursor: result.cursor });
+                        allFiles.push(...result.entries);
+                    }
+                    return allFiles.filter(f => f['.tag'] === 'file');
+                } catch (err) {
+                    if (err.message && err.message.includes("path/not_found")) return [];
+                    else throw err;
                 }
             },
-
-            async downloadFile(remoteFile) {
-                try {
-                    const response = await gapi.client.drive.files.get({
-                        fileId: remoteFile.id,
-                        alt: 'media',
-                    });
-                    return response.body;
-                } catch (error) {
-                    console.error(`Failed to download file ${remoteFile.name}:`, error);
-                    return null;
-                }
-            },
-
-            async uploadFile(fileName, data, fileId = null) {
-                const fileContent = JSON.stringify(data);
-                const metadata = {
-                    name: fileName,
-                    mimeType: 'application/json',
-                };
-                if (!fileId) {
-                    metadata.parents = [this.appFolderId];
-                }
-
-                const boundary = '-------314159265358979323846';
-                const delimiter = `\r\n--${boundary}\r\n`;
-                const close_delim = `\r\n--${boundary}--`;
-
-                const multipartRequestBody =
-                    delimiter +
-                    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-                    JSON.stringify(metadata) +
-                    delimiter +
-                    'Content-Type: application/json\r\n\r\n' +
-                    fileContent +
-                    close_delim;
-
-                const method = fileId ? 'PATCH' : 'POST';
-                const path = `/upload/drive/v3/files${fileId ? `/${fileId}` : ''}`;
-
-                try {
-                    await gapi.client.request({
-                        path: path,
-                        method: method,
-                        params: { uploadType: 'multipart' },
-                        headers: {
-                            'Content-Type': `multipart/related; boundary=${boundary}`,
-                        },
-                        body: multipartRequestBody,
-                    });
-                } catch (error) {
-                    console.error(`Failed to upload file ${fileName}:`, error);
-                }
-            },
-
-            isReady: () => App.state.isGoogleDriveReady,
+            generateCodeVerifier() { const c='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01236789-._~';let r='';const v=new Uint8Array(128);crypto.getRandomValues(v);for(let i=0;i<v.length;i++)r+=c[v[i]%c.length];return r; },
+            async generateCodeChallenge(v) { const d=new TextEncoder().encode(v);const h=await crypto.subtle.digest('SHA-256',d);return btoa(String.fromCharCode.apply(null,new Uint8Array(h))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); },
+            isReady: () => App.state.isDropboxReady,
         },
         
         // ==========================================================================
@@ -10403,7 +10333,21 @@
                     }
                     return finalHtml;
                 } else {
-                    return `<div class="snippet" tabindex="0" onclick="App.events.toggleSnippetVisibility(event)">${item.html}</div>`;
+                    let snippetHtml = item.html;
+                    if (snippetHtml && snippetHtml.includes('cloze-flashcard')) {
+                        snippetHtml = snippetHtml.replace(/<span class="cloze-flashcard">(.*?)<\/span>/g, 
+                            (match, content) => {
+                                return `<span class="focus-cloze" 
+                                                onclick="event.stopPropagation(); this.classList.toggle('revealed')" 
+                                                title="Click to reveal cloze">
+                                            <span class="focus-cloze-hidden">[...]</span>
+                                            <span class="focus-cloze-revealed">${content}</span>
+                                        </span>`;
+                            }
+                        );
+                    }
+                    
+                    return `<div class="snippet" tabindex="0" onclick="App.events.toggleSnippetVisibility(event)">${snippetHtml}</div>`;
                 }
             }).join('');
 
@@ -11994,16 +11938,21 @@
             async showStorageModal() {
                 // --- 1. GET CURRENT STATE ---
                 const isPremium = App.license.isPremium();
-                const isConnected = App.state.isGoogleDriveReady;
-                const syncEnabled = App.settings.get('enableGoogleDriveSync');
+                const clientId = App.settings.get('dropboxClientId') || '';
+                const isConnected = App.state.isDropboxReady;
+                const hasKey = !!clientId.trim();
+                const syncEnabled = App.settings.get('enableDropboxSync');
                 const lastSyncTime = App.util.formatTimestamp(App.settings.get('lastSyncTimestamp'));
 
                 // --- 2. BUILD THE CLOUD SYNC SECTION HTML ---
-                let cloudSyncHTML = '';
+
+                // This class locks the entire section if the user is not premium.
                 const premiumLockClass = !isPremium ? 'premium-feature-locked' : '';
+                let cloudSyncHTML = '';
 
                 if (!isPremium) {
                     // --- STATE A: SPARK (FREE) USER ---
+                    // Show a clear upsell message.
                     cloudSyncHTML = `
                         <div class="premium-cta-text" style="text-align: center; padding: 1rem; background: var(--bg-tertiary); border-radius: var(--border-radius-lg);">
                             Cloud Sync is a Premium feature.
@@ -12011,49 +11960,91 @@
                         </div>
                     `;
                 } else {
-                    // --- STATE B: PREMIUM USER ---
-                    const step1_ConnectHTML = `
+                    // --- STATE B-E: PREMIUM USER ---
+                    // The user is Premium, so we show the step-by-step setup.
+
+                    // STEP 1: API Key Input (Always visible for premium users)
+                    const step1_ApiKeyHTML = `
                         <div class="settings-item">
                             <div class="settings-label">
-                                <b>Step 1: Connect to Google Drive</b>
-                                <small>${isConnected ? `Connected as ${App.state.googleDriveUser.displayName}` : 'Click to sign in with Google.'}</small>
+                                <b>Step 1: Set Your API Key</b>
+                                <small>Get this from your Dropbox App Console.</small>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap: 8px; align-items: stretch; margin-top: -0.5rem; margin-bottom: 1rem;">
+                            <input type="password" id="dropbox-client-id-input" class="text-input" placeholder="Paste your App Key (Client ID) here" value="${clientId}">
+                            <button class="btn btn-secondary" onclick="${hasKey ? 'App.events.removeDropboxClientId()' : 'App.events.saveDropboxClientId()'}">${hasKey ? 'Remove' : 'Save'}</button>
+                        </div>
+                    `;
+
+                    // STEP 2: Connect Button (Enabled only if key is saved)
+                    const step2_ConnectHTML = `
+                        <div class="settings-item">
+                            <div class="settings-label">
+                                <b>Step 2: Connect to Dropbox</b>
+                                <small>${isConnected ? `Connected as ${App.state.dropboxUser.email}` : 'Please save an API key and connect.'}</small>
                             </div>
                             ${isConnected ? 
-                                `<button class="btn btn-danger" onclick="App.googleDrive.disconnect()">Disconnect</button>` : 
-                                `<button class="btn btn-primary" onclick="App.googleDrive.connect()">Connect</button>`
+                                `<button class="btn btn-danger" onclick="App.dropbox.disconnect(); App.ui.showStorageModal();">Disconnect</button>` : 
+                                `<button class="btn btn-primary" onclick="App.dropbox.connect()" ${!hasKey ? 'disabled' : ''}>Connect</button>`
                             }
                         </div>
                     `;
 
-                    const step2_EnableHTML = `
+                    // STEP 3: Enable Toggle (Enabled only if connected)
+                    const step3_EnableHTML = `
                         <div class="settings-item" style="${!isConnected ? 'opacity: 0.5; pointer-events: none;' : ''}">
                             <div class="settings-label">
-                                <b>Step 2: Enable Sync</b>
+                                <b>Step 3: Enable Sync</b>
                                 <small>${!isConnected ? 'You must be connected to enable sync.' : 'Turn on automatic syncing.'}</small>
                             </div>
                             <div id="sync-toggle" class="toggle-switch ${syncEnabled ? 'active' : ''} ${!isConnected ? 'is-disabled' : ''}"></div>
                         </div>
                     `;
 
-                    const step3_ManualSyncHTML = (isConnected && syncEnabled) ? `
+                    // STEP 4: Manual Sync Button (Visible only if enabled)
+                    const step4_ManualSyncHTML = (isConnected && syncEnabled) ? `
                         <div class="settings-item">
                             <div class="settings-label">
                                 <b>Manual Sync</b>
                                 <small>Last sync: ${lastSyncTime}</small>
                             </div>
-                            <button id="sync-now-btn" class="btn btn-primary" onclick="App.googleDrive.syncChanges()" ${!App.state.directoryHandle && App.state.storageMode !== 'browser' ? 'disabled' : ''} title="${!App.state.directoryHandle && App.state.storageMode !== 'browser' ? 'Please select a folder or use browser storage first.' : 'Sync Now'}">
+                            <button id="sync-now-btn" class="btn btn-primary" onclick="App.dropbox.syncChanges()" ${!App.state.directoryHandle && App.state.storageMode !== 'browser' ? 'disabled' : ''} title="${!App.state.directoryHandle && App.state.storageMode !== 'browser' ? 'Please select a folder or use browser storage first.' : 'Sync Now'}">
                                 ${App.state.isSyncing ? `<i class="fa-solid fa-arrows-rotate spin"></i> Syncing...` : 'Sync Now'}
                             </button>
                         </div>
                     ` : '';
 
-                    cloudSyncHTML = step1_ConnectHTML + step2_EnableHTML + step3_ManualSyncHTML;
+                    // HELP GUIDE: Separate from the inputs, always available at the bottom.
+                    const helpGuideHTML = `
+                        <div class="settings-item" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                            <div class="settings-label">
+                                <b>Need help?</b>
+                                <small>Follow these steps to get your API key.</small>
+                            </div>
+                            <button class="btn btn-secondary" onclick="document.getElementById('dropbox-guide-content').style.display = document.getElementById('dropbox-guide-content').style.display === 'block' ? 'none' : 'block';">
+                                Show Setup Guide
+                            </button>
+                        </div>
+                        <div class="guide-content" id="dropbox-guide-content" style="display: none;">
+                            <h3>1. Create Dropbox App</h3>
+                            <ol>
+                                <li>Go to the <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer">Dropbox App Console</a> and click <strong>Create app</strong>.</li>
+                                <li>Select <strong>Scoped access</strong> &rarr; <strong>App folder</strong>. Name your app (e.g., "NoteKashSync").</li>
+                                <li>In <strong>Permissions</strong>, check <code>files.content.read</code> and <code>files.content.write</code>. Click Submit. (you can allow more items as well)</li>
+                                <li>In <strong>Settings</strong>, find "Redirect URIs" and add this exact URL: <code>https://notekash.com</code> or you can copy from "web address" as well. </li> 
+                                <li>Copy the <strong>App key (Client ID)</strong> from this page.</li>
+                            </ol>
+                            <h3>2. Save Your Key</h3>
+                            <p>Paste the <strong>App key (Client ID)</strong> into the "Step 1" input box above and click <strong>Save</strong> then click <strong> Connect </strong> and you have sucessfully connected the <strong> powerful Automatic Multi Device Sync </strong>.</p>
+                        </div>
+                    `;
+
+                    // Combine all parts for the premium user
+                    cloudSyncHTML = step1_ApiKeyHTML + step2_ConnectHTML + step3_EnableHTML + step4_ManualSyncHTML + helpGuideHTML;
                 }
 
                 // --- 3. ASSEMBLE THE FINAL MODAL ---
-                const syncHeader = isPremium ? 
-                    `<h4><i class="fa-brands fa-google-drive"></i> Google Drive Sync</h4>` : 
-                    `<h4><i class="fa-solid fa-cloud-arrow-up"></i> Cloud Sync (Premium)</h4>`;
                 const modalHTML = `
                     <div class="modal-backdrop" onclick="if(event.target === this) App.ui.closeModal()">
                         <div class="modal-content ui-card" style="max-width: 550px;" onclick="event.stopPropagation()">
@@ -12062,11 +12053,11 @@
                             <div class="settings-section">
                                 <h4><i class="fa-solid fa-folder-open"></i> Local Storage</h4>
                                 <div class="settings-item">
-                                    <div class="settings-label"><b>Storage Mode</b><small>${App.state.directoryHandle ? `Using folder: '${App.state.directoryHandle.name}'` : 'Using Browser Storage.'}</small></div>
+                                    <div class="settings-label"><b>Notes Folder</b><small>${App.state.directoryHandle ? `Using folder: '${App.state.directoryHandle.name}'` : 'Using Browser Storage.'}</small></div>
                                     <button class="btn btn-secondary" onclick="App.ui.closeModal(); App.router.navigateTo('welcome');">Change</button>
                                 </div>
                                 <div class="settings-item">
-                                    <div class="settings-label"><b>Backup</b><small>Save or Restore all your data.</small></div>
+                                    <div class="settings-label"><b>Backup</b><small>Save or Restore your Note or All Data files.</small></div>
                                     <div style="display:flex; gap: 8px;">
                                         <button class="btn btn-secondary" onclick="App.events.triggerZipImport()">Import</button>
                                         <button class="btn btn-secondary" onclick="App.services.backup.exportToZip()">Export</button>
@@ -12074,8 +12065,8 @@
                                 </div>
                             </div>
 
-                            <div class="settings-section">
-                                ${syncHeader}
+                            <div classs="settings-section ${premiumLockClass}">
+                                <h4><i class="fa-brands fa-dropbox"></i> Cloud Sync</h4>
                                 ${cloudSyncHTML}
                             </div>
 
@@ -12654,46 +12645,6 @@
                 document.getElementById('modal-container').innerHTML = ''; 
             },
 
-            updateSyncIcon(status = 'idle', message = 'Sync Status: Idle') {
-                const iconEl = document.getElementById('sync-status-icon');
-                if (!iconEl) return;
-
-                // Only show the icon if sync is enabled in settings
-                if (App.settings.get('enableGoogleDriveSync')) {
-                    iconEl.style.display = 'flex';
-                } else {
-                    iconEl.style.display = 'none';
-                    return;
-                }
-
-                iconEl.title = message;
-                const icon = iconEl.querySelector('i');
-                icon.className = 'fa-solid'; // Reset classes
-                icon.classList.remove('spin');
-
-                switch (status) {
-                    case 'syncing':
-                        icon.classList.add('fa-cloud-arrow-up', 'spin');
-                        icon.style.color = 'var(--primary-color)';
-                        break;
-                    case 'success':
-                        icon.classList.add('fa-check-double'); // Changed for a "synced" look
-                        icon.style.color = 'var(--success-color)';
-                        // Revert to idle after 3 seconds
-                        setTimeout(() => this.updateSyncIcon('idle', 'Sync Status: Up to date'), 3000);
-                        break;
-                    case 'error':
-                        icon.classList.add('fa-cloud-xmark');
-                        icon.style.color = 'var(--danger-color)';
-                        break;
-                    case 'idle':
-                    default:
-                        icon.classList.add('fa-cloud');
-                        icon.style.color = 'var(--text-secondary)';
-                        break;
-                }
-            },
-
             updateTheLine(progress) {
                     const line = document.getElementById('the-line');
                     if (line) {
@@ -12974,12 +12925,11 @@
                     App.ui.showAscensionModal();
                     return;
                 }
-                const syncEnabled = App.settings.get('enableGoogleDriveSync');
-                App.settings.set('enableGoogleDriveSync', !syncEnabled);
-                App.ui.showStorageModal(); // Re-renders the modal with the new state
-
-                if (!syncEnabled && App.googleDrive.isReady()) {
-                    App.googleDrive.syncChanges(true);
+                const syncEnabled = App.settings.get('enableDropboxSync');
+                App.settings.set('enableDropboxSync', !syncEnabled);
+                App.ui.showStorageModal();
+                if (!syncEnabled && App.dropbox.isReady()) {
+                    App.dropbox.syncChanges(true);
                 }
             },
 
@@ -13837,6 +13787,9 @@
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = content;
 
+                // --- THIS IS THE FIX (PART 1) ---
+                // We get the most recent version of the article from the app's memory.
+                // This ensures we have the latest attachment data, including any new PDF highlights.
                 const articleInMemory = App.storage.getArticle(id) || {};
                 let attachments = articleInMemory.attachments || [];
                 let attachmentsUpdated = false;
@@ -13894,8 +13847,8 @@
 
                     App.ui.updateArticleMetadata(content, savedArticle.createdAt);
                     if (switchToRead) { this.switchToMode('read'); }
-                    if (App.googleDrive.isReady() && App.settings.get('enableGoogleDriveSync')) {
-                        App.googleDrive.syncChanges(true);
+                    if (App.dropbox.isReady() && App.settings.get('enableDropboxSync')) {
+                        App.dropbox.syncChanges(true);
                     } else if (!isAutosave) {
                         App.ui.showToast('Saved!', { type: 'success' });
                     }
@@ -13914,6 +13867,9 @@
                     const newFlashcards = App.util.extractFlashcards(content, id, category, existingFlashcards);
                     const newTags = App.contentTools.extractTagsFromHTML(content);
 
+                    // --- THIS IS THE FIX (PART 2) ---
+                    // The `attachments` array is now ALWAYS included in the update payload,
+                    // ensuring PDF highlights are saved every time.
                     const updates = { title, content, category, flashcards: newFlashcards, tags: newTags, attachments: attachments };
 
                     const result = await App.storage.updateArticle(id, updates);
@@ -13953,7 +13909,7 @@
                 App.ui.renderArticleControls(App.storage.getArticle(App.state.activeArticleId));
             },
 
-            deleteArticleWithConfirmation() {
+           deleteArticleWithConfirmation() {
                 const id = App.state.activeArticleId;
                 const article = App.storage.getArticle(id);
                 App.ui.showConfirmationModal({
@@ -13967,9 +13923,8 @@
                         App.commandPalette.state.fuse.links = null; 
 
                         App.router.navigateTo('library');
-                        // --- THIS IS THE FIX ---
-                        if (App.googleDrive.isReady() && App.settings.get('enableGoogleDriveSync')) {
-                            App.googleDrive.syncChanges(true); // Call Google Drive sync
+                        if (App.dropbox.isReady() && App.settings.get('enableDropboxSync')) {
+                            App.dropbox.syncChanges(true);
                         }
                     }
                 });
@@ -17988,6 +17943,20 @@
                 },
             },
 
+
+            saveDropboxClientId() {
+                const id = document.getElementById('dropbox-client-id-input').value.trim();
+                App.settings.set('dropboxClientId', id);
+                App.ui.showToast('Dropbox Client ID saved!', {type: 'success'});
+                App.ui.showStorageModal();
+            },
+
+            removeDropboxClientId() {
+                App.settings.set('dropboxClientId', null);
+                App.ui.showToast('Dropbox Client ID removed.');
+                App.ui.showStorageModal();
+            },
+
             toggleCategoryHighlights() {
                 const container = document.querySelector('.category-view-container');
                 const toggle = document.getElementById('highlight-toggle');
@@ -18016,26 +17985,21 @@
                 const category = App.util.getOriginalCategoryName(container.querySelector('h2').textContent.split(': ')[1] || 'All');
                 const sortedArticles = App.services.export.getSortedArticlesForCategory(category);
 
-                // CHANGE START: Added 'blocks' to the types array to fetch timelines and charts
+               
                 const articlesWithContent = sortedArticles
-                    .map(article => ({ ...article, snippets: App.util.extractSnippets(article, ['highlight', 'mcq', 'blocks'], true) }))
+                    .map(article => ({ ...article, snippets: App.util.extractSnippets(article, ['highlight', 'mcq', 'blocks', 'cloze'], true) }))
                     .filter(article => article.snippets.length > 0);
-                // CHANGE END
 
                 articlesWithContent.forEach(article => {
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = article.content;
                     
-                    // CHANGE START: Added selectors for new block types to ensure correct sorting order
                     const allElements = Array.from(tempDiv.querySelectorAll(
                         '.snippet, .nk-mcq-block, .nk-timeline-block, .chart-container, ' +
                         '.highlight-1, .highlight-2, .highlight-3, .highlight-4, .highlight-5, .highlight-6, .image-container.highlighted-image'
                     ));
-                    // CHANGE END
 
                     article.snippets.sort((a, b) => {
-                        // RATIONALE: This complex logic finds the original DOM element for each snippet
-                        // and sorts them based on their actual order in the article content.
                         const elA = tempDiv.querySelector(`[id="${a.id}"]`);
                         const elB = tempDiv.querySelector(`[id="${b.id}"]`);
                         if (!elA || !elB) return 0;
@@ -18073,7 +18037,7 @@
                 const articlesForCategory = App.services.export.getSortedArticlesForCategory(categoryName);
 
                 const articlesWithContent = articlesForCategory
-                    .map(article => ({ ...article, snippets: App.util.extractSnippets(article, ['highlight', 'mcq', 'blocks'], true) }))
+                    .map(article => ({ ...article, snippets: App.util.extractSnippets(article, ['highlight', 'mcq', 'blocks', 'cloze'], true) }))
                     .filter(article => article.snippets.length > 0);
 
                 if (articlesWithContent.length === 0) {
@@ -19656,6 +19620,7 @@
                 const tempDiv = document.createElement('div');
 
                 const selectors = {
+                    cloze: '.cloze-flashcard',
                     highlight: '.highlight-1, .highlight-2, .highlight-3, .highlight-4, .highlight-5, .highlight-6, .text-red, .text-green, .text-blue',
                     image: '.image-container.highlighted-image',
                     textile: '.nk-text-tile',
@@ -19684,6 +19649,9 @@
                     if (types.includes('tag')) {
                         selectorsToQuery.push(selectors.tag);
                     }
+                    if (types.includes('cloze')) { 
+                        selectorsToQuery.push(selectors.cloze);
+                    }
                     
                     const masterSelector = selectorsToQuery.join(', ');
                     if (!masterSelector) return;
@@ -19694,7 +19662,7 @@
                         if (node.matches(selectors.tag)) {
                             const snippetId = node.id || `tag-snip-${src.id}-${index}`;
                             if (!node.id) node.id = snippetId;
-                            // Find the parent block to get the full context
+                            
                             const parentBlock = node.closest('p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6, li');
                             if (parentBlock) {
                                 snippetObject = { 
@@ -19705,7 +19673,8 @@
                                     type: 'tag-snippet' 
                                 };
                             }
-                        } 
+                        }
+                        
                         else if (node.matches(selectors.textile)) {
                             const snippetId = node.id || `tile-${src.id}-${index}`;
                             if (!node.id) node.id = snippetId;
@@ -19740,7 +19709,7 @@
                             const snippetId = node.id || `snip-${src.id}-${index}`;
                             snippetObject = { id: snippetId, html: node.outerHTML, text: (node.textContent || "").trim(), articleId: src.id, type: 'snippet' };
                         }
-
+                        
                         if (snippetObject) {
                             results.push(snippetObject);
                         }
