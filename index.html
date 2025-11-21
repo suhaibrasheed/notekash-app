@@ -19056,6 +19056,7 @@
             },
 
             backup: {
+                // 1. HELPER: Gathers all app data for export
                 async getAllDataAsFiles() {
                     const files = [];
                     const dataFileNames = ['settings.json', 'todos.json', 'pomodoro.json', 'quiz_stats.json', 'tags.json', 'visual-map-state.json', 'mind-map-state.json', App.storage.DELETED_RECORDS_FILENAME];
@@ -19063,11 +19064,17 @@
                     if (App.state.storageMode === 'fileSystem' && App.state.directoryHandle) {
                         for await (const entry of App.state.directoryHandle.values()) {
                             if (entry.kind === 'file' && entry.name.endsWith('.json')) {
-                                const file = await entry.getFile();
-                                files.push({ name: file.name, content: await file.text() });
+                                try {
+                                    const file = await entry.getFile();
+                                    const text = await file.text();
+                                    // Robustness: Only export files that actually have content
+                                    if (text.trim()) { 
+                                        files.push({ name: file.name, content: text });
+                                    }
+                                } catch (e) { console.warn("Failed to read file for export:", entry.name); }
                             }
                         }
-                    } else { // Browser storage mode
+                    } else { 
                         const articles = await App.browserStore.getAllArticles();
                         articles.forEach(a => files.push({ name: `${a.id}.json`, content: JSON.stringify(a, null, 2) }));
                         
@@ -19079,225 +19086,317 @@
                     return files;
                 },
 
-                               async exportToZip() {
-                    if (!window.JSZip) {
-                        App.ui.showToast("Export library not loaded.", { type: 'error' });
-                        return;
-                    }
-
-                    App.ui.migrationScreen.show("Exporting Notes");
+                // 2. EXPORT: Full System Backup (For you, the user)
+                async exportToZip() {
+                    if (!window.JSZip) { App.ui.showToast("Export library not loaded.", { type: 'error' }); return; }
+                    
+                    App.ui.migrationScreen.show("Creating Full Backup");
 
                     try {
-                        App.ui.migrationScreen.update(10, "Gathering all data...");
+                        App.ui.migrationScreen.update(10, "Gathering files...");
                         const allFiles = await this.getAllDataAsFiles();
                         
                         if (App.ui.migrationScreen.state.isCancelled) return;
+                        if (allFiles.length === 0) { App.ui.showToast("No data to export.", "warning"); return; }
 
-                        if (allFiles.length === 0) {
-                            App.ui.showToast("No data to export.", "warning");
-                            return;
-                        }
-
-                        App.ui.migrationScreen.update(40, `Found ${allFiles.length} files to compress...`);
+                        App.ui.migrationScreen.update(40, `Compressing ${allFiles.length} files...`);
                         const zip = new JSZip();
-                        allFiles.forEach(file => {
-                            zip.file(file.name, file.content);
-                        });
+                        allFiles.forEach(file => zip.file(file.name, file.content));
 
                         if (App.ui.migrationScreen.state.isCancelled) return;
-
-                        App.ui.migrationScreen.update(80, "Compressing files...");
+                        
+                        App.ui.migrationScreen.update(80, "Finalizing...");
                         const blob = await zip.generateAsync({ type: 'blob' });
-
                         const filename = `notekash-backup-${new Date().toISOString().slice(0, 10)}.zip`;
+                        
                         App.util.downloadBlob(blob, filename);
-
                         App.ui.migrationScreen.update(100, "Done!");
-                        App.ui.showToast("Backup created successfully!", "success");
-
+                        App.ui.showToast("Full backup created successfully!", "success");
                     } catch (error) {
-                        console.error("Export to Zip failed:", error);
-                        App.ui.showToast("Failed to create backup.", "error");
+                        console.error("Export failed:", error);
+                        App.ui.showToast("Export failed. Check console.", "error");
+                    } finally { 
+                        setTimeout(() => App.ui.migrationScreen.hide(), 1000); 
+                    }
+                },
+
+                // 3. EXPORT: Study Kit (For Selling/Sharing - No System Files)
+                async exportStudyKit(categoryName) {
+                    if (!window.JSZip) { App.ui.showToast("Export library not loaded.", { type: 'error' }); return; }
+
+                    // Handle "All" category or specific category
+                    const targetArticles = categoryName === 'All' 
+                        ? App.state.articles 
+                        : App.state.articles.filter(a => a.category === categoryName);
+
+                    if (targetArticles.length === 0) {
+                        App.ui.showToast(`No notes found in category "${categoryName}".`, 'warning');
+                        return;
+                    }
+
+                    App.ui.migrationScreen.show(`Creating Study Kit: ${categoryName}`);
+
+                    try {
+                        const zip = new JSZip();
+                        const folderName = `StudyKit-${App.util.slugify(categoryName)}`;
+                        
+                        // Add only the articles
+                        targetArticles.forEach((article, index) => {
+                            const progress = Math.round((index / targetArticles.length) * 90);
+                            App.ui.migrationScreen.update(progress, `Packing: ${article.title}`);
+                            zip.file(`${article.id}.json`, JSON.stringify(article, null, 2));
+                        });
+
+                        // Optional: Add a manifest or readme
+                        zip.file("README.txt", `NoteKash Study Kit: ${categoryName}\nContains ${targetArticles.length} notes.\nImport this zip directly into NoteKash.`);
+
+                        const blob = await zip.generateAsync({ type: 'blob' });
+                        App.util.downloadBlob(blob, `${folderName}.zip`);
+                        
+                        App.ui.migrationScreen.update(100, "Kit Ready!");
+                        App.ui.showToast(`Study Kit downloaded! (${targetArticles.length} notes)`, "success");
+
+                    } catch (e) {
+                        console.error("Study Kit Export Failed", e);
+                        App.ui.showToast("Failed to create Study Kit.", "error");
                     } finally {
-                        // Ensures the loading screen is always hidden
                         setTimeout(() => App.ui.migrationScreen.hide(), 1000);
                     }
                 },
 
+                // 4. IMPORT ROUTER (The Gatekeeper)
                 async handleFileImport(files) {
                     if (!files || files.length === 0) return;
-
+                    
                     const zipFiles = Array.from(files).filter(f => f.name.endsWith('.zip'));
-                    const noteFiles = Array.from(files).filter(f => f.name.endsWith('.notekash') || f.name.endsWith('.json'));
-
+                    const jsonFiles = Array.from(files).filter(f => f.name.endsWith('.json') || f.name.endsWith('.notekash'));
+                    
                     if (zipFiles.length > 0) {
-                        // If a zip is present, process it (as before) and ignore other files.
-                        App.services.backup.importFromZip(zipFiles[0]);
-                        if (noteFiles.length > 0) {
-                            App.ui.showToast('Importing .zip file. Other selected notes were ignored.', 'info');
-                        }
-                        return;
-                    }
-
-                    if (noteFiles.length > 0) {
-                        // This is the new logic for importing .notekash / .json files
-                        App.ui.migrationScreen.show("Importing Notes");
-                        let importedCount = 0;
-                        let skippedCount = 0;
-                        
-                        const allLocalArticles = (App.state.storageMode === 'fileSystem')
-                            ? (await App.storage.getAll()).articles
-                            : await App.browserStore.getAllArticles();
-                        const localArticlesMap = new Map(allLocalArticles.map(a => [a.id, a]));
-
-                        for (let i = 0; i < noteFiles.length; i++) {
-                            const file = noteFiles[i];
-                            if (App.ui.migrationScreen.state.isCancelled) break;
-                            const progress = Math.round(((i + 1) / noteFiles.length) * 100);
-                            App.ui.migrationScreen.update(progress, `Importing "${file.name}"...`);
-
-                            try {
-                                const content = await file.text();
-                                const article = JSON.parse(content);
-                                
-                                // Basic validation
-                                if (article.id && article.title && article.content) {
-                                    const localArticle = localArticlesMap.get(article.id);
-                                    
-                                    // Generate a new ID if it's a new note, but keep original ID logic for updates
-                                    let newArticleId = article.id;
-                                    let isNewNote = !localArticle;
-                                    let isUpdate = localArticle && (new Date(article.updatedAt) > new Date(localArticle.updatedAt));
-
-                                    if (isNewNote) {
-                                        // It's a new note, but we must check if the ID already exists (e.g., duplicate import)
-                                        // If ID is already in use, we must assign a new one to prevent conflicts.
-                                        if(localArticlesMap.has(article.id)) {
-                                            article.id = 'art_' + crypto.randomUUID(); // Assign new ID
-                                        }
-                                        await App.storage.createArticle(article);
-                                        importedCount++;
-                                    } else if (isUpdate) {
-                                        // It's an update to an existing note
-                                        await App.storage.updateArticle(article.id, article);
-                                        importedCount++;
-                                    } else {
-                                        // Local version is same or newer, so we skip
-                                        skippedCount++;
-                                    }
-                                }
-                            } catch (e) {
-                                console.warn(`Could not import file: ${file.name}`, e);
-                                skippedCount++;
-                            }
-                        }
-
-                        if (App.ui.migrationScreen.state.isCancelled) {
-                            App.ui.migrationScreen.hide();
-                            return;
-                        }
-
-                        App.ui.migrationScreen.hide();
-                        App.ui.showToast(`Import complete! ${importedCount} notes added/updated, ${skippedCount} skipped. Reloading...`, 'success');
-                        
-                        // Reload the app to reflect all changes
-                        setTimeout(() => window.location.reload(), 1500);
+                        await this.importFromZip(zipFiles[0]);
+                    } else if (jsonFiles.length > 0) {
+                        await this.importLooseFiles(jsonFiles);
                     }
                 },
 
-                async importFromZip(file) {
-                    if (!window.JSZip) {
-                        App.ui.showToast("Import library not loaded.", { type: 'error' });
-                        return;
-                    }
-                    
+                // 5. LOOSE FILE HANDLER (Handles Single JSON, Bulk Arrays, & .notekash)
+                async importLooseFiles(files) {
                     App.ui.migrationScreen.show("Importing Notes");
-
                     try {
-                        const zip = await JSZip.loadAsync(file);
-                        const filesToProcess = Object.keys(zip.files).filter(path => !zip.files[path].dir);
-                        const totalFiles = filesToProcess.length;
+                        const rawArticles = [];
+                        for (let i = 0; i < files.length; i++) {
+                            const content = await files[i].text();
+                            if (!content.trim()) continue;
 
-                        let newCount = 0, updatedCount = 0, skippedCount = 0;
-
-                        const allLocalArticles = (App.state.storageMode === 'fileSystem')
-                            ? (await App.storage.getAll()).articles
-                            : await App.browserStore.getAllArticles();
-                        const localArticlesMap = new Map(allLocalArticles.map(a => [a.id, a]));
-
-                        // Helper function for DRY code
-                        const importDataFile = async (fileName) => {
-                            const fileInZip = zip.file(fileName);
-                            if (fileInZip) {
-                                try {
-                                    const data = JSON.parse(await fileInZip.async('string'));
-                                    await App.fs.write(fileName, data);
-                                } catch (e) {
-                                    console.warn(`Could not parse ${fileName} in backup.`, e);
+                            try { 
+                                const parsed = JSON.parse(content);
+                                
+                                // FIX: Handle "Bulk Array" imports (e.g., [note1, note2, note3])
+                                if (Array.isArray(parsed)) {
+                                    parsed.forEach(item => {
+                                        if (item.id && item.title) rawArticles.push(item);
+                                    });
+                                } 
+                                // Handle "Single Object" imports
+                                else if (parsed.id && parsed.title) {
+                                    rawArticles.push(parsed);
                                 }
-                            }
-                        };
-                        
-                        // Process data files
-                        await Promise.all([
-                            importDataFile('todos.json'), importDataFile('pomodoro.json'),
-                            importDataFile('quiz_stats.json'), importDataFile('settings.json'),
-                            importDataFile('tags.json'), importDataFile('visual-map-state.json'),
-                            importDataFile('mind-map-state.json')
-                        ]);
-
-                        const importedDeletedRecords = await (async () => {
-                            const fileInZip = zip.file(App.storage.DELETED_RECORDS_FILENAME);
-                            if (fileInZip) { try { return JSON.parse(await fileInZip.async('string')); } catch (e) { return []; } } return [];
-                        })();
-                        
-                        const localDeletedRecords = await App.storage.getDeletedRecords();
-                        const masterDeletedMap = new Map(localDeletedRecords.map(r => [r.id, r]));
-                        importedDeletedRecords.forEach(r => { if (!masterDeletedMap.has(r.id)) masterDeletedMap.set(r.id, r); });
-
-                        let processedFileCount = 0;
-                        for (const path of filesToProcess) {
-                            if (App.ui.migrationScreen.state.isCancelled) break;
-
-                            processedFileCount++;
-                            const progress = Math.round((processedFileCount / totalFiles) * 100);
-                            App.ui.migrationScreen.update(progress, `Processing ${path}...`);
-
-                            if (path.startsWith('art_') && path.endsWith('.json')) {
-                                try {
-                                    const importedData = JSON.parse(await zip.files[path].async('string'));
-                                    if (importedData.id && importedData.title) {
-                                        if (masterDeletedMap.has(importedData.id)) { skippedCount++; continue; }
-                                        const localArticle = localArticlesMap.get(importedData.id);
-                                        
-                                        if (!localArticle) { await App.storage.createArticle(importedData); newCount++; } 
-                                        else if (new Date(importedData.updatedAt) > new Date(localArticle.updatedAt)) { await App.storage.updateArticle(importedData.id, importedData); updatedCount++; } 
-                                        else { skippedCount++; }
-                                    }
-                                } catch (e) { console.warn(`Skipping invalid file: ${path}`, e); }
-                            }
-                            // Yield to the browser to keep UI responsive
-                            await new Promise(resolve => setTimeout(resolve, 0));
+                            } catch(e) { console.warn("Skipping invalid JSON:", files[i].name); }
                         }
                         
-                        if (App.ui.migrationScreen.state.isCancelled) return; // Exit before final save if cancelled
+                        if (rawArticles.length === 0) {
+                            App.ui.showToast("No valid notes found in selection.", "warning");
+                            return;
+                        }
 
-                        await App.storage.saveDeletedRecords(Array.from(masterDeletedMap.values()));
-                        await App.util.reconcileCategories();
-
-                        let summary = `Import complete: ${newCount} new, ${updatedCount} updated, ${skippedCount} skipped. Reloading...`;
-                        App.ui.showToast(summary, { type: 'success', duration: 6000 });
-
-                        setTimeout(() => window.location.reload(), 1500);
-
-                    } catch (error) {
-                        console.error("Import from Zip failed:", error);
-                        App.ui.showToast("Import failed. The zip file may be corrupt.", "error");
+                        await this.processImportedArticles(rawArticles);
+                    } catch (e) {
+                        console.error("Import error:", e);
+                        App.ui.showToast("Import failed.", "error");
                     } finally {
                         App.ui.migrationScreen.hide();
                     }
                 },
+
+                // 6. ZIP HANDLER (Handles Backups & Study Kits)
+                async importFromZip(file) {
+                    if (!window.JSZip) { App.ui.showToast("Import library not loaded.", { type: 'error' }); return; }
+                    
+                    App.ui.migrationScreen.show("Reading Archive");
+
+                    try {
+                        const zip = await JSZip.loadAsync(file);
+                        // FIX: Filter out macOS hidden files (starting with ._) and folders
+                        const filesToProcess = Object.keys(zip.files).filter(path => 
+                            !zip.files[path].dir && 
+                            !path.startsWith('__MACOSX') && 
+                            !path.split('/').pop().startsWith('._')
+                        );
+                        
+                        const rawArticles = [];
+                        const systemFiles = ['settings.json', 'todos.json', 'pomodoro.json', 'quiz_stats.json', 'tags.json', 'visual-map-state.json', 'mind-map-state.json', App.storage.DELETED_RECORDS_FILENAME];
+                        let systemFilesRestored = 0;
+
+                        App.ui.migrationScreen.update(20, "Unpacking & Sorting...");
+
+                        for (const path of filesToProcess) {
+                            if (App.ui.migrationScreen.state.isCancelled) break;
+                            if (path.includes('_index.json')) continue;
+
+                            const content = await zip.files[path].async('string');
+                            
+                            // FIX: Check for empty content to prevent crashes
+                            if (!content || !content.trim()) continue; 
+
+                            // Case A: System Files (Restore immediately)
+                            if (systemFiles.includes(path)) {
+                                try {
+                                    const data = JSON.parse(content);
+                                    await App.fs.write(path, data);
+                                    
+                                    if (path === 'tags.json') App.state.tags = data;
+                                    if (path === 'todos.json') App.hub.state.tasks = data;
+                                    if (path === 'pomodoro.json') App.hub.state.pomodoroStats = data;
+                                    
+                                    systemFilesRestored++;
+                                } catch (e) { console.warn(`Skipped corrupt system file: ${path}`); }
+                            } 
+                            // Case B: Note Files (Collect for processing)
+                            else if (path.endsWith('.json') || path.endsWith('.notekash')) {
+                                try {
+                                    const parsed = JSON.parse(content);
+                                    // Robustly handle Arrays vs Objects inside Zips too
+                                    if (Array.isArray(parsed)) {
+                                        parsed.forEach(item => { if(item.id && item.title) rawArticles.push(item); });
+                                    } else if (parsed.id && parsed.title) {
+                                        rawArticles.push(parsed);
+                                    }
+                                } catch (e) { console.warn("Corrupt note file in zip:", path); }
+                            }
+                        }
+                        
+                        if (App.ui.migrationScreen.state.isCancelled) return;
+
+                        // Reload settings if restored
+                        if (systemFilesRestored > 0) {
+                            console.log("System files restored. Reloading settings...");
+                            await App.settings.load();
+                            App.ui.applyTheme(App.settings.get('theme')); 
+                        }
+
+                        await this.processImportedArticles(rawArticles);
+
+                    } catch (error) {
+                        console.error("Zip Import Error:", error);
+                        App.ui.showToast("Failed to process zip file.", "error");
+                        App.ui.migrationScreen.hide();
+                    }
+                },
+
+                // 7. THE BRAIN (Handles Merging, Flashcard Generation & Indexing)
+                async processImportedArticles(articles) {
+                    let newCount = 0;
+                    let updatedCount = 0;
+
+                    App.ui.migrationScreen.update(50, "Merging Knowledge Graph...");
+
+                    // A. Category Reconciliation (Auto-create missing categories)
+                    let userCategories = App.settings.get('userCategories');
+                    const existingCatNames = new Set(userCategories.map(c => c.name.toLowerCase()));
+                    let categoriesUpdated = false;
+
+                    articles.forEach(article => {
+                        if (article.category && !existingCatNames.has(article.category.toLowerCase())) {
+                            userCategories.push({
+                                name: article.category,
+                                displayName: article.category,
+                                colorIndex: userCategories.length % 20,
+                                isDefault: false
+                            });
+                            existingCatNames.add(article.category.toLowerCase());
+                            categoriesUpdated = true;
+                        }
+                    });
+
+                    if (categoriesUpdated) {
+                        await App.settings.set('userCategories', userCategories);
+                    }
+
+                    // B. State Merge & Flashcard Generation
+                    const currentArticlesMap = new Map(App.state.articles.map(a => [a.id, a]));
+                    const articlesToPersist = [];
+
+                    articles.forEach(incoming => {
+                        // FIX: The critical empty object check
+                        const hasNoFlashcards = !incoming.flashcards || Object.keys(incoming.flashcards).length === 0;
+                        
+                        if (hasNoFlashcards && incoming.content) {
+                            // Force auto-generation of flashcards for AI/External notes
+                            incoming.flashcards = App.util.extractFlashcards(incoming.content, incoming.id, incoming.category || 'General', {});
+                        }
+
+                        const existing = currentArticlesMap.get(incoming.id);
+
+                        if (!existing) {
+                            App.state.articles.push(incoming);
+                            articlesToPersist.push(incoming);
+                            newCount++;
+                        } else {
+                            // Overwrite only if incoming is newer
+                            const incomingDate = new Date(incoming.updatedAt || 0);
+                            const existingDate = new Date(existing.updatedAt || 0);
+
+                            if (incomingDate > existingDate) {
+                                Object.assign(existing, incoming);
+                                articlesToPersist.push(incoming);
+                                updatedCount++;
+                            }
+                        }
+                    });
+
+                    // C. Batch Persistence
+                    App.ui.migrationScreen.update(70, "Saving to Storage...");
+                    
+                    if (App.state.storageMode === 'fileSystem' && App.state.directoryHandle) {
+                        await Promise.all(articlesToPersist.map(a => App.fs.write(`${a.id}.json`, a)));
+                    } else {
+                        await Promise.all(articlesToPersist.map(a => App.browserStore.setArticle(a)));
+                    }
+
+                    // D. Rebuild Indexes
+                    App.ui.migrationScreen.update(90, "Rebuilding Master Index...");
+                    App.state.articles.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                    await App.storage.generateIndexFromState();
+
+                    // E. Refresh App State
+                    App.ui.migrationScreen.update(95, "Refreshing UI...");
+                    App.globalSearch.buildIndex();       
+                    await App.contentTools.updateTagsIndex(); 
+                    App.contentTools.buildDataCache();   
+
+                    // F. Finish
+                    App.ui.migrationScreen.update(100, "Import Complete!");
+                    
+                    setTimeout(() => {
+                        App.ui.migrationScreen.hide();
+                        
+                        const currentView = App.router.getActiveView();
+                        if (currentView === 'library') App.ui.filterAndRenderArticles();
+                        if (currentView === 'flashcard') App.ui.filterAndRenderFlashcards();
+                        if (currentView === 'category') App.ui.renderCategoryView(document.getElementById('category-view'), App.router.getActiveViewData());
+                        if (currentView === 'visual-map') App.visualMap.init();
+                        if (currentView === 'mindmap') App.mindMap.init();
+                        if (currentView === 'tags') App.events.filterAndRenderTags();
+
+                        App.ui.showToast(`Imported ${newCount} new, updated ${updatedCount} notes.`, "success");
+                        
+                        if (App.settings.get('enableDropboxSync') && App.dropbox.isReady()) {
+                            App.dropbox.syncChanges(true);
+                        }
+
+                    }, 800);
+                }
             },
+
             share: {
                 async article() {
                     if (!navigator.share) {
