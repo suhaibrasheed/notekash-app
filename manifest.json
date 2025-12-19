@@ -4,19 +4,33 @@
   "description": "Your Second Brain for thinking, learning, and creating.",
   "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#f8f9fa",
-  "theme_color": "#4a5568",
+  "background_color": "#f4ecd8",
+  "theme_color": "#704214",
   "orientation": "any",
   "icons": [
     {
+      "src": "icons/favicon-32x32.png",
+      "type": "image/png",
+      "sizes": "32x32",
+      "purpose": "any"
+    },
+    {
       "src": "icons/icon-192x192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
       "src": "icons/icon-512x512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ],
   "share_target": {
