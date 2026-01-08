@@ -167,14 +167,14 @@
             --hl-5-border: #e879f9;
             --hl-6-bg: #dcdcff;
             --hl-6-border: #828ffe;
-            --hl-7-bg: #fce7f3;
-            --hl-7-border: #ec4899;
+            --hl-7-bg: #fae8ff;
+            --hl-7-border: #c026d3;
             /* SuperTag Rendered */
             --hl-text: #1f2937;
             --text-red: #D32F2F;
             --text-green: #26902c;
             --text-blue: #0f72d5;
-            --text-magenta: #d946ef;
+            --text-magenta: #c026d3;
             --text-orange: #f97316;
             --text-teal: #1eb4dd;
             --text-slate: #c5a019;
@@ -468,12 +468,12 @@
             --hl-5-border: #9347da;
             --hl-6-bg: #0c5876;
             --hl-6-border: #0b8fcd;
-            --hl-7-bg: #581c87;
+            --hl-7-bg: #701a75;
             --hl-7-border: #d946ef;
             --text-red: #ff4830;
             --text-green: #2cfb3e;
             --text-blue: #6074fa;
-            --text-magenta: #fe70f2;
+            --text-magenta: #d946ef;
             --text-orange: #ff9934;
             --text-teal: #0effef;
             --text-slate: #fcf006;
@@ -697,12 +697,12 @@
             --hl-5-border: #8b27e3;
             --hl-6-bg: #a3eff9;
             --hl-6-border: #07bada;
-            --hl-7-bg: #fae8ff;
-            --hl-7-border: #e879f9;
+            --hl-7-bg: #f3e8ff;
+            --hl-7-border: #a855f7;
             --text-red: #ab0404;
             --text-green: #15803d;
             --text-blue: #2563eb;
-            --text-magenta: #a04dee;
+            --text-magenta: #9333ea;
             --text-orange: #dc7208;
             --text-teal: #0693be;
             --text-slate: #c59b1e;
@@ -2224,7 +2224,7 @@
             scroll-padding-top: 30px;
         }
 
-        #article-content :is(p, span, div, li, td, th blockquote):not([class*="highlight-"]):not([style]):not([data-user-font]) {
+        #article-content :is(p, span, div, li, td, th blockquote):not([class*="highlight-"]):not(.rendered-tag):not(.text-magenta):not(.text-green):not(.text-blue):not(.text-red):not([style]):not([data-user-font]) {
             font-family: inherit !important;
             font-size: inherit !important;
             line-height: inherit !important;
@@ -2460,8 +2460,14 @@
             color: var(--text-blue);
         }
 
+        #article-content .text-magenta,
         .text-magenta {
-            color: var(--text-magenta);
+            background-color: var(--hl-7-bg) !important;
+            color: var(--text-magenta) !important;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border-bottom: 2px solid var(--hl-7-border) !important;
+            margin: 0 2px;
         }
 
         /* SuperTag Suggestion */
@@ -2483,11 +2489,45 @@
 
         .rendered-tag {
             cursor: pointer;
-            background-color: var(--hl-7-bg);
-            padding: 2px 6px;
-            border-radius: 4px;
-            border-bottom: 2px solid var(--hl-7-border);
-            margin: 0 2px;
+            background: linear-gradient(120deg, var(--hl-7-bg) 0%, color-mix(in srgb, var(--hl-7-bg) 92%, var(--hl-7-border) 8%) 100%);
+            padding: 0.2em 0.55em;
+            margin: 0 0.1em;
+            border-radius: 6px;
+            border: 1.5px solid color-mix(in srgb, var(--hl-7-border) 60%, transparent 40%);
+            box-shadow: 0 1px 3px rgba(192, 38, 211, 0.08),
+                inset 0 0 0 1px rgba(192, 38, 211, 0.1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .rendered-tag::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 6px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--hl-7-border), transparent 60%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .rendered-tag:hover {
+            background: linear-gradient(120deg,
+                    color-mix(in srgb, var(--hl-7-bg) 88%, var(--hl-7-border) 12%) 0%,
+                    color-mix(in srgb, var(--hl-7-bg) 85%, var(--hl-7-border) 15%) 100%);
+            border-color: color-mix(in srgb, var(--hl-7-border) 75%, transparent 25%);
+            box-shadow: 0 2px 8px rgba(192, 38, 211, 0.15),
+                0 1px 3px rgba(192, 38, 211, 0.1),
+                inset 0 0 0 1px rgba(192, 38, 211, 0.15);
+            transform: translateY(-0.5px);
+        }
+
+        .rendered-tag:hover::after {
+            opacity: 0.6;
         }
 
         .tag-suggestion {
@@ -5899,7 +5939,15 @@
             min-width: max-content;
         }
 
-        .stage-more-menu-container:hover .stage-more-popup,
+        /* FIX: Restrict hover behavior to devices that support it, to prevent sticky hover on mobile */
+        @media (hover: hover) {
+            .stage-more-menu-container:hover .stage-more-popup {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+                pointer-events: all;
+            }
+        }
+
         .stage-more-menu-container.active .stage-more-popup {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
@@ -6835,8 +6883,8 @@
         body.mobile-view #teleprompter-resizer {
             left: 0;
             right: 0;
-            top: 100%;
-            height: 8px;
+            top: 0;
+            height: 16px;
             cursor: row-resize;
             transform: translateY(-50%);
         }
@@ -15438,12 +15486,14 @@
         }
 
         /* PDF PAN MODE */
-        #pdf-viewer-container.pan-active .pdf-viewer-canvas-wrapper {
+        #pdf-viewer-container.pan-active .pdf-viewer-canvas-wrapper,
+        #pdf-viewer-container.grab-mode .pdf-viewer-canvas-wrapper {
             cursor: grab;
             user-select: none;
         }
 
-        #pdf-viewer-container.pan-active.is-dragging .pdf-viewer-canvas-wrapper {
+        #pdf-viewer-container.pan-active.is-dragging .pdf-viewer-canvas-wrapper,
+        #pdf-viewer-container.grab-mode.is-dragging .pdf-viewer-canvas-wrapper {
             cursor: grabbing;
         }
 
@@ -19627,6 +19677,12 @@
                         }
 
                         contentDiv.innerHTML = App.util.sanitizeHTML(finalContent);
+
+                        contentDiv.querySelectorAll('.nk-text-tile').forEach(tile => {
+                            if (tile.textContent.trim() === '') {
+                                App.util.unwrapNode(tile);
+                            }
+                        });
 
                         contentDiv.querySelectorAll('.nk-accordion').forEach(accordion => {
                             const hintEditor = accordion.querySelector('.nk-accordion-hint-editor');
@@ -26419,6 +26475,8 @@
 
                     const textTile = target.closest('.nk-text-tile');
                     if (textTile) {
+                        if (textTile.textContent.trim() === '') return;
+
                         if (App.state.currentMode === 'read') {
                             e.preventDefault();
                             textTile.classList.toggle('faded');
@@ -33169,7 +33227,7 @@
                                         id: 'Note_' + Date.now().toString(36) + Math.random().toString(36).substr(2),
                                         title: displayName, // Title is filename without extension
                                         content: pillHTML,
-                                        category: 'All', // Default category
+                                        category: (App.settings.get('userCategories').find(c => c.isDefault) || { name: 'General' }).name,
                                         tags: [],
                                         attachments: [fileData], // Attach the file to the article model
                                         createdAt: new Date().toISOString(),
@@ -45786,14 +45844,31 @@
                         header.querySelector('button[title="Clear Annotations on Page"]').onclick = () => App.annotationEngine.clearCurrentPage();
                         header.querySelector('button[title="Clear Annotations on Page"]').onclick = () => App.annotationEngine.clearCurrentPage();
                         document.addEventListener('keydown', this.handleKeyDown);
+                        document.addEventListener('keyup', this.handleKeyUp);
 
                         // Attach Pan Listeners
                         const wrapper = container.querySelector('.pdf-viewer-canvas-wrapper');
                         let isDown = false;
                         let startX, startY, scrollLeft, scrollTop;
 
+                        // Zoom on Wheel (Ctrl/Meta + Wheel)
+                        wrapper.addEventListener('wheel', (e) => {
+                            if (e.ctrlKey || e.metaKey) {
+                                e.preventDefault();
+                                const delta = e.deltaY || e.deltaX;
+                                const zoomStep = Math.abs(delta) < 50 ? 0.05 : 0.1;
+                                App.pdf.viewer.zoom(delta < 0 ? zoomStep : -zoomStep);
+                            }
+                        }, { passive: false });
+
                         wrapper.addEventListener('mousedown', (e) => {
-                            if (!App.pdf.state.isPanMode) return;
+                            // Enable pan for: PanMode, Middle Click, or Spacebar held
+                            const isMiddleClick = e.button === 1;
+                            const isSpacePan = App.pdf.state.isSpacePan;
+
+                            if (!App.pdf.state.isPanMode && !isMiddleClick && !isSpacePan) return;
+
+                            if (isMiddleClick || isSpacePan) e.preventDefault();
                             isDown = true;
                             container.classList.add('is-dragging');
                             startX = e.pageX - wrapper.offsetLeft;
@@ -45810,7 +45885,7 @@
                             container.classList.remove('is-dragging');
                         });
                         wrapper.addEventListener('mousemove', (e) => {
-                            if (!isDown || !App.pdf.state.isPanMode) return;
+                            if (!isDown) return;
                             e.preventDefault();
                             const x = e.pageX - wrapper.offsetLeft;
                             const y = e.pageY - wrapper.offsetTop;
@@ -45825,7 +45900,7 @@
                             App.pdf.state.pdfDoc = pdfDoc_;
                             document.getElementById('pdf-page-count').textContent = App.pdf.state.pdfDoc.numPages;
                             document.getElementById('pdf-page-num').max = App.pdf.state.pdfDoc.numPages;
-                            App.pdf.state.pageNum = 1;
+                            App.pdf.state.pageNum = attachment.lastPage || 1;
                             this.renderPage(App.pdf.state.pageNum);
                             this.buildThumbnails();
                         });
@@ -45866,7 +45941,24 @@
                     },
 
                     renderPage(num) {
+                        // Clear any pending zoom debounce since we are rendering now
+                        if (this.zoomTimeout) {
+                            clearTimeout(this.zoomTimeout);
+                            this.zoomTimeout = null;
+                        }
+
                         App.pdf.state.pageRendering = true;
+
+                        // Update rendered scale state to match the current requested scale
+                        App.pdf.state.renderedScale = App.pdf.state.scale;
+
+                        // Reset CSS transform as we are about to render at the correct resolution
+                        const pageContainer = document.querySelector('.pdf-page-container');
+                        if (pageContainer) {
+                            pageContainer.style.transform = 'none';
+                            pageContainer.style.transformOrigin = 'top center';
+                        }
+
                         const container = document.getElementById('pdf-viewer-container');
                         const isInTextView = container.classList.contains('text-view-active');
 
@@ -46021,7 +46113,22 @@
                     zoom(amount) {
                         if (amount === 0) App.pdf.state.scale = 1.0;
                         else App.pdf.state.scale = Math.max(0.5, Math.min(3, App.pdf.state.scale + amount));
-                        this.queueRenderPage(App.pdf.state.pageNum);
+
+                        if (!App.pdf.state.renderedScale) App.pdf.state.renderedScale = 1.0;
+
+                        const cssScale = App.pdf.state.scale / App.pdf.state.renderedScale;
+                        const pageContainer = document.querySelector('.pdf-page-container');
+
+                        if (pageContainer) {
+                            pageContainer.style.transformOrigin = 'top center';
+                            pageContainer.style.transform = `scale(${cssScale})`;
+                        }
+
+                        if (this.zoomTimeout) clearTimeout(this.zoomTimeout);
+
+                        this.zoomTimeout = setTimeout(() => {
+                            this.queueRenderPage(App.pdf.state.pageNum);
+                        }, 200);
                     },
                     toggleFullscreen() {
                         const container = document.getElementById('pdf-viewer-container');
@@ -46031,6 +46138,13 @@
 
                     handleKeyDown: (e) => {
                         if (App.coPilot.state.isOpen) return;
+
+                        // Spacebar for Pan Mode (Hold)
+                        if (e.code === 'Space' && !e.repeat && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && !e.target.isContentEditable) {
+                            App.pdf.state.isSpacePan = true;
+                            const container = document.getElementById('pdf-viewer-container');
+                            if (container) container.classList.add('grab-mode');
+                        }
 
                         if (e.target.id === 'pdf-page-num') return;
                         const isAnnotationActive = App.annotationEngine.state.isActive && App.annotationEngine.state.context === 'pdf';
@@ -46050,6 +46164,14 @@
                             case 'p': if (isAnnotationActive) { App.annotationEngine.setTool('pen'); e.preventDefault(); } break;
                             case 'r': if (isAnnotationActive) { App.annotationEngine.setTool('rect'); e.preventDefault(); } break;
                             case 'e': if (isAnnotationActive) { App.annotationEngine.setTool('eraser'); e.preventDefault(); } break;
+                        }
+                    },
+
+                    handleKeyUp: (e) => {
+                        if (e.code === 'Space') {
+                            App.pdf.state.isSpacePan = false;
+                            const container = document.getElementById('pdf-viewer-container');
+                            if (container) container.classList.remove('grab-mode');
                         }
                     },
 
@@ -46087,9 +46209,20 @@
                         }
 
 
-                        const annotationsWereChanged = this.saveAnnotationsToAttachment();
+                        let needsSave = this.saveAnnotationsToAttachment();
 
-                        if (annotationsWereChanged) {
+                        // Save Last Read Page
+                        const article = App.storage.getArticle(App.state.activeArticleId);
+                        const attachment = App.pdf.state.currentAttachment;
+                        if (article && attachment) {
+                            const att = article.attachments.find(a => a.id === attachment.id);
+                            if (att && att.lastPage !== App.pdf.state.pageNum) {
+                                att.lastPage = App.pdf.state.pageNum;
+                                needsSave = true;
+                            }
+                        }
+
+                        if (needsSave) {
                             await App.events.saveArticle({ isAutosave: true });
                         }
 
@@ -46097,6 +46230,7 @@
                         container.classList.remove('visible', 'text-view-active', 'annotation-active');
                         container.innerHTML = '';
                         document.removeEventListener('keydown', this.handleKeyDown);
+                        document.removeEventListener('keyup', this.handleKeyUp);
 
                         App.pdf.state.pdfDoc = null;
                         App.pdf.state.pageNum = 1;
