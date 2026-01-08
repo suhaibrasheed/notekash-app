@@ -2622,6 +2622,7 @@
 
         .image-container.align-center {
             display: block;
+            width: fit-content;
             text-align: center;
             margin: 1em auto;
         }
@@ -16509,6 +16510,7 @@
     </div>
 
     <div id="context-menu-container"></div>
+
     <div id="toast-container"></div>
     <div id="modal-container"></div>
     <div id="zen-mode-container"></div>
@@ -19509,7 +19511,6 @@
                             return;
                         }
                     }
-
 
                     App.state.activeArticleId = article.id;
                     App.state.currentMode = mode;
@@ -25892,12 +25893,20 @@
                 async saveArticle(options = {}) {
                     // --- OPTIMIZATION: Hash-based "Virtual Save" ---
                     const { content: newContent, switchToRead = false, isAutosave = false, force = false } = options;
+
+                    let savingToast = null;
+                    if (switchToRead) savingToast = App.ui.showToast("Saving...", { type: 'info', duration: 0 });
+
                     const id = App.state.activeArticleId;
-                    if (!id) return;
+                    if (!id) {
+                        if (savingToast) App.ui.hideToast(savingToast);
+                        return;
+                    }
 
                     const titleInput = document.getElementById('article-title');
                     const contentDiv = document.getElementById('article-content');
                     if (!titleInput || !contentDiv) {
+                        if (savingToast) App.ui.hideToast(savingToast);
                         if (!isAutosave) App.ui.showToast("Save failed. Editor not found.", { type: 'error' });
                         return;
                     }
@@ -26006,11 +26015,15 @@
                         App.commandPalette.state.fuse.links = null;
 
                         App.ui.updateArticleMetadata(content, savedArticle.createdAt);
-                        if (switchToRead) { this.switchToMode('read'); }
-                        if (App.dropbox.isReady() && App.settings.get('enableDropboxSync')) {
-                            App.dropbox.syncChanges(true);
+                        if (switchToRead) {
+                            if (savingToast) App.ui.hideToast(savingToast);
+                            if (!isAutosave) App.ui.showToast('Saved!', { type: 'success' });
+                            this.switchToMode('read');
                         } else if (!isAutosave) {
                             App.ui.showToast('Saved!', { type: 'success' });
+                        }
+                        if (App.dropbox.isReady() && App.settings.get('enableDropboxSync')) {
+                            App.dropbox.syncChanges(true);
                         }
                     };
 
@@ -26027,9 +26040,6 @@
                         const newFlashcards = App.util.extractFlashcards(content, id, category, existingFlashcards);
                         const newTags = App.contentTools.extractTagsFromHTML(content);
 
-                        // --- THIS IS THE FIX (PART 2) ---
-                        // The `attachments` array is now ALWAYS included in the update payload,
-                        // ensuring PDF highlights are saved every time.
                         const updates = { title, content, category, flashcards: newFlashcards, tags: newTags, attachments: attachments };
 
                         const result = await App.storage.updateArticle(id, updates);
@@ -34327,8 +34337,16 @@
 
                 parseShortcuts(text) {
                     if (!text) return '';
+
+                    // --- FIX: Protect HTML tags (especially data:image URLs) from regex replacements ---
+                    const tokens = [];
+                    const maskedText = text.replace(/<[^>]+>/g, (match) => {
+                        tokens.push(match);
+                        return `\uE000${tokens.length - 1}\uE000`;
+                    });
+
                     const createSnippetId = () => `snip-${crypto.randomUUID().slice(0, 12)}`;
-                    let processedHtml = text
+                    let processedHtml = maskedText
                         .replace(/^\s*>\s*(.*)/gm, '<blockquote>$1</blockquote>')
                         .replace(/^\s*---\s*$/gm, '<hr>')
                         .replace(/\*\*(.*?)\*\*/g, '<i>$1</i>').replace(/\*([^*]+)\*/g, '<b>$1</b>')
@@ -34339,6 +34357,9 @@
                         .replace(/==(.*?)==c/g, `<span class="highlight-6" id="${createSnippetId()}">$1</span>`).replace(/==(.*?)==m/g, `<span class="highlight-7" id="${createSnippetId()}">$1</span>`).replace(/==(.*?)==/g, `<span class="highlight-1" id="${createSnippetId()}">$1</span>`)
                         .replace(/::(.*?)_r::/g, `<span class="text-red" id="${createSnippetId()}">$1</span>`).replace(/::(.*?)_g::/g, `<span class="text-green" id="${createSnippetId()}">$1</span>`)
                         .replace(/::(.*?)_b::/g, `<span class="text-blue" id="${createSnippetId()}">$1</span>`).replace(/::(.*?)_m::/g, `<span class="text-magenta" id="${createSnippetId()}">$1</span>`);
+
+                    // Restore tags
+                    processedHtml = processedHtml.replace(/\uE000(\d+)\uE000/g, (match, index) => tokens[parseInt(index)] || match);
 
                     processedHtml = App.contentTools.convertContentSyntax(processedHtml);
                     return processedHtml;
@@ -39387,13 +39408,50 @@
 
                 convertContentSyntax(htmlString) {
                     if (!htmlString) return '';
-                    let processedHtml = htmlString;
-                    processedHtml = processedHtml.replace(/\[\[(.*?)\]\]/g, (match, content) => {
-                        const slug = this.slugify(content);
-                        if (!slug) return match;
-                        return `<span class="rendered-tag" data-tag="${slug}">${content}</span>`;
+                    // DOM-based approach: Only process text nodes, never attributes (protects data: URLs)
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = htmlString;
+                    const tagRegex = /\[\[(.*?)\]\]/g;
+                    const walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT);
+                    const nodesToProcess = [];
+                    while (walker.nextNode()) {
+                        const node = walker.currentNode;
+                        // Skip if inside protected elements
+                        if (node.parentElement.closest('code, pre, .nk-code-block, .rendered-tag')) continue;
+                        if (tagRegex.test(node.nodeValue)) {
+                            tagRegex.lastIndex = 0; // Reset regex
+                            nodesToProcess.push(node);
+                        }
+                    }
+                    nodesToProcess.forEach(textNode => {
+                        const text = textNode.nodeValue;
+                        const fragment = document.createDocumentFragment();
+                        let lastIndex = 0;
+                        let match;
+                        tagRegex.lastIndex = 0;
+                        while ((match = tagRegex.exec(text)) !== null) {
+                            if (match.index > lastIndex) {
+                                fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+                            }
+                            const content = match[1];
+                            const slug = this.slugify(content);
+                            if (slug) {
+                                const span = document.createElement('span');
+                                span.className = 'rendered-tag';
+                                span.dataset.tag = slug;
+                                span.textContent = content;
+                                fragment.appendChild(span);
+                            } else {
+                                fragment.appendChild(document.createTextNode(match[0]));
+                            }
+                            lastIndex = match.index + match[0].length;
+                        }
+                        if (lastIndex < text.length) {
+                            fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+                        }
+                        textNode.parentNode.replaceChild(fragment, textNode);
                     });
-                    return processedHtml;
+                    return tempDiv.innerHTML;
                 },
                 updateDataTagsInContent(html) {
                     const tempDiv = document.createElement('div');
@@ -39407,8 +39465,10 @@
                     clearTimeout(App.state.suggestionTimeout);
                     App.state.suggestionTimeout = setTimeout(() => {
                         const tagDisplayNames = Object.values(App.state.tags).map(t => t.displayName);
-                        if (tagDisplayNames.length === 0) return;
-                        const regex = new RegExp(`\\b(${tagDisplayNames.map(name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`, 'gi');
+                        // CRITICAL FIX: Filter out empty/falsy display names to prevent regex matching empty strings at word boundaries
+                        const validTagNames = tagDisplayNames.filter(name => name && name.trim());
+                        if (validTagNames.length === 0) return;
+                        const regex = new RegExp(`\\b(${validTagNames.map(name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`, 'gi');
                         const walker = document.createTreeWalker(contentEl, NodeFilter.SHOW_TEXT);
                         const nodesToProcess = [];
                         while (walker.nextNode()) {
@@ -39422,7 +39482,12 @@
                             text.replace(regex, (match, ...args) => {
                                 const offset = args[args.length - 2];
                                 if (offset > lastIndex) fragment.appendChild(document.createTextNode(text.substring(lastIndex, offset)));
-                                const span = document.createElement('span'); span.className = 'tag-suggestion'; span.textContent = match; fragment.appendChild(span);
+                                // SAFEGUARD: Skip empty or whitespace-only matches
+                                if (match && match.trim()) {
+                                    const span = document.createElement('span'); span.className = 'tag-suggestion'; span.textContent = match; fragment.appendChild(span);
+                                } else {
+                                    fragment.appendChild(document.createTextNode(match));
+                                }
                                 lastIndex = offset + match.length;
                             });
                             if (lastIndex < text.length) fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
