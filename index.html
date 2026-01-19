@@ -89,6 +89,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script type="module" src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mozilla/readability@0.5.0/Readability.min.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
@@ -113,6 +114,23 @@
             clip: rect(0, 0, 0, 0);
             white-space: nowrap;
             border: 0;
+        }
+
+        /* --- Selection Highlight --- */
+        ::selection {
+            background-color: #ff0055;
+            color: #ffffff;
+            text-shadow:
+                0 0 8px rgba(255, 0, 85, 0.4),
+                0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        ::-webkit-selection {
+            background-color: #ff0055;
+            color: #ffffff;
+            text-shadow:
+                0 0 8px rgba(255, 0, 85, 0.4),
+                0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         /* ==========================================================================
@@ -472,8 +490,8 @@
             --hl-7-border: #d946ef;
             --text-red: #ff4830;
             --text-green: #2cfb3e;
-            --text-blue: #6074fa;
-            --text-magenta: #d946ef;
+            --text-blue: #906eff;
+            --text-magenta: #e84fff;
             --text-orange: #ff9934;
             --text-teal: #0effef;
             --text-slate: #fcf006;
@@ -1578,7 +1596,19 @@
 
         /* Hide controls in Read Mode */
         .read-mode .nk-map-controls {
-            display: none !important;
+            display: flex;
+            pointer-events: auto;
+            z-index: 50;
+        }
+
+        .read-mode .nk-map-controls .nk-map-btn {
+            display: none;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .read-mode .nk-map-controls .nk-map-btn:first-child {
+            display: flex;
         }
 
 
@@ -2460,14 +2490,8 @@
             color: var(--text-blue);
         }
 
-        #article-content .text-magenta,
         .text-magenta {
-            background-color: var(--hl-7-bg) !important;
-            color: var(--text-magenta) !important;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border-bottom: 2px solid var(--hl-7-border) !important;
-            margin: 0 2px;
+            color: var(--text-magenta);
         }
 
         /* SuperTag Suggestion */
@@ -6189,6 +6213,486 @@
         .focus-mode-overlay.stage-mode-active .focus-mode-body.smart-blur-disabled .nk-accordion,
         .focus-mode-overlay.stage-mode-active .focus-mode-body.smart-blur-disabled .nk-text-tile {
             opacity: 1.0 !important;
+        }
+
+        /* ==========================================================================
+           STAGE & ARTICLE MODE - Images, Videos, and Maps Fix
+           ========================================================================== */
+
+        /* --- IMAGES: Remove float/alignment in Stage modes - display centered block --- */
+        /* Stage mode needs large centered images */
+        .focus-mode-overlay.stage-mode-active .image-container.align-left,
+        .focus-mode-overlay.stage-mode-active .image-container.align-right {
+            float: none !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            max-width: 85vw !important;
+            display: block !important;
+            clear: both !important;
+        }
+
+        /* Stage Presentation Mode - Reset ratio-based image container for proper display */
+        .focus-mode-overlay.stage-mode-active .snippet .image-container {
+            padding-top: 0 !important;
+            height: auto;
+            max-height: 65vh;
+            display: block;
+            overflow: visible;
+            max-width: 85vw;
+            margin: 1rem auto;
+        }
+
+        .focus-mode-overlay.stage-mode-active .snippet .image-container img {
+            position: relative !important;
+            width: auto !important;
+            height: auto !important;
+            max-width: 85vw !important;
+            max-height: 60vh;
+            object-fit: contain !important;
+            object-position: center;
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* ==========================================================================
+           SIGMA ARTICLE MODE - Mimic Read Mode Layout Exactly
+           The key difference: preserve natural content flow (tables, inline elements, etc.)
+           ========================================================================== */
+
+        /* Sigma Article Mode - Standalone images (NOT inside tables) get article styling */
+        .focus-mode-overlay.sigma-mode-article .snippet>.image-container,
+        .focus-mode-overlay.sigma-mode-article .snippet>p>.image-container {
+            padding-top: 0 !important;
+            height: auto;
+            max-height: none;
+            display: block;
+            margin: 1.5rem auto;
+            max-width: 85vw;
+        }
+
+        .focus-mode-overlay.sigma-mode-article .snippet>.image-container img,
+        .focus-mode-overlay.sigma-mode-article .snippet>p>.image-container img {
+            position: relative !important;
+            width: auto !important;
+            height: auto !important;
+            max-width: 85vw !important;
+            max-height: 75vh;
+            object-fit: contain !important;
+            object-position: center;
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Sigma Article Mode - Images inside tables MUST behave like read mode */
+        /* Higher specificity to override any other rules */
+        .focus-mode-overlay.sigma-mode-article .snippet table .image-container,
+        .focus-mode-overlay.sigma-mode-article table .image-container,
+        .focus-mode-overlay.sigma-mode-article td .image-container,
+        .focus-mode-overlay.sigma-mode-article th .image-container {
+            display: inline-block !important;
+            max-width: 100% !important;
+            padding-top: 0 !important;
+            height: auto !important;
+            margin: 0.5rem auto !important;
+            float: none !important;
+            clear: none !important;
+        }
+
+        .focus-mode-overlay.sigma-mode-article .snippet table .image-container img,
+        .focus-mode-overlay.sigma-mode-article table .image-container img,
+        .focus-mode-overlay.sigma-mode-article td .image-container img,
+        .focus-mode-overlay.sigma-mode-article th .image-container img {
+            position: relative !important;
+            max-width: 100% !important;
+            max-height: 300px !important;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain !important;
+            border-radius: var(--border-radius) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+            display: block !important;
+            margin: 0 auto !important;
+        }
+
+        /* Sigma Article Mode - Aligned images not in tables */
+        /* But aligned images IN tables should stay in place */
+        .focus-mode-overlay.sigma-mode-article table .image-container.align-left,
+        .focus-mode-overlay.sigma-mode-article table .image-container.align-right,
+        .focus-mode-overlay.sigma-mode-article td .image-container.align-left,
+        .focus-mode-overlay.sigma-mode-article td .image-container.align-right {
+            float: none !important;
+            display: inline-block !important;
+            max-width: 100% !important;
+            margin: 0.5rem auto !important;
+        }
+
+        /* Ensure standalone images (not in snippets) also display correctly */
+        .focus-mode-overlay.stage-mode-active .focus-mode-body>.image-container,
+        .focus-mode-overlay.sigma-mode-article .focus-mode-body>.image-container {
+            display: block;
+            padding: 1rem;
+            max-height: 70vh;
+            max-width: 85vw;
+            margin: 1rem auto;
+        }
+
+        .focus-mode-overlay.stage-mode-active .focus-mode-body>.image-container img,
+        .focus-mode-overlay.sigma-mode-article .focus-mode-body>.image-container img {
+            max-width: 85vw;
+            max-height: 65vh;
+            object-fit: contain;
+            border-radius: var(--border-radius-lg);
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* --- TABLES: Exact Replica of Read Mode for Sigma Article Mode --- */
+        .focus-mode-overlay.sigma-mode-article .article-content-wrapper table {
+            width: 100% !important;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1.5em 0;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            table-layout: auto;
+            background-color: transparent;
+        }
+
+        .focus-mode-overlay.sigma-mode-article .article-content-wrapper th,
+        .focus-mode-overlay.sigma-mode-article .article-content-wrapper td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 16px;
+            text-align: left;
+            vertical-align: top;
+            position: relative;
+            color: inherit;
+        }
+
+        .focus-mode-overlay.sigma-mode-article .article-content-wrapper td {
+            border-left: 1px solid var(--border-color);
+        }
+
+        .focus-mode-overlay.sigma-mode-article .article-content-wrapper td:first-child,
+        .focus-mode-overlay.sigma-mode-article .article-content-wrapper th:first-child {
+            border-left: none;
+        }
+
+        .focus-mode-overlay.sigma-mode-article .article-content-wrapper th {
+            background-color: rgba(var(--primary-color-rgb), 0.07);
+            font-weight: 600;
+        }
+
+        .focus-mode-overlay.sigma-mode-article .article-content-wrapper tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* --- VIDEOS: Fix Blank Screens & Alignment --- */
+
+        /* 1. Presentation/Stage Mode (Strict Center) - Not Article Mode */
+        .focus-mode-overlay.stage-mode-active:not(.sigma-mode-article) .nk-video-embed {
+            float: none !important;
+            margin: 1.5rem auto !important;
+            max-width: 85vw !important;
+            display: block !important;
+            clear: both !important;
+            aspect-ratio: 16 / 9;
+            height: auto !important;
+            min-height: 200px;
+            /* Prevent collapse */
+        }
+
+        .focus-mode-overlay.stage-mode-active:not(.sigma-mode-article) .nk-video-embed iframe {
+            margin: 0 auto;
+            display: block;
+        }
+
+        /* 2. Global Video Fix (Ensure dimensions to prevent blankness) */
+        .focus-mode-overlay .nk-video-embed iframe {
+            width: 100%;
+            height: auto;
+            min-height: 250px;
+            max-width: 100%;
+        }
+
+        /* 3. Sigma Article Mode - Enforce Read Mode Behavior & Interaction */
+        .focus-mode-overlay.sigma-mode-article .nk-video-embed,
+        .focus-mode-overlay.sigma-mode-article .nk-video-embed iframe {
+            pointer-events: auto !important;
+        }
+
+        /* --- MAPS: Make maps work properly in Stage & Article modes --- */
+        .focus-mode-overlay.stage-mode-active .nk-map-embed,
+        .focus-mode-overlay.sigma-mode-article .nk-map-embed {
+            margin: 1.5rem auto !important;
+            max-width: 85vw !important;
+            display: block !important;
+        }
+
+        .focus-mode-overlay.stage-mode-active .nk-map-embed iframe,
+        .focus-mode-overlay.sigma-mode-article .nk-map-embed iframe {
+            max-width: 85vw;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Ensure maps are interactive in Article mode */
+        .focus-mode-overlay.sigma-mode-article .nk-map-embed,
+        .focus-mode-overlay.sigma-mode-article .nk-map-embed iframe,
+        .focus-mode-overlay.sigma-mode-article .nk-map-embed .nk-map-controls {
+            pointer-events: auto !important;
+        }
+
+        /* ==========================================================================
+           STAGE MODE INNOVATIONS - Bento Layouts, Build Animations, 2D Transitions
+           ========================================================================== */
+
+        /* --- Innovation 1: Bento Slide Layouts --- */
+        .focus-mode-overlay.stage-mode-active .stage-bento-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 95vw;
+            min-height: 60vh;
+            align-items: start;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .focus-mode-overlay.stage-mode-active .stage-bento-split>*:first-child {
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+
+        .focus-mode-overlay.stage-mode-active .stage-bento-split .image-container {
+            width: 100%;
+            height: auto;
+            max-height: 50vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: var(--border-radius-lg);
+        }
+
+        .focus-mode-overlay.stage-mode-active .stage-bento-split .image-container img {
+            max-width: 100%;
+            max-height: 50vh;
+            object-fit: contain;
+            border-radius: var(--border-radius);
+        }
+
+        .focus-mode-overlay.stage-mode-active .stage-bento-split-alt {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 95vw;
+            min-height: 60vh;
+            align-items: start;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .focus-mode-overlay.stage-mode-active .stage-bento-split-alt>*:first-child {
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+
+        /* Alternate layout: Text on left, Image on right */
+        .focus-mode-overlay.stage-mode-active .stage-bento-split-alt .bento-text-content {
+            order: 1;
+        }
+
+        .focus-mode-overlay.stage-mode-active .stage-bento-split-alt .image-container {
+            order: 2;
+            width: 100%;
+            height: auto;
+            max-height: 50vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: var(--border-radius-lg);
+        }
+
+        /* Hero Image Slide - Full width image with centered positioning */
+        .focus-mode-overlay.stage-mode-active .stage-hero-image {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 70vh;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .focus-mode-overlay.stage-mode-active .stage-hero-image .image-container {
+            max-width: 85vw;
+            max-height: 75vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .focus-mode-overlay.stage-mode-active .stage-hero-image .image-container img {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Mobile responsiveness for Bento layouts */
+        @media (max-width: 768px) {
+
+            .focus-mode-overlay.stage-mode-active .stage-bento-split,
+            .focus-mode-overlay.stage-mode-active .stage-bento-split-alt {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .focus-mode-overlay.stage-mode-active .stage-bento-split-alt .bento-text-content,
+            .focus-mode-overlay.stage-mode-active .stage-bento-split-alt .image-container {
+                order: unset;
+            }
+        }
+
+        /* --- Innovation 2: List Build Animations --- */
+        .focus-mode-overlay.stage-mode-active li.stage-build-hidden {
+            opacity: 0;
+            transform: translateY(12px);
+            pointer-events: none;
+        }
+
+        .focus-mode-overlay.stage-mode-active li.stage-build-visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.45s cubic-bezier(0.25, 0.1, 0.25, 1.0),
+                transform 0.45s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+        }
+
+        /* Ensure list items have proper spacing during animation */
+        .focus-mode-overlay.stage-mode-active ul,
+        .focus-mode-overlay.stage-mode-active ol {
+            overflow: visible;
+        }
+
+        .focus-mode-overlay.stage-mode-active li {
+            transition: opacity 0.45s cubic-bezier(0.25, 0.1, 0.25, 1.0),
+                transform 0.45s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+        }
+
+        /* --- Innovation 3: 2D Camera Transitions --- */
+        .stage-camera-viewport {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .stage-camera-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            will-change: transform;
+            transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+        }
+
+        .stage-camera-slide {
+            position: absolute;
+            width: 100vw;
+            height: calc(100vh - 100px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2rem;
+            box-sizing: border-box;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Disable default scrolling when 2D camera is active */
+        .focus-mode-overlay.stage-mode-active.stage-camera-active .focus-mode-body {
+            overflow: hidden !important;
+            scroll-behavior: auto !important;
+        }
+
+        /* Slide positioning uses CSS custom properties set by JS */
+        .stage-camera-slide {
+            left: calc(var(--slide-x, 0) * 100vw);
+            top: calc(var(--slide-y, 0) * (100vh - 100px));
+        }
+
+        /* Smooth camera pan indicator for user feedback */
+        .focus-mode-overlay.stage-mode-active.stage-camera-active .stage-camera-canvas::after {
+            content: '';
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    var(--primary-color) 50%,
+                    transparent 100%);
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .focus-mode-overlay.stage-mode-active.stage-camera-active.is-transitioning .stage-camera-canvas::after {
+            opacity: 0.6;
+        }
+
+        /* --- Sigma Article Mode: Navigation Transition Effect --- */
+        /* Subtle fade-pulse effect for presentation-like feel during scroll navigation */
+        .focus-mode-overlay.sigma-mode-article .focus-mode-body {
+            transition: opacity 0.25s ease-out;
+        }
+
+        .focus-mode-overlay.sigma-mode-article.article-nav-transitioning .focus-mode-body {
+            opacity: 0.6;
+        }
+
+        /* Progress indicator for Article mode navigation */
+        .focus-mode-overlay.sigma-mode-article::after {
+            content: '';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(var(--primary-color-rgb), 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            opacity: 0;
+            transition: width 0.35s ease-out, height 0.35s ease-out, opacity 0.35s ease-out;
+            z-index: 9999;
+        }
+
+        .focus-mode-overlay.sigma-mode-article.article-nav-transitioning::after {
+            width: 200px;
+            height: 200px;
+            opacity: 1;
+        }
+
+        /* Smooth scroll with enhanced easing for article mode */
+        .focus-mode-overlay.sigma-mode-article .focus-mode-body {
+            scroll-behavior: smooth;
         }
 
         /* Stage Mode Timer - Premium 3D & Aesthetic */
@@ -16554,7 +17058,7 @@
     <input type="file" id="import-files-input"
         accept=".zip,.notekash,.json,.pdf,application/pdf,application/json,application/zip,application/octet-stream,text/plain,*/*"
         multiple style="display:none">
-    <input type="file" id="pdf-import-input" accept=".pdf" style="display:none">
+    <input type="file" id="pdf-import-input" accept=".pdf,.txt,.doc,.docx" style="display: none;">
     <div id="pdf-viewer-container"></div>
     <script id="transcription-worker-script" type="text/js-worker">
         // **THE FIX**: This now uses the modern ES module import.
@@ -20905,11 +21409,34 @@
                         setTimeout(() => {
                             const bodyEl = overlay.querySelector('.focus-mode-body');
                             if (bodyEl) {
-                                session.scrollStops = this._calculateScrollStops(bodyEl);
-                                bodyEl.scrollTo({ top: session.scrollStops[session.currentSlideIndex], behavior: 'auto' });
+                                const sigmaMode = session.sigmaMode || 'presentation';
+
+                                // STAGE MODE INNOVATIONS (only for Sigma Presentation mode)
+                                if (sigmaMode === 'presentation') {
+                                    // Innovation 1: Prepare Bento layouts
+                                    this._prepareStageModeBentoLayouts(bodyEl);
+
+                                    // Innovation 2: Prepare list build animations
+                                    this._prepareListBuildAnimations(bodyEl);
+
+                                    // Innovation 3: 2D Camera viewport (optional feature flag)
+                                    // Enable by setting session.use2DCamera = true before entering Stage Mode
+                                    if (session.use2DCamera) {
+                                        this._prepare2DCameraViewport(bodyEl);
+                                    }
+                                }
+
+                                // Use camera map if available, otherwise use scroll stops
+                                if (session.cameraMap && session.cameraMap.positions.length > 0) {
+                                    session.scrollStops = session.cameraMap.positions.map((_, i) => i);
+                                    this._navigate2DCamera(bodyEl, 0, 0);
+                                } else {
+                                    session.scrollStops = this._calculateScrollStops(bodyEl);
+                                    bodyEl.scrollTo({ top: session.scrollStops[session.currentSlideIndex], behavior: 'auto' });
+                                }
 
                                 // Get all observable elements for smart blur logic
-                                const allElements = bodyEl.querySelectorAll('.snippet, .nk-mcq-block, .nk-timeline-block, .chart-container, .nk-accordion, .nk-text-tile');
+                                const allElements = bodyEl.querySelectorAll('.snippet, .nk-mcq-block, .nk-timeline-block, .chart-container, .nk-accordion, .nk-text-tile, .stage-bento-split, .stage-bento-split-alt, .stage-hero-image');
                                 const totalItems = allElements.length;
 
                                 // Smart blur: If very few items or only one slide, disable blur
@@ -20942,6 +21469,8 @@
                                 allElements.forEach(el => observer.observe(el));
                             }
                             this.renderFocusModeControls();
+                            // Fix: Initialize video players in Stage Mode
+                            App.util.initPlyr(bodyEl);
                         }, 100);
                     } else {
                         this.renderFocusModeControls();
@@ -21093,7 +21622,7 @@
                     container.innerHTML = controlsHTML;
                     const laserToggle = document.getElementById('laser-pointer-toggle');
                     if (laserToggle) {
-                        laserToggle.onclick = App.events.toggleLaserPointer;
+                        laserToggle.onclick = () => App.events.toggleSharedLaser('stage');
                         laserToggle.classList.toggle('active', document.querySelector('.focus-mode-overlay.laser-active') !== null);
                     }
                 },
@@ -21130,6 +21659,325 @@
                     if (scrollStops.length > 0) { scrollStops[0] = 0; }
 
                     return scrollStops.length > 0 ? scrollStops : [0];
+                },
+
+                // --- STAGE MODE INNOVATIONS ---
+
+                /**
+                 * Innovation 1: Intelligent "Bento" Slide Layouts
+                 * Scans DOM for patterns and wraps them in CSS Grid containers
+                 */
+                _prepareStageModeBentoLayouts(bodyEl) {
+                    if (!bodyEl) return;
+
+                    // Optimization: Use a single pass and minimal DOM manipulation
+                    const snippets = Array.from(bodyEl.querySelectorAll('.snippet'));
+                    let alternateLayout = false;
+
+                    for (let i = 0; i < snippets.length - 2; i++) {
+                        const snippet = snippets[i];
+
+                        // Skip if already processed
+                        if (snippet.closest('.stage-bento-split, .stage-bento-split-alt, .stage-hero-image')) continue;
+
+                        const nextSnippet = snippets[i + 1];
+                        const nextNextSnippet = snippets[i + 2];
+
+                        // Safety: Don't mess with videos in the Bento grouping logic if they are sensitive
+                        if (snippet.querySelector('.nk-video-embed') ||
+                            nextSnippet.querySelector('.nk-video-embed') ||
+                            nextNextSnippet.querySelector('.nk-video-embed')) {
+                            continue;
+                        }
+
+                        // Pattern 1: "Split Slide" - Header + Image + Text
+                        const headerMatch = snippet.querySelector('h1, h2, h3');
+                        const hasImage = nextSnippet.querySelector('.image-container, img');
+                        const hasText = nextNextSnippet.querySelector('p, ul, ol');
+
+                        if (headerMatch && hasImage && hasText) {
+                            // Valid Pattern Found
+                            const wrapper = document.createElement('div');
+                            // Use text direction class for alternate layout
+                            wrapper.className = alternateLayout ? 'stage-bento-split-alt' : 'stage-bento-split';
+                            wrapper.dataset.bentoWrapper = 'true';
+
+                            // Insert wrapper at the position of the first element
+                            snippet.parentNode.insertBefore(wrapper, snippet);
+
+                            // Construction:
+                            // 1. Header (snippet) always goes first/top-left
+                            wrapper.appendChild(snippet);
+
+                            // 2. Arrange Image and Text based on layout
+                            if (alternateLayout) {
+                                // For alt layout, we wrap text to target it specifically with CSS order
+                                const textWrapper = document.createElement('div');
+                                textWrapper.className = 'bento-text-content';
+                                textWrapper.appendChild(nextNextSnippet);
+                                wrapper.appendChild(nextSnippet); // Image
+                                wrapper.appendChild(textWrapper); // Text
+                            } else {
+                                wrapper.appendChild(nextSnippet); // Image
+                                wrapper.appendChild(nextNextSnippet); // Text
+                            }
+
+                            alternateLayout = !alternateLayout;
+                            i += 2; // Advanced index
+                        }
+                    }
+
+                    // Separate pass for Hero Images to avoid complex nested loops
+                    const remainingSnippets = bodyEl.querySelectorAll('.snippet > .image-container');
+                    remainingSnippets.forEach(imgContainer => {
+                        const snippet = imgContainer.closest('.snippet');
+                        if (!snippet || snippet.closest('[data-bento-wrapper="true"]')) return;
+
+                        // Check if it's "standalone" (mostly image)
+                        const textContent = snippet.textContent.trim();
+                        // Loose check: clearly less than 100 chars of text, mostly just the image
+                        if (textContent.length < 100) {
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'stage-hero-image';
+                            wrapper.dataset.bentoWrapper = 'true';
+                            snippet.parentNode.insertBefore(wrapper, snippet);
+                            wrapper.appendChild(snippet);
+                        }
+                    });
+                },
+
+
+                _cleanupStageModeBentoLayouts(bodyEl) {
+                    if (!bodyEl) return;
+
+                    // Find all bento wrappers and unwrap them
+                    const wrappers = bodyEl.querySelectorAll('[data-bento-wrapper="true"]');
+                    wrappers.forEach(wrapper => {
+                        // Unwrap text wrappers first
+                        const textWrappers = wrapper.querySelectorAll('.bento-text-content');
+                        textWrappers.forEach(tw => {
+                            while (tw.firstChild) {
+                                tw.parentNode.insertBefore(tw.firstChild, tw);
+                            }
+                            tw.remove();
+                        });
+
+                        // Move children out of wrapper
+                        while (wrapper.firstChild) {
+                            wrapper.parentNode.insertBefore(wrapper.firstChild, wrapper);
+                        }
+                        wrapper.remove();
+                    });
+                },
+
+                /**
+                 * Innovation 2: List Build Animations
+                 * Sets up list items for progressive reveal
+                 */
+                _prepareListBuildAnimations(bodyEl) {
+                    if (!bodyEl) return;
+
+                    const lists = bodyEl.querySelectorAll('ul, ol');
+                    lists.forEach(list => {
+                        const items = list.querySelectorAll('li');
+                        items.forEach((item, index) => {
+                            if (index === 0) {
+                                // First item is visible
+                                item.classList.add('stage-build-visible');
+                                item.classList.remove('stage-build-hidden');
+                            } else {
+                                // Other items start hidden
+                                item.classList.add('stage-build-hidden');
+                                item.classList.remove('stage-build-visible');
+                            }
+                        });
+                    });
+                },
+
+                /**
+                 * Reveals the next hidden list item in the current visible snippet
+                 * Returns true if an item was revealed, false if all items are visible
+                 */
+                _revealNextListItem(bodyEl) {
+                    if (!bodyEl) return false;
+
+                    // Find the currently visible snippet
+                    const visibleSnippet = bodyEl.querySelector('.snippet.is-visible, .stage-bento-split.is-visible, .stage-hero-image.is-visible');
+                    if (!visibleSnippet) return false;
+
+                    // Find the first hidden list item
+                    const hiddenItem = visibleSnippet.querySelector('li.stage-build-hidden');
+                    if (!hiddenItem) return false;
+
+                    // Reveal it
+                    hiddenItem.classList.remove('stage-build-hidden');
+                    hiddenItem.classList.add('stage-build-visible');
+
+                    return true;
+                },
+
+                /**
+                 * Checks if there are still hidden list items in the current visible snippet
+                 */
+                _hasHiddenListItems(bodyEl) {
+                    if (!bodyEl) return false;
+                    const visibleSnippet = bodyEl.querySelector('.snippet.is-visible, .stage-bento-split.is-visible, .stage-hero-image.is-visible');
+                    if (!visibleSnippet) return false;
+                    return visibleSnippet.querySelector('li.stage-build-hidden') !== null;
+                },
+
+                /**
+                 * Innovation 3: 2D "Camera" Transitions
+                 * Calculates a 2D grid map for slides using a snaking pattern
+                 * Returns: { positions: [{x, y, width, height}], gridWidth, gridHeight }
+                 */
+                _calculate2DScrollMap(bodyEl) {
+                    if (!bodyEl) return { positions: [], gridWidth: 0, gridHeight: 0 };
+
+                    const elements = Array.from(bodyEl.querySelectorAll('.snippet, .nk-mcq-block, .nk-timeline-block, .chart-container, .nk-accordion, .stage-bento-split, .stage-bento-split-alt, .stage-hero-image'));
+                    if (elements.length === 0) return { positions: [], gridWidth: 0, gridHeight: 0 };
+
+                    const viewportWidth = bodyEl.clientWidth;
+                    const viewportHeight = bodyEl.clientHeight;
+
+                    // Calculate how many slides fit per row (2-3 based on content density)
+                    const slidesPerRow = Math.min(3, Math.max(2, Math.ceil(Math.sqrt(elements.length))));
+
+                    const positions = [];
+                    let currentRow = 0;
+                    let currentCol = 0;
+                    let goingRight = true;
+
+                    elements.forEach((el, index) => {
+                        // Snaking pattern: row 0 goes right, row 1 goes left, etc.
+                        if (goingRight) {
+                            positions.push({
+                                x: currentCol * viewportWidth,
+                                y: currentRow * viewportHeight,
+                                width: viewportWidth,
+                                height: viewportHeight,
+                                element: el
+                            });
+                            currentCol++;
+                            if (currentCol >= slidesPerRow) {
+                                currentRow++;
+                                currentCol = slidesPerRow - 1;
+                                goingRight = false;
+                            }
+                        } else {
+                            positions.push({
+                                x: currentCol * viewportWidth,
+                                y: currentRow * viewportHeight,
+                                width: viewportWidth,
+                                height: viewportHeight,
+                                element: el
+                            });
+                            currentCol--;
+                            if (currentCol < 0) {
+                                currentRow++;
+                                currentCol = 0;
+                                goingRight = true;
+                            }
+                        }
+                    });
+
+                    const gridWidth = slidesPerRow * viewportWidth;
+                    const gridHeight = (currentRow + 1) * viewportHeight;
+
+                    return { positions, gridWidth, gridHeight };
+                },
+
+                /**
+                 * Navigates the 2D camera to a specific position
+                 * Uses CSS transform for smooth GPU-accelerated animation
+                 */
+                _navigate2DCamera(bodyEl, targetX, targetY) {
+                    if (!bodyEl) return;
+
+                    const canvas = bodyEl.querySelector('.stage-camera-canvas');
+                    if (!canvas) return;
+
+                    // Use negative values to translate canvas in opposite direction
+                    canvas.style.transform = `translate3d(${-targetX}px, ${-targetY}px, 0)`;
+                },
+
+                /**
+                 * Prepares the 2D camera viewport structure
+                 * Wraps content in a transformable canvas
+                 */
+                _prepare2DCameraViewport(bodyEl) {
+                    if (!bodyEl) return;
+
+                    // Check if already prepared
+                    if (bodyEl.querySelector('.stage-camera-canvas')) return;
+
+                    const map = this._calculate2DScrollMap(bodyEl);
+                    if (map.positions.length === 0) return;
+
+                    // Create the camera canvas
+                    const canvas = document.createElement('div');
+                    canvas.className = 'stage-camera-canvas';
+                    canvas.style.width = `${map.gridWidth}px`;
+                    canvas.style.height = `${map.gridHeight}px`;
+
+                    // Move all elements into the canvas and position them absolutely
+                    map.positions.forEach((pos, index) => {
+                        const el = pos.element;
+                        if (el && el.parentNode === bodyEl) {
+                            // Wrap element in a positioned container
+                            const slideContainer = document.createElement('div');
+                            slideContainer.className = 'stage-camera-slide';
+                            slideContainer.style.cssText = `
+                                position: absolute;
+                                left: ${pos.x}px;
+                                top: ${pos.y}px;
+                                width: ${pos.width}px;
+                                height: ${pos.height}px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                box-sizing: border-box;
+                                padding: 2rem;
+                            `;
+
+                            // Move element into slide container
+                            bodyEl.removeChild(el);
+                            slideContainer.appendChild(el);
+                            canvas.appendChild(slideContainer);
+                        }
+                    });
+
+                    // Add canvas to body
+                    bodyEl.appendChild(canvas);
+                    bodyEl.classList.add('stage-camera-active');
+
+                    // Store map in session for navigation
+                    App.state.focusSession.cameraMap = map;
+
+                    // Navigate to first slide
+                    this._navigate2DCamera(bodyEl, 0, 0);
+                },
+
+                /**
+                 * Cleans up the 2D camera viewport
+                 */
+                _cleanup2DCameraViewport(bodyEl) {
+                    if (!bodyEl) return;
+
+                    const canvas = bodyEl.querySelector('.stage-camera-canvas');
+                    if (!canvas) return;
+
+                    // Move all elements back to body
+                    const slides = canvas.querySelectorAll('.stage-camera-slide');
+                    slides.forEach(slide => {
+                        while (slide.firstChild) {
+                            bodyEl.insertBefore(slide.firstChild, canvas);
+                        }
+                    });
+
+                    canvas.remove();
+                    bodyEl.classList.remove('stage-camera-active');
+                    delete App.state.focusSession.cameraMap;
                 },
 
                 migrationScreen: {
@@ -25780,6 +26628,13 @@
                                 App.state.lastHeartKeyPressTime = now;
                             }
                         }
+
+                        // NEW: Laser Toggle (L) in Read Mode
+                        if (e.key.toLowerCase() === 'l' && !isEditable && !isModalOpen && !cmdKey && !e.shiftKey) {
+                            e.preventDefault();
+                            App.events.toggleSharedLaser('read');
+                            return;
+                        }
                     }
                     if (App.state.studySession.isActive) App.events.study.handleKeyboard(e);
                 },
@@ -25912,7 +26767,32 @@
                     }
 
                     const title = titleInput.value.trim();
+
+                    // --- FIX: Handle Fullscreen Maps before getting content ---
+                    const fullscreenMaps = Array.from(document.querySelectorAll('.nk-map-embed.is-viewport-fullscreen'));
+                    const restoredMaps = [];
+
+                    if (!newContent) {
+                        fullscreenMaps.forEach(map => {
+                            const placeholderId = map.dataset.placeholderId;
+                            if (placeholderId) {
+                                const placeholder = document.getElementById(placeholderId);
+                                // Ensure placeholder is within the content we are saving
+                                if (placeholder && contentDiv.contains(placeholder)) {
+                                    placeholder.replaceWith(map);
+                                    restoredMaps.push({ map, placeholder });
+                                }
+                            }
+                        });
+                    }
+
                     let content = newContent ?? contentDiv.innerHTML.trim();
+
+                    // --- Restore Fullscreen Maps state (so user doesn't see them disappear) ---
+                    restoredMaps.forEach(({ map, placeholder }) => {
+                        map.replaceWith(placeholder);
+                        document.body.appendChild(map);
+                    });
 
 
                     // Prepare content for saving (normalization)
@@ -25921,8 +26801,14 @@
 
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = content;
-                    // Clean components
                     App.util.cleanPlyrForSave(tempDiv);
+
+                    tempDiv.querySelectorAll('.nk-map-embed.is-viewport-fullscreen').forEach(map => {
+                        map.classList.remove('is-viewport-fullscreen');
+                        map.style.zIndex = '';
+                        delete map.dataset.placeholderId;
+                    });
+                    tempDiv.querySelectorAll('.nk-map-placeholder').forEach(ph => ph.remove());
 
                     // Get in-memory attachments to include in hash calculation
                     const articleInMemory = App.storage.getArticle(id) || {};
@@ -26436,6 +27322,7 @@
                         const playPauseBtn = target.closest('.audio-play-pause-btn');
                         const progressBar = target.closest('.audio-progress-bar');
                         const speedBtn = target.closest('.audio-speed-btn');
+
 
                         if (playPauseBtn) {
                             App.audio.handlePlayPause(playPauseBtn);
@@ -30985,6 +31872,19 @@
 
                 toggleStageMode() {
                     const session = App.state.focusSession;
+
+                    // Clean up innovations when exiting Stage Mode
+                    if (session.isStageMode) {
+                        const bodyEl = document.querySelector('.focus-mode-body');
+                        if (bodyEl) {
+                            // Innovation 1: Cleanup Bento layouts
+                            App.ui._cleanupStageModeBentoLayouts(bodyEl);
+
+                            // Innovation 3: Cleanup 2D camera viewport
+                            App.ui._cleanup2DCameraViewport(bodyEl);
+                        }
+                    }
+
                     session.isStageMode = !session.isStageMode;
                     session.currentSlideIndex = 0;
                     session.scrollStops = [];
@@ -30998,27 +31898,66 @@
                     // --- NEW: SIGMA ARTICLE NAVIGATION ---
                     if (session.sigmaMode === 'article') {
                         const body = document.querySelector('.focus-mode-body');
-                        if (body) {
+                        const overlay = document.querySelector('.focus-mode-overlay');
+                        if (body && overlay) {
                             const scrollAmount = window.innerHeight * 0.8; // Scroll 80% of screen height
-                            body.scrollBy({
-                                top: scrollAmount * direction,
-                                behavior: 'smooth'
-                            });
+
+                            // Add transition class for presentation-like fade effect
+                            overlay.classList.add('article-nav-transitioning');
+
+                            // Slight delay before scroll to let fade-out start
+                            setTimeout(() => {
+                                body.scrollBy({
+                                    top: scrollAmount * direction,
+                                    behavior: 'smooth'
+                                });
+
+                                // Remove transition class after scroll animation completes
+                                setTimeout(() => {
+                                    overlay.classList.remove('article-nav-transitioning');
+                                }, 350);
+                            }, 80);
                         }
                         return; // Stop here, do not do slide navigation
                     }
 
                     const newIndex = session.currentSlideIndex + direction;
 
+                    // INNOVATION 2: List Build Animation
+                    // When moving forward, check if there are hidden list items to reveal first
+                    if (direction > 0) {
+                        const body = document.querySelector('.focus-mode-body');
+                        if (body && App.ui._hasHiddenListItems(body)) {
+                            // Reveal the next list item instead of advancing slide
+                            if (App.ui._revealNextListItem(body)) {
+                                return; // Don't advance slide, we revealed a list item
+                            }
+                        }
+                    }
+
                     if (newIndex >= 0 && newIndex < session.scrollStops.length) {
                         session.currentSlideIndex = newIndex;
 
                         const body = document.querySelector('.focus-mode-body');
                         if (body) {
-                            body.scrollTo({
-                                top: session.scrollStops[newIndex],
-                                behavior: 'smooth'
-                            });
+                            // INNOVATION 3: 2D Camera navigation
+                            if (session.cameraMap && session.cameraMap.positions[newIndex]) {
+                                const pos = session.cameraMap.positions[newIndex];
+                                App.ui._navigate2DCamera(body, pos.x, pos.y);
+
+                                // Add transitioning class for visual feedback
+                                const overlay = document.querySelector('.focus-mode-overlay');
+                                if (overlay) {
+                                    overlay.classList.add('is-transitioning');
+                                    setTimeout(() => overlay.classList.remove('is-transitioning'), 700);
+                                }
+                            } else {
+                                // Fallback to scroll-based navigation
+                                body.scrollTo({
+                                    top: session.scrollStops[newIndex],
+                                    behavior: 'smooth'
+                                });
+                            }
                         }
                         App.ui.renderFocusModeControls();
                         setTimeout(() => {
@@ -31031,159 +31970,282 @@
                                 newFirstItem.classList.add('spotlight-key-focus');
                                 newFirstItem.focus({ preventScroll: true });
                             }
+
+                            // After navigating to a new slide, reset list build state
+                            // so the first item is visible and others are hidden
+                            if (session.sigmaMode !== 'article') {
+                                const visibleSnippet = container.querySelector('.snippet.is-visible, .stage-bento-split.is-visible, .stage-hero-image.is-visible');
+                                if (visibleSnippet) {
+                                    const lists = visibleSnippet.querySelectorAll('ul, ol');
+                                    lists.forEach(list => {
+                                        const items = list.querySelectorAll('li');
+                                        items.forEach((item, index) => {
+                                            if (index === 0) {
+                                                item.classList.add('stage-build-visible');
+                                                item.classList.remove('stage-build-hidden');
+                                            } else {
+                                                item.classList.add('stage-build-hidden');
+                                                item.classList.remove('stage-build-visible');
+                                            }
+                                        });
+                                    });
+                                }
+                            }
                         }, 400);
                     }
                 },
 
 
-                toggleLaserPointer() {
-                    const overlay = document.querySelector('.focus-mode-overlay');
-                    let pointer = document.getElementById('laser-pointer');
+                // UNIFIED LASER POINTER (Read & Stage Mode)
+                toggleSharedLaser(context = 'stage') {
+                    // Context: 'stage' (Focus/Stage Mode) or 'read' (Read/Global Mode)
+                    let overlay, canvasId, pointerId;
 
-                    // NEW: Canvas for Laser Trail
-                    let laserCanvas = document.getElementById('laser-trail-canvas');
+                    if (context === 'stage') {
+                        overlay = document.querySelector('.focus-mode-overlay');
+                        canvasId = 'laser-trail-canvas';
+                        pointerId = 'laser-pointer';
+                    } else {
+                        overlay = document.body;
+                        canvasId = 'read-mode-laser-canvas';
+                        pointerId = 'read-mode-laser-pointer';
+                    }
 
                     if (!overlay) return;
 
-                    // Create elements if they don't exist
+                    let laserCanvas = document.getElementById(canvasId);
+                    let pointer = document.getElementById(pointerId);
+                    const activeClass = context === 'stage' ? 'laser-active' : 'read-mode-laser-active';
+
+                    // INITIALIZATION
                     if (!pointer) {
-                        // Pointer element usually created in renderFocusMode or exists in DOM. 
-                        // If not, we can assume it exists or fail safely. 
-                        // Check previous grep, pointer implementation existed but was simple.
-                        // For safety, let's grab it again or ensure it exists
-                        pointer = document.getElementById('laser-pointer');
-                        if (!pointer) return;
+                        pointer = document.createElement('div');
+                        pointer.id = pointerId;
+                        Object.assign(pointer.style, {
+                            position: 'fixed',
+                            width: '8px',
+                            height: '8px',
+                            background: '#ff0055',
+                            borderRadius: '50%',
+                            boxShadow: '0 0 5px #ff0055, 0 0 10px #ff0055, 0 0 20px #ff0055',
+                            pointerEvents: 'none',
+                            zIndex: '2147483647',
+                            display: 'none',
+                            transform: 'translate(-50%, -50%)',
+                            transition: 'transform 0.04s linear' // Faster follow
+                        });
+                        overlay.appendChild(pointer);
                     }
 
                     if (!laserCanvas) {
                         laserCanvas = document.createElement('canvas');
-                        laserCanvas.id = 'laser-trail-canvas';
-                        laserCanvas.style.position = 'absolute';
-                        laserCanvas.style.top = '0';
-                        laserCanvas.style.left = '0';
-                        laserCanvas.style.width = '100%';
-                        laserCanvas.style.height = '100%';
-                        laserCanvas.style.pointerEvents = 'none';
-                        laserCanvas.style.zIndex = '9998'; // Just below the dot
+                        laserCanvas.id = canvasId;
+                        Object.assign(laserCanvas.style, {
+                            position: 'fixed', // Use fixed for both
+                            top: '0',
+                            left: '0',
+                            width: '100%',
+                            height: '100%',
+                            pointerEvents: 'none',
+                            zIndex: '2147483646'
+                        });
                         overlay.appendChild(laserCanvas);
 
-                        // Resize canvas
                         const resizeCanvas = () => {
-                            laserCanvas.width = overlay.clientWidth;
-                            laserCanvas.height = overlay.clientHeight;
+                            laserCanvas.width = context === 'stage' ? overlay.clientWidth : window.innerWidth;
+                            laserCanvas.height = context === 'stage' ? overlay.clientHeight : window.innerHeight;
                         };
                         window.addEventListener('resize', resizeCanvas);
                         resizeCanvas();
                     }
 
-                    const isActive = overlay.classList.toggle('laser-active');
-                    pointer.style.display = isActive ? 'block' : 'none';
-                    laserCanvas.style.display = isActive ? 'block' : 'none';
-
-                    // Ensure the button visually reflects the state
-                    document.getElementById('laser-pointer-toggle')?.classList.toggle('active', isActive);
+                    const isActive = !overlay.classList.contains(activeClass);
 
                     if (isActive) {
+                        // Surgical: Theme Awareness & Aesthetic Upgrade
+                        const themeSource = context === 'stage' ? overlay : (document.querySelector('.article-view-wrapper') || document.body);
+                        const style = getComputedStyle(themeSource);
+                        const rawText = style.getPropertyValue('--text-primary').trim();
+                        const rawPrimary = style.getPropertyValue('--primary-color').trim();
+
+                        const laserColor = rawText || '#ff0055';
+                        const glowColor = rawPrimary || laserColor;
+
+                        overlay.classList.add(activeClass);
+                        pointer.style.display = 'block';
+
+                        // Apply Aesthetic Update to Pointer
+                        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                        const isDarkTheme = currentTheme === 'dark'; // 'sepia' counts as light-ish for laser physics
+
+                        if (isDarkTheme) {
+                            // Dark Mode: Hot Plasma / Neon
+                            pointer.style.background = `radial-gradient(circle at 35% 35%, #fff 0%, ${laserColor} 50%, ${glowColor} 100%)`;
+                            pointer.style.boxShadow = `0 0 5px ${glowColor}, 0 0 10px ${laserColor}, 0 0 20px ${glowColor}`;
+                            pointer.style.border = 'none';
+                        } else {
+                            // Light/Sepia Mode: Wet Ink / High-End Marker
+                            pointer.style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, ${laserColor} 55%)`;
+                            pointer.style.boxShadow = `0 2px 5px rgba(0,0,0,0.25)`; // Physical shadow for depth
+                            pointer.style.border = `1px solid rgba(255,255,255,0.2)`;
+                        }
+
+                        laserCanvas.style.display = 'block';
+
+                        // In Read Mode, we need to capture events via canvas. In Stage, overlay might handle it.
+                        laserCanvas.style.pointerEvents = 'all';
+                        laserCanvas.style.cursor = 'none';
+
+                        if (context === 'stage') document.getElementById('laser-pointer-toggle')?.classList.add('active');
+
                         const ctx = laserCanvas.getContext('2d');
-                        let paths = []; // Store multiple paths: [ [{x,y},...], ... ]
+                        let paths = [];
                         let currentPath = null;
                         let animationFrameId;
 
                         const draw = () => {
-                            if (!isActive) return;
+                            if (!overlay.classList.contains(activeClass)) return;
 
                             ctx.clearRect(0, 0, laserCanvas.width, laserCanvas.height);
-
-                            // NEON STYLE
                             ctx.lineCap = 'round';
                             ctx.lineJoin = 'round';
-                            ctx.lineWidth = 6;
-                            ctx.shadowBlur = 10;
-                            ctx.shadowColor = '#ff0055'; // Neon Glow
-                            ctx.strokeStyle = '#ff0055';
 
-                            // Draw ALL stored paths
-                            [...paths, currentPath].forEach(path => {
-                                if (!path || path.length < 2) return;
-                                ctx.beginPath();
-                                ctx.moveTo(path[0].x, path[0].y);
-                                for (let i = 1; i < path.length; i++) {
-                                    // Simple quadratic smoothing
-                                    const p = path[i];
-                                    const prev = path[i - 1];
-                                    const cx = (prev.x + p.x) / 2;
-                                    const cy = (prev.y + p.y) / 2;
-                                    ctx.quadraticCurveTo(prev.x, prev.y, cx, cy);
-                                }
-                                ctx.stroke();
-                            });
+                            const activePaths = [...paths, currentPath];
+                            const drawPaths = () => {
+                                activePaths.forEach(path => {
+                                    if (!path || path.length < 2) return;
+                                    ctx.beginPath();
+                                    ctx.moveTo(path[0].x, path[0].y);
+                                    for (let i = 1; i < path.length; i++) {
+                                        const p = path[i];
+                                        const prev = path[i - 1];
+                                        const cx = (prev.x + p.x) / 2;
+                                        const cy = (prev.y + p.y) / 2;
+                                        ctx.quadraticCurveTo(prev.x, prev.y, cx, cy);
+                                    }
+                                    ctx.stroke();
+                                });
+                            };
 
-                            if (overlay.classList.contains('laser-active')) {
-                                animationFrameId = requestAnimationFrame(draw);
+                            // RENDER LASER TRAIL
+                            if (isDarkTheme) {
+                                // DARK MODE: NEON / LIGHTSABER PHYSICS
+                                // Pass 1: The Glow (Atmosphere) - Additive blending for light physics
+                                ctx.globalCompositeOperation = 'lighter';
+                                ctx.lineWidth = 6;
+                                ctx.shadowBlur = 10;
+                                ctx.shadowColor = glowColor;
+                                ctx.strokeStyle = glowColor;
+                                drawPaths();
+
+                                // Pass 2: The Core (Hot Plasma)
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.lineWidth = 2;
+                                ctx.shadowBlur = 1;
+                                ctx.shadowColor = '#fff';
+                                ctx.strokeStyle = '#fff'; // Always white hot core
+                                drawPaths();
+                            } else {
+                                // LIGHT/SEPIA MODE: FOUNTAIN PEN / MARKER PHYSICS
+                                // Pass 1: The Stain/Bleed (Softer, wider, low opacity)
+                                ctx.globalCompositeOperation = 'source-over'; // Normal blending (ink on paper)
+                                ctx.lineWidth = 7;
+                                ctx.lineCap = 'round';
+                                ctx.shadowBlur = 6;
+                                ctx.shadowColor = glowColor; // Use primary/glow color as the "wash"
+                                ctx.strokeStyle = glowColor;
+                                ctx.globalAlpha = 0.3; // Transparent bleed
+                                drawPaths();
+
+                                // Pass 2: The Ink Flow (Solid, sharper)
+                                ctx.globalAlpha = 1.0;
+                                ctx.lineWidth = 2.5;
+                                ctx.shadowBlur = 1;
+                                ctx.shadowColor = 'rgba(0,0,0,0.1)';
+                                ctx.strokeStyle = laserColor; // Use the text color (dark) as ink
+                                drawPaths();
                             }
-                        };
 
-                        // Start Loop
+                            animationFrameId = requestAnimationFrame(draw);
+                        };
                         draw();
 
-                        const moveHandler = (e) => {
-                            const rect = overlay.getBoundingClientRect();
-                            const x = e.clientX - rect.left;
-                            const y = e.clientY - rect.top;
 
+
+                        // Event Handlers
+                        const moveHandler = (e) => {
                             pointer.style.left = `${e.clientX}px`;
                             pointer.style.top = `${e.clientY}px`;
-
-                            if (currentPath) {
-                                currentPath.push({ x, y });
-                            }
+                            if (currentPath) currentPath.push({ x: e.clientX, y: e.clientY });
                         };
-
                         const downHandler = (e) => {
-                            e.preventDefault(); // FIX: Prevent text selection
-                            // Start new path
-                            const rect = overlay.getBoundingClientRect();
-                            const x = e.clientX - rect.left;
-                            const y = e.clientY - rect.top;
-                            currentPath = [{ x, y }];
+                            if (e.button !== 0) return;
+                            e.preventDefault();
+                            currentPath = [{ x: e.clientX, y: e.clientY }];
                         };
-
                         const upHandler = () => {
-                            if (currentPath && currentPath.length > 0) {
-                                paths.push(currentPath);
-                            }
+                            if (currentPath && currentPath.length > 0) paths.push(currentPath);
                             currentPath = null;
                         };
-
                         const dblClickHandler = () => {
                             paths = [];
                             currentPath = null;
                         };
 
-                        overlay.addEventListener('mousemove', moveHandler);
-                        overlay.addEventListener('mousedown', downHandler);
-                        overlay.addEventListener('mouseup', upHandler);
-                        overlay.addEventListener('dblclick', dblClickHandler);
+                        // NEW: Wheel Handler for Scrolling while Laser is active
+                        const wheelHandler = (e) => {
+                            let scrollTarget;
+                            if (context === 'stage') {
+                                scrollTarget = document.querySelector('.focus-mode-body');
+                            } else {
+                                // For Read Mode, the content is usually in <main>
+                                scrollTarget = document.querySelector('main') || document.scrollingElement || document.documentElement || document.body;
+                            }
 
-                        overlay.laserMoveHandler = moveHandler;
-                        overlay.laserDownHandler = downHandler;
-                        overlay.laserUpHandler = upHandler;
-                        overlay.laserDblHandler = dblClickHandler;
-                        overlay.laserAnimFrame = animationFrameId;
+                            if (scrollTarget) {
+                                scrollTarget.scrollTop += e.deltaY;
+                                scrollTarget.scrollLeft += e.deltaX;
+                            }
+                        };
+
+                        // Unified Key Handler
+                        const keyHandler = (e) => {
+                            if (e.key === 'Escape' || (e.key.toLowerCase() === 'l' && !e.repeat)) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                App.events.toggleSharedLaser(context);
+                            }
+                        };
+
+                        laserCanvas.addEventListener('mousemove', moveHandler);
+                        laserCanvas.addEventListener('mousedown', downHandler);
+                        laserCanvas.addEventListener('wheel', wheelHandler, { passive: true });
+                        window.addEventListener('mouseup', upHandler);
+                        laserCanvas.addEventListener('dblclick', dblClickHandler);
+                        document.addEventListener('keydown', keyHandler, true); // Capture phase importance
+
+                        laserCanvas._cleanup = () => {
+                            laserCanvas.removeEventListener('mousemove', moveHandler);
+                            laserCanvas.removeEventListener('mousedown', downHandler);
+                            laserCanvas.removeEventListener('wheel', wheelHandler);
+                            window.removeEventListener('mouseup', upHandler);
+                            laserCanvas.removeEventListener('dblclick', dblClickHandler);
+                            document.removeEventListener('keydown', keyHandler, true);
+                            cancelAnimationFrame(animationFrameId);
+                        };
 
                     } else {
-                        if (overlay.laserMoveHandler) {
-                            overlay.removeEventListener('mousemove', overlay.laserMoveHandler);
-                            overlay.removeEventListener('mousedown', overlay.laserDownHandler);
-                            overlay.removeEventListener('mouseup', overlay.laserUpHandler);
-                            overlay.removeEventListener('dblclick', overlay.laserDblHandler);
-                        }
-                        if (overlay.laserAnimFrame) {
-                            cancelAnimationFrame(overlay.laserAnimFrame);
-                        }
-                        // Clear canvas
+                        // Deactivate
+                        overlay.classList.remove(activeClass);
+                        pointer.style.display = 'none';
+                        laserCanvas.style.display = 'none';
+                        laserCanvas.style.pointerEvents = 'none';
+                        if (context === 'stage') document.getElementById('laser-pointer-toggle')?.classList.remove('active');
+
                         const ctx = laserCanvas.getContext('2d');
                         ctx.clearRect(0, 0, laserCanvas.width, laserCanvas.height);
+                        if (laserCanvas._cleanup) laserCanvas._cleanup();
+
                     }
                 },
 
@@ -31382,7 +32444,7 @@
                             case 't': // NEW SHORTCUT
                                 if (isAnnotationActive) App.annotationEngine.cycleThickness();
                                 break;
-                            case 'l': App.events.toggleLaserPointer(); break;
+                            case 'l': App.events.toggleSharedLaser('stage'); break;
                             case 'w': App.events.annotation.toggleWhiteboard(document.querySelector('#annotation-toolbar .btn-icon[onclick*="toggleWhiteboard"]')); break;
 
                             case 'h': document.querySelector('.stage-mode-controls .btn-icon[onclick*="toggleStageModeHighlights"]')?.click(); break;
@@ -31398,7 +32460,7 @@
                             case 'escape':
                                 const overlay = document.querySelector('.focus-mode-overlay');
                                 if (overlay?.classList.contains('annotation-active')) App.events.annotation.toggle();
-                                else if (overlay?.classList.contains('laser-active')) App.events.toggleLaserPointer();
+                                else if (overlay?.classList.contains('laser-active')) App.events.toggleSharedLaser('stage');
                                 else if (overlay?.classList.contains('blackout-active')) overlay.classList.remove('blackout-active');
                                 else App.events.toggleStageMode();
                                 break;
@@ -37466,9 +38528,9 @@
                                 const mapHtml = `
                                 <div class="nk-map-embed" contenteditable="false" tabindex="0" style="width: 100%; max-width: 800px; aspect-ratio: 16/9; margin: 25px auto; border-radius: 16px; overflow: hidden; background: var(--bg-secondary, #222); box-shadow: 0 8px 30px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.1); position: relative; resize: both; min-width: 300px; min-height: 200px;">
                                     <div class="nk-map-controls">
-                                        <div class="nk-map-btn" onclick="App.handleMapAction(event, 'fullscreen')" title="Toggle Fullscreen"><i class="fa-solid fa-expand"></i></div>
-                                        <div class="nk-map-btn" onclick="App.handleMapAction(event, 'edit')" title="Edit Location"><i class="fa-solid fa-pen"></i></div>
-                                        <div class="nk-map-btn is-delete" onclick="App.handleMapAction(event, 'delete')" title="Remove Map"><i class="fa-solid fa-xmark"></i></div>
+                                        <div class="nk-map-btn" data-action="fullscreen" onclick="App.handleMapAction(event, 'fullscreen')" title="Toggle Fullscreen"><i class="fa-solid fa-expand"></i></div>
+                                        <div class="nk-map-btn" data-action="edit" onclick="App.handleMapAction(event, 'edit')" title="Edit Location"><i class="fa-solid fa-pen"></i></div>
+                                        <div class="nk-map-btn is-delete" data-action="delete" onclick="App.handleMapAction(event, 'delete')" title="Remove Map"><i class="fa-solid fa-xmark"></i></div>
                                     </div>
                                     <iframe src="${embedUrl}" style="width: 100%; height: 100%; border: none; display: block;" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"></iframe>
                                     <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:-1;"></div>
@@ -38147,8 +39209,6 @@
                         }
                     }
 
-                    // Hide palette and refocus after command execution
-                    // Save BOTH cursor and scroll position before closing palette
                     const selection = window.getSelection();
                     const savedCursorRange = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
 
@@ -45502,43 +46562,124 @@
 
                 async handleFileSelect(event) {
                     const file = event.target.files[0];
-                    if (!file || file.type !== 'application/pdf') return;
+                    if (!file) return;
 
-                    // LOCK UI: Prevent saving or navigating away while processing
-                    App.ui.migrationScreen.show("Attaching PDF...");
+                    // --- PDF IMPORT (Existing Logic) ---
+                    if (file.type === 'application/pdf') {
+                        // LOCK UI: Prevent saving or navigating away while processing
+                        App.ui.migrationScreen.show("Attaching PDF...");
 
-                    try {
+                        try {
+                            const reader = new FileReader();
+                            reader.onload = async (e) => {
+                                try {
+                                    const safeId = 'pdf_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
+                                    const fileData = {
+                                        id: safeId,
+                                        name: file.name,
+                                        type: file.type,
+                                        data: e.target.result
+                                    };
+                                    await this.saveAttachment(fileData);
+                                    this.insertAttachmentPill(fileData);
+                                    App.ui.showToast(`Attached "${file.name}"`, 'success');
+                                } catch (err) {
+                                    console.error('Error saving attachment:', err);
+                                    App.ui.showToast('Error attaching PDF.', 'error');
+                                } finally {
+                                    App.ui.migrationScreen.hide();
+                                }
+                            };
+                            reader.onerror = () => {
+                                App.ui.showToast('Error reading file.', 'error');
+                                App.ui.migrationScreen.hide();
+                            };
+                            reader.readAsDataURL(file);
+                        } catch (err) {
+                            App.ui.showToast('Error initiating import.', 'error');
+                            App.ui.migrationScreen.hide();
+                        } finally {
+                            event.target.value = null;
+                        }
+                        return;
+                    }
+
+                    // --- TXT IMPORT ---
+                    if (file.name.toLowerCase().endsWith('.txt')) {
+                        App.ui.migrationScreen.show("Importing Text...");
                         const reader = new FileReader();
-                        reader.onload = async (e) => {
+                        reader.onload = (e) => {
                             try {
-                                const safeId = 'pdf_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
-                                const fileData = {
-                                    id: safeId,
-                                    name: file.name,
-                                    type: file.type,
-                                    data: e.target.result
-                                };
-                                await this.saveAttachment(fileData);
-                                this.insertAttachmentPill(fileData);
-                                App.ui.showToast(`Attached "${file.name}"`, 'success');
+                                const text = e.target.result;
+                                // Helper to sanitize and insert text
+                                const cleanText = App.util.escapeHtml(text).replace(/\n/g, '<br>');
+
+                                if (document.queryCommandSupported('insertHTML')) {
+                                    document.execCommand('insertHTML', false, cleanText);
+                                } else {
+                                    // Fallback: simple append if command not supported (unlikely)
+                                    const article = App.storage.getArticle(App.state.activeArticleId);
+                                    if (article) {
+                                        article.content += `<div>${cleanText}</div>`;
+                                        App.editor.setContent(article.content);
+                                    }
+                                }
+                                App.ui.showToast(`Imported "${file.name}"`, 'success');
                             } catch (err) {
-                                console.error('Error saving attachment:', err);
-                                App.ui.showToast('Error attaching PDF.', 'error');
+                                console.error("Text import failed", err);
+                                App.ui.showToast("Failed to import text file.", 'error');
                             } finally {
                                 App.ui.migrationScreen.hide();
                             }
                         };
-                        reader.onerror = () => {
-                            App.ui.showToast('Error reading file.', 'error');
-                            App.ui.migrationScreen.hide();
-                        };
-                        reader.readAsDataURL(file);
-                    } catch (err) {
-                        App.ui.showToast('Error initiating import.', 'error');
-                        App.ui.migrationScreen.hide();
-                    } finally {
+                        reader.readAsText(file);
                         event.target.value = null;
+                        return;
                     }
+
+                    // --- DOC/DOCX IMPORT (via Mammoth) ---
+                    if (file.name.toLowerCase().endsWith('.doc') || file.name.toLowerCase().endsWith('.docx')) {
+                        if (typeof mammoth === 'undefined') {
+                            App.ui.showToast('DOCX conversion library not loaded. Please check internet connection.', 'error');
+                            event.target.value = null;
+                            return;
+                        }
+
+                        App.ui.migrationScreen.show("Converting Document...");
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            try {
+                                const arrayBuffer = e.target.result;
+                                const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+                                const html = result.value;
+
+                                // Insert the converted HTML
+                                if (document.queryCommandSupported('insertHTML')) {
+                                    document.execCommand('insertHTML', false, html);
+                                } else {
+                                    const article = App.storage.getArticle(App.state.activeArticleId);
+                                    if (article) {
+                                        article.content += `<div>${html}</div>`;
+                                        App.editor.setContent(article.content);
+                                    }
+                                }
+
+                                App.ui.showToast(`Imported "${file.name}"`, 'success');
+                            } catch (err) {
+                                console.error("Mammoth conversion failed", err);
+                                App.ui.showToast("Failed to convert document.", 'error');
+                            } finally {
+                                App.ui.migrationScreen.hide();
+                            }
+                        };
+                        reader.readAsArrayBuffer(file);
+                        event.target.value = null;
+                        return;
+                    }
+
+                    // --- UNSUPPORTED TYPE ---
+                    App.ui.showToast('Unsupported file type. Please select PDF, TXT, DOC, or DOCX.', 'warning');
+                    event.target.value = null;
                 },
 
                 insertAttachmentPill(fileData) {
@@ -47088,6 +48229,32 @@
 
 
             if (App.ui.aiMagicModal) App.ui.aiMagicModal.init();
+
+            // --- GLOBAL MAP CONTROL LISTENER (Fix for Read Mode Fullscreen) ---
+            document.addEventListener('click', (e) => {
+                const mapBtn = e.target.closest('.nk-map-btn');
+                if (mapBtn && (document.body.classList.contains('read-mode') || document.body.contains(mapBtn))) {
+                    let action = mapBtn.dataset.action;
+                    if (!action) {
+                        const title = mapBtn.getAttribute('title') || '';
+                        if (title.includes('Fullscreen') || title.includes('Exit Fullscreen')) action = 'fullscreen';
+                        else if (title.includes('Edit')) action = 'edit';
+                        else if (title.includes('Remove')) action = 'delete';
+                        else if (mapBtn.classList.contains('is-delete')) action = 'delete';
+                    }
+
+                    if (action && typeof App.handleMapAction === 'function') {
+                        // Mock event to satisfy handleMapAction's dependence on currentTarget
+                        const mockEvent = {
+                            preventDefault: () => { e.preventDefault(); },
+                            stopPropagation: () => { e.stopPropagation(); },
+                            currentTarget: mapBtn,
+                            target: e.target
+                        };
+                        App.handleMapAction(mockEvent, action);
+                    }
+                }
+            });
         });
 
 
@@ -47224,40 +48391,114 @@
             App.handleMapAction = function (event, action) {
                 event.preventDefault();
                 event.stopPropagation();
-                const btn = event.currentTarget;
+                const btn = event.currentTarget.closest('.nk-map-btn'); // Robust selector
                 const container = btn.closest('.nk-map-embed');
                 const iframe = container.querySelector('iframe');
 
                 if (action === 'delete') {
-                    if (confirm('Remove this map?')) {
-                        // Remove spacing p tag if it exists
-                        if (container.nextElementSibling && container.nextElementSibling.tagName === 'P' && container.nextElementSibling.textContent.trim() === '') {
-                            container.nextElementSibling.remove();
+                    // Custom Confirm Modal
+                    const modalId = `confirm-modal-${Date.now()}`;
+                    const modalHTML = `
+                    <div id="${modalId}" class="modal-backdrop" style="animation: fadeIn 0.2s ease-out; z-index: 20000; background-color: rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; position:fixed; top:0; left:0; width:100%; height:100%;">
+                        <div class="modal-content ui-card" style="max-width: 400px; width:90%; transform-origin: center center; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: var(--bg-secondary); padding: 20px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                            <h3 style="margin-top:0; margin-bottom: 10px;">Remove Map?</h3>
+                            <p style="margin-bottom: 20px; opacity: 0.8;">Are you sure you want to remove this map from your note?</p>
+                            <div class="modal-buttons" style="margin-top: 0; display:flex; justify-content: flex-end; gap: 10px;">
+                                <button class="btn btn-secondary" id="${modalId}-cancel">Cancel</button>
+                                <button class="btn btn-primary" id="${modalId}-confirm" style="background: var(--danger-color); border-color: var(--danger-color);">Remove</button>
+                            </div>
+                        </div>
+                    </div>`;
+
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                    const modalEl = document.getElementById(modalId);
+                    const cancelBtn = document.getElementById(`${modalId}-cancel`);
+                    const confirmBtn = document.getElementById(`${modalId}-confirm`);
+
+                    const cleanup = () => modalEl.remove();
+
+                    confirmBtn.onclick = () => {
+                        // Check if we are in fullscreen (reparented) mode
+                        const placeholderId = container.dataset.placeholderId;
+                        if (placeholderId) {
+                            const placeholder = document.getElementById(placeholderId);
+                            if (placeholder) {
+                                // Remove the placeholder from the flow
+                                if (placeholder.nextElementSibling && placeholder.nextElementSibling.tagName === 'P' && placeholder.nextElementSibling.textContent.trim() === '') {
+                                    placeholder.nextElementSibling.remove();
+                                }
+                                placeholder.remove();
+                            }
+                        } else {
+                            // Standard removal
+                            if (container.nextElementSibling && container.nextElementSibling.tagName === 'P' && container.nextElementSibling.textContent.trim() === '') {
+                                container.nextElementSibling.remove();
+                            }
                         }
+
                         container.remove();
                         App.state.isArticleDirty = true;
                         App.ui.showToast('Map removed.', { type: 'success' });
-                    }
+                        cleanup();
+                    };
+
+                    cancelBtn.onclick = cleanup;
+                    modalEl.onclick = (e) => { if (e.target === modalEl) cleanup(); };
+
                 } else if (action === 'fullscreen') {
-                    // Theater Mode Toggle (Viewport Fullscreen)
-                    container.classList.toggle('is-viewport-fullscreen');
+                    // Theater Mode (In-Window Fullscreen via Reparenting)
+                    const isFullscreen = container.classList.contains('is-viewport-fullscreen');
                     const icon = btn.querySelector('i');
-                    if (container.classList.contains('is-viewport-fullscreen')) {
-                        icon.classList.replace('fa-expand', 'fa-compress');
-                        btn.title = "Exit Fullscreen";
-                        // Ensure it's on top of everything
-                        container.style.zIndex = '100000';
-                    } else {
+
+                    if (isFullscreen) {
+                        const placeholderId = container.dataset.placeholderId;
+                        const placeholder = document.getElementById(placeholderId);
+
+                        if (placeholder) {
+                            placeholder.replaceWith(container);
+                        } else {
+                            console.warn("Map placeholder missing, leaving map at body root.");
+                        }
+
+                        container.classList.remove('is-viewport-fullscreen');
+                        delete container.dataset.placeholderId;
+
+                        // Update Icon
                         icon.classList.replace('fa-compress', 'fa-expand');
                         btn.title = "Toggle Fullscreen";
                         container.style.zIndex = '';
+
+                    } else {
+                        // ENTER Fullscreen
+                        // 1. Create placeholder
+                        const placeholder = document.createElement('div');
+                        placeholder.id = `map-placeholder-${Date.now()}`;
+                        placeholder.className = 'nk-map-placeholder';
+                        const rect = container.getBoundingClientRect();
+                        placeholder.style.width = container.style.width || '100%';
+                        placeholder.style.height = container.style.height || rect.height + 'px';
+                        placeholder.style.margin = container.style.margin;
+
+                        // 2. Mark container
+                        container.dataset.placeholderId = placeholder.id;
+
+                        // 3. Swap
+                        container.replaceWith(placeholder);
+                        document.body.appendChild(container);
+
+                        // 4. Apply Fixed Styles
+                        container.classList.add('is-viewport-fullscreen');
+
+                        icon.classList.replace('fa-expand', 'fa-compress');
+                        btn.title = "Exit Fullscreen";
+                        container.style.zIndex = '1000000';
                     }
+
                 } else if (action === 'edit') {
                     const currentSrc = iframe.src;
                     const urlMatch = currentSrc.match(/q=([^&]+)/);
                     const currentQuery = urlMatch ? decodeURIComponent(urlMatch[1]) : '';
 
-                    // Use new Native-like Modal
                     App.ui.showInputModal(
                         "Update Map Location",
                         "Enter city, country, or landmark...",
