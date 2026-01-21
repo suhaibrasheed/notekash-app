@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 
-    <title>NoteKash | The Ultimate Flashcard Note-Taking App & AI Second Brain</title>
+    <title>Smart AI Notes & Flashcards</title>
     <meta name="description"
         content="Master any subject with NoteKash. The best free offline note-taking app with built-in spaced repetition flashcards, AI co-pilot, visual mind maps, and active recall tools. Build your second brain today especially for UPSC exams.">
     <meta name="keywords"
@@ -33249,11 +33249,61 @@
                                     'text-pink': '#DB2777'
                                 };
 
+                                // 🎨 EMOJI RENDERING HELPER
+                                // Draws emoji to a canvas and returns base64 image to prevent "blank boxes" in PDF
+                                const emojiCanvas = document.createElement('canvas');
+                                const ctx = emojiCanvas.getContext('2d');
+                                const getEmojiDataUrl = (emoji) => {
+                                    // High res for crisp PDF
+                                    emojiCanvas.width = 64;
+                                    emojiCanvas.height = 64;
+                                    ctx.clearRect(0, 0, 64, 64);
+                                    ctx.font = '54px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'middle';
+                                    ctx.fillText(emoji, 32, 36); // Slight offset for vertical centering
+                                    return emojiCanvas.toDataURL('image/png');
+                                };
+
+                                const emojiRegex = /([\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F1E6}-\u{1F1FF}]{2}|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA70}-\u{1FAFF}]|[\u{200D}])/gu;
+
+                                const processTextWithEmojis = (text, inheritedStyles) => {
+                                    if (!text) return null;
+
+                                    // If no emojis, return simple text object
+                                    if (!text.match(emojiRegex)) {
+                                        return { text: text, ...inheritedStyles };
+                                    }
+
+                                    // Split by emoji and map to objects
+                                    const parts = text.split(emojiRegex);
+                                    const resultArray = [];
+
+                                    parts.forEach(part => {
+                                        if (!part) return;
+                                        if (part.match(emojiRegex)) {
+                                            // It's an emoji - render as image
+                                            resultArray.push({
+                                                image: getEmojiDataUrl(part),
+                                                width: 13,  // Slightly larger than text size
+                                                height: 13,
+                                                margin: [0, 1, 0, -2] // Inline alignment adjustment
+                                            });
+                                        } else {
+                                            // Regular text
+                                            resultArray.push({ text: part, ...inheritedStyles });
+                                        }
+                                    });
+                                    return resultArray;
+                                };
+
                                 const processNode = (node, inheritedStyles = {}) => {
                                     if (node.nodeType === Node.TEXT_NODE) {
                                         const text = node.textContent;
-                                        if (text.trim()) {
-                                            return { text, ...inheritedStyles };
+                                        // Skip empty whitespace-only nodes unless they are significant (e.g. spaces between words)
+                                        // But here we usually just trim or check if it's meaningful
+                                        if (text.replace(/[\n\r]+/, '').length > 0) {
+                                            return processTextWithEmojis(text, inheritedStyles);
                                         }
                                         return null;
                                     }
@@ -33271,7 +33321,8 @@
                                             styles.decoration = 'underline';
                                             styles.decorationStyle = 'double'; // Thicker, "3D-like" premium effect
                                             styles.decorationColor = highlightUnderlineMap[cls];
-                                            // styles.bold = true; // REMOVED: Only bold if content is bold
+                                            // Fix for overlap: Increase line height slightly for highlighted text
+                                            styles.lineHeight = 1.6;
                                         }
                                         if (textColorMap[cls]) {
                                             styles.color = textColorMap[cls];
@@ -33391,16 +33442,23 @@
                                         const children = [];
                                         node.childNodes.forEach(child => {
                                             const processed = processNode(child, styles);
-                                            if (processed) children.push(processed);
+                                            if (processed) {
+                                                if (Array.isArray(processed)) children.push(...processed);
+                                                else children.push(processed);
+                                            }
                                         });
                                         if (children.length === 0) return { text: '\n', margin: [0, 4, 0, 4] };
 
                                         // Check if any child is an image (non-text content) - return as stack instead
-                                        const hasNonTextContent = children.some(c => c.image || c.stack || c.table);
+                                        const hasNonTextContent = children.some(c => c.image || c.stack || c.table || (c.text && Array.isArray(c.text)));
                                         if (hasNonTextContent) {
-                                            return { stack: children };
+                                            // If we have mixed content (text + emoji images), we need to be careful not to break paragraph flow
+                                            const hasBlockElements = children.some(c => c.stack || c.table || (c.image && c.width > 50));
+
+                                            if (hasBlockElements) return { stack: children, margin: [0, 0, 0, 8] };
+                                            return { text: children, margin: [0, 0, 0, 8], lineHeight: 1.6 }; // Increased line height
                                         }
-                                        return { text: children, margin: [0, 0, 0, 8], lineHeight: 1.5 };
+                                        return { text: children, margin: [0, 0, 0, 8], lineHeight: 1.6 };
                                     }
 
                                     if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)) {
@@ -33408,13 +33466,24 @@
                                         const sizes = { 1: 20, 2: 17, 3: 14, 4: 12, 5: 11, 6: 10 };
                                         const margins = { 1: [0, 18, 0, 8], 2: [0, 16, 0, 7], 3: [0, 14, 0, 6], 4: [0, 10, 0, 5], 5: [0, 8, 0, 4], 6: [0, 6, 0, 4] };
                                         const headingColors = { 1: '#111827', 2: '#1F2937', 3: '#374151', 4: '#4B5563', 5: '#6B7280', 6: '#6B7280' };
+
+                                        // Process children (headers might have emojis)
+                                        const children = [];
+                                        node.childNodes.forEach(child => {
+                                            const processed = processNode(child, styles);
+                                            if (processed) {
+                                                if (Array.isArray(processed)) children.push(...processed);
+                                                else children.push(processed);
+                                            }
+                                        });
+
                                         return {
-                                            text: node.textContent,
+                                            text: children.length ? children : node.textContent, // Fallback to content if simple
                                             fontSize: sizes[level],
                                             bold: true,
                                             color: headingColors[level],
                                             margin: margins[level],
-                                            lineHeight: 1.2
+                                            lineHeight: 1.3
                                         };
                                     }
 
@@ -33422,7 +33491,10 @@
                                         const children = [];
                                         node.childNodes.forEach(child => {
                                             const processed = processNode(child, { ...styles, italics: true, color: '#6B7280' });
-                                            if (processed) children.push(processed);
+                                            if (processed) {
+                                                if (Array.isArray(processed)) children.push(...processed);
+                                                else children.push(processed);
+                                            }
                                         });
                                         // Elegant left-bordered quote
                                         return {
@@ -33448,11 +33520,26 @@
                                     if (tag === 'ul' || tag === 'ol') {
                                         const items = [];
                                         node.querySelectorAll(':scope > li').forEach(li => {
-                                            items.push({ text: li.textContent, margin: [0, 3, 0, 3], color: '#374151' });
+                                            // Process LI children to support emojis/styles inside list items
+                                            const liChildren = [];
+                                            li.childNodes.forEach(child => {
+                                                const processed = processNode(child, styles);
+                                                if (processed) {
+                                                    if (Array.isArray(processed)) liChildren.push(...processed);
+                                                    else liChildren.push(processed);
+                                                }
+                                            });
+
+                                            items.push({
+                                                text: liChildren,
+                                                margin: [0, 3, 0, 3],
+                                                color: '#374151',
+                                                lineHeight: 1.5
+                                            });
                                         });
                                         return {
                                             [tag]: items,
-                                            margin: [0, 8, 0, 12],
+                                            margin: [8, 4, 0, 12], // Adjusted for better alignment
                                             color: '#6366F1'  // Bullet/number color
                                         };
                                     }
@@ -33535,18 +33622,28 @@
                                     const children = [];
                                     node.childNodes.forEach(child => {
                                         const processed = processNode(child, styles);
-                                        if (processed) children.push(processed);
+                                        if (processed) {
+                                            if (Array.isArray(processed)) children.push(...processed);
+                                            else children.push(processed);
+                                        }
                                     });
 
+                                    if (children.length === 0) return null;
                                     if (children.length === 1) return children[0];
-                                    if (children.length > 1) return { text: children };
-                                    return null;
+                                    return children; // Return array for pdfmake to handle as text mix
                                 };
 
                                 // Process all top-level nodes
                                 div.childNodes.forEach(node => {
                                     const processed = processNode(node);
-                                    if (processed) content.push(processed);
+                                    if (processed) {
+                                        if (Array.isArray(processed) && processed.some(p => p.stack || p.table)) {
+                                            // logic to keep blocks separated
+                                            content.push({ stack: processed });
+                                        } else {
+                                            content.push(processed);
+                                        }
+                                    }
                                 });
 
                                 return content;
