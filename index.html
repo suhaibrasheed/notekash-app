@@ -17062,12 +17062,22 @@
     <script id="transcription-worker-script" type="text/js-worker">
         // **THE FIX**: This now uses the modern ES module import.
         // This is compatible with how the worker is created in runTranscription.
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
-
+        // **OFFLINE FIX**
         let transcriber = null;
+        let pipeline = null;
 
         self.addEventListener('message', async (event) => {
             const { audioData, modelName, playerId } = event.data;
+
+            if (!pipeline) {
+                try {
+                    const module = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1');
+                    pipeline = module.pipeline;
+                } catch (e) {
+                     self.postMessage({ status: 'error', data: 'Offline: AI disabled.', playerId: playerId });
+                     return;
+                }
+            }
 
             if (!transcriber) {
                 try {
@@ -17928,7 +17938,153 @@
                 }
             },
 
+            // --- OFFLINE HANDLING MODULE ---
+            offline: {
+                isOffline: false,
+                init() {
+                    // 1. Inject CSS for the offline indicator (Minimal fix)
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        #offline-indicator {
+                            display: none; 
+                            color: var(--danger-color, #ff6b6b);
+                            margin-right: 4px; /* Adjust spacing to match other icons */
+                        }
+                        #offline-indicator.is-visible {
+                            display: flex; /* btn-icon uses flex */
+                            animation: none; /* No pulse */
+                        }
+                        #offline-indicator svg {
+                            width: 20px;
+                            height: 20px;
+                        }
+                    `;
+                    document.head.appendChild(style);
+
+                    // 2. Create the indicator element using standard button structure
+                    this.el = document.createElement('button');
+                    this.el.className = 'btn-icon';
+                    this.el.id = 'offline-indicator';
+                    this.el.setAttribute('aria-label', 'Offline Mode');
+                    this.el.title = "Offline Mode - Cloud features paused";
+
+                    // SVG Icon: Cloud Off (Feather Icons)
+                    this.el.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    `;
+
+                    // 3. Inject into Header (before Settings button)
+                    const tryInject = () => {
+                        const headerActions = document.querySelector('.header-fixed-actions');
+                        const settingsBtn = document.getElementById('settings-btn');
+                        if (headerActions && settingsBtn) {
+                            headerActions.insertBefore(this.el, settingsBtn);
+                        } else {
+                            if (document.readyState === 'loading') {
+                                document.addEventListener('DOMContentLoaded', tryInject);
+                            } else {
+                                // Fallback
+                                this.el.style.position = 'fixed';
+                                this.el.style.bottom = '20px';
+                                this.el.style.left = '20px';
+                                this.el.style.zIndex = '1000';
+                                document.body.appendChild(this.el);
+                            }
+                        }
+                    };
+                    tryInject();
+
+                    // 4. Add click handler
+                    this.el.addEventListener('click', () => {
+                        App.ui.showToast('You are Offline. Cloud features are paused.', { type: 'warning', duration: 3000 });
+                    });
+
+                    // 5. Status Check Logic
+                    const checkStatus = () => {
+                        this.isOffline = !navigator.onLine;
+                        document.body.classList.toggle('is-offline', this.isOffline);
+
+                        if (this.isOffline) {
+                            this.el.classList.add('is-visible');
+                            console.log("App is OFFLINE. Disabling external libraries.");
+                        } else {
+                            this.el.classList.remove('is-visible');
+                        }
+                    };
+
+                    window.addEventListener('online', () => {
+                        checkStatus();
+                        App.ui.showToast('You are back online!', { type: 'success' });
+                    });
+                    window.addEventListener('offline', () => {
+                        checkStatus();
+                        App.ui.showToast('You are offline. Cloud features disabled.', { type: 'warning' });
+                    });
+
+                    // Initial Check
+                    checkStatus();
+                },
+                check(featureName = 'This feature') {
+                    if (!navigator.onLine) {
+                        App.ui.showToast(`${featureName} requires internet.`, { type: 'warning' });
+                        return false;
+                    }
+                    return true;
+                },
+                safeChart(ctx, config) {
+                    if (typeof Chart !== 'undefined') {
+                        try {
+                            return new Chart(ctx, config);
+                        } catch (e) {
+                            console.error("Chart init error:", e);
+                            return null;
+                        }
+                    } else if (ctx) {
+                        const c = ctx;
+                        c.save();
+                        c.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-tertiary') || '#f0f0f0';
+                        c.fillRect(0, 0, c.canvas.width, c.canvas.height);
+                        c.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#666';
+                        c.font = '14px sans-serif';
+                        c.textAlign = 'center';
+                        c.textBaseline = 'middle';
+                        c.fillText('Chart offline', c.canvas.width / 2, c.canvas.height / 2);
+                        c.restore();
+                    }
+                    return null;
+                },
+                safeFuse(list, options) {
+                    if (typeof Fuse !== 'undefined') {
+                        return new window.Fuse(list, options);
+                    }
+                    return {
+                        search: (query) => {
+                            if (!query) return [];
+                            const lowerQ = String(query).toLowerCase();
+                            const keys = options.keys || [];
+                            return list.map((item, index) => {
+                                let match = false;
+                                if (keys.length > 0) {
+                                    match = keys.some(k => {
+                                        const val = item[k];
+                                        return val && String(val).toLowerCase().includes(lowerQ);
+                                    });
+                                } else {
+                                    match = String(item).toLowerCase().includes(lowerQ);
+                                }
+                                if (match) return { item: item, refIndex: index, score: 0.1 };
+                                return null;
+                            }).filter(i => i !== null);
+                        }
+                    };
+                }
+            },
+
             async init() {
+                this.offline.init();
 
                 if ('launchQueue' in window && 'files' in LaunchParams.prototype) {
                     window.launchQueue.setConsumer(async (launchParams) => {
@@ -18974,6 +19130,10 @@
 
                     const isMap = viewId === 'visual-map' || viewId === 'mindmap';
                     if (isMap) {
+                        if (typeof d3 === 'undefined') {
+                            App.ui.showToast('Visual Maps are not available offline.', { type: 'warning' });
+                            return;
+                        }
                         mainEl.style.height = '100vh';
                         mainEl.style.overflow = 'hidden';
                         root.style.overflow = 'hidden';
@@ -19357,7 +19517,7 @@
                     }
 
                     // Create simple Fuse.js instance for article search
-                    const fuse = new Fuse(articles, {
+                    const fuse = App.offline.safeFuse(articles, {
                         keys: ['title', 'plainText', 'content'],
                         threshold: 0.4,
                         includeScore: true
@@ -19725,7 +19885,7 @@
                             snippets: App.util.extractSnippets(article, 'highlight').map(s => s.text)
                         }));
 
-                        const fuse = new Fuse(searchableData, {
+                        const fuse = App.offline.safeFuse(searchableData, {
                             keys: [{ name: 'title', weight: 0.6 }, { name: 'tags', weight: 0.3 }, { name: 'snippets', weight: 0.1 }],
                             includeScore: true, threshold: 0.4
                         });
@@ -21062,7 +21222,7 @@
                     const readCtx = document.getElementById('readingActivityChart')?.getContext('2d');
                     if (readCtx) {
                         if (App.state.chartInstances.reading) App.state.chartInstances.reading.destroy();
-                        App.state.chartInstances.reading = new Chart(readCtx, {
+                        App.state.chartInstances.reading = App.offline.safeChart(readCtx, {
                             type: 'line', data: { labels: readingData.labels, datasets: [{ label: `Articles Completed`, data: readingData.data, borderColor: baseColor, borderWidth: 2, tension: 0.4, fill: true, backgroundColor: chartFillColor }] },
                             options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
                         });
@@ -21071,7 +21231,7 @@
                     const flashCtx = document.getElementById('flashcardActivityChart')?.getContext('2d');
                     if (flashCtx) {
                         if (App.state.chartInstances.flashcard) App.state.chartInstances.flashcard.destroy();
-                        App.state.chartInstances.flashcard = new Chart(flashCtx, {
+                        App.state.chartInstances.flashcard = App.offline.safeChart(flashCtx, {
                             type: 'bar', data: { labels: flashcardData.labels, datasets: [{ label: `Flashcards Reviewed`, data: flashcardData.data, backgroundColor: baseColor }] },
                             options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
                         });
@@ -21081,7 +21241,7 @@
                     if (forecastCtx) {
                         if (App.state.chartInstances.forecast) App.state.chartInstances.forecast.destroy();
                         const forecastData = App.util.getFlashcardForecastData();
-                        App.state.chartInstances.forecast = new Chart(forecastCtx, {
+                        App.state.chartInstances.forecast = App.offline.safeChart(forecastCtx, {
                             type: 'bar',
                             data: {
                                 labels: Array.from({ length: 30 }, (_, i) => `+${i}d`),
@@ -21105,7 +21265,7 @@
                     if (easeCtx) {
                         if (App.state.chartInstances.ease) App.state.chartInstances.ease.destroy();
                         const easeData = App.util.getCardEaseDistributionData();
-                        App.state.chartInstances.ease = new Chart(easeCtx, {
+                        App.state.chartInstances.ease = App.offline.safeChart(easeCtx, {
                             type: 'doughnut',
                             data: {
                                 labels: ['Leech', 'Hard', 'Normal', 'Easy', 'New'],
@@ -22620,7 +22780,7 @@
 
                         this.state.isOpen = true;
                         this.state.commands = this._getCommands();
-                        this.state.fuse = new Fuse(this.state.commands.filter(c => c.type !== 'separator'), { keys: ['title', 'desc', 'id'], threshold: 0.4 });
+                        this.state.fuse = App.offline.safeFuse(this.state.commands.filter(c => c.type !== 'separator'), { keys: ['title', 'desc', 'id'], threshold: 0.4 });
                         this.state.filteredCommands = this.state.commands;
                         this.state.selectedIndex = -1;
 
@@ -24788,12 +24948,12 @@
                         };
 
                         // 4. If a chart instance already exists on this canvas, destroy it first.
-                        if (Chart.getChart(canvas)) {
+                        if (typeof Chart !== 'undefined' && Chart.getChart(canvas)) {
                             Chart.getChart(canvas).destroy();
                         }
 
                         // 5. Create the new Chart.js instance with the freshly styled config.
-                        new Chart(canvas.getContext('2d'), config);
+                        App.offline.safeChart(canvas.getContext('2d'), config);
 
                     } catch (e) {
                         console.error("Failed to render chart from data attribute:", e);
@@ -32918,7 +33078,7 @@
 
                             // Generate and download
                             const filename = `${App.util.slugify(categoryName)}-highlights.pdf`;
-                            pdfMake.createPdf(docDefinition).download(filename);
+                            if (App.offline.check('PDF Export') && typeof pdfMake !== 'undefined') pdfMake.createPdf(docDefinition).download(filename);
 
                             App.ui.updateToast(toastId, `✅ PDF exported: ${filename}`, { type: 'success', duration: 3000 });
 
@@ -33880,7 +34040,7 @@
                             // Generate and download PDF
                             const filename = `${App.util.slugify(article.title)}.pdf`;
 
-                            pdfMake.createPdf(docDefinition).download(filename, () => {
+                            if (App.offline.check('PDF Export') && typeof pdfMake !== 'undefined') pdfMake.createPdf(docDefinition).download(filename, () => {
                                 App.ui.hideToast(toastId);
                                 App.ui.showToast(`✅ PDF exported: ${filename}`, { type: 'success' });
                             });
@@ -37605,13 +37765,13 @@
                     this.state.emojiData = this._generateEmojiData();
                     this.state.iconData = this._generateIconData();
 
-                    this.state.fuse.commands = new Fuse(this.state.commands, { keys: ['title', 'desc', 'id'], threshold: 0.3 });
+                    this.state.fuse.commands = App.offline.safeFuse(this.state.commands, { keys: ['title', 'desc', 'id'], threshold: 0.3 });
                     this.state.fuse.categories = null;
-                    this.state.fuse.emojis = new Fuse(this.state.emojiData, { keys: ['k'], threshold: 0.4 });
-                    this.state.fuse.icons = new Fuse(this.state.iconData, { keys: ['k', 'icon'], threshold: 0.4 });
+                    this.state.fuse.emojis = App.offline.safeFuse(this.state.emojiData, { keys: ['k'], threshold: 0.4 });
+                    this.state.fuse.icons = App.offline.safeFuse(this.state.iconData, { keys: ['k', 'icon'], threshold: 0.4 });
 
-                    this.state.fuse.fontFamilies = new Fuse(this.state.fontFamilyOptions, { keys: ['name'], threshold: 0.3 });
-                    this.state.fuse.fontSizes = new Fuse(this.state.fontSizeOptions, { threshold: 0.3 });
+                    this.state.fuse.fontFamilies = App.offline.safeFuse(this.state.fontFamilyOptions, { keys: ['name'], threshold: 0.3 });
+                    this.state.fuse.fontSizes = App.offline.safeFuse(this.state.fontSizeOptions, { threshold: 0.3 });
 
                     this.els.input.addEventListener('input', () => this.filter());
                     this.els.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
@@ -38822,12 +38982,12 @@
                                 });
                             });
 
-                            this.state.fuse.links = new Fuse(linkableData, { keys: ['title', 'desc'], threshold: 0.3 });
+                            this.state.fuse.links = App.offline.safeFuse(linkableData, { keys: ['title', 'desc'], threshold: 0.3 });
                         }
                         this.state.mode = 'links'; const searchTerm = query.substring(5).trim();
                         if (!searchTerm) { this.state.filteredResults = App.state.articles.slice(0, 500).map(a => ({ type: 'article', id: a.id, title: a.title, desc: `Article: ${a.title}` })); } else { this.state.filteredResults = this.state.fuse.links.search(searchTerm).map(r => r.item); }
                     } else if (query.toLowerCase().startsWith('tag ')) {
-                        if (!this.state.fuse.tags) { const tagData = Object.values(App.state.tags).map(tag => ({ ...tag, articleId: tag.articles ? tag.articles[0] : null })); this.state.fuse.tags = new Fuse(tagData, { keys: ['displayName'], threshold: 0.3 }); }
+                        if (!this.state.fuse.tags) { const tagData = Object.values(App.state.tags).map(tag => ({ ...tag, articleId: tag.articles ? tag.articles[0] : null })); this.state.fuse.tags = App.offline.safeFuse(tagData, { keys: ['displayName'], threshold: 0.3 }); }
                         this.state.mode = 'tags'; const searchTerm = query.substring(4).trim();
                         if (!searchTerm) { this.state.filteredResults = Object.values(App.state.tags).sort((a, b) => a.displayName.localeCompare(b.displayName)); } else { this.state.filteredResults = this.state.fuse.tags.search(searchTerm).map(r => r.item); }
                     } else if (categoryMatch) {
@@ -38839,7 +38999,7 @@
                             name: App.util.getCategoryDisplayName(c.name) // The display name for UI
                         }));
                         if (!this.state.fuse.categories) {
-                            this.state.fuse.categories = new Fuse(categoryData, { keys: ['name'], threshold: 0.3 });
+                            this.state.fuse.categories = App.offline.safeFuse(categoryData, { keys: ['name'], threshold: 0.3 });
                         }
 
                         if (!searchTerm) {
@@ -38922,7 +39082,7 @@
 
                             // Also do fuzzy search to show related options
                             if (!this.state.fuse.fontSizes) {
-                                this.state.fuse.fontSizes = new Fuse(this.state.fontSizeOptions);
+                                this.state.fuse.fontSizes = App.offline.safeFuse(this.state.fontSizeOptions);
                             }
                             results = results.concat(this.state.fuse.fontSizes.search(arg).map(r => r.item));
                         } else {
@@ -42208,6 +42368,7 @@
                         btn.textContent = 'Preparing...';
                         btn.disabled = true;
                     }
+                    if (!App.offline.check('Voice Typing')) return;
                     try {
                         const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1');
                         await pipeline('automatic-speech-recognition', modelId, {
@@ -47706,7 +47867,7 @@
                         let itemsToSearch = this.searchableData.filter(item => item.type === 'image');
 
                         if (searchTerm.trim()) {
-                            const fuse = new Fuse(itemsToSearch, { keys: ['title'], threshold: 0.4, includeScore: true });
+                            const fuse = App.offline.safeFuse(itemsToSearch, { keys: ['title'], threshold: 0.4, includeScore: true });
                             this.results = fuse.search(searchTerm).map(r => r.item);
                         } else {
                             this.results = itemsToSearch;
@@ -47719,7 +47880,7 @@
                         const searchTerm = lowerQuery.replace(/^pdf:?\s*/, '');
                         let itemsToSearch = this.searchableData.filter(item => item.type === 'pdf');
                         if (searchTerm.trim()) {
-                            const fuse = new Fuse(itemsToSearch, { keys: ['title', 'content'], threshold: 0.4, includeScore: true });
+                            const fuse = App.offline.safeFuse(itemsToSearch, { keys: ['title', 'content'], threshold: 0.4, includeScore: true });
                             this.results = fuse.search(searchTerm).map(r => r.item);
                         } else {
                             this.results = itemsToSearch;
@@ -47738,7 +47899,7 @@
 
                         if (searchTerm.trim()) {
                             const keys = searchType === 'note' ? ['title'] : ['title', 'content'];
-                            const fuse = new Fuse(itemsToSearch, { keys: keys, threshold: 0.4, includeScore: true });
+                            const fuse = App.offline.safeFuse(itemsToSearch, { keys: keys, threshold: 0.4, includeScore: true });
                             this.results = fuse.search(searchTerm).map(r => r.item);
                         } else {
                             this.results = itemsToSearch;
@@ -47930,7 +48091,7 @@
                     });
 
                     const options = { includeScore: true, keys: ['title', 'content'], threshold: 0.4 };
-                    this.fuse = new Fuse(this.searchableData, options);
+                    this.fuse = App.offline.safeFuse(this.searchableData, options);
                     this.isInitialized = true;
                 },
 
