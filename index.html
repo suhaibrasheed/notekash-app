@@ -115,6 +115,7 @@
             border: 0;
         }
 
+
         /* --- Selection Highlight --- */
         ::selection {
             background-color: #ff0055;
@@ -132,9 +133,59 @@
                 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
-        /* ==========================================================================
-         1. STYLES & THEMING (v2 SUPERTAGS UPDATE)
-         ========================================================================== */
+        /* --- Custom Searching Toast --- */
+        .toast.searching-process {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+            color: white !important;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* --- AI Magic Format Chips --- */
+        .ai-format-chips-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            scrollbar-width: none;
+            /* Hide scrollbar Firefox */
+            -ms-overflow-style: none;
+            /* Hide scrollbar IE/Edge */
+        }
+
+        .ai-format-chips-container::-webkit-scrollbar {
+            display: none;
+            /* Hide scrollbar Chrome/Safari */
+        }
+
+        .ai-format-chip {
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background-color: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .ai-format-chip:hover {
+            background-color: var(--bg-secondary);
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+        }
+
+        .ai-format-chip.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* 1. STYLES & THEMING (v2 SUPERTAGS UPDATE) */
         :root {
             /* --- Base & Layout --- */
             --bg-primary: #f8f9fa;
@@ -6233,12 +6284,13 @@
         /* Stage Presentation Mode - Reset ratio-based image container for proper display */
         .focus-mode-overlay.stage-mode-active .snippet .image-container {
             padding-top: 0 !important;
-            height: auto;
+            height: auto !important;
             max-height: 65vh;
             display: block;
             overflow: visible;
             max-width: 85vw;
             margin: 1rem auto;
+            position: relative !important;
         }
 
         .focus-mode-overlay.stage-mode-active .snippet .image-container img {
@@ -6255,24 +6307,24 @@
             margin: 0 auto;
         }
 
-        /* ==========================================================================
-           SIGMA ARTICLE MODE - Mimic Read Mode Layout Exactly
-           The key difference: preserve natural content flow (tables, inline elements, etc.)
-           ========================================================================== */
+        /* SIGMA ARTICLE MODE - Mimic Read Mode Layout Exactly */
 
         /* Sigma Article Mode - Standalone images (NOT inside tables) get article styling */
-        .focus-mode-overlay.sigma-mode-article .snippet>.image-container,
-        .focus-mode-overlay.sigma-mode-article .snippet>p>.image-container {
+        .focus-mode-overlay.sigma-mode-article .snippet .image-container,
+        .focus-mode-overlay.sigma-mode-article .snippet p .image-container,
+        .focus-mode-overlay.sigma-mode-article .snippet>.image-container {
             padding-top: 0 !important;
-            height: auto;
+            height: auto !important;
             max-height: none;
             display: block;
             margin: 1.5rem auto;
             max-width: 85vw;
+            position: relative !important;
         }
 
-        .focus-mode-overlay.sigma-mode-article .snippet>.image-container img,
-        .focus-mode-overlay.sigma-mode-article .snippet>p>.image-container img {
+        .focus-mode-overlay.sigma-mode-article .snippet .image-container img,
+        .focus-mode-overlay.sigma-mode-article .snippet p .image-container img,
+        .focus-mode-overlay.sigma-mode-article .snippet>.image-container img {
             position: relative !important;
             width: auto !important;
             height: auto !important;
@@ -6299,6 +6351,7 @@
             margin: 0.5rem auto !important;
             float: none !important;
             clear: none !important;
+            position: relative !important;
         }
 
         .focus-mode-overlay.sigma-mode-article .snippet table .image-container img,
@@ -6330,23 +6383,29 @@
         }
 
         /* Ensure standalone images (not in snippets) also display correctly */
-        .focus-mode-overlay.stage-mode-active .focus-mode-body>.image-container,
-        .focus-mode-overlay.sigma-mode-article .focus-mode-body>.image-container {
+        .focus-mode-overlay.stage-mode-active .focus-mode-body .image-container,
+        .focus-mode-overlay.sigma-mode-article .focus-mode-body .image-container {
             display: block;
             padding: 1rem;
             max-height: 70vh;
             max-width: 85vw;
             margin: 1rem auto;
+            position: relative !important;
+            padding-top: 0 !important;
+            height: auto !important;
         }
 
-        .focus-mode-overlay.stage-mode-active .focus-mode-body>.image-container img,
-        .focus-mode-overlay.sigma-mode-article .focus-mode-body>.image-container img {
+        .focus-mode-overlay.stage-mode-active .focus-mode-body .image-container img,
+        .focus-mode-overlay.sigma-mode-article .focus-mode-body .image-container img {
             max-width: 85vw;
             max-height: 65vh;
-            object-fit: contain;
+            object-fit: contain !important;
             border-radius: var(--border-radius-lg);
             display: block;
             margin: 0 auto;
+            position: relative !important;
+            width: auto !important;
+            height: auto !important;
         }
 
         /* --- TABLES: Exact Replica of Read Mode for Sigma Article Mode --- */
@@ -10879,6 +10938,42 @@
             border: 1px solid var(--border-color);
             position: relative;
         }
+
+        /* --- RESPONSE MODE STYLES --- */
+        #ai-magic-command-list.response-mode {
+            display: block !important;
+            font-family: var(--font-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem;
+            animation: fadeIn 0.4s ease-out;
+            user-select: text;
+            /* Allow selecting text in response */
+            cursor: text;
+        }
+
+        .ai-magic-response-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+            justify-content: flex-end;
+        }
+
+        .ai-magic-response-content b {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .ai-magic-response-content h1,
+        .ai-magic-response-content h2,
+        .ai-magic-response-content h3 {
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            font-family: var(--font-display);
+        }
+
 
         .ai-magic-command-item:hover {
             transform: translateY(-4px) scale(1.02);
@@ -18607,6 +18702,7 @@
                             } else { throw new Error('Invalid NoteKash article structure'); }
                         } catch (err) { console.error(`Skipping invalid or corrupt file ${entry.name}:`, err.message); App.ui.showToast(`Skipped corrupt file: ${entry.name}`, { type: 'warning' }); failedCount++; }
                         count++; App.ui.updateToast(toastId, `Loading ${count} / ${total} articles...`);
+                        if (count % 10 === 0) await new Promise(r => setTimeout(r, 0)); // Yield to thread
                     }
                     App.ui.hideToast(toastId); return { articles, failedCount, total };
                 },
@@ -19763,7 +19859,7 @@
                         <div class="search-and-filter-bar">
                             <div class="search-bar-container">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
-                                <input type="text" id="search-input" placeholder="Search by titles, snippets, '*category', read count e.g *law, 0 (unread)" aria-label="Search articles">
+                                <input type="text" id="search-input" placeholder="Search by titles, snippets, '*category', read count e.g *law, 0 (unread)" aria-label="Search articles" autocomplete="off">
                             </div>
                             <select id="sort-filter" class="btn btn-secondary" aria-label="Sort articles by">
                                 <option value="updatedAt">Sort by Newest</option>
@@ -19878,21 +19974,35 @@
                     }
 
                     if (currentSearchTerm) {
-                        const searchableData = articlesToDisplay.map(article => ({
-                            id: article.id,
-                            title: article.title,
-                            tags: (article.tags || []).join(' '),
-                            snippets: App.util.extractSnippets(article, 'highlight').map(s => s.text)
-                        }));
+                        // --- OPTIMIZATION: Global Fuse Caching + Intersection ---
+                        let keywordFilteredIds = null;
+                        const totalArticles = App.state.articles.length;
 
-                        const fuse = App.offline.safeFuse(searchableData, {
-                            keys: [{ name: 'title', weight: 0.6 }, { name: 'tags', weight: 0.3 }, { name: 'snippets', weight: 0.1 }],
-                            includeScore: true, threshold: 0.4
-                        });
-                        const results = fuse.search(currentSearchTerm);
+                        // Rebuild Index if missing, dirty, or size changed (add/delete)
+                        if (!App.state.globalSearchIndex || App.state.searchIndexDirty || App.state.globalSearchIndex.size !== totalArticles) {
+                            const searchableData = App.state.articles.map(article => ({
+                                id: article.id,
+                                title: article.title,
+                                tags: (article.tags || []).join(' '),
+                                snippets: App.util.extractSnippets(article, 'highlight').map(s => s.text)
+                            }));
+
+                            App.state.globalSearchIndex = App.offline.safeFuse(searchableData, {
+                                keys: [{ name: 'title', weight: 0.6 }, { name: 'tags', weight: 0.3 }, { name: 'snippets', weight: 0.1 }],
+                                includeScore: true, threshold: 0.4
+                            });
+                            App.state.globalSearchIndex.size = totalArticles;
+                            App.state.searchIndexDirty = false;
+                        }
+
+                        const results = App.state.globalSearchIndex.search(currentSearchTerm);
                         const filteredIds = new Set(results.map(r => r.item.id));
                         articlesToDisplay = articlesToDisplay.filter(a => filteredIds.has(a.id));
                     }
+
+                    // Hide the "Searching..." toast if it exists
+                    const searchingToast = document.getElementById('search-feedback-toast');
+                    if (searchingToast) App.ui.hideToast(searchingToast);
 
                     let finalHTML = '';
 
@@ -22764,6 +22874,7 @@
                         filteredCommands: [],
                         selectedIndex: 0,
                         fuse: null,
+                        selectedFormat: 'auto'
                     },
 
                     init() {
@@ -22771,6 +22882,7 @@
                     },
 
                     open() {
+                        this.state.selectedFormat = 'auto'; // Reset format on open
                         if (this.state.isOpen) return;
 
                         const selection = window.getSelection();
@@ -22796,6 +22908,9 @@
                                             <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
                                         </svg>
                                     </button>
+                                </div>
+                                <div class="ai-format-chips-container" id="ai-format-chips">
+                                    <!-- Chips injected by JS -->
                                 </div>
                             </div>
                             <div id="ai-magic-command-list"></div>
@@ -22931,23 +23046,94 @@
 
                         backdrop.addEventListener('click', (e) => { if (e.target === backdrop) this.close(); });
 
+                        const renderChips = () => {
+                            const chipsContainer = document.getElementById('ai-format-chips');
+                            if (!chipsContainer) return;
+                            const formats = [
+                                { id: 'auto', label: 'Auto ✨' },
+                                { id: 'mcq', label: 'MCQ 📝' },
+                                { id: 'cloze', label: 'Cloze 🧩' },
+                                { id: 'accordion', label: 'Accordion 🔽' },
+                                { id: 'table', label: 'Table 📊' },
+                                { id: 'timeline', label: 'Timeline ⏳' },
+                                { id: 'decktile', label: 'Decktile 🗂️' },
+                            ];
+                            chipsContainer.innerHTML = formats.map(f =>
+                                `<div class="ai-format-chip ${this.state.selectedFormat === f.id ? 'active' : ''}" data-format="${f.id}">${f.label}</div>`
+                            ).join('');
+                        };
+
+                        // Initial render of chips
+                        renderChips();
+
+                        // Listener for chips
+                        const chipsContainer = document.getElementById('ai-format-chips');
+                        if (chipsContainer) {
+                            chipsContainer.addEventListener('click', (e) => {
+                                const chip = e.target.closest('.ai-format-chip');
+                                if (chip) {
+                                    const format = chip.dataset.format;
+                                    // Toggle logic: if clicking active non-auto, revert to auto. If clicking different, set it.
+                                    if (this.state.selectedFormat === format && format !== 'auto') {
+                                        this.state.selectedFormat = 'auto';
+                                    } else {
+                                        this.state.selectedFormat = format;
+                                    }
+                                    renderChips();
+                                    document.getElementById('ai-magic-prompt-input').focus();
+                                }
+                            });
+                        }
+
                         const handlePrompt = async () => {
                             if (!App.license.isPremium()) {
                                 this._showUpsellCard();
                                 return;
                             }
-                            const query = searchInput.value.trim();
+                            let query = searchInput.value.trim();
                             if (query) {
-                                // --- SURGICAL FIX #2 STARTS HERE ---
+
                                 const commandListEl = document.getElementById('ai-magic-command-list');
                                 if (commandListEl) {
+                                    commandListEl.classList.remove('compact-grid'); // Reset grid
                                     commandListEl.innerHTML = `
                             <div class="copilot-empty-state" style="justify-content: center; text-align: center; padding: 2rem;">
                                 <div class="spin" style="font-size: 2.5rem; color: var(--primary-color);">${App.util.icons.cycle}</div>
                                 <h4 class="witty-gradient-text" style="margin-top: 1rem;">Your Second Brain is thinking...</h4>
                             </div>`;
                                 }
-                                // --- SURGICAL FIX #2 ENDS HERE ---
+
+
+                                // --- SHORTCUT PARSING LOGIC ---
+                                // Check for *mcq, *table, etc.
+                                let explicitFormat = this.state.selectedFormat;
+
+                                const shortcuts = {
+                                    '*mcq': 'mcq',
+                                    '*cloze': 'cloze',
+                                    '*accordion': 'accordion',
+                                    '*acc': 'accordion',
+                                    '*table': 'table',
+                                    '*timeline': 'timeline',
+                                    '*decktile': 'decktile',
+                                    '*deck': 'decktile',
+                                    '*cards': 'decktile'
+                                };
+
+                                const lowerQuery = query.toLowerCase();
+                                // Sort by length descending to match longest shortcuts first (*accordion before *acc)
+                                const sortedKeys = Object.keys(shortcuts).sort((a, b) => b.length - a.length);
+
+                                for (const key of sortedKeys) {
+                                    if (lowerQuery.includes(key)) {
+                                        explicitFormat = shortcuts[key];
+                                        this.state.selectedFormat = explicitFormat;
+                                        renderChips();
+
+                                        query = query.replace(new RegExp(App.util.escapeRegex(key), 'ig'), '').trim();
+                                        break;
+                                    }
+                                }
 
                                 if (this.state.savedRange) {
                                     const selection = window.getSelection();
@@ -22958,8 +23144,7 @@
                                 const context = (selection && !selection.isCollapsed) ? selection.toString() : document.getElementById('article-content').innerText;
                                 const fullPrompt = `Based on the following context:\n\n---\n${context}\n---\n\nAnswer this question: ${query}`;
 
-                                await App.events.ai.executeKashAsk(fullPrompt);
-                                this.close();
+                                await App.events.ai.executeKashAskOnModal(fullPrompt, explicitFormat);
                             }
                         };
 
@@ -23054,6 +23239,104 @@
                                 item.scrollIntoView({ block: 'nearest' });
                             }
                         });
+                    },
+
+                    renderResponse(htmlContent) {
+                        const listEl = document.getElementById('ai-magic-command-list');
+                        if (!listEl) return;
+
+                        listEl.classList.add('response-mode');
+                        listEl.innerHTML = `
+                            <div class="ai-magic-response-content">${htmlContent}</div>
+                            <div class="ai-magic-response-actions">
+                                <button class="btn btn-sm btn-ghost" onclick="App.ui.aiMagicModal._copyResponseToClipboard(this)">
+                                    ${App.util.icons.copy} Copy
+                                </button>
+                                <button class="btn btn-sm btn-secondary" onclick="App.ui.aiMagicModal._insertResponseToNote('replace')">
+                                    Replace
+                                </button>
+                                <button class="btn btn-sm btn-primary" onclick="App.ui.aiMagicModal._insertResponseToNote('insert')">
+                                    Insert
+                                </button>
+                            </div>
+                        `;
+
+                        // Store response for insertion
+                        this.state.lastResponse = htmlContent;
+                    },
+
+                    _copyResponseToClipboard(btn) {
+                        const content = this.state.lastResponse;
+                        if (!content) return;
+
+                        const temp = document.createElement('div');
+                        temp.innerHTML = content;
+                        const textContent = temp.innerText;
+
+                        try {
+                            const blobHtml = new Blob([content], { type: 'text/html' });
+                            const blobText = new Blob([textContent], { type: 'text/plain' });
+                            const data = [new ClipboardItem({
+                                'text/html': blobHtml,
+                                'text/plain': blobText
+                            })];
+                            navigator.clipboard.write(data).then(() => {
+                                const originalText = btn.innerHTML;
+                                btn.innerHTML = `${App.util.icons.check} Copied`;
+                                setTimeout(() => btn.innerHTML = originalText, 2000);
+                            });
+                        } catch (e) {
+                            navigator.clipboard.writeText(textContent).then(() => {
+                                const originalText = btn.innerHTML;
+                                btn.innerHTML = `${App.util.icons.check} Copied`;
+                                setTimeout(() => btn.innerHTML = originalText, 2000);
+                            });
+                        }
+                    },
+
+                    _insertResponseToNote(mode = 'insert') {
+                        const content = this.state.lastResponse;
+                        if (!content) return;
+
+                        if (this.state.savedRange) {
+                            const selection = window.getSelection();
+                            selection.removeAllRanges();
+                            selection.addRange(this.state.savedRange);
+
+                            if (mode === 'replace') {
+                                document.execCommand('insertHTML', false, content);
+                            } else {
+                                // Intelligent Insert AFTER logic
+                                const range = selection.getRangeAt(0);
+                                let node = range.commonAncestorContainer;
+                                if (node.nodeType === 3) node = node.parentNode; // Get element if text node
+
+                                const trapSelector = 'table, ul, ol, blockquote, .nk-mcq-container, pre, .card';
+                                const trapElement = node.closest(trapSelector);
+
+                                if (trapElement) {
+                                    const newRange = document.createRange();
+                                    newRange.setStartAfter(trapElement);
+                                    newRange.collapse(true);
+
+                                    selection.removeAllRanges();
+                                    selection.addRange(newRange);
+
+                                    // Insert with some spacing
+                                    document.execCommand('insertHTML', false, '<p><br></p>' + content);
+                                } else {
+                                    // Standard text paragraph - just append
+                                    selection.collapseToEnd();
+                                    document.execCommand('insertHTML', false, content);
+                                }
+                            }
+                        } else {
+                            // No selection logic: just append or insert at cursor
+                            document.execCommand('insertHTML', false, content);
+                        }
+
+                        this.close();
+                        App.state.isArticleDirty = true;
                     },
 
                     _executeSelected() {
@@ -23206,12 +23489,12 @@
 
                 showToast(message, options = {}) {
                     if (typeof options === 'string') { options = { type: options }; }
-                    const { type = 'info', duration = 4000, action = null } = options;
+                    const { type = 'info', duration = 4000, action = null, id = null } = options;
 
                     const container = document.getElementById('toast-container');
                     const toast = document.createElement('div');
                     toast.className = `toast ${type}`;
-                    toast.id = `toast-${crypto.randomUUID()}`; // Assign a unique ID for updating
+                    toast.id = id || `toast-${crypto.randomUUID()}`; // Assign a unique ID for updating
 
                     // Intelligently handle HTML content vs. plain text.
                     if (/<[a-z][\s\S]*>/i.test(message)) {
@@ -25340,9 +25623,18 @@
                             // Use the new generic debounce, ensuring 'this' context if needed (though App.ui methods are bound usually)
                             const debouncedHandler = App.util.debounce(() => {
                                 filterFunction.call(App.ui);
+                                const toast = document.getElementById('search-feedback-toast');
+                                if (toast) App.ui.hideToast(toast);
                             }, 300);
 
-                            input.addEventListener('input', debouncedHandler);
+                            input.addEventListener('input', (e) => {
+                                // --- VISUAL FEEDBACK: Show Indexing Toast ---
+                                const existingToast = document.getElementById('search-feedback-toast');
+                                if (!existingToast) {
+                                    App.ui.showToast('Searching...', { type: 'searching-process', duration: 0, id: 'search-feedback-toast' });
+                                }
+                                debouncedHandler(e);
+                            });
                         }
                     };
 
@@ -25447,20 +25739,29 @@
 
                                 // NEW: Debounced Autosave (Replaces Interval)
                                 const debouncedAutosave = App.util.debounce(() => {
-                                    if (App.state.isArticleDirty) {
-                                        App.events.saveArticle({ isAutosave: true });
+                                    const performSave = () => {
+                                        if (App.state.isArticleDirty) {
+                                            App.events.saveArticle({ isAutosave: true });
+                                        }
+                                    };
+
+                                    if (window.requestIdleCallback) {
+                                        window.requestIdleCallback(performSave, { timeout: 2000 });
+                                    } else {
+                                        setTimeout(performSave, 10);
                                     }
-                                }, 1000);
+                                }, 11000);
 
                                 contentDiv.addEventListener('input', () => {
                                     setDirty();
                                     contentDiv.classList.remove('is-empty');
+                                    debouncedAutosave();
                                     clearTimeout(audioInitTimeout);
                                     audioInitTimeout = setTimeout(() => {
                                         App.audio.initializePlayersIn(contentDiv);
                                     }, 500); // 500ms delay after last input
                                 });
-                                App.state.autosaveInterval = setInterval(() => { if (App.state.isArticleDirty) App.events.saveArticle({ isAutosave: true }); }, 11000);
+                                // Interval autosave removed in favor of debounced autosave
                                 const guardianCallback = () => { if (contentDiv.childElementCount === 0 || (contentDiv.childElementCount === 1 && contentDiv.firstElementChild.tagName === 'BR')) { contentDiv.innerHTML = '<p><br></p>'; } };
                                 App.state.guardianObserver = new MutationObserver(guardianCallback);
                                 App.state.guardianObserver.observe(contentDiv, { childList: true });
@@ -27054,6 +27355,7 @@
                     const handleSaveSuccess = async (savedArticle) => {
                         App.state.isArticleDirty = false;
                         App.state.lastSavedHash = currentHash; // UPDATE HASH
+                        App.state.searchIndexDirty = true; // Invalidate Search Cache
 
                         await App.contentTools.updateTagsIndex();
                         App.contentTools.buildDataCache();
@@ -28434,6 +28736,176 @@
                             App.ui.showToast("The AI did not provide an answer. Please try again.", "warning");
                         }
                     },
+
+                    async executeKashAskOnModal(prompt, format = 'auto') {
+                        if (!prompt) {
+                            App.ui.showToast("Please provide a question for the AI.", "warning");
+                            return;
+                        }
+
+                        // --- MODULAR PROMPT SYSTEM ---
+
+                        const PROMPT_IDENTITY = `You are 'Kash, the Content Architect,' an expert AI integrated into the NoteKash app. Your mission is to analyze the user's context (the article and any selected text) and their prompt, adopt the persona of a subject matter expert, to write most reliable and meaningful response to Query. Then Act as content architect to generate a beautiful, structured, and aesthetic response using the best components from your HTML Toolkit.`;
+
+                        const PROMPT_CORE_LOGIC = `
+                        **MANDATORY Core Logic Flow (Synthesis Model):**
+                        1.  **Analyze the User's Goal:** Understand the core question. What is the user's primary intent?
+                        2.  **Analyze Provided Context:** Review the provided [Article Content]. Does it contain information directly relevant to the user's question?
+                        3.  **Synthesize and Respond (CRITICAL):**
+                            * IMPORTANT: You MUST ALWAYS Act as Subject Matter Expert (SME). Develop the most relevant and Best Persona according to what is being Asked.
+                            * Answer in precise, authoritative, logical, purposeful and contextually appropriate manner, reflecting the depth of your knowledge.
+                            * If context is provided and relevant, combine it with your knowledge. If not, use your own vast knowledge base.
+                        `;
+
+                        const PROMPT_BEAUTY = `
+                        **Core Principle: Aesthetic Coloring (MANDATORY)**
+                        You have access to **7 Text Colors** to make the notes look beautiful, vibrant, and alive. You also can use native formatting tools of Bold/Italics with or apart from them to give you Plenty options to present output well.
+                        1.  **The 7 Colors:**
+                            *   \`class="text-red"\` (MANDATORY for **Headlines** and **Questions**)
+                            *   \`class="text-green"\`
+                            *   \`class="text-blue"\`
+                            *   \`class="text-magenta"\`
+                            *   \`class="text-orange"\`
+                            *   \`class="text-teal"\`
+                            *   \`class="text-slate"\`
+                        2.  **Usage Strategy:**
+                            *   **Headlines & Questions (CRITICAL):** You MUST use \`text-red\` for all subtitles, questions, or section headers to create a clear visual hierarchy.
+                            *   **Variety is Beauty:** Use the other 6 colors freely for important keywords, dates, quotes, statistics, or emphasis. Mix them up to create a "premium" feel.
+                            *   **Beautify, Don't Clutter:** Do NOT color every single word. That looks ugly. Only color the *most* important parts (approx. 10-20% of text).
+                            *   **Constraint:** Apply colors on top of \`<b>\` tags for maximum pop (e.g., \`<b class="text-blue">Key Concept</b>\`).
+                        `;
+
+                        // --- TOOLKITS ---
+                        const TOOLKIT = {
+                            mcq: `
+                            **Your Primary Component: Native MCQ Block (CRITICAL):**
+                            *   **Instruction:** You MUST output the answer as a series of Native MCQ Blocks.
+                            *   **HTML Structure for EACH Question:**
+                                \`\`\`html
+                                <div class="nk-mcq-block" contenteditable="false">
+                                    <div class="nk-mcq-toolbar">
+                                        <button class="nk-mcq-copy-block" title="Copy MCQ"><i class="fa-solid fa-copy"></i></button>
+                                        <button class="nk-mcq-delete-block" title="Delete MCQ"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                    <div class="nk-mcq-question" contenteditable="true">YOUR_QUESTION_HERE</div>
+                                    <div class="nk-mcq-options">
+                                        <!-- Repeat for each option (usually 4) -->
+                                        <div class="nk-mcq-option" data-is-correct="false"> <!-- Set "true" ONLY for the correct answer -->
+                                            <div class="nk-mcq-option-radio"></div>
+                                            <div class="nk-mcq-option-text" contenteditable="true">OPTION_TEXT</div>
+                                            <button class="nk-mcq-delete-option" title="Delete Option">&times;</button>
+                                        </div>
+                                    </div>
+                                    <!-- Use text-colors in explanation to make it beautiful -->
+                                    <div class="nk-mcq-explanation" contenteditable="true">YOUR_EXPLANATION_HERE</div>
+                                </div>
+                                \`\`\`
+                            `,
+                            cloze: `
+                            **Your Primary Component: Cloze Flashcard Injection (CRITICAL):**
+                            *   **Instruction:** Rewrite the text/answer, but actively CONVERT key information into Cloze Flashcards.
+                            *   **Syntax:** Use \`{{c1::Answer}}\`, \`{{c2::Answer}}\` syntax.
+                            *   **Strategy:**
+                                *   If the prompt is a simple fact, turn it into a sentence with a cloze.
+                                *   If explaining a concept, write the explanation and hide the key term.
+                            *   **Example Output:**
+                                <p>The <b class="text-blue">{{c1::Mitral Valve}}</b> is located between the left atrium and left ventricle.</p>
+                            `,
+                            accordion: `
+                            **Your Primary Component: Accordion (CRITICAL):**
+                            *   **Instruction:** You MUST output the answer as a series of Interactive Accordions (Q&A style).
+                            *   **HTML Structure:**
+                                \`\`\`html
+                                <div class="nk-accordion" data-state="open">
+                                    <div class="nk-accordion-trigger"><span class="nk-accordion-title"><b>QUESTION_HERE</b></span><i class="fa-solid fa-chevron-down"></i></div>
+                                    <div class="nk-accordion-content"><p>YOUR_ANSWER_HERE_WITH_BOLD_AND_COLORS</p></div>
+                                </div>
+                                \`\`\`
+                            `,
+                            decktile: `
+                            **Your Primary Component: Decktile (CRITICAL):**
+                            *   **Instruction:** Organize the information into short, colorful tiles.
+                            *   **HTML Structure:**
+                                \`\`\`html
+                                <div class="nk-textile-deck" contenteditable="false">
+                                    <div class="nk-text-tile color-1"><div class="nk-text-tile-content">Content 1...</div></div>
+                                    <div class="nk-text-tile color-2"><div class="nk-text-tile-content">Content 2...</div></div>
+                                    <div class="nk-text-tile color-3"><div class="nk-text-tile-content">Content 3...</div></div>
+                                </div>
+                                \`\`\`
+                            `,
+                            table: `
+                            **Your Primary Component: Revision Table (CRITICAL):**
+                            *   **Instruction:** Create a detailed, beautiful HTML table to compare or list data.
+                            *   **Structure:** Use standard \`<table>\`, \`<thead>\`, \`<tbody>\`, \`<tr>\`, \`<th>\`, \`<td>\`.
+                            *   **Styling:** Use \`<b>\` and text color classes INSIDE the cells to highlight key data.
+                            `,
+                            timeline: `
+                            **Your Primary Component: Timeline (CRITICAL):**
+                            *   **Instruction:** Create a chronological list of events.
+                            *   **Structure:** Use a \`<div class="nk-textile-deck">\` where each tile represents an era/year OR a styled HTML list.
+                            *   **Preferred Format:** A nice table with two columns: "Time/Era" and "Event Description". Use text colors for dates.
+                            `,
+                            // Simplified HTML rules for 'Auto' mode
+                            basic: `
+                            **Formatting Rules:**
+                             1. **Paragraphs:** Use standard paragraphs \`<p>\` with extensive use of **Colors** and **Bold**.
+                             2. **Tables:** Use \`<table>\` if comparing data.
+                             3. **Lists:** Use \`<ul>\` or \`<ol>\` for steps or lists.
+                             4. **Blockquotes:** Use \`<blockquote>\` for summaries or quotes.
+                            `
+                        };
+
+                        // --- DYNAMIC PROMPT ASSEMBLY ---
+                        let toolkitInstructions = "";
+
+                        if (format === 'mcq') {
+                            toolkitInstructions = TOOLKIT.mcq + "\n**RESTRICTION:** Output ONLY Native MCQ Blocks. Do not use lists or plain text.";
+                        } else if (format === 'cloze') {
+                            toolkitInstructions = TOOLKIT.cloze + "\n**RESTRICTION:** Focus on creating valid Cloze deletions within the text.";
+                        } else if (format === 'accordion') {
+                            toolkitInstructions = TOOLKIT.accordion + "\n**RESTRICTION:** Output ONLY Accordions.";
+                        } else if (format === 'decktile') {
+                            toolkitInstructions = TOOLKIT.decktile + "\n**RESTRICTION:** Output ONLY Decktiles.";
+                        } else if (format === 'table') {
+                            toolkitInstructions = TOOLKIT.table + "\n**RESTRICTION:** Output ONLY a HTML Table.";
+                        } else if (format === 'timeline') {
+                            toolkitInstructions = TOOLKIT.timeline + "\n**RESTRICTION:** Focus on chronological order and dates.";
+                        } else {
+                            // 'auto' or 'text'
+                            toolkitInstructions = TOOLKIT.basic + "\n**NOTE:** You may use Tables or Lists if appropriate, but avoid complex interactive components (MCQs, Accordions) unless specifically asked in the user prompt.";
+                        }
+
+
+                        const finalSystemPrompt = `
+                        ${PROMPT_IDENTITY}
+                        ${PROMPT_CORE_LOGIC}
+                        ${PROMPT_BEAUTY}
+
+                        **Your Specific Tool for this Request:**
+                        ${toolkitInstructions}
+
+                        **Final Rules (CRITICAL):**
+                        *   Respond ONLY with the final, complete HTML snippet.
+                        *   Do NOT include any conversational filler, greetings, or explanations outside of the HTML you generate.
+                        `;
+
+
+                        const result = await App.services.ai.queryGenerativeAI(finalSystemPrompt, prompt);
+
+                        if (result && result.trim()) {
+                            const answerHtml = result.trim().replace(/^```(html)?\n?/, '').replace(/\n?```$/, '');
+                            App.ui.aiMagicModal.renderResponse(answerHtml);
+                        } else {
+                            App.ui.showToast("The AI did not provide an answer. Please try again.", "warning");
+                            // Reset modal state?
+                            const commandListEl = document.getElementById('ai-magic-command-list');
+                            if (commandListEl && App.ui.aiMagicModal._renderCommands) {
+                                App.ui.aiMagicModal._renderCommands(); // Revert to grid
+                            }
+                        }
+                    },
+
 
                     async executeKashTranslate(language) {
                         const selection = window.getSelection();
@@ -33141,7 +33613,7 @@
                             '--hl-7-bg', '--hl-7-border', '--text-red', '--text-green', '--text-blue'
                         ].map(v => `${v}: ${styles.getPropertyValue(v)};`).join('\n');
 
-                        const watermarkButtonHTML = `<a id="notekash-watermark" href="https://notekash.com" target="_blank" rel="noopener noreferrer">Source: notekash.com</a>`;
+                        const watermarkButtonHTML = `<a id="notekash-watermark" href="https://notekash.com" target="_blank" rel="noopener noreferrer">notekash.com</a>`;
 
                         // MASTER CSS: Generates the perfect "carved" look for the watermark AND pills based on the exported theme.
                         const getThemeAwareCSS = (theme) => {
@@ -33569,34 +34041,96 @@
 
                                     // ═══ MCQ & ACCORDION - Unified Q&A Card Format (MUST be before generic div handler) ═══
                                     if (node.classList?.contains('nk-mcq-block') || node.classList?.contains('nk-accordion')) {
-                                        let q = '', a = '';
+                                        let qText = [], aText = [];
+
                                         if (node.classList.contains('nk-mcq-block')) {
-                                            q = node.querySelector('.nk-mcq-question')?.textContent?.trim() || '';
-                                            const correctOpt = node.querySelector('.nk-mcq-option[data-is-correct="true"] .nk-mcq-option-text');
-                                            a = correctOpt?.textContent?.trim() || '';
+                                            // Extract Question with rich text
+                                            const questionNode = node.querySelector('.nk-mcq-question');
+                                            if (questionNode) {
+                                                questionNode.childNodes.forEach(child => {
+                                                    const processed = processNode(child, styles);
+                                                    if (processed) {
+                                                        if (Array.isArray(processed)) qText.push(...processed);
+                                                        else qText.push(processed);
+                                                    }
+                                                });
+                                            }
+
+                                            // Extract Correct Option with rich text
+                                            const correctOptNode = node.querySelector('.nk-mcq-option[data-is-correct="true"] .nk-mcq-option-text');
+                                            if (correctOptNode) {
+                                                correctOptNode.childNodes.forEach(child => {
+                                                    const processed = processNode(child, styles);
+                                                    if (processed) {
+                                                        if (Array.isArray(processed)) aText.push(...processed);
+                                                        else aText.push(processed);
+                                                    }
+                                                });
+                                            }
                                         } else {
-                                            q = node.querySelector('.nk-accordion-title')?.textContent?.trim() || '';
-                                            a = node.querySelector('.nk-accordion-content')?.textContent?.trim() || '';
+                                            // Accordion
+                                            const titleNode = node.querySelector('.nk-accordion-title');
+                                            if (titleNode) {
+                                                titleNode.childNodes.forEach(child => {
+                                                    const processed = processNode(child, styles);
+                                                    if (processed) {
+                                                        if (Array.isArray(processed)) qText.push(...processed);
+                                                        else qText.push(processed);
+                                                    }
+                                                });
+                                            }
+
+                                            const contentNode = node.querySelector('.nk-accordion-content');
+                                            if (contentNode) {
+                                                contentNode.childNodes.forEach(child => {
+                                                    const processed = processNode(child, styles);
+                                                    if (processed) {
+                                                        if (Array.isArray(processed)) aText.push(...processed);
+                                                        else aText.push(processed);
+                                                    }
+                                                });
+                                            }
                                         }
-                                        if (!q && !a) return null;
+
+                                        if (qText.length === 0 && aText.length === 0) return null;
+
+                                        // Ensure text arrays are treated as stacks if they contain blocks
+                                        const qStack = qText.length ? { stack: qText, margin: [0, 0, 0, 4] } : { text: '' };
+                                        const aStack = aText.length ? { stack: aText } : { text: '' };
+
                                         return {
                                             table: {
-                                                widths: [3, '*'], body: [[
+                                                widths: [3, '*'],
+                                                body: [[
                                                     { text: '', fillColor: '#6366F1' },
                                                     {
                                                         stack: [
-                                                            { text: [{ text: 'Question: ', bold: true, color: '#6366F1' }, { text: q }], fontSize: 10, margin: [0, 0, 0, 4] },
-                                                            { text: [{ text: 'Answer: ', bold: true, color: '#16A34A' }, { text: a, color: '#374151' }], fontSize: 10 }
-                                                        ], margin: [10, 8, 8, 8]
+                                                            {
+                                                                text: [
+                                                                    { text: 'Question: ', bold: true, color: '#6366F1' }
+                                                                ],
+                                                                margin: [0, 0, 0, 2]
+                                                            },
+                                                            qStack,
+                                                            {
+                                                                text: [
+                                                                    { text: 'Answer: ', bold: true, color: '#16A34A' }
+                                                                ],
+                                                                margin: [0, 6, 0, 2]
+                                                            },
+                                                            aStack
+                                                        ],
+                                                        margin: [10, 8, 8, 8]
                                                     }
                                                 ]]
                                             },
                                             layout: { hLineWidth: () => 0, vLineWidth: () => 0, paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0 },
-                                            margin: [0, 8, 0, 8]
+                                            margin: [0, 8, 0, 8],
+                                            _isBlock: true // Mark as block
                                         };
                                     }
 
-                                    // Handle block elements
+                                    // Handle block elements (p, div, etc)
                                     if (['p', 'div'].includes(tag)) {
                                         const children = [];
                                         node.childNodes.forEach(child => {
@@ -33608,16 +34142,30 @@
                                         });
                                         if (children.length === 0) return { text: '\n', margin: [0, 4, 0, 4] };
 
-                                        // Check if any child is an image (non-text content) - return as stack instead
-                                        const hasNonTextContent = children.some(c => c.image || c.stack || c.table || (c.text && Array.isArray(c.text)));
-                                        if (hasNonTextContent) {
-                                            // If we have mixed content (text + emoji images), we need to be careful not to break paragraph flow
-                                            const hasBlockElements = children.some(c => c.stack || c.table || (c.image && c.width > 50));
+                                        // CRITICAL FIX: Robust block detection
+                                        // If any child is a block (header, list, table, or explicitly marked), current element MUST be a stack
+                                        const hasBlockElements = children.some(c =>
+                                            c._isBlock ||           // Explicit flag
+                                            c.stack ||              // Is a stack
+                                            c.table ||              // Is a table
+                                            c.ul || c.ol ||         // Is a list
+                                            (c.image && c.width > 50) // Is a large image
+                                        );
 
-                                            if (hasBlockElements) return { stack: children, margin: [0, 0, 0, 8] };
-                                            return { text: children, margin: [0, 0, 0, 8], lineHeight: 1.6 }; // Increased line height
+                                        if (hasBlockElements) {
+                                            return {
+                                                stack: children,
+                                                margin: [0, 0, 0, 8],
+                                                _isBlock: true // Propagate block status up
+                                            };
                                         }
-                                        return { text: children, margin: [0, 0, 0, 8], lineHeight: 1.6 };
+                                        // Otherwise, it's an inline paragraph
+                                        return {
+                                            text: children,
+                                            margin: [0, 0, 0, 8],
+                                            lineHeight: 1.6,
+                                            _isBlock: true // Paragraphs are blocks in the grand scheme (breaks flow)
+                                        };
                                     }
 
                                     if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)) {
@@ -33642,7 +34190,8 @@
                                             bold: true,
                                             color: headingColors[level],
                                             margin: margins[level],
-                                            lineHeight: 1.3
+                                            lineHeight: 1.3,
+                                            _isBlock: true // Headers are blocks
                                         };
                                     }
 
@@ -33661,7 +34210,7 @@
                                                 widths: [3, '*'],
                                                 body: [[
                                                     { text: '', fillColor: '#6366F1' },
-                                                    { stack: [{ text: children }], margin: [12, 6, 0, 6] }
+                                                    { stack: children, margin: [12, 6, 0, 6] }
                                                 ]]
                                             },
                                             layout: {
@@ -33672,14 +34221,15 @@
                                                 paddingTop: () => 0,
                                                 paddingBottom: () => 0
                                             },
-                                            margin: [0, 10, 0, 10]
+                                            margin: [0, 10, 0, 10],
+                                            _isBlock: true // Quotes are blocks
                                         };
                                     }
 
                                     if (tag === 'ul' || tag === 'ol') {
                                         const items = [];
                                         node.querySelectorAll(':scope > li').forEach(li => {
-                                            // Process LI children to support emojis/styles inside list items
+                                            // Process LI children to support emojis/styles/nested blocks inside list items
                                             const liChildren = [];
                                             li.childNodes.forEach(child => {
                                                 const processed = processNode(child, styles);
@@ -33689,17 +34239,23 @@
                                                 }
                                             });
 
-                                            items.push({
-                                                text: liChildren,
-                                                margin: [0, 3, 0, 3],
-                                                color: '#374151',
-                                                lineHeight: 1.5
-                                            });
+                                            // Use stack for list items to support nested blocks (like sub-lists or images)
+                                            if (liChildren.length > 0) {
+                                                items.push({
+                                                    stack: liChildren,
+                                                    margin: [0, 3, 0, 3],
+                                                    color: '#374151',
+                                                    lineHeight: 1.5,
+                                                    // Note: Stack items inside UL/OL don't strictly need _isBlock as UL/OL handles layout, but good practice
+                                                });
+                                            }
                                         });
+
                                         return {
                                             [tag]: items,
                                             margin: [8, 4, 0, 12], // Adjusted for better alignment
-                                            color: '#6366F1'  // Bullet/number color
+                                            color: '#6366F1',  // Bullet/number color
+                                            _isBlock: true // Lists are blocks
                                         };
                                     }
 
@@ -33717,7 +34273,8 @@
                                                 lineWidth: 0.75,
                                                 lineColor: '#D1D5DB'
                                             }],
-                                            margin: [0, 16, 0, 16]
+                                            margin: [0, 16, 0, 16],
+                                            _isBlock: true // HR is block
                                         };
                                     }
 
@@ -33731,7 +34288,8 @@
                                                     image: base64,
                                                     width: 200,
                                                     margin: [0, 8, 0, 8],
-                                                    alignment: 'center'
+                                                    alignment: 'center',
+                                                    _isBlock: true // Treat images as blocks for layout safety
                                                 };
                                             }
                                         }
@@ -33743,7 +34301,8 @@
                                                 italics: true,
                                                 color: '#9CA3AF',
                                                 alignment: 'center',
-                                                margin: [0, 6, 0, 6]
+                                                margin: [0, 6, 0, 6],
+                                                _isBlock: true
                                             };
                                         }
                                         return null;
@@ -33755,10 +34314,20 @@
                                         node.querySelectorAll('tr').forEach(tr => {
                                             const cells = [];
                                             tr.querySelectorAll('td, th').forEach(cell => {
+                                                // Process cell content recursively
+                                                const cellChildren = [];
+                                                cell.childNodes.forEach(child => {
+                                                    const processed = processNode(child, cell.tagName === 'TH' ? { ...styles, bold: true } : styles);
+                                                    if (processed) {
+                                                        if (Array.isArray(processed)) cellChildren.push(...processed);
+                                                        else cellChildren.push(processed);
+                                                    }
+                                                });
+
                                                 cells.push({
-                                                    text: cell.textContent,
-                                                    bold: cell.tagName === 'TH',
-                                                    fillColor: cell.tagName === 'TH' ? colors.paper : null
+                                                    stack: cellChildren.length ? cellChildren : [{ text: '' }],
+                                                    fillColor: cell.tagName === 'TH' ? colors.paper : null,
+                                                    margin: [2, 2, 2, 2] // Add some padding
                                                 });
                                             });
                                             if (cells.length > 0) rows.push(cells);
@@ -33771,7 +34340,8 @@
                                                     widths: Array(maxCols).fill('*'),
                                                     body: rows
                                                 },
-                                                margin: [0, 10, 0, 10]
+                                                margin: [0, 10, 0, 10],
+                                                _isBlock: true // Table is block
                                             };
                                         }
                                         return null;
@@ -42576,7 +43146,10 @@
                 },
 
                 initializePlayersIn(container) {
-                    container.querySelectorAll('.nk-audio-player').forEach(player => { if (player.dataset.initialized) return; this._initializeSinglePlayer(player); });
+                    // Optimization: Use getElementsByClassName (faster) and check length before looping
+                    const players = container.getElementsByClassName('nk-audio-player');
+                    if (players.length === 0) return;
+                    Array.from(players).forEach(player => { if (player.dataset.initialized) return; this._initializeSinglePlayer(player); });
                 },
 
                 _initializeSinglePlayer(player) {
@@ -47763,13 +48336,34 @@
                 },
 
                 openSearch() {
-                    if (!this.isInitialized) this.buildIndex();
+                    // 1. VISUAL FEEDBACK: Show UI IMMEDIATELY
                     this.els.overlay.classList.remove('hidden');
                     this.els.input.value = '';
                     this.els.resultsContainer.innerHTML = '';
-                    this.els.input.focus();
                     this.els.input.style.height = 'auto';
-                    this.buildIndex();
+                    this.els.input.focus();
+
+                    // Show "Indexing" toast
+                    const toast = App.ui.showToast('Indexing...', { type: 'searching-process', duration: 0, id: 'indexing-feedback-toast' });
+
+                    // Force the toast to show immediately (bypass default 100ms animation delay)
+                    requestAnimationFrame(() => {
+                        if (toast) toast.classList.add('show');
+                    });
+
+                    // 2. Defer heavy indexing to allow DOM to paint and toast to appear
+                    setTimeout(() => {
+                        this.buildIndex();
+
+                        // Hide the toast when done
+                        const toastEl = document.getElementById('indexing-feedback-toast');
+                        if (toastEl && App.ui.hideToast) {
+                            App.ui.hideToast(toastEl);
+                        } else if (toastEl) {
+                            toastEl.classList.remove('show');
+                            setTimeout(() => toastEl.remove(), 300);
+                        }
+                    }, 200);
                 },
 
                 closeSearch() {
@@ -48010,15 +48604,29 @@
                     return action;
                 },
 
-                buildIndex() {
+                async buildIndex() {
                     if (!App.state || (!App.state.articles && !App.state.tasks)) return;
                     this.searchableData = [];
+                    const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0));
 
-                    (App.state.articles || []).forEach(note => this.searchableData.push({ id: note.id, type: 'note', title: note.title, content: note.content.substring(0, 100), action: 'openNote' }));
-                    (App.hub.state.tasks || []).forEach(task => this.searchableData.push({ id: task.id, type: 'task', title: task.title, action: 'openTask' }));
+                    const articles = App.state.articles || [];
+                    for (let i = 0; i < articles.length; i++) {
+                        const note = articles[i];
+                        this.searchableData.push({ id: note.id, type: 'note', title: note.title, content: note.content.substring(0, 100), action: 'openNote' });
+                        if (i % 50 === 0) await yieldToMain();
+                    }
+
+                    const tasks = App.hub.state.tasks || [];
+                    for (let i = 0; i < tasks.length; i++) {
+                        const task = tasks[i];
+                        this.searchableData.push({ id: task.id, type: 'task', title: task.title, action: 'openTask' });
+                        if (i % 50 === 0) await yieldToMain();
+                    }
 
 
-                    (App.util.getAllFlashcards() || []).forEach(card => {
+                    const flashcards = App.util.getAllFlashcards() || [];
+                    for (let i = 0; i < flashcards.length; i++) {
+                        const card = flashcards[i];
                         let title = '';
                         let content = '';
 
@@ -48041,7 +48649,8 @@
                             action: 'openFlashcard',
                             category: card.category
                         });
-                    });
+                        if (i % 50 === 0) await yieldToMain();
+                    }
 
                     Object.values(App.state.tags || {}).forEach(tag => this.searchableData.push({ id: tag.id, type: 'tag', title: tag.displayName, action: 'filterNotesByTag' }));
 
@@ -48049,9 +48658,10 @@
 
 
                     // Process snippets, separating text from images
-                    allSnippets.forEach(snip => {
+                    for (let i = 0; i < allSnippets.length; i++) {
+                        const snip = allSnippets[i];
                         const article = App.storage.getArticle(snip.articleId);
-                        if (!article) return;
+                        if (!article) continue;
 
                         if (snip.isImage) {
                             // This is our new logic to add images as a distinct type
@@ -48072,23 +48682,26 @@
                                 action: 'openSnippet'
                             });
                         }
-                    });
-                    (App.state.articles || []).forEach(note => {
-                        if (note.attachments && note.attachments.length > 0) {
-                            note.attachments.forEach(attachment => {
-                                if (attachment.type === 'application/pdf') {
-                                    this.searchableData.push({
-                                        id: attachment.id,
-                                        type: 'pdf',
-                                        title: attachment.name.replace(/\.pdf$/i, ''),
-                                        content: `In: ${note.title}`,
-                                        action: 'openPdfArticle',
-                                        articleId: note.id
-                                    });
-                                }
-                            });
-                        }
-                    });
+                        if (i % 50 === 0) await yieldToMain();
+                    }
+
+                    const pdfArticles = (App.state.articles || []).filter(n => n.attachments && n.attachments.length > 0);
+                    for (let i = 0; i < pdfArticles.length; i++) {
+                        const note = pdfArticles[i];
+                        note.attachments.forEach(attachment => {
+                            if (attachment.type === 'application/pdf') {
+                                this.searchableData.push({
+                                    id: attachment.id,
+                                    type: 'pdf',
+                                    title: attachment.name.replace(/\.pdf$/i, ''),
+                                    content: `In: ${note.title}`,
+                                    action: 'openPdfArticle',
+                                    articleId: note.id
+                                });
+                            }
+                        });
+                        if (i % 20 === 0) await yieldToMain();
+                    }
 
                     const options = { includeScore: true, keys: ['title', 'content'], threshold: 0.4 };
                     this.fuse = App.offline.safeFuse(this.searchableData, options);
