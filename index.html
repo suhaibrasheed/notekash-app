@@ -5489,6 +5489,7 @@
             box-shadow: var(--shadow-sm);
             content-visibility: auto;
             contain-intrinsic-size: 1px 300px;
+            margin-bottom: 1rem;
         }
 
         .sectional-card:hover {
@@ -5918,10 +5919,31 @@
         }
 
         /* --- G. Stage Presentation Mode ("Smart Scroll") --- */
+        .focus-mode-overlay.stage-mode-active .focus-mode-content {
+            overflow-y: auto;
+            display: block;
+            height: 100%;
+            scrollbar-width: none;
+        }
+
+        .focus-mode-overlay.stage-mode-active .focus-mode-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .focus-mode-overlay.stage-mode-active .focus-mode-title {
+            position: static;
+            margin-bottom: 1rem;
+            margin-top: 1rem;
+            flex-shrink: 0;
+        }
+
         .focus-mode-overlay.stage-mode-active .focus-mode-body {
             scroll-behavior: smooth;
             -ms-overflow-style: none;
             scrollbar-width: none;
+            overflow: visible;
+            height: auto;
+            display: block;
         }
 
         .focus-mode-overlay.stage-mode-active .focus-mode-body::-webkit-scrollbar {
@@ -5939,6 +5961,15 @@
 
         .focus-mode-overlay.stage-mode-active .snippet.is-visible {
             opacity: 1.0;
+        }
+
+        /* FIX: Prevent large objects from fading in Stage Mode */
+        .focus-mode-overlay.stage-mode-active .snippet:has(.nk-mcq-block),
+        .focus-mode-overlay.stage-mode-active .snippet:has(.nk-accordion),
+        .focus-mode-overlay.stage-mode-active .snippet:has(table),
+        .focus-mode-overlay.stage-mode-active .nk-mcq-block,
+        .focus-mode-overlay.stage-mode-active .nk-accordion {
+            opacity: 1 !important;
         }
 
         .stage-mode-controls {
@@ -11025,10 +11056,30 @@
 
         .ai-magic-separator {
             grid-column: 1 / -1;
+            margin: 8px 0;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+        }
+
+        .ai-magic-separator:empty {
             height: 1px;
             background-color: var(--border-color);
             margin: 4px 0;
             opacity: 0.6;
+        }
+
+        .ai-magic-separator:not(:empty)::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background-color: var(--border-color);
+            margin-left: 8px;
+            opacity: 0.4;
         }
 
         #ai-magic-prompt-send {
@@ -11610,17 +11661,18 @@
         }
 
 
-        /* --- NEW: MCQ Block Styles (Feature #2) --- */
+        /* --- NEW: MCQ Block Styles (Feature #2) - POLISHED --- */
         .nk-mcq-block {
             position: relative;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-left: 3px solid var(--primary-color);
-            border-radius: 10px;
-            padding: 1.25rem 1.5rem;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
             margin: 1.5em 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05),
+                0 1px 3px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-family: inherit;
             font-size: inherit;
         }
@@ -11628,27 +11680,34 @@
         /* Subtle hover effect in read mode */
         body.read-mode .nk-mcq-block:not([data-answered="true"]):hover,
         .focus-mode-overlay .nk-mcq-block:not([data-answered="true"]):hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            border-color: var(--primary-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08),
+                0 2px 8px rgba(0, 0, 0, 0.04);
+            border-left-width: 5px;
+            transform: translateY(-1px);
         }
 
-        /* Answered state - elegant checkmark badge */
+        /* Answered state - elegant with subtle glow */
         .nk-mcq-block[data-answered="true"] {
             border-left-color: var(--success-color);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05),
+                -2px 0 12px color-mix(in srgb, var(--success-color) 15%, transparent);
         }
 
         .nk-mcq-block[data-answered="true"][data-user-incorrect="true"] {
             border-left-color: var(--danger-color);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05),
+                -2px 0 12px color-mix(in srgb, var(--danger-color) 15%, transparent);
         }
 
-        /* Question text - inherit from article settings */
+        /* Question text - refined typography */
         .nk-mcq-question {
             font-weight: 600;
             font-size: 1.05em;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
             margin-right: 40px;
             outline: none;
             line-height: 1.6;
+            letter-spacing: 0.01em;
             color: var(--text-primary);
             font-family: inherit;
         }
@@ -11760,6 +11819,7 @@
             font-family: inherit;
             font-size: 0.95em;
             line-height: 1.5;
+            letter-spacing: 0.01em;
         }
 
         .nk-mcq-option-text:focus-within {
@@ -11866,7 +11926,7 @@
             background: color-mix(in srgb, var(--success-color) 8%, var(--bg-secondary));
         }
 
-        /* --- Read Mode Specific Styles --- */
+        /* --- Read Mode Specific Styles - POLISHED --- */
         body.read-mode .nk-mcq-add-option,
         body.read-mode .nk-mcq-delete-option,
         body.read-mode .nk-mcq-option-radio,
@@ -11875,99 +11935,107 @@
         }
 
         body.read-mode .nk-mcq-option {
-            padding: 12px 16px;
+            padding: 14px 18px;
             border: 2px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 14px;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: var(--bg-secondary);
             position: relative;
             overflow: hidden;
         }
 
+        /* Refined radio indicator */
         body.read-mode .nk-mcq-option::before {
             content: '';
             position: absolute;
             top: 50%;
-            left: 8px;
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--border-color);
+            left: 12px;
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid var(--border-color);
             border-radius: 50%;
             transform: translateY(-50%);
-            background: var(--bg-tertiary);
-            transition: all 0.25s ease;
+            background: var(--bg-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
         }
+
 
         body.read-mode .nk-mcq-option .nk-mcq-option-text {
-            padding-left: 28px;
+            padding-left: 34px;
         }
 
+        /* Hover state - show inner dot */
         body.read-mode .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover {
             border-color: var(--primary-color);
-            background: color-mix(in srgb, var(--primary-color) 6%, var(--bg-secondary));
-            transform: translateX(4px);
+            background: color-mix(in srgb, var(--primary-color) 4%, var(--bg-secondary));
+            transform: translateX(4px) scale(1.01);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         body.read-mode .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before {
             border-color: var(--primary-color);
-            background: color-mix(in srgb, var(--primary-color) 20%, var(--bg-tertiary));
+            background: var(--bg-secondary);
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 10%, transparent);
         }
+
+
 
         body.read-mode .nk-mcq-block[data-answered="true"] .nk-mcq-option {
             cursor: default;
         }
 
-        /* Premium Correct Answer Style */
+        /* Premium Correct Answer Style - POLISHED */
         body.read-mode .nk-mcq-option.correct {
             border: 2.5px solid var(--success-color);
             color: var(--text-primary);
             background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--success-color) 12%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--success-color) 6%, var(--bg-secondary)));
-            animation: mcqCorrectPulse 0.5s ease;
+                    color-mix(in srgb, var(--success-color) 14%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--success-color) 7%, var(--bg-secondary)));
+            box-shadow: 0 2px 12px color-mix(in srgb, var(--success-color) 20%, transparent);
+            animation: mcqCorrectPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         body.read-mode .nk-mcq-option.correct::before {
             content: '✓';
             border-color: var(--success-color);
-            background: var(--success-color);
+            background: linear-gradient(135deg, var(--success-color), color-mix(in srgb, var(--success-color), #000 10%));
             color: white;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 6px color-mix(in srgb, var(--success-color) 35%, transparent),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
         }
 
-        body.read-mode .nk-mcq-option.correct::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--success-color) 8%, transparent), transparent);
-            animation: shimmer 1.5s ease-out;
-        }
 
-        /* Premium Incorrect Answer Style */
+
+        /* Premium Incorrect Answer Style - POLISHED */
         body.read-mode .nk-mcq-option.incorrect {
             border: 2.5px solid var(--danger-color);
             color: var(--text-primary);
             background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--danger-color) 10%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--danger-color) 4%, var(--bg-secondary)));
-            animation: mcqIncorrectShake 0.5s ease;
+                    color-mix(in srgb, var(--danger-color) 12%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--danger-color) 5%, var(--bg-secondary)));
+            box-shadow: 0 2px 12px color-mix(in srgb, var(--danger-color) 20%, transparent);
+            animation: mcqIncorrectShake 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         body.read-mode .nk-mcq-option.incorrect::before {
             content: '×';
             border-color: var(--danger-color);
-            background: var(--danger-color);
+            background: linear-gradient(135deg, var(--danger-color), color-mix(in srgb, var(--danger-color), #000 10%));
             color: white;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 6px color-mix(in srgb, var(--danger-color) 35%, transparent),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
         }
 
         @keyframes mcqCorrectPulse {
@@ -12025,7 +12093,7 @@
             line-height: 1.6;
         }
 
-        /* FOCUS/PRESENTATION MODE MCQ STYLING*/
+        /* FOCUS/PRESENTATION MODE MCQ STYLING - POLISHED */
 
         /* Hide radios and delete buttons in presentation mode */
         .focus-mode-overlay .nk-mcq-block .nk-mcq-option-radio,
@@ -12036,85 +12104,301 @@
         /* Remove inner background from option text - let the option container handle it */
         .focus-mode-overlay .nk-mcq-block .nk-mcq-option-text {
             padding: 0;
-            padding-left: 36px;
+            padding-left: 40px;
             background: transparent;
             border: none;
         }
 
         /* Option container - clean card style */
         .focus-mode-overlay .nk-mcq-block .nk-mcq-option {
-            padding: 16px 20px;
+            padding: 18px 24px;
             border: 2px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 14px;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: var(--bg-secondary);
             position: relative;
         }
 
-        /* Radio pseudo-element - positioned properly */
+        /* Refined radio indicator */
         .focus-mode-overlay .nk-mcq-block .nk-mcq-option::before {
             content: '';
             position: absolute;
             top: 50%;
-            left: 16px;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--border-color);
+            left: 18px;
+            width: 22px;
+            height: 22px;
+            border: 2.5px solid var(--border-color);
             border-radius: 50%;
             transform: translateY(-50%);
-            background: var(--bg-tertiary);
-            transition: all 0.25s ease;
+            background: var(--bg-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
         }
+
+        /* Removed inner dot - user preference */
 
         /* Hover state before answering */
         .focus-mode-overlay .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover {
             border-color: var(--primary-color);
-            background: color-mix(in srgb, var(--primary-color) 8%, var(--bg-secondary));
-            transform: translateX(6px);
+            background: color-mix(in srgb, var(--primary-color) 6%, var(--bg-secondary));
+            transform: translateX(6px) scale(1.01);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
         }
 
         .focus-mode-overlay .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before {
             border-color: var(--primary-color);
-            background: color-mix(in srgb, var(--primary-color) 25%, var(--bg-tertiary));
+            background: var(--bg-secondary);
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 12%, transparent);
         }
+
+
 
         /* Disable pointer after answering */
         .focus-mode-overlay .nk-mcq-block[data-answered="true"] .nk-mcq-option {
             cursor: default;
         }
 
-        /* Correct answer styling */
+        /* Correct answer styling - POLISHED */
         .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct {
             border: 2.5px solid var(--success-color);
             background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--success-color) 12%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--success-color) 6%, var(--bg-secondary)));
-            animation: mcqCorrectPulse 0.5s ease;
+                    color-mix(in srgb, var(--success-color) 14%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--success-color) 7%, var(--bg-secondary)));
+            box-shadow: 0 3px 16px color-mix(in srgb, var(--success-color) 25%, transparent);
+            animation: mcqCorrectPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct::before {
             content: '✓';
             border-color: var(--success-color);
-            background: var(--success-color);
+            background: linear-gradient(135deg, var(--success-color), color-mix(in srgb, var(--success-color), #000 10%));
             color: white;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--success-color) 40%, transparent),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
         }
 
-        /* Incorrect answer styling */
+
+
+        /* Incorrect answer styling - POLISHED */
         .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect {
             border: 2.5px solid var(--danger-color);
             background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--danger-color) 10%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--danger-color) 4%, var(--bg-secondary)));
-            animation: mcqIncorrectShake 0.5s ease;
+                    color-mix(in srgb, var(--danger-color) 12%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--danger-color) 5%, var(--bg-secondary)));
+            box-shadow: 0 3px 16px color-mix(in srgb, var(--danger-color) 25%, transparent);
+            animation: mcqIncorrectShake 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect::before {
+            content: '×';
+            border-color: var(--danger-color);
+            background: linear-gradient(135deg, var(--danger-color), color-mix(in srgb, var(--danger-color), #000 10%));
+            color: white;
+            font-size: 1.05rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--danger-color) 40%, transparent),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+
+        /* STUDY FLASHCARD MODE MCQ STYLING */
+
+        /* Hide radios, delete buttons, and toolbar in study card mode */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option-radio,
+        .study-card-content-box .nk-mcq-block .nk-mcq-delete-option,
+        .study-card-content-box .nk-mcq-block .nk-mcq-toolbar {
+            display: none;
+        }
+
+        /* Study card MCQ block - Premium container with beautiful curved left border */
+        .study-card-content-box .nk-mcq-block {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            padding: 1.5rem 0 1.5rem 1.5rem;
+            margin: 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Curved, polished left border using pseudo-element */
+        .study-card-content-box .nk-mcq-block::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: linear-gradient(180deg,
+                    var(--primary-color) 0%,
+                    color-mix(in srgb, var(--primary-color), #000 15%) 100%);
+            border-radius: 12px;
+            box-shadow: 2px 0 8px color-mix(in srgb, var(--primary-color) 20%, transparent),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Answered state - Green curved border with glow */
+        .study-card-content-box .nk-mcq-block[data-answered="true"]::before {
+            width: 6px;
+            background: linear-gradient(180deg,
+                    var(--success-color) 0%,
+                    color-mix(in srgb, var(--success-color), #000 20%) 100%);
+            box-shadow: 2px 0 12px color-mix(in srgb, var(--success-color) 35%, transparent),
+                inset 0 1px 2px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Incorrect answer - Red curved border with glow */
+        .study-card-content-box .nk-mcq-block[data-answered="true"][data-user-incorrect="true"]::before {
+            width: 6px;
+            background: linear-gradient(180deg,
+                    var(--danger-color) 0%,
+                    color-mix(in srgb, var(--danger-color), #000 20%) 100%);
+            box-shadow: 2px 0 12px color-mix(in srgb, var(--danger-color) 35%, transparent),
+                inset 0 1px 2px rgba(255, 255, 255, 0.4);
+        }
+
+        /* MCQ Question - More prominent and beautiful, inherits font size */
+        .study-card-content-box .nk-mcq-block .nk-mcq-question {
+            font-weight: 700;
+            font-size: calc(var(--study-card-font-size, 1.6rem) * 1.05);
+            line-height: 1.5;
+            margin-bottom: 1.75rem;
+            color: var(--text-primary);
+            padding-bottom: 1rem;
+            position: relative;
+        }
+
+        /* Elegant gradient underline for the question */
+        .study-card-content-box .nk-mcq-block .nk-mcq-question::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), transparent);
+            border-radius: 2px;
+        }
+
+        /* Options container - Better spacing */
+        .study-card-content-box .nk-mcq-block .nk-mcq-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Remove inner background from option text in study cards, inherits font size */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option-text {
+            padding: 0;
+            padding-left: 32px;
+            background: transparent;
+            border: none;
+            font-size: var(--study-card-font-size, 1.6rem);
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        /* Option container - Modern card style with premium feel */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option {
+            padding: 18px 24px;
+            border: 2.5px solid var(--border-color);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: linear-gradient(135deg,
+                    var(--bg-secondary) 0%,
+                    color-mix(in srgb, var(--bg-tertiary) 30%, var(--bg-secondary)) 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Radio pseudo-element for study cards - Larger and more prominent */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option::before {
+            content: '';
+            flex-shrink: 0;
+            position: relative;
+            top: auto;
+            left: auto;
+            width: 22px;
+            height: 22px;
+            border: 2.5px solid var(--border-color);
+            border-radius: 50%;
+            transform: none;
+            background: var(--bg-secondary);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Premium hover state for study cards */
+        .study-card-content-box .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--primary-color) 8%, var(--bg-secondary)) 0%,
+                    color-mix(in srgb, var(--primary-color) 4%, var(--bg-secondary)) 100%);
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08),
+                0 0 0 3px color-mix(in srgb, var(--primary-color) 12%, transparent);
+        }
+
+        .study-card-content-box .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before {
+            border-color: var(--primary-color);
+            background: color-mix(in srgb, var(--primary-color) 20%, var(--bg-secondary));
+            transform: scale(1.15);
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 15%, transparent);
+        }
+
+        /* Disable pointer after answering in study cards */
+        .study-card-content-box .nk-mcq-block[data-answered="true"] .nk-mcq-option {
+            cursor: default;
+        }
+
+        /* Correct answer for study cards - Premium success state */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option.correct {
+            border: 2.5px solid var(--success-color);
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--success-color) 15%, var(--bg-secondary)) 0%,
+                    color-mix(in srgb, var(--success-color) 8%, var(--bg-secondary)) 100%);
+            box-shadow: 0 4px 16px color-mix(in srgb, var(--success-color) 25%, transparent);
+            animation: mcqCorrectPulse 0.6s ease;
+        }
+
+        .study-card-content-box .nk-mcq-block .nk-mcq-option.correct::before {
+            content: '✓';
+            border-color: var(--success-color);
+            background: var(--success-color);
+            color: white;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--success-color) 40%, transparent);
+        }
+
+
+
+        /* Incorrect answer for study cards - Clear but not harsh */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect {
+            border: 2.5px solid var(--danger-color);
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--danger-color) 12%, var(--bg-secondary)) 0%,
+                    color-mix(in srgb, var(--danger-color) 6%, var(--bg-secondary)) 100%);
+            box-shadow: 0 4px 16px color-mix(in srgb, var(--danger-color) 20%, transparent);
+            animation: mcqIncorrectShake 0.5s ease;
+        }
+
+        .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect::before {
             content: '×';
             border-color: var(--danger-color);
             background: var(--danger-color);
@@ -12124,126 +12408,45 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--danger-color) 40%, transparent);
         }
 
-        /* ============================================
-           STUDY FLASHCARD MODE MCQ STYLING
-           ============================================ */
-
-        /* Hide radios, delete buttons, and toolbar in study card mode */
-        .study-card-content-box .nk-mcq-block .nk-mcq-option-radio,
-        .study-card-content-box .nk-mcq-block .nk-mcq-delete-option,
-        .study-card-content-box .nk-mcq-block .nk-mcq-toolbar {
-            display: none;
-        }
-
-        /* Remove inner background from option text in study cards */
-        .study-card-content-box .nk-mcq-block .nk-mcq-option-text {
-            padding: 0;
-            padding-left: 28px;
-            background: transparent;
-            border: none;
-        }
-
-        /* Option container - clean card style for study mode */
-        .study-card-content-box .nk-mcq-block .nk-mcq-option {
-            padding: 14px 18px 14px 14px;
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            background: var(--bg-secondary);
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        /* Radio pseudo-element for study cards */
-        .study-card-content-box .nk-mcq-block .nk-mcq-option::before {
-            content: '';
-            flex-shrink: 0;
-            position: relative;
-            top: auto;
-            left: auto;
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--border-color);
-            border-radius: 50%;
-            transform: none;
-            background: var(--bg-tertiary);
-            transition: all 0.25s ease;
-        }
-
-        /* Hover state for study cards */
-        .study-card-content-box .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover {
-            border-color: var(--primary-color);
-            background: color-mix(in srgb, var(--primary-color) 8%, var(--bg-secondary));
-        }
-
-        .study-card-content-box .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before {
-            border-color: var(--primary-color);
-            background: color-mix(in srgb, var(--primary-color) 25%, var(--bg-tertiary));
-        }
-
-        /* Disable pointer after answering in study cards */
-        .study-card-content-box .nk-mcq-block[data-answered="true"] .nk-mcq-option {
-            cursor: default;
-        }
-
-        /* Correct answer for study cards */
-        .study-card-content-box .nk-mcq-block .nk-mcq-option.correct {
-            border: 2px solid var(--success-color);
-            background: color-mix(in srgb, var(--success-color) 10%, var(--bg-secondary));
-        }
-
-        .study-card-content-box .nk-mcq-block .nk-mcq-option.correct::before {
-            content: '✓';
-            border-color: var(--success-color);
-            background: var(--success-color);
-            color: white;
-            font-size: 0.7rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Incorrect answer for study cards */
-        .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect {
-            border: 2px solid var(--danger-color);
-            background: color-mix(in srgb, var(--danger-color) 8%, var(--bg-secondary));
-        }
-
-        .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect::before {
-            content: '×';
-            border-color: var(--danger-color);
-            background: var(--danger-color);
-            color: white;
-            font-size: 0.9rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Hide add option and explanation styling overrides for study cards */
+        /* Hide add option in study cards */
         .study-card-content-box .nk-mcq-block .nk-mcq-add-option {
             display: none;
         }
 
-        /* Study card MCQ block simplified styling */
-        .study-card-content-box .nk-mcq-block {
-            border-left: none;
-            background: transparent;
-            box-shadow: none;
-            padding: 0;
-            margin: 0;
+        /* ACCORDION STYLING IN STUDY FLASHCARDS */
+        /* Accordion title in study cards - inherits font size */
+        .study-card-content-box .nk-accordion-title {
+            font-size: calc(var(--study-card-font-size, 1.6rem) * 1.05);
+            line-height: 1.5;
+        }
+
+        /* Accordion content in study cards - inherits font size */
+        .study-card-content-box .nk-accordion-content {
+            font-size: var(--study-card-font-size, 1.6rem);
+            line-height: 1.6;
+        }
+
+
+        /* Enhanced explanation reveal in study cards */
+        .study-card-content-box .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
+            margin-top: 1.5rem;
+            padding: 1.25rem 1.5rem;
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--primary-color) 8%, var(--bg-tertiary)) 0%,
+                    color-mix(in srgb, var(--primary-color) 4%, var(--bg-tertiary)) 100%);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 12px;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
         }
 
 
         /*PREMIUM "INSIGHT CARD" EXPLANATION - Glassmorphic Reveal Effect*/
         .nk-mcq-explanation {
-            /* Hidden state - ready for spring animation */
             max-height: 0;
             opacity: 0;
             overflow: hidden;
@@ -12261,7 +12464,7 @@
             padding: 0 16px;
             border-radius: 8px;
             font-size: 0.93em;
-            color: var(--text-secondary);
+            color: inherit;
             line-height: 1.6;
             font-family: inherit;
 
@@ -20569,8 +20772,28 @@
 
                     controlsContainer.innerHTML = `
                 <div class="controls-wrapper read-mode-controls" style="gap:6px; padding: 0 8px;">
-                    <!-- 1. Category (Left) -->
-                    <button class="btn-icon" data-action="goToCategory" title="Go to Category View" aria-label="Go to category view">${App.util.icons.category}</button>
+                    <!-- 1. Category & Modes Popover (Left) -->
+                    <div class="control-group-popover">
+                        <button class="btn-icon" onclick="this.nextElementSibling.classList.toggle('show'); event.stopPropagation();" title="Category & Modes" aria-label="Category and modes">
+                            ${App.util.icons.category}
+                        </button>
+                        <div class="popover-menu" style="min-width: auto; padding: 6px; gap: 4px; display: flex; flex-direction: column;">
+                            <!-- A. Category View -->
+                            <button class="btn-icon" onclick="App.router.navigateTo('category', { category: '${article.category || 'All'}', articleId: '${article.id}' })" title="Category View">
+                                ${App.util.icons.list}
+                            </button>
+                            
+                            <!-- B. Presentation Mode -->
+                            <button class="btn-icon" onclick="App.events.enterFocusMode('${article.id}')" title="Presentation Mode">
+                                ${App.util.icons.present}
+                            </button>
+                            
+                            <!-- C. Study Flashcards -->
+                            <button class="btn-icon" onclick="const allCards = App.util.getAllFlashcards(); const articleCards = allCards.filter(c => c.articleId === '${article.id}'); if(articleCards.length) { App.events.study.start({ quizCards: articleCards, mode: 'custom' }); } else { App.ui.showToast('No flashcards in this article', 'info'); }" title="Study Article Flashcards">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l10-5 10 5-10 5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+                            </button>
+                        </div>
+                    </div>
                     
                     <!-- 2. Cycle (Ambiance) - Left of Whiteboard -->
                     <button class="btn-icon" onclick="App.events.cycleReaderTheme()" oncontextmenu="event.preventDefault(); App.events.cycleReaderTheme(true)" ondblclick="event.preventDefault(); App.events.resetReaderTheme()" title="Cycle Ambiance (C, Right-click back, Double-click reset)">
@@ -20812,6 +21035,27 @@
                         }
 
                         this.renderCategoryBatch(initialBatchCount);
+
+                        // FIXED: Restore scroll-to-article functionality with visual highlight
+                        if (articleIdToFocus) {
+                            setTimeout(() => {
+                                const targetCard = document.getElementById(`summary-${articleIdToFocus}`);
+                                if (targetCard) {
+                                    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    // Visual highlight pulse
+                                    targetCard.classList.add('pulse-highlight');
+                                    targetCard.style.transition = 'box-shadow 0.5s ease, transform 0.3s ease';
+                                    const originalTransform = targetCard.style.transform;
+                                    targetCard.style.transform = 'scale(1.02)';
+                                    targetCard.style.boxShadow = '0 0 0 3px var(--primary-color, #d4a373)';
+                                    setTimeout(() => {
+                                        targetCard.style.boxShadow = '';
+                                        targetCard.style.transform = originalTransform;
+                                        targetCard.classList.remove('pulse-highlight');
+                                    }, 2000);
+                                }
+                            }, 150);
+                        }
 
                         const sentinel = document.getElementById('category-sentinel');
                         if (sentinel) {
@@ -22900,9 +23144,12 @@
                     <div class="ai-magic-backdrop">
                         <div class="ai-magic-modal">
                             <div class="ai-magic-header">
-                                <h3 class="ai-magic-title witty-gradient-text">NoteKash AI Co-Pilot</h3>
+                                <h3 class="ai-magic-title witty-gradient-text">NoteKash AI Magic</h3>
                                 <div class="ai-magic-prompt-container">
                                     <input type="text" id="ai-magic-prompt-input" placeholder="Search or Ask AI anything ..." autocomplete="off">
+                                    <button id="ai-magic-prompt-save" class="btn-icon" title="Save this Prompt for later" style="margin-right: 4px;">
+                                        ${App.util.icons.bookmark || '<i class="fa-solid fa-bookmark"></i>'}
+                                    </button>
                                     <button id="ai-magic-prompt-send" class="btn-icon btn-primary" title="Ask AI">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                                             <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
@@ -22958,9 +23205,144 @@
                         commandListEl.innerHTML = upsellHTML;
                     },
 
+                    _saveCustomPrompt(text) {
+                        try {
+                            if (!text || !text.trim()) return;
+                            text = text.trim();
+
+                            // Use Native-like Modal
+                            App.ui.showInputModal(
+                                "Name this Bookmark",
+                                "E.g., Summarize cleanly...",
+                                text.length > 20 ? text.substring(0, 20) + "..." : text,
+                                (name) => {
+                                    if (!name) return;
+                                    name = name.trim() || text.substring(0, 20); // Fallback
+
+                                    const prompts = JSON.parse(localStorage.getItem('noteKashCustomPrompts') || '[]');
+                                    // Check duplicate text to avoid redundancy (optional, but good)
+                                    if (prompts.some(p => p.text === text)) {
+                                        App.ui.showToast("This prompt is already saved.", { type: 'info' });
+                                        return;
+                                    }
+
+                                    // Ensure format is captured as string, fallback to current state, fallback to auto
+                                    let formatToSave = 'auto';
+                                    try {
+                                        formatToSave = App.ui.aiMagicModal.state.selectedFormat || 'auto';
+                                    } catch (e) { console.error("Could not read format state", e); }
+
+                                    console.log("Saving Custom Prompt:", name, "Format:", formatToSave);
+
+                                    prompts.unshift({
+                                        id: 'custom_' + Date.now(),
+                                        name: name,
+                                        text: text,
+                                        format: formatToSave
+                                    });
+                                    localStorage.setItem('noteKashCustomPrompts', JSON.stringify(prompts));
+                                    App.ui.showToast("Prompt Saved! 💾", { type: 'success' });
+
+                                    // Refresh list
+                                    this.state.commands = this._getCommands();
+                                    this.state.fuse = App.offline.safeFuse(this.state.commands.filter(c => c.type !== 'separator'), { keys: ['title', 'desc', 'id'], threshold: 0.4 });
+                                    this.state.filteredCommands = this.state.commands;
+                                    this._renderCommands();
+                                }
+                            );
+                        } catch (e) { console.error(e); }
+                    },
+
+                    _deleteCustomPrompt(id) {
+                        try {
+                            const prompts = JSON.parse(localStorage.getItem('noteKashCustomPrompts') || '[]');
+                            const newPrompts = prompts.filter(p => p.id !== id);
+                            localStorage.setItem('noteKashCustomPrompts', JSON.stringify(newPrompts));
+                            App.ui.showToast("Prompt Deleted", { type: 'info' });
+
+                            // Refresh list
+                            this.state.commands = this._getCommands();
+                            this.state.fuse = App.offline.safeFuse(this.state.commands.filter(c => c.type !== 'separator'), { keys: ['title', 'desc', 'id'], threshold: 0.4 });
+                            // If we were filtering, we might want to maintain filter?
+                            // Simplest to reset or just update filtered if search is empty
+                            const searchInput = document.getElementById('ai-magic-prompt-input');
+                            if (searchInput && searchInput.value.trim()) {
+                                // Re-run search
+                                this.state.filteredCommands = this.state.fuse.search(searchInput.value.trim()).map(r => r.item);
+                            } else {
+                                this.state.filteredCommands = this.state.commands;
+                            }
+                            this._renderCommands();
+
+                        } catch (e) { console.error(e); }
+                    },
+
+                    _editCustomPrompt(id) {
+                        try {
+                            const prompts = JSON.parse(localStorage.getItem('noteKashCustomPrompts') || '[]');
+                            const promptItem = prompts.find(p => p.id === id);
+                            if (!promptItem) return;
+
+                            const newName = window.prompt("Edit Name:", promptItem.name || promptItem.text.substring(0, 20));
+                            if (newName === null) return;
+
+                            const newText = window.prompt("Edit Prompt:", promptItem.text);
+                            if (newText === null) return;
+
+                            if (newName.trim() !== "" && newText.trim() !== "") {
+                                promptItem.name = newName.trim();
+                                promptItem.text = newText.trim();
+                                localStorage.setItem('noteKashCustomPrompts', JSON.stringify(prompts));
+                                App.ui.showToast("Prompt Updated", { type: 'success' });
+
+                                // Refresh
+                                this.state.commands = this._getCommands();
+                                this.state.fuse = App.offline.safeFuse(this.state.commands.filter(c => c.type !== 'separator'), { keys: ['title', 'desc', 'id'], threshold: 0.4 });
+
+                                const searchInput = document.getElementById('ai-magic-prompt-input');
+                                if (searchInput && searchInput.value.trim()) {
+                                    this.state.filteredCommands = this.state.fuse.search(searchInput.value.trim()).map(r => r.item);
+                                } else {
+                                    this.state.filteredCommands = this.state.commands;
+                                }
+                                this._renderCommands();
+                            }
+                        } catch (e) { console.error(e); }
+                    },
+
+                    async _executeCustomPrompt(text) {
+                        if (!App.license.isPremium()) {
+                            this._showUpsellCard();
+                            return;
+                        }
+                        const commandListEl = document.getElementById('ai-magic-command-list');
+                        if (commandListEl) {
+                            commandListEl.classList.remove('compact-grid'); // Reset grid
+                            commandListEl.innerHTML = `
+                            <div class="copilot-empty-state" style="justify-content: center; text-align: center; padding: 2rem;">
+                                <div class="spin" style="font-size: 2.5rem; color: var(--primary-color);">${App.util.icons.cycle}</div>
+                                <h4 class="witty-gradient-text" style="margin-top: 1rem;">Your Second Brain is thinking...</h4>
+                            </div>`;
+                        }
+
+                        if (this.state.savedRange) {
+                            const selection = window.getSelection();
+                            selection.removeAllRanges();
+                            selection.addRange(this.state.savedRange);
+                        }
+                        const selection = window.getSelection();
+                        const context = (selection && !selection.isCollapsed) ? selection.toString() : document.getElementById('article-content').innerText;
+
+                        // Use the Improved Wrapper
+                        const fullPrompt = `Context:\n${context}\n\nUser Request: ${text}\n\nPlease satisfy the User Request based on the Context.`;
+
+                        // IMPORTANT: Pass the selected format!
+                        await App.events.ai.executeKashAskOnModal(fullPrompt, this.state.selectedFormat || 'auto');
+                    },
+
                     _getCommands() {
                         const hasSelection = !!this.state.savedRange;
-                        const allCommands = [
+                        let allCommands = [
                             // Selection Commands
                             { id: 'kashwriting', title: 'Improve Writing', desc: 'Refine the selected text', icon: 'fa-solid fa-wand-sparkles', action: () => App.events.ai.executeImproveWriting(), selection: true },
                             { id: 'kashgrammar', title: 'Fix Grammar', desc: 'Correct spelling and Grammar ', icon: 'fa-solid fa-pen-nib', action: () => App.events.ai.executeFixGrammar(), selection: true },
@@ -23003,10 +23385,68 @@
                         const selectionCommands = allCommands.filter(cmd => cmd.selection);
                         const articleCommands = allCommands.filter(cmd => !cmd.selection);
 
+                        let finalCommands = [];
                         if (hasSelection) {
-                            return [...selectionCommands, { type: 'separator' }, ...articleCommands];
+                            finalCommands = [...selectionCommands, { type: 'separator' }, ...articleCommands];
+                        } else {
+                            finalCommands = [...articleCommands];
                         }
-                        return articleCommands;
+
+                        // --- CUSTOM PROMPTS (Moved to End) ---
+                        try {
+                            const customPrompts = JSON.parse(localStorage.getItem('noteKashCustomPrompts') || '[]');
+                            if (customPrompts.length > 0) {
+                                const customCommands = customPrompts.map(p => ({
+                                    id: p.id,
+                                    title: p.name || (p.text.length > 20 ? p.text.substring(0, 20) + '...' : p.text),
+                                    desc: p.text,
+                                    icon: 'fa-solid fa-bookmark',
+                                    action: () => {
+                                        // CHANGED: Populate input instead of executing
+                                        const input = document.getElementById('ai-magic-prompt-input');
+                                        if (input) {
+                                            console.log("Loading Custom Prompt:", p.text, "Format:", p.format);
+                                            input.value = p.text;
+
+                                            // RESELECT FORMAT
+                                            if (p.format) {
+                                                console.log("Applying format:", p.format);
+                                                // Use explicit global reference to be safe
+                                                try {
+                                                    App.ui.aiMagicModal.state.selectedFormat = p.format;
+                                                    const chipsContainer = document.getElementById('ai-format-chips');
+                                                    if (chipsContainer) {
+                                                        const formats = [
+                                                            { id: 'auto', label: 'Auto ✨' },
+                                                            { id: 'mcq', label: 'MCQ 📝' },
+                                                            { id: 'cloze', label: 'Cloze 🧩' },
+                                                            { id: 'accordion', label: 'Accordion 🔽' },
+                                                            { id: 'table', label: 'Table 📊' },
+                                                            { id: 'timeline', label: 'Timeline ⏳' },
+                                                            { id: 'decktile', label: 'Decktile 🗂️' },
+                                                        ];
+                                                        chipsContainer.innerHTML = formats.map(f =>
+                                                            `<div class="ai-format-chip ${p.format === f.id ? 'active' : ''}" data-format="${f.id}">${f.label}</div>`
+                                                        ).join('');
+                                                    }
+                                                } catch (err) { console.error("Error applying format", err); }
+                                            } else {
+                                                console.warn("No format found for prompt, keeping current.");
+                                            }
+                                            input.focus();
+                                        }
+                                    }
+                                    ,
+                                    custom: true,
+                                    keepOpen: true, // NEW: Prevent closing
+                                    fullText: p.text
+                                }));
+                                finalCommands.push({ type: 'separator', label: 'My Custom Prompts' });
+                                finalCommands = [...finalCommands, ...customCommands];
+                            }
+                        } catch (e) { console.error("Error loading custom prompts", e); }
+
+                        return finalCommands;
                     },
 
                     _renderCommands() {
@@ -23020,9 +23460,19 @@
 
                         const html = this.state.filteredCommands.map((cmd, index) => {
                             if (cmd.type === 'separator') {
-                                return '<div class="ai-magic-separator"></div>';
+                                return `<div class="ai-magic-separator">${cmd.label || ''}</div>`;
                             }
                             const isSelected = this.state.selectedIndex === index; // Check against visual index
+
+                            // ACTIONS for Custom Prompts
+                            let actionsHTML = '';
+                            if (cmd.custom) {
+                                actionsHTML = `
+                                    <div class="ai-custom-actions">
+                                        <button class="btn-icon btn-sm" title="Delete" onmousedown="event.stopPropagation(); App.ui.aiMagicModal._deleteCustomPrompt('${cmd.id}');"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                `;
+                            }
 
                             const itemHTML = `
                         <div class="ai-magic-command-item ${isSelected ? 'selected' : ''}" data-visual-index="${index}" title="${cmd.desc}">
@@ -23030,6 +23480,7 @@
                             <div class="command-text">
                                 <div class="command-title">${cmd.title}</div>
                             </div>
+                            ${actionsHTML}
                         </div>
                     `;
                             return itemHTML;
@@ -23042,6 +23493,7 @@
                         const backdrop = document.querySelector('.ai-magic-backdrop');
                         const searchInput = document.getElementById('ai-magic-prompt-input');
                         const sendBtn = document.getElementById('ai-magic-prompt-send');
+                        const saveBtn = document.getElementById('ai-magic-prompt-save');
                         const commandList = document.getElementById('ai-magic-command-list');
 
                         backdrop.addEventListener('click', (e) => { if (e.target === backdrop) this.close(); });
@@ -23084,6 +23536,21 @@
                                 }
                             });
                         }
+
+                        // SAVE BUTTON LISTENER
+                        if (saveBtn) {
+                            saveBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const text = searchInput.value;
+                                if (text && text.trim()) {
+                                    this._saveCustomPrompt(text);
+                                } else {
+                                    App.ui.showToast("Type something to save!", { type: 'warning' });
+                                }
+                            });
+                        }
+
 
                         const handlePrompt = async () => {
                             if (!App.license.isPremium()) {
@@ -23142,7 +23609,9 @@
                                 }
                                 const selection = window.getSelection();
                                 const context = (selection && !selection.isCollapsed) ? selection.toString() : document.getElementById('article-content').innerText;
-                                const fullPrompt = `Based on the following context:\n\n---\n${context}\n---\n\nAnswer this question: ${query}`;
+
+                                // NEW PROMPT WRAPPER
+                                const fullPrompt = `Context:\n${context}\n\nUser Request: ${query}\n\nPlease satisfy the User Request based on the Context.`;
 
                                 await App.events.ai.executeKashAskOnModal(fullPrompt, explicitFormat);
                             }
@@ -23249,6 +23718,14 @@
                         listEl.innerHTML = `
                             <div class="ai-magic-response-content">${htmlContent}</div>
                             <div class="ai-magic-response-actions">
+                                <div class="ai-feedback-group" style="margin-right: auto; display: flex; gap: 0.5rem;">
+                                    <button class="btn btn-sm btn-ghost" title="Good Response" onclick="App.ui.aiMagicModal._submitFeedback('positive', this)">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-ghost" title="Bad Response" onclick="App.ui.aiMagicModal._submitFeedback('negative', this)">
+                                        <i class="fa-solid fa-thumbs-down"></i>
+                                    </button>
+                                </div>
                                 <button class="btn btn-sm btn-ghost" onclick="App.ui.aiMagicModal._copyResponseToClipboard(this)">
                                     ${App.util.icons.copy} Copy
                                 </button>
@@ -23263,6 +23740,25 @@
 
                         // Store response for insertion
                         this.state.lastResponse = htmlContent;
+                    },
+
+                    _submitFeedback(type, btn) {
+                        // Visual feedback
+                        const group = btn.parentElement;
+                        const buttons = group.querySelectorAll('button');
+                        buttons.forEach(b => b.classList.remove('active', 'text-success', 'text-danger'));
+
+                        btn.classList.add('active');
+                        if (type === 'positive') {
+                            btn.classList.add('text-success');
+                            App.ui.showToast("Thanks! We're glad you liked it. 👍", "success");
+                        } else {
+                            btn.classList.add('text-danger');
+                            App.ui.showToast("We'll try to do better. 👎", "info");
+                        }
+
+                        // In a real app, we would send this to the server
+                        console.log(`User feedback: ${type}`);
                     },
 
                     _copyResponseToClipboard(btn) {
@@ -23342,13 +23838,19 @@
                     _executeSelected() {
                         const command = this.state.filteredCommands[this.state.selectedIndex];
                         if (command && command.action) {
+
+                            // Restore selection if needed
                             if (this.state.savedRange) {
                                 const selection = window.getSelection();
                                 selection.removeAllRanges();
                                 selection.addRange(this.state.savedRange);
                             }
+
                             command.action();
-                            this.close();
+
+                            if (!command.keepOpen) {
+                                this.close();
+                            }
                         }
                     }
                 },
@@ -31320,8 +31822,8 @@
                     },
 
                     toggleFontSize(button) {
-                        const fontSizes = ['1.2rem', '1.4rem', '1.6rem', '1.8rem', '2.0rem', '2.2rem', '2.4rem', '2.6rem', '2.8rem', '3rem'];
-                        const currentSize = App.settings.get('studyCardFontSize') || '1.6rem';
+                        const fontSizes = ['0.85rem', '1rem', '1.2rem', '1.4rem', '1.6rem', '1.8rem', '2.0rem', '2.2rem', '2.4rem', '2.6rem', '2.8rem', '3rem'];
+                        const currentSize = App.settings.get('studyCardFontSize') || '1.2rem';
                         const currentIndex = fontSizes.indexOf(currentSize);
                         const nextIndex = (currentIndex + 1) % fontSizes.length;
                         const newSize = fontSizes[nextIndex];
@@ -33140,7 +33642,7 @@
                     snippet.classList.toggle('is-hidden');
                 },
                 toggleFocusModeFontSize(button) {
-                    const fontSizes = ['0.85rem', '1.0rem', '1.1rem', '1.2rem', '1.4rem', '1.6rem', '1.8rem', '2.0rem', '2.2rem', '2.4rem', '2.6rem', '2.8rem', '3rem'];
+                    const fontSizes = ['0.85rem', '1rem', '1.2rem', '1.4rem', '1.6rem', '1.8rem', '2.0rem', '2.2rem', '2.4rem', '2.6rem', '2.8rem', '3rem'];
                     const body = document.querySelector('.focus-mode-body');
                     if (!body || !button) return;
 
@@ -33605,13 +34107,18 @@
 
                     _getHtmlExportTemplate(title, bodyContent, themeName = 'light') {
                         const styles = getComputedStyle(document.documentElement);
+                        const articleFontFamily = styles.getPropertyValue('--article-font-family');
                         const cssVars = [
                             '--bg-primary', '--bg-secondary', '--bg-tertiary', '--text-primary', '--text-secondary',
                             '--border-color', '--primary-color', '--hl-text', '--category-pill-text',
                             '--hl-1-bg', '--hl-1-border', '--hl-2-bg', '--hl-2-border', '--hl-3-bg', '--hl-3-border',
                             '--hl-4-bg', '--hl-4-border', '--hl-5-bg', '--hl-5-border', '--hl-6-bg', '--hl-6-border',
-                            '--hl-7-bg', '--hl-7-border', '--text-red', '--text-green', '--text-blue'
+                            '--hl-7-bg', '--hl-7-border', '--text-red', '--text-green', '--text-blue',
+                            '--success-color', '--danger-color', '--border-radius-lg', '--transition-fast', '--shadow'
                         ].map(v => `${v}: ${styles.getPropertyValue(v)};`).join('\n');
+
+                        // Inject article font family into root
+                        const rootCss = `:root { ${cssVars} --article-font-family: ${articleFontFamily}; }`;
 
                         const watermarkButtonHTML = `<a id="notekash-watermark" href="https://notekash.com" target="_blank" rel="noopener noreferrer">notekash.com</a>`;
 
@@ -33634,8 +34141,9 @@
                                 right: 25px;
                                 z-index: 9999;
                             }
-                            .exported-pills-container { margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+                            .exported-pills-container { margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
                             .exported-pill.category { font-size: 13px; padding: 9px 18px; }
+                            .article-metadata { margin-bottom: 2rem; color: var(--text-secondary); font-size: 0.9rem; font-family: var(--article-font-family); display: flex; gap: 16px; align-items: center; opacity: 0.8; }
                         `;
 
                             switch (theme) {
@@ -33689,17 +34197,129 @@
 
                         const watermarkCSS = getThemeAwareCSS(themeName);
 
-                        return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title}</title><style>:root{${cssVars}}body{padding-bottom: 80px; font-family:Georgia,serif;background-color:var(--bg-primary);color:var(--text-primary);max-width:90ch;margin:2rem auto;line-height:1.7;font-size:1.15rem;padding:2rem;}img{max-width:100%;height:auto;}[class^="highlight-"]{padding:0.1em 0.3em;margin:0 -0.1em;border-radius:4px;color:var(--hl-text);border-bottom:2px solid;}.highlight-1{background-color:var(--hl-1-bg);border-color:var(--hl-1-border);}.highlight-2{background-color:var(--hl-2-bg);border-color:var(--hl-2-border);}.highlight-3{background-color:var(--hl-3-bg);border-color:var(--hl-3-border);}.highlight-4{background-color:var(--hl-4-bg);border-color:var(--hl-4-border);}.highlight-5{background-color:var(--hl-5-bg);border-color:var(--hl-5-border);}.highlight-6{background-color:var(--hl-6-bg);border-color:var(--hl-6-border);}.highlight-7{background-color:var(--hl-7-bg);border-color:var(--hl-7-border);}.text-red{color:var(--text-red);}.text-green{color:var(--text-green);}.text-blue{color:var(--text-blue);}.text-underline{text-decoration:underline;}blockquote{border-left:3px solid var(--primary-color);margin-left:0;padding-left:1.5em;color:var(--text-secondary);font-style:italic;}hr{border:none;border-top:1px solid var(--border-color);margin:2em 0;} ${watermarkCSS}</style></head><body>${bodyContent}${watermarkButtonHTML}</body></html>`;
-                    },
+                        // --- NATIVE ELEMENT STYLES (Export) ---
+                        const nativeElementsCSS = `
+                            /* Accordion (Native <details>) */
+                            details.nk-accordion { border: 1px solid var(--border-color); border-radius: 8px; margin: 1.5em 0; background-color: var(--bg-secondary); overflow: hidden; }
+                            summary.nk-accordion-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 1rem 1.25rem; background-color: color-mix(in srgb, var(--border-color) 25%, var(--bg-tertiary)); border: none; font-family: inherit; font-size: inherit; color: var(--text-primary); text-align: left; cursor: pointer; list-style: none; user-select: none; }
+                            summary.nk-accordion-trigger::-webkit-details-marker { display: none; } /* Hide default triangle */
+                            summary.nk-accordion-trigger:after { content: '+'; font-size: 1.5rem; line-height: 1rem; color: var(--text-secondary); transition: transform 0.2s; }
+                            details[open] summary.nk-accordion-trigger:after { transform: rotate(45deg); }
+                            .nk-accordion-title { flex-grow: 1; font-weight: 600; display: inline-block; }
+                            .nk-accordion-content { padding: 1rem 1.25rem; border-top: 1px solid var(--border-color); display: block; animation: slideDown 0.3s ease-out; }
+                            @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+                            
+                            /* MCQ */
+                            .nk-mcq-block { position: relative; background: var(--bg-secondary); border: 1px solid var(--border-color); border-left: 3px solid var(--primary-color); border-radius: 10px; padding: 1.25rem 1.5rem; margin: 1.5em 0; }
+                            .nk-mcq-question { font-weight: 600; font-size: 1.05em; margin-bottom: 1rem; color: var(--text-primary); }
+                            .nk-mcq-options { display: flex; flex-direction: column; gap: 0.6rem; }
+                            .nk-mcq-option { display: flex; align-items: center; gap: 0.75rem; padding: 8px; border-radius: 6px; border: 1px solid transparent; }
+                            .nk-mcq-option-radio { width: 18px; height: 18px; border: 2px solid var(--text-secondary); border-radius: 50%; display: grid; place-items: center; }
+                            .nk-mcq-option[data-is-correct="true"] .nk-mcq-option-radio { border-color: var(--success-color); background-color: var(--success-color); }
+                            
+                            /* Image Interactions */
+                            img { transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: zoom-in; }
+                            img:hover { transform: scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
 
+                            /* Hide admin/interactive controls in static export */
+                            .nk-accordion-chevron, .nk-accordion-controls, .nk-mcq-toolbar, .nk-mcq-delete-option, .nk-mcq-add-option, .nk-mcq-delete-block, .nk-mcq-copy-block { display: none !important; }
+                        `;
+
+                        return `<!DOCTYPE html>
+                                <html lang="en">
+                                <head>
+                                    <meta charset="UTF-8">
+                                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                    <title>${title}</title>
+                                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Montserrat:wght@400;700&family=Satisfy&family=Pacifico&family=Lobster&family=Patrick+Hand&family=Shadows+Into+Light&family=Great+Vibes&family=Dancing+Script&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+                                    <style>
+                                        ${rootCss}
+                                        body { 
+                                            padding-bottom: 80px; 
+                                            font-family: var(--article-font-family), Georgia, serif; 
+                                            background-color: var(--bg-primary); 
+                                            color: var(--text-primary); 
+                                            max-width: 90ch; 
+                                            margin: 0 auto; 
+                                            line-height: 1.7; 
+                                            font-size: 1.15rem; 
+                                            padding: 2rem; 
+                                            box-sizing: border-box;
+                                        }
+                                        @media (max-width: 600px) { 
+                                            body { 
+                                                padding: 1.5rem 1rem; 
+                                                font-size: 1.05rem; 
+                                            } 
+                                        }
+                                        img { max-width: 100%; height: auto; border-radius: 8px; }
+                                        [class^="highlight-"] { padding: 0.1em 0.3em; margin: 0 -0.1em; border-radius: 4px; color: var(--hl-text); border-bottom: 2px solid; }
+                                        .highlight-1 { background-color: var(--hl-1-bg); border-color: var(--hl-1-border); }
+                                        .highlight-2 { background-color: var(--hl-2-bg); border-color: var(--hl-2-border); }
+                                        .highlight-3 { background-color: var(--hl-3-bg); border-color: var(--hl-3-border); }
+                                        .highlight-4 { background-color: var(--hl-4-bg); border-color: var(--hl-4-border); }
+                                        .highlight-5 { background-color: var(--hl-5-bg); border-color: var(--hl-5-border); }
+                                        .highlight-6 { background-color: var(--hl-6-bg); border-color: var(--hl-6-border); }
+                                        .highlight-7 { background-color: var(--hl-7-bg); border-color: var(--hl-7-border); }
+                                        .text-red { color: var(--text-red); } .text-green { color: var(--text-green); } .text-blue { color: var(--text-blue); }
+                                        .text-underline { text-decoration: underline; }
+                                        blockquote { border-left: 3px solid var(--primary-color); margin-left: 0; padding-left: 1.5em; color: var(--text-secondary); font-style: italic; }
+                                        hr { border: none; border-top: 1px solid var(--border-color); margin: 2em 0; } 
+                                        ${watermarkCSS}
+                                        ${nativeElementsCSS}
+                                    </style>
+                                </head>
+                                <body>
+                                    ${bodyContent}
+                                    ${watermarkButtonHTML}
+                                </body>
+                                </html>`;
+                    },
                     exportArticleAsHtml() {
                         const article = App.storage.getArticle(App.state.activeArticleId); if (!article) return;
                         const categoryObj = App.settings.get('userCategories').find(c => c.name === article.category) || { name: article.category, colorIndex: 0 };
                         const categoryPill = `<div class="exported-pill category" style="background-color: ${App.util.getCategoryColor(categoryObj.colorIndex)}; color: var(--category-pill-text);">${App.util.getCategoryDisplayName(categoryObj.name)}</div>`;
                         const tagsPills = (article.tags || []).map(tag => `<div class="exported-pill">${App.state.tags[tag]?.displayName || tag}</div>`).join('');
+
+                        // Metadata Calculation
+                        const tempDiv = document.createElement('div'); tempDiv.innerHTML = article.content;
+                        const wordCount = (tempDiv.textContent || "").trim().split(/\s+/).length;
+                        const dateStr = new Date(article.updatedAt || Date.now()).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+                        const metadataHTML = `<div class="article-metadata"><span>${wordCount} words</span> &bull; <span>${dateStr}</span></div>`;
+
                         const pillsHTML = `<div class="exported-pills-container">${categoryPill}${tagsPills}</div>`;
 
-                        const bodyContent = `${pillsHTML}<h1>${article.title}</h1><hr>${App.util.parseShortcuts(article.content)}`;
+                        // Native Accordion Replacement: Convert div structure to details/summary
+                        let processedContent = App.util.parseShortcuts(article.content);
+
+                        // Transform structural div accordions into semantic details/summary using DOMParser
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(processedContent, 'text/html');
+                        doc.querySelectorAll('.nk-accordion').forEach(acc => {
+                            const details = doc.createElement('details');
+                            details.className = acc.className;
+
+                            const trigger = acc.querySelector('.nk-accordion-trigger');
+                            const titleSpan = acc.querySelector('.nk-accordion-title');
+                            const content = acc.querySelector('.nk-accordion-content');
+
+                            if (trigger && content) {
+                                const summary = doc.createElement('summary');
+                                summary.className = 'nk-accordion-trigger';
+                                summary.innerHTML = `<span class="nk-accordion-title">${titleSpan ? titleSpan.innerHTML : 'Details'}</span>`;
+
+                                details.appendChild(summary);
+                                details.appendChild(content.cloneNode(true));
+
+                                acc.replaceWith(details);
+                            }
+                        });
+                        processedContent = doc.body.innerHTML;
+
+
+                        const bodyContent = `${pillsHTML}<h1>${article.title}</h1>${metadataHTML}<hr>${processedContent}`;
                         const fullHtml = this._getHtmlExportTemplate(article.title, bodyContent, App.settings.get('theme'));
                         App.util.downloadBlob(new Blob([fullHtml], { type: 'text/html' }), `${App.util.slugify(article.title)}.html`);
                     },
@@ -34004,6 +34624,31 @@
                                             styles.sub = true;
                                             styles.fontSize = 8;
                                             break;
+                                        case 'a':
+                                            if (node.getAttribute('href')) {
+                                                styles.link = node.getAttribute('href');
+                                                styles.color = '#2563EB';
+                                                styles.decoration = 'underline';
+                                            }
+                                            break;
+                                    }
+
+                                    // ═══ Handle Youtube/Video Embeds - Graceful Fallback to Link ═══
+                                    if (tag === 'iframe' || node.classList?.contains('video-container') || node.querySelector('iframe')) {
+                                        let src = node.getAttribute('src') || node.querySelector('iframe')?.getAttribute('src');
+
+                                        if (src && (src.includes('youtube.com') || src.includes('youtu.be'))) {
+                                            // Compact clickable link as requested
+                                            return {
+                                                text: [
+                                                    { text: '🎥 Watch Video: ', color: '#374151', fontSize: 10, bold: true },
+                                                    { text: src, link: src, color: '#2563EB', decoration: 'underline', fontSize: 10, italics: true }
+                                                ],
+                                                margin: [0, 2, 0, 2], // Minimal margin
+                                                _isBlock: true // Ensure it handles own spacing
+                                            };
+                                        }
+                                        return null; // Skip non-youtube iframes
                                     }
 
                                     // ═══ Handle image-container divs - Centered, compact layout ═══
@@ -34015,16 +34660,30 @@
                                             if (src && src.startsWith('data:')) {
                                                 const base64 = imageCache.get(src);
                                                 if (base64) {
+                                                    // Dynamic Sizing for Container Images
+                                                    let imgWidth = 200;
+                                                    const attrWidth = img.getAttribute('width');
+                                                    const styleWidth = img.style.width;
+
+                                                    if (attrWidth) {
+                                                        imgWidth = parseInt(attrWidth);
+                                                    } else if (styleWidth && styleWidth.includes('px')) {
+                                                        imgWidth = parseInt(styleWidth);
+                                                    }
+
+                                                    if (isNaN(imgWidth) || imgWidth <= 0) imgWidth = 200;
+                                                    imgWidth = Math.min(imgWidth, 300); // Capped at 300px 
+
                                                     // Compact centered image
                                                     return {
                                                         image: base64,
-                                                        width: 200,
-                                                        margin: [0, 8, 0, 8],
+                                                        width: imgWidth,
+                                                        margin: [0, 2, 0, 2],
                                                         alignment: 'center'
                                                     };
                                                 }
                                             }
-                                            // External URL image - show indicator but don't block
+                                            // External URL image
                                             if (src && !src.startsWith('data:')) {
                                                 return {
                                                     text: '[ External image ]',
@@ -34032,11 +34691,76 @@
                                                     italics: true,
                                                     color: '#9CA3AF',
                                                     alignment: 'center',
-                                                    margin: [0, 6, 0, 6]
+                                                    margin: [0, 2, 0, 2]
                                                 };
                                             }
                                         }
                                         return null; // Empty container
+                                    }
+
+                                    // ═══ Text Tile (Textile) - Aesthetic Box ═══
+                                    if (node.classList?.contains('nk-text-tile')) {
+                                        let tileColor = 'default';
+                                        node.classList.forEach(cls => {
+                                            if (cls.startsWith('color-')) tileColor = cls;
+                                        });
+
+                                        const tileStyles = {
+                                            'color-1': { bg: '#F0F9FF', border: '#0EA5E9', text: '#0C4A6E' }, // Sky
+                                            'color-2': { bg: '#DCFCE7', border: '#16A34A', text: '#14532D' }, // Green
+                                            'color-3': { bg: '#FFF7ED', border: '#EA580C', text: '#7C2D12' }, // Orange
+                                            'color-4': { bg: '#FEF2F2', border: '#DC2626', text: '#7F1D1D' }, // Red
+                                            'color-5': { bg: '#FAF5FF', border: '#9333EA', text: '#581C87' }, // Purple
+                                            'color-6': { bg: '#FDF4FF', border: '#C026D3', text: '#701A75' }, // Fuchsia
+                                            'color-7': { bg: '#F0FDFA', border: '#0D9488', text: '#134E4A' }, // Teal
+                                            'color-8': { bg: '#FFFBEB', border: '#D97706', text: '#78350F' }, // Amber
+                                            'color-9': { bg: '#EEF2FF', border: '#4F46E5', text: '#312E81' }, // Indigo
+                                            'default': { bg: '#F3F4F6', border: '#6B7280', text: '#1F2937' }  // Gray
+                                        };
+                                        const style = tileStyles[tileColor] || tileStyles['default'];
+
+                                        const content = [];
+                                        const contentNode = node.querySelector('.nk-text-tile-content') || node;
+
+                                        contentNode.childNodes.forEach(child => {
+                                            const processed = processNode(child, { ...styles, color: style.text });
+                                            if (processed) {
+                                                if (Array.isArray(processed)) content.push(...processed);
+                                                else content.push(processed);
+                                            }
+                                        });
+
+                                        // Simplified: Use 'text' property for inline wrapping unless heavy blocks present
+                                        const hasHeavyBlocks = content.some(c => c.table || c.ul || c.ol || (c.stack && !c._isBlock));
+
+                                        if (content.length === 0) content.push({ text: '' });
+
+                                        return {
+                                            table: {
+                                                widths: ['*'],
+                                                body: [[
+                                                    {
+                                                        // Simplified: Toggle stack vs text based on content type
+                                                        [hasHeavyBlocks ? 'stack' : 'text']: content,
+                                                        fillColor: style.bg,
+                                                        borderColor: [style.border, style.border, style.border, style.border],
+                                                        margin: [10, 6, 10, 6]
+                                                    }
+                                                ]]
+                                            },
+                                            layout: {
+                                                hLineWidth: () => 1.5,
+                                                vLineWidth: () => 1.5,
+                                                hLineColor: () => style.border,
+                                                vLineColor: () => style.border,
+                                                paddingLeft: () => 0,
+                                                paddingRight: () => 0,
+                                                paddingTop: () => 0,
+                                                paddingBottom: () => 0
+                                            },
+                                            margin: [0, 8, 0, 8],
+                                            _isBlock: true
+                                        };
                                     }
 
                                     // ═══ MCQ & ACCORDION - Unified Q&A Card Format (MUST be before generic div handler) ═══
@@ -34132,7 +34856,7 @@
 
                                     // Handle block elements (p, div, etc)
                                     if (['p', 'div'].includes(tag)) {
-                                        const children = [];
+                                        let children = [];
                                         node.childNodes.forEach(child => {
                                             const processed = processNode(child, styles);
                                             if (processed) {
@@ -34153,16 +34877,23 @@
                                         );
 
                                         if (hasBlockElements) {
+                                            // FIX: Filter out whitespace-only text nodes if we are in block mode
+                                            // This prevents indentation/newlines in HTML from creating "junk" empty lines around images
+                                            children = children.filter(c => {
+                                                if (c.text && typeof c.text === 'string' && !c.text.trim()) return false;
+                                                return true;
+                                            });
+
                                             return {
                                                 stack: children,
-                                                margin: [0, 0, 0, 8],
+                                                margin: [0, 0, 0, 4], // Reduced wrapper margin (let blocks handle own spacing)
                                                 _isBlock: true // Propagate block status up
                                             };
                                         }
                                         // Otherwise, it's an inline paragraph
                                         return {
                                             text: children,
-                                            margin: [0, 0, 0, 8],
+                                            margin: [0, 0, 0, 4], // Reduced margin for compactness
                                             lineHeight: 1.6,
                                             _isBlock: true // Paragraphs are blocks in the grand scheme (breaks flow)
                                         };
@@ -34239,15 +34970,35 @@
                                                 }
                                             });
 
-                                            // Use stack for list items to support nested blocks (like sub-lists or images)
                                             if (liChildren.length > 0) {
-                                                items.push({
-                                                    stack: liChildren,
-                                                    margin: [0, 3, 0, 3],
-                                                    color: '#374151',
-                                                    lineHeight: 1.5,
-                                                    // Note: Stack items inside UL/OL don't strictly need _isBlock as UL/OL handles layout, but good practice
-                                                });
+                                                // Stricter check: Use inline 'text' ONLY if all children are simple strings or text objects
+                                                const hasBlock = liChildren.some(c =>
+                                                    c._isBlock ||
+                                                    c.stack ||
+                                                    c.table ||
+                                                    c.ul ||
+                                                    c.ol ||
+                                                    (c.image && c.width > 200) ||
+                                                    // Also check if it's NOT a simple text object/string (conservative approach)
+                                                    (typeof c === 'object' && !c.text && !c.image)
+                                                );
+
+                                                if (hasBlock) {
+                                                    items.push({
+                                                        stack: liChildren,
+                                                        margin: [0, 2, 0, 2],
+                                                        color: '#374151',
+                                                        lineHeight: 1.5,
+                                                    });
+                                                } else {
+                                                    // Use text for inline flow - prevents broken lines for simple bullets
+                                                    items.push({
+                                                        text: liChildren,
+                                                        margin: [0, 2, 0, 2],
+                                                        color: '#374151',
+                                                        lineHeight: 1.5,
+                                                    });
+                                                }
                                             }
                                         });
 
@@ -34284,10 +35035,26 @@
                                         if (src && src.startsWith('data:')) {
                                             const base64 = imageCache.get(src);
                                             if (base64) {
+                                                // Dynamic Sizing Logic
+                                                let imgWidth = 200; // Default fallback
+
+                                                // Try to get width from attribute or style
+                                                const attrWidth = node.getAttribute('width');
+                                                const styleWidth = node.style.width;
+
+                                                if (attrWidth) {
+                                                    imgWidth = parseInt(attrWidth);
+                                                } else if (styleWidth && styleWidth.includes('px')) {
+                                                    imgWidth = parseInt(styleWidth);
+                                                }
+
+                                                // Cap width at 450 (approx print width) to prevent overflow                                                if (isNaN(imgWidth) || imgWidth <= 0) imgWidth = 200;
+                                                imgWidth = Math.min(imgWidth, 325); // Capped at 325px 
+
                                                 return {
                                                     image: base64,
-                                                    width: 200,
-                                                    margin: [0, 8, 0, 8],
+                                                    width: imgWidth,
+                                                    margin: [0, 2, 0, 2], // Reduced margins
                                                     alignment: 'center',
                                                     _isBlock: true // Treat images as blocks for layout safety
                                                 };
@@ -34301,7 +35068,7 @@
                                                 italics: true,
                                                 color: '#9CA3AF',
                                                 alignment: 'center',
-                                                margin: [0, 6, 0, 6],
+                                                margin: [0, 4, 0, 4],
                                                 _isBlock: true
                                             };
                                         }
@@ -34314,6 +35081,9 @@
                                         node.querySelectorAll('tr').forEach(tr => {
                                             const cells = [];
                                             tr.querySelectorAll('td, th').forEach(cell => {
+                                                const colspan = parseInt(cell.getAttribute('colspan') || '1');
+                                                const rowspan = parseInt(cell.getAttribute('rowspan') || '1');
+
                                                 // Process cell content recursively
                                                 const cellChildren = [];
                                                 cell.childNodes.forEach(child => {
@@ -34327,24 +35097,39 @@
                                                 cells.push({
                                                     stack: cellChildren.length ? cellChildren : [{ text: '' }],
                                                     fillColor: cell.tagName === 'TH' ? colors.paper : null,
-                                                    margin: [2, 2, 2, 2] // Add some padding
+                                                    margin: [2, 2, 2, 2],
+                                                    colSpan: colspan,
+                                                    rowSpan: rowspan
                                                 });
+                                                // Support colSpan by adding empty cells for pdfmake
+                                                for (let i = 1; i < colspan; i++) {
+                                                    cells.push({});
+                                                }
                                             });
                                             if (cells.length > 0) rows.push(cells);
                                         });
+
                                         if (rows.length > 0) {
                                             const maxCols = Math.max(...rows.map(r => r.length));
+
+                                            // Normalization
+                                            rows.forEach(row => {
+                                                while (row.length < maxCols) {
+                                                    row.push({ text: '', margin: [2, 2, 2, 2] });
+                                                }
+                                            });
+
                                             return {
                                                 table: {
                                                     headerRows: 1,
-                                                    widths: Array(maxCols).fill('*'),
+                                                    widths: Array(maxCols).fill('auto'), // FIX: auto width prevents cutoff
                                                     body: rows
                                                 },
                                                 margin: [0, 10, 0, 10],
-                                                _isBlock: true // Table is block
+                                                _isBlock: true
                                             };
                                         }
-                                        return null;
+
                                     }
 
                                     // Default: process children with inherited styles
