@@ -20655,6 +20655,15 @@
 
                         contentDiv.innerHTML = App.util.sanitizeHTML(finalContent);
 
+                        // RESET MCQ STATE: Remove previous answer states so users can re-interact with MCQs
+                        contentDiv.querySelectorAll('.nk-mcq-block').forEach(mcqBlock => {
+                            mcqBlock.removeAttribute('data-answered');
+                            mcqBlock.removeAttribute('data-user-incorrect');
+                            mcqBlock.querySelectorAll('.nk-mcq-option').forEach(option => {
+                                option.classList.remove('correct', 'incorrect');
+                            });
+                        });
+
                         contentDiv.querySelectorAll('.nk-text-tile').forEach(tile => {
                             if (tile.textContent.trim() === '') {
                                 App.util.unwrapNode(tile);
