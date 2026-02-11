@@ -33329,9 +33329,11 @@
                             if (currentPath && currentPath.length > 0) paths.push(currentPath);
                             currentPath = null;
                         };
-                        const dblClickHandler = () => {
-                            paths = [];
-                            currentPath = null;
+                        const tripleClickHandler = (e) => {
+                            if (e.detail === 3) {
+                                paths = [];
+                                currentPath = null;
+                            }
                         };
 
                         // NEW: Wheel Handler for Scrolling while Laser is active
@@ -33363,7 +33365,7 @@
                         laserCanvas.addEventListener('mousedown', downHandler);
                         laserCanvas.addEventListener('wheel', wheelHandler, { passive: true });
                         window.addEventListener('mouseup', upHandler);
-                        laserCanvas.addEventListener('dblclick', dblClickHandler);
+                        laserCanvas.addEventListener('click', tripleClickHandler);
                         document.addEventListener('keydown', keyHandler, true); // Capture phase importance
 
                         laserCanvas._cleanup = () => {
@@ -33371,7 +33373,7 @@
                             laserCanvas.removeEventListener('mousedown', downHandler);
                             laserCanvas.removeEventListener('wheel', wheelHandler);
                             window.removeEventListener('mouseup', upHandler);
-                            laserCanvas.removeEventListener('dblclick', dblClickHandler);
+                            laserCanvas.removeEventListener('click', tripleClickHandler);
                             document.removeEventListener('keydown', keyHandler, true);
                             cancelAnimationFrame(animationFrameId);
                         };
