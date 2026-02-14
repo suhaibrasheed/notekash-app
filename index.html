@@ -69,30 +69,47 @@
     }
     </script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: JSZip disabled');"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: jsPDF disabled');"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: html2canvas disabled');"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: pdfmake disabled');"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: pdfmake fonts disabled');"></script>
 
     <link
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Satisfy&family=Pacifico&family=Lobster&family=Patrick+Hand&family=Shadows+Into+Light&family=Great+Vibes&family=Dancing+Script&family=Caveat:wght@400;700&display=swap"
-        rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
+        rel="stylesheet" onerror="this.href='data:text/css;base64,'">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: Chart.js disabled');"></script>
+    <script src="https://d3js.org/d3.v7.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: D3.js disabled');"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: html-to-image disabled');"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: Fuse.js disabled');"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mozilla/readability@0.5.0/Readability.min.js"></script>
-    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"
+        onerror="this.href='data:text/css;base64,'">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        onerror="this.href='data:text/css;base64,'">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"
+        onerror="console.warn('Offline: Transformers disabled');"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: PDF.js disabled');"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: Mammoth disabled');"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mozilla/readability@0.5.0/Readability.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: Readability disabled');"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js' defer
+        onerror="this.style.display='none'; console.warn('Offline: Tesseract disabled');"></script>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" onerror="this.href='data:text/css;base64,'" />
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: Plyr disabled');"></script>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-KGXNNGWKEX"></script>
     <script>
@@ -20635,6 +20652,15 @@
                             App.util.initPlyr(contentDiv);
                         }, 50);
 
+                        // FIX: Restore MCQ Editability in Write Mode
+                        setTimeout(() => {
+                            contentDiv.querySelectorAll('.nk-mcq-block').forEach(block => {
+                                block.contentEditable = "false"; // Protect the container itself from being deleted easily
+                                const editables = block.querySelectorAll('.nk-mcq-question, .nk-mcq-option-text, .nk-mcq-explanation, .nk-mcq-hint-content');
+                                editables.forEach(el => el.contentEditable = "true");
+                            });
+                        }, 60);
+
                     } else {
                         let parsedContent = App.util.parseShortcuts(article.content);
                         let finalContent = App.util.renderClozeForDisplay(parsedContent);
@@ -36486,7 +36512,15 @@
 
                 // Initialize Plyr players
                 initPlyr(container) {
-                    if (typeof Plyr === 'undefined' || !container) return;
+                    if (typeof Plyr === 'undefined') {
+                        if (container) {
+                            container.querySelectorAll('.js-plyr-video').forEach(el => {
+                                el.innerHTML = '<div style="padding:20px;text-align:center;background:var(--bg-secondary);color:var(--text-secondary);border-radius:8px;">Video player unavailable offline.</div>';
+                            });
+                        }
+                        return;
+                    }
+                    if (!container) return;
 
                     // 1. YouTube & Shorts
                     container.querySelectorAll('.js-plyr-video').forEach(el => {
@@ -42247,6 +42281,13 @@
                 },
 
                 init() {
+                    if (typeof d3 === 'undefined') {
+                        // console.warn('Offline: D3 not available for MindMap.');
+                        // Ensure container is clear or shows message?
+                        const container = document.getElementById('mindmap-container');
+                        if (container) container.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100%;color:var(--text-secondary);">Mind Map unavailable offline.</div>';
+                        return;
+                    }
 
                     this.isInitialLoad = true;
 
@@ -42765,6 +42806,10 @@
                     if (snapshot.transform) { const { x, y, k } = snapshot.transform; this.svg.transition().duration(750).call(this.zoom.transform, d3.zoomIdentity.translate(x, y).scale(k)); }
                 },
                 async saveSnapshotAndExport() {
+                    if (typeof htmlToImage === 'undefined') {
+                        App.ui.showToast('Snapshot feature unavailable offline.', { type: 'error' });
+                        return;
+                    }
                     const btn = document.getElementById('mindmap-snapshot-btn'); btn.style.color = 'var(--primary-color)';
                     const transform = d3.zoomTransform(this.svg.node());
                     const nodePositions = this.simulation ? this.simulation.nodes().map(n => ({ id: n.id, x: n.x, y: n.y, fx: n.fx, fy: n.fy })) : [];
@@ -42918,6 +42963,11 @@
                 },
 
                 init() {
+                    if (typeof d3 === 'undefined') {
+                        const container = document.getElementById('visual-map-container');
+                        if (container) container.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100%;color:var(--text-secondary);">Visual Map unavailable offline.</div>';
+                        return;
+                    }
                     // If the view is already set up, just update the data
                     if (this.svg) {
                         this.updateGraph();
@@ -43381,6 +43431,10 @@
                     if (snapshot.openStickyNotes) { snapshot.openStickyNotes.forEach(noteStateInSnapshot => { if (App.storage.getArticle(noteStateInSnapshot.articleId)) { App.state.visualMapState.stickyNotes[noteStateInSnapshot.id] = noteStateInSnapshot; this.stickyNotes.render(noteStateInSnapshot.id); } }); }
                 },
                 async exportAndSave() {
+                    if (typeof htmlToImage === 'undefined') {
+                        App.ui.showToast('Snapshot feature unavailable offline.', { type: 'error' });
+                        return;
+                    }
                     const btn = document.getElementById('visual-map-snapshot-btn'); btn.style.color = 'var(--primary-color)'; const container = document.getElementById('visual-map-container');
                     try {
                         const blob = await htmlToImage.toBlob(container, { backgroundColor: getComputedStyle(container).backgroundColor, width: container.clientWidth, height: container.clientHeight });
@@ -48727,10 +48781,18 @@
                             wrapper.scrollTop = scrollTop - walkY;
                         });
 
+
                         const pdfData = atob(attachment.data.substring(attachment.data.indexOf(',') + 1));
+
+                        if (typeof pdfjsLib === 'undefined') {
+                            App.ui.showToast('PDF Viewer not available offline.', { type: 'error' });
+                            return;
+                        }
+
                         pdfjsLib.getDocument({ data: pdfData }).promise.then(pdfDoc_ => {
                             App.pdf.state.pdfDoc = pdfDoc_;
-                            document.getElementById('pdf-page-count').textContent = App.pdf.state.pdfDoc.numPages;
+                            const pageCountEl = document.getElementById('pdf-page-count');
+                            if (pageCountEl) pageCountEl.textContent = App.pdf.state.pdfDoc.numPages;
                             document.getElementById('pdf-page-num').max = App.pdf.state.pdfDoc.numPages;
                             App.pdf.state.pageNum = attachment.lastPage || 1;
                             this.renderPage(App.pdf.state.pageNum);
@@ -49886,12 +49948,13 @@
 
             if (App.splitScreen.handleSplitMode()) {
             }
+
             App.init();
             App.globalSearch.init();
             App.commandPalette.init();
             App.whiteboard.init();
             App.coPilot.init();
-            App.globalSearch._initCheckboxListener(); // Using globalSearch object as carrier (awkward but safe context) OR just init directly?
+            App.globalSearch._initCheckboxListener();
 
 
             if (App.ui.aiMagicModal) App.ui.aiMagicModal.init();
