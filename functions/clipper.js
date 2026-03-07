@@ -11,6 +11,7 @@ export async function onRequestPost(context) {
             return new Response(JSON.stringify({ error: 'A valid URL is required.' }), { status: 400 });
         }
 
+        // Native fetch works perfectly here
         const response = await fetch(url, {
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
         });
@@ -21,6 +22,7 @@ export async function onRequestPost(context) {
 
         const html = await response.text();
         
+        // linkedom creates a fast, edge-compatible DOM
         const document = new DOMParser().parseFromString(html, 'text/html');
         
         const reader = new Readability(document);
