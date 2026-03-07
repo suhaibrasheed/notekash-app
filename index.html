@@ -18588,7 +18588,7 @@
                     // Save status/bio locally regardless of activation success
                     await App.settings.set('userBio', status);
 
-                    const validationUrl = '/.netlify/functions/validate';
+                    const validationUrl = '/validate';
 
                     try {
                         const response = await fetch(validationUrl, {
@@ -21188,6 +21188,61 @@
                     };
                 },
 
+                showExportBrandModal(onExport, exportType = 'PDF') {
+                    const isPremium = App.license.isPremium();
+                    const savedBrandName = App.settings.get('brandName') || '';
+                    const savedBrandLink = App.settings.get('brandLink') || '';
+                    const modalId = `export-brand-modal-${Date.now()}`;
+                    const lockHint = isPremium ? '' : `
+                        <div style="display:flex;align-items:center;gap:6px;margin-top:6px;padding:7px 10px;border-radius:8px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.18);">
+                            <span style="font-size:13px;">🔒</span>
+                            <span style="font-size:14px;color:var(--text-muted);">Upgrade to <strong style="color:#6366F1;cursor:pointer;" onclick="App.ui.closeModal(); App.ui.showAscensionModal();">Premium</strong> to add your Brand & remove all watermarks</span>
+                        </div>`;
+                    const inputStyle = `width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:14px;box-sizing:border-box;${isPremium ? '' : 'opacity:0.45;cursor:not-allowed;'}`;
+                    const modalHTML = `
+                    <div id="${modalId}" class="modal-backdrop" style="animation:fadeIn 0.2s ease-out;z-index:20000;background-color:rgba(0,0,0,0.6);">
+                        <div class="modal-content ui-card" style="max-width:400px;animation:popIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275);">
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                                <span style="font-size:22px;">📄</span>
+                                <h3 style="margin:0;font-size:1.1rem;">Export Brand Settings</h3>
+                            </div>
+                            <p style="margin:0 0 14px;font-size:13px;color:var(--text-muted);line-height:1.5;">You can add your Brand name in the <strong>${exportType} footer</strong>. Leave blank to keep the default layout.</p>
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;">Brand Name</label>
+                            <input type="text" id="${modalId}-name" class="text-input" value="${App.util.escapeHtml(savedBrandName)}" placeholder="${isPremium ? 'e.g. My Study Notes' : 'Premium feature'}" style="${inputStyle}" ${isPremium ? '' : 'disabled'} maxlength="40">
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin:12px 0 4px;text-transform:uppercase;letter-spacing:.5px;">Brand Link <span style="font-weight:400;text-transform:none;font-size:11px;">(optional)</span></label>
+                            <input type="url" id="${modalId}-link" class="text-input" value="${App.util.escapeHtml(savedBrandLink)}" placeholder="${isPremium ? 'https://yoursite.com' : 'Premium feature'}" style="${inputStyle}" ${isPremium ? '' : 'disabled'}>
+                            ${lockHint}
+                            <div class="modal-buttons" style="margin-top:18px;justify-content:flex-end;gap:10px;">
+                                <button class="btn btn-secondary" id="${modalId}-cancel">Cancel</button>
+                                <button class="btn btn-primary" id="${modalId}-confirm" style="gap:6px;">
+                                    <span>Export ${exportType}</span> 
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                    const modalEl = document.getElementById(modalId);
+                    const nameEl = document.getElementById(`${modalId}-name`);
+                    const linkEl = document.getElementById(`${modalId}-link`);
+                    const cancelEl = document.getElementById(`${modalId}-cancel`);
+                    const confirmEl = document.getElementById(`${modalId}-confirm`);
+                    if (isPremium && nameEl) nameEl.focus();
+                    const cleanup = () => modalEl.remove();
+                    const doExport = () => {
+                        const brandName = isPremium ? (nameEl?.value?.trim() || '') : '';
+                        const brandLink = isPremium ? (linkEl?.value?.trim() || '') : '';
+                        cleanup();
+                        onExport(brandName, brandLink);
+                    };
+                    confirmEl.onclick = doExport;
+                    cancelEl.onclick = cleanup;
+                    modalEl.onclick = (e) => { if (e.target === modalEl) cleanup(); };
+                    modalEl.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') doExport();
+                        if (e.key === 'Escape') cleanup();
+                    });
+                },
+
                 showAscensionModal() {
                     const wittyMessage = App.util.getRandomMessage(App.util.wittyDeveloperMessages);
                     const maybeLaterText = App.util.getRandomMessage(App.util.maybeLaterMessages);
@@ -21817,7 +21872,7 @@
                                 <button class="btn btn-secondary" onclick="App.services.export.copyCategoryContentAsMarkdown('${category}')">Copy MD</button>
                                 <button class="btn btn-secondary ${!App.license.isPremium() ? 'premium-feature-locked' : ''}" onclick="if(App.license.isPremium()) App.services.export.categoryAsText('${category}'); else App.ui.showAscensionModal();">.TXT</button>
                                 <button class="btn btn-secondary ${!App.license.isPremium() ? 'premium-feature-locked' : ''}" onclick="if(App.license.isPremium()) App.services.export.exportCategoryAsHtml('${category}'); else App.ui.showAscensionModal();">.HTML</button>
-                                <button class="btn btn-secondary" onclick="App.services.export.categoryAsPdf('${category}')">PDF Output</button>
+                                <button class="btn btn-secondary" onclick="App.ui.showExportBrandModal((bn,bl) => App.services.export.categoryAsPdf('${category}', bn, bl), 'PDF')">PDF Output</button>
                             </div>
                         </div>
                     </div>
@@ -24345,7 +24400,7 @@
                     },
 
                     _copyBubble(btn) {
-                        if (!App.state.globalCopyAllowed && !App.state.isCreator) {
+                        if (App.state.globalCopyAllowed === false && !App.state.isCreator) {
                             App.ui.showToast('Copying is disabled for shared notes.', { type: 'warning' });
                             return;
                         }
@@ -24376,7 +24431,7 @@
                     },
 
                     _insertBubbleAsTextile(btn) {
-                        if (!App.state.globalCopyAllowed && !App.state.isCreator) {
+                        if (App.state.globalCopyAllowed === false && !App.state.isCreator) {
                             App.ui.showToast('Copying is disabled for shared notes.', { type: 'warning' });
                             return;
                         }
@@ -26526,19 +26581,33 @@
                     const tierName = App.license.state.tier || 'Spark';
                     const userName = App.license.state.userName || '';
                     const userBio = App.settings.get('userBio') || '';
+                    const brandName = App.settings.get('brandName') || '';
+                    const brandLink = App.settings.get('brandLink') || '';
 
                     let licenseViewHTML;
 
                     if (isPremium) {
                         const expiryDate = new Date(App.license.state.expiry).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                         licenseViewHTML = `
-                        <div class="settings-section">
-                            <h4 class="witty-gradient-text" style="text-align:center; font-size: 1.2em;">You are in the ${tierName} League!</h4>
-                            <p style="text-align:center; color: var(--text-secondary);">Enjoy unlimited features until <strong>${expiryDate}</strong>.</p>
+                        <div class="settings-section" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 1.5rem; text-align: center;">
+                            <h4 class="witty-gradient-text" style="font-size: 1.4em; margin-bottom: 0.5rem; text-align: center; justify-content: center; width: 100%;">You are in the ${tierName} League!</h4>
+                            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; text-align: center; width: 100%;">Enjoy unlimited features until <strong>${expiryDate}</strong>.</p>
+                            
+                            <div style="display: flex; gap: 1rem; justify-content: center; width: 100%;">
+                                <button class="btn btn-danger" onclick="App.license.delete()">Downgrade to Spark</button>
+                                <button class="btn btn-secondary" onclick="App.license.revalidate()">Re-validate License</button>
+                            </div>
                         </div>
-                        <div class="modal-buttons" style="margin-top: 1.5rem; justify-content: space-between;">
-                            <button class="btn btn-danger" onclick="App.license.delete()">Downgrade to Spark</button>
-                            <button class="btn btn-secondary" onclick="App.license.revalidate()">Re-validate License</button>
+                        
+                        <div class="settings-section" style="margin-top: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                            <h4 style="font-size: 1.1em; margin-bottom: 0.5rem; color: var(--text-primary);"><i class="fa-solid fa-copyright" style="color: var(--primary-color); margin-right: 8px;"></i>Brand Settings</h4>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Personalize your PDF and HTML exports. Changes are auto-saved.</p>
+                            <div class="license-form-grid" style="text-align:left;">
+                                <label for="brand-name-input" style="font-weight: 600;">Brand Name</label>
+                                <input type="text" id="brand-name-input" class="text-input" value="${App.util.escapeHtml(brandName)}" placeholder="e.g. My Study Notes" onchange="App.settings.set('brandName', this.value.trim())" style="background: var(--bg-primary);">
+                                <label for="brand-link-input" style="font-weight: 600; margin-top: 0.5rem;">Brand Link</label>
+                                <input type="url" id="brand-link-input" class="text-input" value="${App.util.escapeHtml(brandLink)}" placeholder="https://yoursite.com" onchange="App.settings.set('brandLink', this.value.trim())" style="background: var(--bg-primary);">
+                            </div>
                         </div>`;
                     } else {
                         licenseViewHTML = `
@@ -26564,6 +26633,15 @@
                             <div class="modal-buttons" style="margin-top: 1.5rem; justify-content: space-between;">
                                 <button class="btn btn-secondary" onclick="App.events.generateLicenseRequestEmail()">Get a License Key</button>
                                 <button class="btn btn-primary" onclick="App.license.activate()">Activate License</button>
+                            </div>
+                        </div>
+                        <div class="settings-section" style="opacity: 0.6; pointer-events: none; margin-top: 1.5rem;">
+                            <h4 style="text-align:center; font-size: 1.05em; margin-bottom: 1rem; color: var(--text-primary);"><span style="font-size:13px; margin-right:5px;">🔒</span>Brand Settings <span style="font-size:0.8em; font-weight:normal;">(Premium)</span></h4>
+                            <div class="license-form-grid" style="text-align:left;">
+                                <label for="brand-name-input">Brand Name</label>
+                                <input type="text" id="brand-name-input" class="text-input" placeholder="Premium feature" disabled>
+                                <label for="brand-link-input">Brand Link</label>
+                                <input type="url" id="brand-link-input" class="text-input" placeholder="Premium feature" disabled>
                             </div>
                         </div>`;
                     }
@@ -27762,18 +27840,17 @@
 
                                 titleInput.addEventListener('input', setDirty);
 
-                                // Debounced Autosave — fires 8s after last input.
+                                // Debounced Autosave — fires 5s after last input.
                                 const debouncedAutosave = App.util.debounce(() => {
                                     if (!App.state.isArticleDirty) return;
                                     const performSave = () => App.events.saveArticle({ isAutosave: true });
                                     if (window.requestIdleCallback) {
-                                        // timeout=15000: only force-run if browser has been busy for 15s
-                                        requestIdleCallback(performSave, { timeout: 15000 });
+                                        // timeout=16000: only force-run if browser has been busy for 16s
+                                        requestIdleCallback(performSave, { timeout: 16000 });
                                     } else {
-                                        // Safari fallback: small macro-task delay to let current frame drain
                                         setTimeout(performSave, 100);
                                     }
-                                }, 8000);
+                                }, 5000);
 
                                 contentDiv.addEventListener('input', () => {
                                     setDirty();
@@ -31019,6 +31096,46 @@
                     },
 
 
+                    // ─── SHARED UTILITY: Safe, case-insensitive DOM phrase applicator ───────────
+                    _applyPhrasesToDOM(rootEl, items, wrapFn, skipSelector) {
+                        if (!rootEl || !items || !items.length) return 0;
+
+                        let applied = 0;
+                        items.forEach(item => {
+                            const phrase = (item.text || '').trim();
+                            if (!phrase) return;
+                            const lowerPhrase = phrase.toLowerCase();
+
+                            // Rebuild walker for EACH phrase because DOM mutates during wrapFn
+                            const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT);
+                            let node;
+
+                            while ((node = walker.nextNode())) {
+                                // Skip nodes already inside a protected span
+                                if (skipSelector && node.parentElement.closest(skipSelector)) continue;
+
+                                const lowerNodeVal = node.nodeValue.toLowerCase();
+                                const idx = lowerNodeVal.indexOf(lowerPhrase);
+                                if (idx === -1) continue;
+
+                                // Preserve the exact original casing from the article
+                                const range = document.createRange();
+                                range.setStart(node, idx);
+                                range.setEnd(node, idx + phrase.length);
+
+                                try {
+                                    wrapFn(range, item);
+                                    applied++;
+                                } catch (e) {
+                                    console.warn('[NoteKash] _applyPhrasesToDOM wrap failed:', e, phrase);
+                                }
+                                break; // First occurrence only per phrase
+                            }
+                        });
+                        return applied;
+                    },
+                    // ──────────────────────────────────────────────────────────────────────────────
+
                     async executeKashTags() {
                         const contentDiv = document.getElementById('article-content');
                         if (!contentDiv || !contentDiv.textContent.trim()) {
@@ -31026,65 +31143,62 @@
                             return;
                         }
 
-                        const systemPrompt = `You are an expert indexer for a knowledge base. Your task is to analyze the article and identify the 5-9 most important and representative phrases to be turned into tags.
-
-                        CRITICAL: Do not just list keywords. You must return a valid JSON array of objects. Each object must have a key named "tag_text" containing the exact, verbatim phrase from the article that should be tagged.
+                        const systemPrompt = `You are an expert indexer for a knowledge base. Analyze the article and identify the 5-9 most important and representative concepts to be turned into clickable tags.
 
                         RULES:
-                        1. Choose the most complete and representative instance of a concept (e.g., tag "collegium system" instead of just "collegium", also "article 312" instead of "article 312 of the constitution" since its clear in itself and short).
-                        2. Do not return duplicate "tag_text" values. Each short phrase must be Unique.
-                        3. Be selective; only choose 5-9 of the most crucial concepts for tagging.
+                        1. Choose the most concise but complete phrase that represents the concept (e.g., "collegium system" not just "collegium"; "Article 312" not the full constitutional reference).
+                        2. The phrase MUST appear verbatim (case may differ) somewhere in the article — do NOT invent phrases.
+                        3. No duplicates. Only 5-9 of the most crucial concepts.
+                        4. Return ONLY a valid JSON array of objects, each with one key: "tag_text".
 
-                        Example Response:
-                        [{"tag_text": "women representation"},{"tag_text": "article 312"}, {"tag_text": "All India Judicial Service"}]
+                        Example: [{"tag_text": "women representation"},{"tag_text": "Article 312"},{"tag_text": "All India Judicial Service"}]`;
 
-                        Respond ONLY with the JSON array.`;
-
-                        const userPrompt = contentDiv.innerText;
-                        const result = await App.services.ai.queryGenerativeAI(systemPrompt, userPrompt);
+                        const toastId = App.ui.showToast('🤖 KashTags is analysing...', { type: 'info', duration: 0 });
+                        const result = await App.services.ai.queryGenerativeAI(systemPrompt, contentDiv.innerText);
+                        App.ui.hideToast(toastId);
 
                         if (result && result.trim()) {
                             try {
-                                // Find the JSON array within the AI's response, even if it adds extra text
                                 const jsonMatch = result.match(/\[\s*\{[\s\S]*?\}\s*\]/s);
-                                if (!jsonMatch) throw new Error("AI response did not contain a valid JSON array.");
+                                if (!jsonMatch) throw new Error('No JSON array in AI response.');
 
                                 const tagsToApply = JSON.parse(jsonMatch[0]);
-                                if (!Array.isArray(tagsToApply)) throw new Error("AI did not return an array.");
+                                if (!Array.isArray(tagsToApply)) throw new Error('AI did not return an array.');
 
-                                let contentHTML = contentDiv.innerHTML;
-                                let tagsAppliedCount = 0;
+                                // Map to the shared utility's {text} format
+                                const items = tagsToApply
+                                    .filter(t => t && t.tag_text)
+                                    .map(t => ({ text: t.tag_text }));
 
-                                App.ui.showToast(`Applying ${tagsToApply.length} smart tags...`, { type: 'info' });
+                                App.ui.showToast(`Applying ${items.length} smart tags...`, { type: 'info' });
 
-                                tagsToApply.forEach(tagObj => {
-                                    if (tagObj && tagObj.tag_text) {
-                                        const phraseToTag = tagObj.tag_text;
-                                        // This check prevents re-tagging something that's already a tag
-                                        if (contentHTML.includes(phraseToTag)) {
-                                            const slug = App.contentTools.slugify(phraseToTag);
-                                            const replacement = `<span class="rendered-tag" data-tag="${slug}">${phraseToTag}</span>`;
+                                // Use safe DOM walker — NO innerHTML string replace, NO DOM nuke
+                                const applied = App.events.ai._applyPhrasesToDOM(
+                                    contentDiv,
+                                    items,
+                                    (range, item) => {
+                                        const slug = App.contentTools.slugify(item.text);
+                                        const span = document.createElement('span');
+                                        span.className = 'rendered-tag';
+                                        span.dataset.tag = slug;
+                                        range.surroundContents(span);
+                                    },
+                                    'span.rendered-tag' // skip already-tagged nodes
+                                );
 
-                                            contentHTML = contentHTML.replace(phraseToTag, replacement);
-                                            tagsAppliedCount++;
-                                        }
-                                    }
-                                });
-
-                                if (tagsAppliedCount > 0) {
-                                    contentDiv.innerHTML = contentHTML;
-                                    App.ui.showToast(`${tagsAppliedCount} smart tags were applied!`, 'success');
+                                if (applied > 0) {
+                                    App.ui.showToast(`${applied} smart tags applied!`, 'success');
                                     App.state.isArticleDirty = true;
                                 } else {
-                                    App.ui.showToast("AI suggested tags, but none could be applied.", "info");
+                                    App.ui.showToast('AI suggested tags but none could be matched in the text.', 'info');
                                 }
 
                             } catch (error) {
-                                console.error("KashTags Error:", error, "AI Response:", result);
-                                App.ui.showToast("AI returned an invalid format for tagging.", "error");
+                                console.error('KashTags Error:', error, 'AI Response:', result);
+                                App.ui.showToast('AI returned an invalid format for tagging.', 'error');
                             }
                         } else {
-                            App.ui.showToast("AI could not identify any tags to apply.", "warning");
+                            App.ui.showToast('AI could not identify any tags to apply.', 'warning');
                         }
                     },
 
@@ -31133,55 +31247,93 @@
                         const selectedText = selection.toString().trim();
 
                         if (!selectedText) {
-                            App.ui.showToast("Please select text to generate flashcards from.", "warning");
+                            App.ui.showToast('Please select text to generate flashcards from.', 'warning');
                             return;
                         }
 
-                        // --- NEW "LEARNING SCIENTIST" PROMPT ---
-                        const systemPrompt = `You are an expert educator and Cloze Deletion Specialist integrated into the NoteKash app. Your mission is to transform a user's selected text into the most Effective Active Recall Flashcard possible by creating surgical, High-value/quality Cloze deletions.
+                        const systemPrompt = `You are a Cloze Deletion Specialist for a note-taking app. Your task is to analyze the user's selected text and identify ONLY the MOST CRITICAL AND IMPORTANT phrases to test via cloze deletion.
 
-                    **Core Philosophy:**
-                    Your goal is not just to hide words, but to identify and test the most critical pieces of information that are essential for understanding and memorization.
+                        **What to cloze (in priority order):**
+                        1. Key terms / defined concepts (e.g., "Collegium System", "non-justiciable")
+                        2. Cause-and-effect results or reasons
+                        3. Specific data: numbers, dates, names, statistics
+                        4. Critical multi-word phrases representing a single concept
 
-                    **Your Thought Process & Selection Criteria (Follow this hierarchy):**
+                        **Strict rules & Count limit:**
+                        - You MUST NOT cloze too much. Be highly selective. Avoid cloze on short, unimportant sentences.
+                        - Only cloze information that a student absolutely must memorize.
+                        - 1–2 sentence selection → MAXIMUM 1 to 2 very important clozes.
+                        - Full paragraph → MAXIMUM 2 to 5 clozes, each testing a DISTINCT and VITAL concept.
 
-                    1.  **Identify the Core Concepts:** Read the entire text to understand its meaning. What are the 1-4 most important "nuggets" of knowledge here?
-                    2.  **Prioritize What to Cloze:**
-                        * **Priority #1 (Key Terms & Definitions):** If the text defines a term, cloze the term itself. **Example:** \`{{c1::The Collegium System}}\` is the body responsible for judicial appointments.
-                        * **Priority #2 (Cause & Effect):** Cloze the result of an action or the reason for a state. **Example:** The non-enforceability of DPSPs is due to them being \`{{c1::non-justiciable}}\`.
-                        * **Priority #3 (Specific Data):** Cloze crucial numbers, dates, names, or statistics. **Example:** The DPSPs are found in \`{{c1::Part IV}}\` of the Constitution.
-                        * **Priority #4 (Crucial Phrases):** If a multi-word phrase represents a single, vital concept, cloze the entire phrase. **Example:** The ultimate goal is to create a \`{{c1::Welfare State}}\`.
+                        **CRITICAL OUTPUT FORMAT:**
+                        Return ONLY a valid JSON array of objects. Each object MUST have:
+                        - "text": the EXACT phrase from the user's text (verbatim, case-preserved) to be hidden
+                        - "id": an integer starting from 1 (c1, c2, c3…)
 
-                    **Dynamic Cloze Count:**
-                    * Analyze the text's length and density.
-                    * For short selections (1-2 sentences), create **1-3** powerful clozes.
-                    * For longer paragraphs, create **2-7** clozes, ensuring each one tests a distinct, important concept.
+                        DO NOT return the rewritten text. DO NOT add any commentary.
 
-                    **CRITICAL Final Output Rules:**
-                    1.  You MUST use the exact \`{{c1::text to hide}}\`, \`{{c2::...}}\` syntax for cloze deletions.
-                    2.  Your response MUST be ONLY the fully modified text.
-                    3.  You MUST preserve the original sentence structure and surrounding context perfectly.
-                    4.  Do NOT include any explanations, conversational text, or markdown formatting. Your output should be ready to be inserted directly into an editor.`;
+                        Example input: "The DPSPs are found in Part IV of the Constitution and are non-justiciable."
+                        Example output: [{"text": "Part IV", "id": 1}, {"text": "non-justiciable", "id": 2}]`;
 
-                        const userPrompt = selectedText;
                         const toastId = App.ui.showToast('🤖 KashFlash is thinking...', { type: 'info', duration: 0 });
 
                         try {
-                            const result = await App.services.ai.queryGenerativeAI(systemPrompt, userPrompt);
+                            const result = await App.services.ai.queryGenerativeAI(systemPrompt, selectedText);
                             App.ui.hideToast(toastId);
 
-                            if (result && result.trim()) {
-                                const cleanedText = result.trim().replace(/^```(\w+\n)?/, '').replace(/\n?```$/, '');
-                                document.execCommand('insertHTML', false, cleanedText);
-                                App.ui.showToast("KashFlash created!", 'success');
-                                App.state.isArticleDirty = true;
-                            } else {
-                                throw new Error("AI returned an empty response.");
+                            if (!result || !result.trim()) throw new Error('AI returned an empty response.');
+
+                            const jsonMatch = result.match(/\[\s*\{[\s\S]*?\}\s*\]/s);
+                            if (!jsonMatch) throw new Error('AI response did not contain a valid JSON array.');
+
+                            const clozePhrases = JSON.parse(jsonMatch[0]);
+                            if (!Array.isArray(clozePhrases) || clozePhrases.length === 0)
+                                throw new Error('AI returned an empty or invalid array.');
+
+                            // Save the live selection range before any DOM changes
+                            const savedRange = selection.getRangeAt(0).cloneRange();
+
+                            // Build a temporary container from the selection HTML to do safe DOM manipulation
+                            const fragment = savedRange.cloneContents();
+                            const tempDiv = document.createElement('div');
+                            tempDiv.appendChild(fragment);
+
+                            // Apply each cloze surgically via the shared DOM walker
+                            const applied = App.events.ai._applyPhrasesToDOM(
+                                tempDiv,
+                                clozePhrases.map(c => ({ text: c.text, id: c.id || 1 })),
+                                (range, item) => {
+                                    const clozeSpan = document.createElement('span');
+                                    // Preserve the exact original text, just wrap in cloze markers
+                                    const originalText = range.toString();
+                                    clozeSpan.textContent = `{{c${item.id}::${originalText}}}`;
+                                    range.deleteContents();
+                                    range.insertNode(clozeSpan);
+                                },
+                                'span[class*="highlight-"]' // don't nest inside backgrounds
+                            );
+
+                            if (applied === 0) {
+                                App.ui.showToast('AI suggested clozes but none could be matched in the selected text.', 'warning');
+                                return;
                             }
+
+                            // Replace the original selection with the processed fragment
+                            savedRange.deleteContents();
+                            savedRange.insertNode(tempDiv);
+
+                            // Unwrap the temp div (it was just a container)
+                            const parent = tempDiv.parentNode;
+                            while (tempDiv.firstChild) parent.insertBefore(tempDiv.firstChild, tempDiv);
+                            parent.removeChild(tempDiv);
+
+                            App.ui.showToast(`KashFlash: ${applied} cloze(s) created!`, 'success');
+                            App.state.isArticleDirty = true;
+
                         } catch (error) {
                             App.ui.hideToast(toastId);
-                            App.ui.showToast("AI could not generate a flashcard. Please try again.", "warning");
-                            console.error("KashFlash Error:", error);
+                            App.ui.showToast('AI could not generate a flashcard. Please try again.', 'warning');
+                            console.error('KashFlash Error:', error);
                         }
                     },
 
@@ -32017,68 +32169,138 @@
                     async executeKashHighlight() {
                         const contentDiv = document.getElementById('article-content');
                         if (!contentDiv || !contentDiv.textContent.trim()) {
-                            App.ui.showToast("Article is empty, nothing to highlight.", "warning");
+                            App.ui.showToast('Article is empty, nothing to highlight.', 'warning');
                             return;
                         }
 
-                        const systemPrompt = `You are an intelligent highlighting tool for a note-taking app. Your task is to analyze the provided article and identify ONLY the most crucial phrases, sentences, or data points (5-10 key points). For each identified piece of text, you must return a JSON object with two keys: "text" (the exact, verbatim text from the article to be highlighted) and "color" (a number from 1 to 6). Use can use different colors contextually (not necessary): 1 for main ideas, 2 for supporting evidence, 3 for names/dates, 4 for warnings/negatives, 5 for key terms, 6 for conclusions. Be very selective and brief. Respond ONLY with a valid JSON array of these objects. Example: [{"text": "the central thesis is...", "color": 1}, {"text": "a critical disadvantage", "color": 4}]`;
+                        // ── DUAL-MODE HIGHLIGHT SYSTEM ─────────────────────────────────────────────
 
-                        const userPrompt = contentDiv.innerText;
 
-                        const result = await App.services.ai.queryGenerativeAI(systemPrompt, userPrompt);
+                        const systemPrompt = `You are an intelligent dual-mode highlighting assistant for a note-taking app called NoteKash.
 
-                        if (result && result.trim()) {
-                            try {
-                                const jsonMatch = result.match(/\[\s*\{[\s\S]*?\}\s*\]/);
-                                if (!jsonMatch) throw new Error("AI response did not contain a valid JSON array.");
+                        Your task: Analyze the article/content while Acting as expert of subject matter before highlighting and return TWO separate highlight lists in a single JSON object.
 
-                                const highlights = JSON.parse(jsonMatch[0]);
-                                if (!Array.isArray(highlights)) throw new Error("AI did not return an array.");
+                        === MODE 1: Background Highlights ("bg_highlights") ===
+                        Use for important PHRASES or SENTENCES. These get a colored background block.
+                        Available color options (integers 1 to 6): 1 (yellow), 2 (green), 3 (blue), 4 (red), 5 (purple), 6 (teal).
+                        Use your intelligence to assign these colors based on the context to make the notes look colorful and distinct while highlighting important sentences/phrases of article.
 
-                                const walker = document.createTreeWalker(contentDiv, NodeFilter.SHOW_TEXT);
-                                const textNodes = [];
-                                while (walker.nextNode()) textNodes.push(walker.currentNode);
+                        === MODE 2: Text-Color Highlights ("text_highlights") ===
+                        Use for SHORT inline keywords or important single-word/short-phrase callouts. These get bold colored text.
+                        Available color names: "green", "blue", "orange", "magenta", "teal", "slate".
+                        Again, pick contextually using your intelligence. These should be freely/abundantly used!
 
-                                let highlightsApplied = 0;
-                                highlights.forEach(highlight => {
-                                    if (!highlight.text || !highlight.color) return;
+                        === CRITICAL RULES ===
+                        1. Every "text" value MUST be a verbatim phrase that appears in the article (case may differ).
+                        2. Do NOT overlap: if a phrase is in bg_highlights, do not repeat it in text_highlights.
+                        3. Use your intelligence to decide which sections are important. Context will change across articles. 
+                        4. Our overall goal is for the notes to look very colorful and visually engaging, so ENSURE you use ALL available background colors  and ALL text colors across your selections. Also use as many times possible.
+                        5. "text_highlights" should be used freely and abundantly for keywords. There should be significantly more text_highlights than bg_highlights.
+                        6. Respond ONLY with a single valid JSON object with exactly two keys: "bg_highlights" and "text_highlights".
 
-                                    const textToHighlight = highlight.text.trim();
-                                    const colorClass = `highlight-${highlight.color}`;
-                                    const snippetId = `snip-${crypto.randomUUID().slice(0, 12)}`;
+                        Example response:
+                        {
+                          "bg_highlights": [
+                            {"text": "the collegium system was established", "color": 1},
+                            {"text": "Article 124", "color": 3},
+                            {"text": "non-justiciable", "color": 5}
+                          ],
+                          "text_highlights": [
+                            {"text": "Judicial Appointments", "color": "orange"},
+                            {"text": "independence of judiciary", "color": "blue"},
+                            {"text": "Supreme Court", "color": "teal"}
+                          ]
+                        }`;
 
-                                    for (const node of textNodes) {
-                                        const index = node.nodeValue.indexOf(textToHighlight);
-                                        if (index !== -1 && !node.parentElement.closest('span[class*="highlight-"]')) {
-                                            const range = document.createRange();
-                                            range.setStart(node, index);
-                                            range.setEnd(node, index + textToHighlight.length);
+                        const toastId = App.ui.showToast('🤖 KashHighlight is analysing...', { type: 'info', duration: 0 });
+                        const result = await App.services.ai.queryGenerativeAI(systemPrompt, contentDiv.innerText);
+                        App.ui.hideToast(toastId);
 
-                                            const highlightSpan = document.createElement('span');
-                                            highlightSpan.className = colorClass;
-                                            highlightSpan.id = snippetId;
-                                            range.surroundContents(highlightSpan);
+                        if (!result || !result.trim()) {
+                            App.ui.showToast('AI could not generate highlights.', 'warning');
+                            return;
+                        }
 
-                                            highlightsApplied++;
-                                            break;
-                                        }
-                                    }
-                                });
+                        try {
+                            // Robustly extract the first JSON object from the response
+                            const jsonMatch = result.match(/\{[\s\S]*\}/s);
+                            if (!jsonMatch) throw new Error('AI response did not contain a valid JSON object.');
 
-                                if (highlightsApplied > 0) {
-                                    App.ui.showToast(`${highlightsApplied} key sections highlighted!`, 'success');
-                                    App.state.isArticleDirty = true;
-                                } else {
-                                    App.ui.showToast("AI found highlights, but they could not be applied to the text.", "warning");
+                            const parsed = JSON.parse(jsonMatch[0]);
+                            const bgItems = Array.isArray(parsed.bg_highlights) ? parsed.bg_highlights : [];
+                            const textItems = Array.isArray(parsed.text_highlights) ? parsed.text_highlights : [];
+
+                            let totalApplied = 0;
+
+                            // ── Apply HEADING highlights ──────────────────────────────────────────
+                            // Automatically make all headings red and bold for the app to understand
+                            const headings = contentDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                            let headingsApplied = 0;
+                            headings.forEach(h => {
+                                if (!h.classList.contains('text-red')) {
+                                    h.classList.add('text-red');
+                                    h.style.fontWeight = 'bold';
+                                    headingsApplied++;
                                 }
+                            });
+                            totalApplied += headingsApplied;
 
+                            // ── Apply BACKGROUND highlights ───────────────────────────────────────
+                            if (bgItems.length > 0) {
+                                const bgNormalized = bgItems
+                                    .filter(h => h.text && h.color >= 1 && h.color <= 6)
+                                    .map(h => ({ text: h.text, color: h.color }));
 
-                            } catch (error) {
-                                console.error("KashHighlight Error:", error, "AI Response:", result);
-                                App.ui.showToast("AI returned an invalid format for highlighting.", "error");
+                                const bgApplied = App.events.ai._applyPhrasesToDOM(
+                                    contentDiv,
+                                    bgNormalized,
+                                    (range, item) => {
+                                        const span = document.createElement('span');
+                                        span.className = `highlight-${item.color}`;
+                                        span.id = `snip-${crypto.randomUUID().slice(0, 12)}`;
+                                        range.surroundContents(span);
+                                    },
+                                    'span[class^="highlight-"]' // skip already highlighted
+                                );
+                                totalApplied += bgApplied;
                             }
-                        } else {
-                            App.ui.showToast("AI could not generate highlights.", "warning");
+
+                            // ── Apply TEXT-COLOR highlights ───────────────────────────────────────
+                            // Map of AI color names → CSS class names
+                            const textColorMap = {
+                                green: 'text-green', blue: 'text-blue', orange: 'text-orange',
+                                magenta: 'text-magenta', teal: 'text-teal', slate: 'text-slate'
+                            };
+
+                            if (textItems.length > 0) {
+                                const textNormalized = textItems
+                                    .filter(h => h.text && textColorMap[h.color])
+                                    .map(h => ({ text: h.text, colorClass: textColorMap[h.color] }));
+
+                                const textApplied = App.events.ai._applyPhrasesToDOM(
+                                    contentDiv,
+                                    textNormalized,
+                                    (range, item) => {
+                                        const span = document.createElement('span');
+                                        span.className = item.colorClass;
+                                        span.style.fontWeight = 'bold';
+                                        range.surroundContents(span);
+                                    },
+                                    'span.text-red, span.text-green, span.text-blue, span.text-orange, span.text-magenta, span.text-teal, span.text-slate'
+                                );
+                                totalApplied += textApplied;
+                            }
+
+                            if (totalApplied > 0) {
+                                App.ui.showToast(`${totalApplied} highlights applied (${bgItems.length} background + ${textItems.length} text-color)!`, 'success');
+                                App.state.isArticleDirty = true;
+                            } else {
+                                App.ui.showToast('AI found highlights but they could not be matched in the text.', 'warning');
+                            }
+
+                        } catch (error) {
+                            console.error('KashHighlight Error:', error, 'AI Response:', result);
+                            App.ui.showToast('AI returned an invalid format for highlighting.', 'error');
                         }
                     },
 
@@ -34102,10 +34324,10 @@
                         case 'switchToWrite': App.events.switchToMode('write'); break;
                         case 'finishArticle': App.events.finishArticle(); break;
                         case 'copyHighlights': App.services.export.copyCurrentArticleHighlights(); break;
-                        case 'exportHtml': App.services.export.exportArticleAsHtml(); break;
+                        case 'exportHtml': App.ui.showExportBrandModal((brandName, brandLink) => App.services.export.exportArticleAsHtml(brandName, brandLink), 'HTML'); break;
                         case 'shareArticle': App.services.share.article(); break;
                         case 'exportNoteKash': App.ui.showNoteKashExportModal(); break;
-                        case 'exportPdf': App.services.export.exportArticleAsPdf(); break;
+                        case 'exportPdf': App.ui.showExportBrandModal((brandName, brandLink) => App.services.export.exportArticleAsPdf(brandName, brandLink), 'PDF'); break;
                         case 'resetReadCount': App.events.resetReadCount(); break;
                         case 'toggleFocusMode': App.events.toggleFocusMode(); break;
                         case 'saveAndRead': App.events.saveArticle({ switchToRead: true }); break;
@@ -35441,6 +35663,151 @@
             // ==========================================================================
             services: {
                 export: {
+                    _getUpsellPdfBlock(isAtEnd = false) {
+                        // ── Native PDF export palette ─────────────────────────────────────────────
+                        const WHITE = '#FFFFFF';
+                        const BRAND = '#6366F1';   // used: snippet borders, highlight counts
+                        const DARK = '#0F172A';   // used: h1 title color
+                        const TEXT = '#374151';   // used: snippet body text
+                        const MUTED = '#64748B';   // used: page numbers
+                        const FAINT = '#94A3B8';   // used: footer text
+                        const BORDER = '#E2E8F0';   // used: footer rule & content dividers
+
+                        // Pill bg colors = the 8 highlight underline colors from highlightUnderlineMap
+                        const PILLS = [
+                            { label: 'VISUAL MAP', bg: '#4F46E5', tc: WHITE },  // accent indigo
+                            { label: 'MIND MAP', bg: '#9333EA', tc: WHITE },  // purple-600
+                            { label: 'FLASHCARDS', bg: '#DC2626', tc: WHITE },  // red-600
+                            { label: 'FOCUS MODE', bg: '#2563EB', tc: WHITE },  // blue-600
+                            { label: 'NoteKash AI', bg: '#16A34A', tc: WHITE },  // green-600
+                            { label: 'SUPER TAGS', bg: '#EAB308', tc: DARK },  // yellow-500
+                            { label: 'WHITEBOARD', bg: '#0891B2', tc: WHITE },  // cyan-600
+                            { label: 'CLOUD SYNC', bg: '#DB2777', tc: WHITE }   // pink-600
+                        ];
+
+                        // makePillGrid — fresh object each call (pdfmake mutates objects in-place)
+                        const makePillGrid = () => ({
+                            table: {
+                                widths: ['*', '*', '*', '*'],
+                                body: [
+                                    PILLS.slice(0, 4).map(p => ({
+                                        text: p.label, bold: true, fontSize: 7.5,
+                                        color: p.tc, fillColor: p.bg, alignment: 'center',
+                                        link: 'https://notekash.com'
+                                    })),
+                                    PILLS.slice(4, 8).map(p => ({
+                                        text: p.label, bold: true, fontSize: 7.5,
+                                        color: p.tc, fillColor: p.bg, alignment: 'center',
+                                        link: 'https://notekash.com'
+                                    }))
+                                ]
+                            },
+                            layout: {
+                                hLineWidth: () => 3, vLineWidth: () => 3,  // 3pt white gap = pill spacing
+                                hLineColor: () => WHITE, vLineColor: () => WHITE,
+                                paddingLeft: () => 0, paddingRight: () => 0,
+                                paddingTop: () => 9, paddingBottom: () => 9
+                            }
+                        });
+
+                        const contentCell = {
+                            stack: [
+                                // Brand header
+                                {
+                                    columns: [
+                                        {
+                                            width: '*',
+                                            text: [
+                                                { text: 'NOTE', bold: true, fontSize: 18, color: DARK },
+                                                { text: ' KASH', bold: true, fontSize: 18, color: BRAND }
+                                            ]
+                                        },
+                                        {
+                                            width: 'auto',
+                                            text: 'CIVILSKASH EDITION',
+                                            fontSize: 7.5, bold: true, color: FAINT,
+                                            characterSpacing: 1.5, alignment: 'right',
+                                            margin: [0, 5, 0, 0], link: 'https://notekash.com'
+                                        }
+                                    ],
+                                    margin: [0, 0, 0, 12]
+                                },
+                                // Thin rule
+                                {
+                                    canvas: [{ type: 'line', x1: 0, y1: 0, x2: 447, y2: 0, lineWidth: 0.5, lineColor: BORDER }],
+                                    margin: [0, 0, 0, 14]
+                                },
+                                // Two-column value prop
+                                {
+                                    columns: [
+                                        {
+                                            width: '50%',
+                                            stack: [
+                                                { text: 'FOR NEW USERS', bold: true, fontSize: 14, color: BRAND, characterSpacing: 1.2, margin: [0, 0, 0, 9] },
+                                                { text: 'Flashcards  ·  Focus Study Mode', fontSize: 12, color: TEXT, margin: [0, 0, 0, 5] },
+                                                { text: 'Mind map  ·  Visual map (special)', fontSize: 12, color: TEXT, margin: [0, 0, 0, 5] },
+                                                { text: 'AI NoteTaking  ·  Super Search', fontSize: 12, color: TEXT, margin: [0, 0, 0, 5] },
+                                                { text: 'Spatial Notes  ·  Whiteboard', fontSize: 12, color: TEXT, margin: [0, 0, 0, 13] },
+                                                { text: 'Unlock your Second Brain only on NoteKash.', fontSize: 10, color: FAINT, lineHeight: 1.5 }
+                                            ]
+                                        },
+                                        {
+                                            width: '50%',
+                                            stack: [
+                                                { text: 'FOR CREATORS', bold: true, fontSize: 14, color: '#DC2626', characterSpacing: 1.2, margin: [0, 0, 0, 9] },
+                                                { text: 'Remove watermark & add Branding', fontSize: 12, color: TEXT, margin: [0, 0, 0, 5] },
+                                                { text: 'Unlimited AI + Presentation Tools', fontSize: 12, color: TEXT, margin: [0, 0, 0, 5] },
+                                                { text: 'Share Project or Export notes', fontSize: 12, color: TEXT, margin: [0, 0, 0, 5] },
+                                                { text: 'MCQs, Accordian & Audio Transcribe', fontSize: 12, color: TEXT, margin: [0, 0, 0, 13] },
+                                                { text: 'Upgrade to Creator tier to start curating Pro Content.', fontSize: 10, color: FAINT, lineHeight: 1.5 }
+                                            ]
+                                        }
+                                    ],
+                                    margin: [0, 0, 0, 16]
+                                },
+                                // Feature pills
+                                makePillGrid(),
+                                // Rule + CTA
+                                {
+                                    canvas: [{ type: 'line', x1: 0, y1: 0, x2: 447, y2: 0, lineWidth: 0.5, lineColor: BORDER }],
+                                    margin: [0, 14, 0, 11]
+                                },
+                                {
+                                    text: [
+                                        { text: 'Get started free at  ', color: MUTED, fontSize: 9, link: 'https://notekash.com' },
+                                        { text: 'notekash.com', color: BRAND, bold: true, fontSize: 9, link: 'https://notekash.com' }
+                                    ],
+                                    alignment: 'center'
+                                }
+                            ],
+                            fillColor: WHITE,
+                            margin: [24, 20, 24, 20]  // cell margin acts as inner padding (layout padding = 0)
+                        };
+
+                        // Outer card: white, indigo 4pt top-accent, hairline border on sides & bottom
+                        const block = {
+                            table: {
+                                widths: ['*'],
+                                body: [[contentCell]]
+                            },
+                            layout: {
+                                hLineWidth: (i, node) => (i === 0) ? 4 : (i === node.table.body.length ? 0.5 : 0),
+                                vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length) ? 0.5 : 0,
+                                hLineColor: (i) => (i === 0) ? BRAND : BORDER,
+                                vLineColor: () => BORDER,
+                                paddingLeft: () => 0, paddingRight: () => 0,
+                                paddingTop: () => 0, paddingBottom: () => 0
+                            }
+                        };
+
+                        if (isAtEnd) {
+                            block.pageBreak = 'before';
+                        } else {
+                            block.margin = [0, 0, 0, 22];
+                        }
+
+                        return block;
+                    },
                     getCategoryContent(category, sortedArticles, asMarkdown = false) {
                         return sortedArticles.map(article => {
                             if (article.isReadOnly || article.preventReExport) return '';
@@ -35469,7 +35836,7 @@
                         return articles;
                     },
                     copyCategoryContent(category) {
-                        if (!App.state.globalCopyAllowed && !App.state.isCreator) {
+                        if (App.state.globalCopyAllowed === false && !App.state.isCreator) {
                             return App.ui.showToast('Copying is disabled for shared notes.', { type: 'warning' });
                         }
                         const sortedArticles = this.getSortedArticlesForCategory(category);
@@ -35478,7 +35845,7 @@
                         navigator.clipboard.writeText(text).then(() => App.ui.showToast("Content copied!"));
                     },
                     copyCategoryContentAsMarkdown(category) {
-                        if (!App.state.globalCopyAllowed && !App.state.isCreator) {
+                        if (App.state.globalCopyAllowed === false && !App.state.isCreator) {
                             return App.ui.showToast('Copying is disabled for shared notes.', { type: 'warning' });
                         }
                         const sortedArticles = this.getSortedArticlesForCategory(category);
@@ -35492,7 +35859,7 @@
                         if (!text) return App.ui.showToast('No content to export.');
                         App.util.downloadBlob(new Blob([text], { type: 'text/plain' }), `${category}-highlights.txt`);
                     },
-                    async categoryAsPdf(category) {
+                    async categoryAsPdf(category, brandName = '', brandLink = '') {
                         // Check pdfmake availability
                         if (typeof pdfMake === 'undefined') {
                             App.ui.showToast('PDF library is loading. Please try again in a moment.', { type: 'error' });
@@ -35516,6 +35883,9 @@
                         const toastId = App.ui.showToast('✨ Preparing PDF export...', { type: 'info', duration: 0 });
 
                         try {
+                            // --- METHOD TO CREATE UPSELL PAGE ---
+                            const createUpsellPage = (isAtEnd = false) => this._getUpsellPdfBlock(isAtEnd);
+
                             // ═══════════════════════════════════════════════════════════
                             // 🎨 DESIGN SYSTEM - Premium category snippets PDF
                             // ═══════════════════════════════════════════════════════════
@@ -35616,14 +35986,8 @@
                                 pageSize: 'A4',
                                 pageMargins: [50, 50, 50, 55],
 
-                                // ═══ WATERMARK (Non-premium users only) ═══
-                                watermark: isPremiumUser ? null : {
-                                    text: 'notekash.com',
-                                    color: '#6366F1',
-                                    opacity: 0.07,
-                                    bold: true,
-                                    angle: -45
-                                },
+                                // ═══ WATERMARK (Non-premium — pure pdfmake vector text, zero image overhead, not clickable/selectable) ═══
+                                watermark: !isPremiumUser ? { text: 'notekash.com', color: '#6366F1', opacity: 0.055, bold: true, fontSize: 54, angle: -45 } : undefined,
 
                                 // ═══ FOOTER - Premium branding ═══
                                 footer: function (currentPage, pageCount) {
@@ -35650,17 +36014,30 @@
                                                             { text: ' of ', color: '#94A3B8', fontSize: 8 },
                                                             { text: `${pageCount}`, color: '#64748B', fontSize: 8, bold: true }
                                                         ],
-                                                        margin: [50, 10, 0, 0]
+                                                        margin: [50, 10, 0, 0],
+                                                        width: '*'
+                                                    },
+                                                    // Center: User brand (Premium only)
+                                                    {
+                                                        text: brandName
+                                                            ? (brandLink
+                                                                ? [{ text: brandName, color: '#0891B2', bold: true, fontSize: 8.5, link: brandLink }]
+                                                                : [{ text: brandName, color: '#0891B2', bold: true, fontSize: 8.5 }])
+                                                            : '',
+                                                        alignment: 'center',
+                                                        margin: [0, 10, 0, 0],
+                                                        width: '*'
                                                     },
                                                     // Right: notekash.com branding
                                                     {
                                                         text: [
-                                                            { text: 'note', fontSize: 9, color: '#64748B', bold: true },
-                                                            { text: 'kash', fontSize: 9, color: '#6366F1', bold: true },
-                                                            { text: '.com', fontSize: 9, color: '#94A3B8' }
+                                                            { text: 'note', fontSize: 9, color: '#64748B', bold: true, link: 'https://notekash.com' },
+                                                            { text: 'kash', fontSize: 9, color: '#6366F1', bold: true, link: 'https://notekash.com' },
+                                                            { text: '.com', fontSize: 9, color: '#94A3B8', link: 'https://notekash.com' }
                                                         ],
                                                         alignment: 'right',
-                                                        margin: [0, 9, 50, 0]
+                                                        margin: [0, 9, 50, 0],
+                                                        width: '*'
                                                     }
                                                 ]
                                             }
@@ -35743,7 +36120,9 @@
                                     },
 
                                     // Article blocks with snippets
-                                    ...articleBlocks
+                                    ...(!isPremiumUser ? [createUpsellPage(false)] : []),
+                                    ...articleBlocks,
+                                    ...(!isPremiumUser ? [createUpsellPage(true)] : [])
                                 ],
 
                                 defaultStyle: {
@@ -35768,7 +36147,7 @@
                         }
                     },
                     copyCurrentArticleHighlights() {
-                        if (!App.state.globalCopyAllowed && !App.state.isCreator) {
+                        if (App.state.globalCopyAllowed === false && !App.state.isCreator) {
                             return App.ui.showToast('Copying is disabled for shared notes.', { type: 'warning' });
                         }
                         const article = App.storage.getArticle(App.state.activeArticleId); if (!article) return;
@@ -35780,7 +36159,7 @@
                         navigator.clipboard.writeText(text).then(() => App.ui.showToast("Title and highlights copied!"));
                     },
                     copyArticleSnippets(articleId) {
-                        if (!App.state.globalCopyAllowed && !App.state.isCreator) {
+                        if (App.state.globalCopyAllowed === false && !App.state.isCreator) {
                             return App.ui.showToast('Copying is disabled for shared notes.', { type: 'warning' });
                         }
                         const article = App.storage.getArticle(articleId); if (!article) return;
@@ -35819,7 +36198,7 @@
                     },
 
 
-                    _getHtmlExportTemplate(title, bodyContent, themeName = 'light') {
+                    _getHtmlExportTemplate(title, bodyContent, themeName = 'light', brandName = '', brandLink = '') {
                         const styles = getComputedStyle(document.documentElement);
                         const articleFontFamily = styles.getPropertyValue('--article-font-family');
                         const cssVars = [
@@ -35835,11 +36214,19 @@
                         const rootCss = `:root { ${cssVars} --article-font-family: ${articleFontFamily}; }`;
 
                         const watermarkButtonHTML = `<a id="notekash-watermark" href="https://notekash.com" target="_blank" rel="noopener noreferrer">notekash.com</a>`;
+                        let brandWatermarkHTML = '';
+                        if (brandName) {
+                            if (brandLink) {
+                                brandWatermarkHTML = `<a id="brand-watermark" href="${App.util.escapeHtml(brandLink)}" target="_blank" rel="noopener noreferrer">${App.util.escapeHtml(brandName)}</a>`;
+                            } else {
+                                brandWatermarkHTML = `<span id="brand-watermark">${App.util.escapeHtml(brandName)}</span>`;
+                            }
+                        }
 
                         // MASTER CSS: Generates the perfect "carved" look for the watermark AND pills based on the exported theme.
                         const getThemeAwareCSS = (theme) => {
                             const baseCSS = `
-                            #notekash-watermark, .exported-pill {
+                            #notekash-watermark, #brand-watermark, .exported-pill {
                                 display: inline-block;
                                 padding: 8px 16px;
                                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -35855,6 +36242,12 @@
                                 right: 25px;
                                 z-index: 9999;
                             }
+                            #brand-watermark {
+                                position: fixed;
+                                bottom: 20px;
+                                left: 25px;
+                                z-index: 9999;
+                            }
                             .exported-pills-container { margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
                             .exported-pill.category { font-size: 13px; padding: 9px 18px; }
                             .article-metadata { margin-bottom: 2rem; color: var(--text-secondary); font-size: 0.9rem; font-family: var(--article-font-family); display: flex; gap: 16px; align-items: center; opacity: 0.8; }
@@ -35863,14 +36256,14 @@
                             switch (theme) {
                                 case 'dark':
                                     return baseCSS + `
-                                    #notekash-watermark, .exported-pill { /* Honed Slate */
+                                    #notekash-watermark, #brand-watermark, .exported-pill { /* Honed Slate */
                                         background-color: #21262D;
                                         color: #8B949E;
                                         border: 1px solid #30363D;
                                         box-shadow: 0 4px 15px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05);
                                         text-shadow: 0 -1px 1px rgba(0, 0, 0, 0.6);
                                     }
-                                    #notekash-watermark:hover, .exported-pill:hover {
+                                    #notekash-watermark:hover, #brand-watermark:hover, .exported-pill:hover {
                                         color: #c9d1d9;
                                         transform: translateY(-2px);
                                         box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.05);
@@ -35878,14 +36271,14 @@
                                 `;
                                 case 'sepia':
                                     return baseCSS + `
-                                    #notekash-watermark, .exported-pill { /* Aged Brass */
+                                    #notekash-watermark, #brand-watermark, .exported-pill { /* Aged Brass */
                                         background: linear-gradient(145deg, #d3c8b6, #fbf0d9);
                                         color: #7a6a57;
                                         border: 1px solid rgba(91, 70, 54, 0.3);
                                         box-shadow: 0 5px 20px rgba(91, 70, 54, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.7);
                                         text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8), 0 -1px 1px rgba(91, 70, 54, 0.2);
                                     }
-                                    #notekash-watermark:hover, .exported-pill:hover {
+                                    #notekash-watermark:hover, #brand-watermark:hover, .exported-pill:hover {
                                         color: #5b4636;
                                         transform: translateY(-2px);
                                         box-shadow: 0 10px 30px rgba(91, 70, 54, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.7);
@@ -35893,14 +36286,14 @@
                                 `;
                                 default: // Light Theme
                                     return baseCSS + `
-                                    #notekash-watermark, .exported-pill { /* Polished Marble */
+                                    #notekash-watermark, #brand-watermark, .exported-pill { /* Polished Marble */
                                         background: linear-gradient(145deg, #e9ecef, #ffffff);
                                         color: var(--text-secondary);
                                         border: 1px solid var(--border-color);
                                         box-shadow: 0 5px 20px rgba(0,0,0,0.07), inset 0 1px 1px rgba(255,255,255,0.8);
                                         text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9), 0 -1px 1px rgba(0, 0, 0, 0.05);
                                     }
-                                    #notekash-watermark:hover, .exported-pill:hover {
+                                    #notekash-watermark:hover, #brand-watermark:hover, .exported-pill:hover {
                                         color: var(--text-primary);
                                         transform: translateY(-2px);
                                         box-shadow: 0 10px 30px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.8);
@@ -36012,10 +36405,11 @@
                                 <body>
                                     ${bodyContent}
                                     ${watermarkButtonHTML}
+                                    ${brandWatermarkHTML}
                                 </body>
                                 </html>`;
                     },
-                    exportArticleAsHtml() {
+                    exportArticleAsHtml(brandName = '', brandLink = '') {
                         const article = App.storage.getArticle(App.state.activeArticleId); if (!article) return;
                         if (article.preventReExport) {
                             return App.ui.showToast('Creator has disabled Re-Sharing of notes.', { type: 'warning' });
@@ -36082,7 +36476,7 @@
 
 
                         const bodyContent = `${pillsHTML}<h1>${article.title}</h1>${metadataHTML}<hr>${processedContent}`;
-                        const fullHtml = this._getHtmlExportTemplate(article.title, bodyContent, App.settings.get('theme'));
+                        const fullHtml = this._getHtmlExportTemplate(article.title, bodyContent, App.settings.get('theme'), brandName, brandLink);
                         App.util.downloadBlob(new Blob([fullHtml], { type: 'text/html' }), `${App.util.slugify(article.title)}.html`);
                     },
 
@@ -36174,7 +36568,7 @@
                     },
 
                     /* Export Article as PDF - Premium PDF with pdfmake (selectable text, images, elegant watermark) */
-                    async exportArticleAsPdf() {
+                    async exportArticleAsPdf(brandName = '', brandLink = '') {
                         const article = App.storage.getArticle(App.state.activeArticleId);
                         if (!article) {
                             App.ui.showToast('No article to export.', { type: 'error' });
@@ -36191,6 +36585,7 @@
                             return;
                         }
 
+                        const isPremiumUser = App.license.isPremium();
                         const toastId = App.ui.showToast('✨ Preparing PDF export...', { type: 'info', duration: 0 });
 
                         try {
@@ -37042,12 +37437,12 @@
                                 return content;
                             };
 
+                            const createUpsellPage = (isAtEnd = false) => this._getUpsellPdfBlock(isAtEnd);
+
                             // Parse article content
                             const articleContent = parseHtmlToPdfContent(article.content);
 
-                            // ═══════════════════════════════════════════════════════════
                             // 🎨 BUILD PREMIUM PDF DOCUMENT
-                            // ═══════════════════════════════════════════════════════════
 
                             // Create stylish tag pills
                             const tagPills = (article.tags || []).map(tag => {
@@ -37061,21 +37456,14 @@
                                 };
                             });
 
-                            // Check if user is premium (for watermark logic)
-                            const isPremiumUser = App.license.isPremium();
+
 
                             const docDefinition = {
                                 pageSize: 'A4',
                                 pageMargins: [40, 60, 40, 50],
 
-                                // ═══ WATERMARK (Non-premium users only) ═══
-                                watermark: isPremiumUser ? null : {
-                                    text: 'notekash.com',
-                                    color: '#6366F1',
-                                    opacity: 0.07,
-                                    bold: true,
-                                    angle: -45
-                                },
+                                // ═══ WATERMARK (Non-premium — pure pdfmake vector text, zero image overhead, not clickable/selectable) ═══
+                                watermark: !isPremiumUser ? { text: 'notekash.com', color: '#6366F1', opacity: 0.055, bold: true, fontSize: 54, angle: -45 } : undefined,
 
                                 // ═══ HEADER - Premium brand header ═══
                                 header: function (currentPage, pageCount) {
@@ -37124,17 +37512,30 @@
                                                             { text: ' of ', color: '#94A3B8', fontSize: 8 },
                                                             { text: `${pageCount}`, color: '#64748B', fontSize: 8, bold: true }
                                                         ],
-                                                        margin: [40, 10, 0, 0]
+                                                        margin: [40, 10, 0, 0],
+                                                        width: '*'
+                                                    },
+                                                    // Center: User brand (Premium only)
+                                                    {
+                                                        text: brandName
+                                                            ? (brandLink
+                                                                ? [{ text: brandName, color: '#0891B2', bold: true, fontSize: 8.5, link: brandLink }]
+                                                                : [{ text: brandName, color: '#0891B2', bold: true, fontSize: 8.5 }])
+                                                            : '',
+                                                        alignment: 'center',
+                                                        margin: [0, 10, 0, 0],
+                                                        width: '*'
                                                     },
                                                     // Right: notekash.com branding
                                                     {
                                                         text: [
-                                                            { text: 'note', fontSize: 9, color: '#64748B', bold: true },
-                                                            { text: 'kash', fontSize: 9, color: '#6366F1', bold: true },
-                                                            { text: '.com', fontSize: 9, color: '#94A3B8' }
+                                                            { text: 'note', fontSize: 9, color: '#64748B', bold: true, link: 'https://notekash.com' },
+                                                            { text: 'kash', fontSize: 9, color: '#6366F1', bold: true, link: 'https://notekash.com' },
+                                                            { text: '.com', fontSize: 9, color: '#94A3B8', link: 'https://notekash.com' }
                                                         ],
                                                         alignment: 'right',
-                                                        margin: [0, 9, 40, 0]
+                                                        margin: [0, 9, 40, 0],
+                                                        width: '*'
                                                     }
                                                 ]
                                             }
@@ -37242,7 +37643,9 @@
                                     },
 
                                     // Main article content
-                                    ...articleContent
+                                    ...(!isPremiumUser ? [createUpsellPage(false)] : []),
+                                    ...articleContent,
+                                    ...(!isPremiumUser ? [createUpsellPage(true)] : [])
                                 ],
 
                                 // ═══ STYLES ═══
@@ -38125,43 +38528,45 @@
                             return;
                         }
 
-                        const categoryObj = App.settings.get('userCategories').find(c => c.name === article.category) || { name: article.category, colorIndex: 0 };
-                        const categoryPill = `<div class="exported-pill category" style="background-color: ${App.util.getCategoryColor(categoryObj.colorIndex)}; color: var(--category-pill-text);">${App.util.getCategoryDisplayName(categoryObj.name)}</div>`;
-                        const tagsPills = (article.tags || []).map(tag => `<div class="exported-pill">${App.state.tags[tag]?.displayName || tag}</div>`).join('');
-                        const pillsHTML = `<div class="exported-pills-container">${categoryPill}${tagsPills}</div>`;
+                        App.ui.showExportBrandModal(async (brandName, brandLink) => {
+                            const categoryObj = App.settings.get('userCategories').find(c => c.name === article.category) || { name: article.category, colorIndex: 0 };
+                            const categoryPill = `<div class="exported-pill category" style="background-color: ${App.util.getCategoryColor(categoryObj.colorIndex)}; color: var(--category-pill-text);">${App.util.getCategoryDisplayName(categoryObj.name)}</div>`;
+                            const tagsPills = (article.tags || []).map(tag => `<div class="exported-pill">${App.state.tags[tag]?.displayName || tag}</div>`).join('');
+                            const pillsHTML = `<div class="exported-pills-container">${categoryPill}${tagsPills}</div>`;
 
-                        const bodyContent = `${pillsHTML}<h1>${article.title}</h1><hr>${App.util.parseShortcuts(article.content)}`;
-                        const fullHtml = App.services.export._getHtmlExportTemplate(article.title, bodyContent);
+                            const bodyContent = `${pillsHTML}<h1>${article.title}</h1><hr>${App.util.parseShortcuts(article.content)}`;
+                            const fullHtml = App.services.export._getHtmlExportTemplate(article.title, bodyContent, App.settings.get('theme'), brandName, brandLink);
 
-                        const blob = new Blob([fullHtml], { type: 'text/html' });
-                        const file = new File([blob], `${App.util.slugify(article.title)}.html`, { type: 'text/html' });
+                            const blob = new Blob([fullHtml], { type: 'text/html' });
+                            const file = new File([blob], `${App.util.slugify(article.title)}.html`, { type: 'text/html' });
 
-                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                            try {
-                                await navigator.share({
-                                    files: [file],
-                                    title: article.title,
-                                    text: `Note: ${article.title}`,
-                                });
-                            } catch (err) {
-                                if (err.name !== 'AbortError') {
-                                    console.error('File share failed:', err);
-                                    App.ui.showToast('Something went wrong while sharing.', 'error');
+                            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                try {
+                                    await navigator.share({
+                                        files: [file],
+                                        title: article.title,
+                                        text: `Note: ${article.title}`,
+                                    });
+                                } catch (err) {
+                                    if (err.name !== 'AbortError') {
+                                        console.error('File share failed:', err);
+                                        App.ui.showToast('Something went wrong while sharing.', 'error');
+                                    }
                                 }
-                            }
-                        } else {
-                            if (!App.state.globalCopyAllowed && !App.state.isCreator) {
-                                App.ui.showToast('Copying is disabled for shared notes.', { type: 'warning' });
-                                return;
-                            }
-                            const tempDiv = document.createElement('div');
-                            tempDiv.innerHTML = article.content;
-                            const textContent = tempDiv.textContent || tempDiv.innerText;
-                            const textToCopy = `Title: ${article.title}\n\n${textContent}\n\n---\nSource: notekash.com`;
+                            } else {
+                                if (App.state.globalCopyAllowed === false && !App.state.isCreator) {
+                                    App.ui.showToast('Copying is disabled for shared notes.', { type: 'warning' });
+                                    return;
+                                }
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = article.content;
+                                const textContent = tempDiv.textContent || tempDiv.innerText;
+                                const textToCopy = `Title: ${article.title}\n\n${textContent}\n\n---\nSource: notekash.com`;
 
-                            await navigator.clipboard.writeText(textToCopy);
-                            App.ui.showToast('File sharing not supported. Full article text has been copied to your clipboard instead!', { type: 'info', duration: 6000 });
-                        }
+                                await navigator.clipboard.writeText(textToCopy);
+                                App.ui.showToast('File sharing not supported. Full article text has been copied to your clipboard instead!', { type: 'info', duration: 6000 });
+                            }
+                        }, 'HTML');
                     },
                 },
                 ai: {
@@ -43113,7 +43518,7 @@
 
                     try {
                         console.log("Clip: Attempting Tier 1 (Netlify Function)...");
-                        const response = await fetch('/.netlify/functions/clipper', {
+                        const response = await fetch('/clipper', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ url })
