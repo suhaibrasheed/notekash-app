@@ -1,11 +1,10 @@
 {
   "name": "notekash-app",
   "version": "1.0.0",
-  "description": "Dependencies for Netlify functions",
+  "description": "Dependencies for Cloudflare Pages functions",
   "dependencies": {
-    "jsonwebtoken": "^9.0.2",
     "@mozilla/readability": "^0.5.0",
-    "jsdom": "^22.1.0",
-    "node-fetch": "^2.6.7" 
+    "@tsndr/cloudflare-worker-jwt": "^2.3.2",
+    "linkedom": "^0.16.8"
   }
 }
