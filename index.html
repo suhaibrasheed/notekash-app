@@ -141,21 +141,16 @@
         }
 
 
-        /* --- Selection Highlight --- */
         ::selection {
-            background-color: #ff0055;
-            color: #ffffff;
-            text-shadow:
-                0 0 8px rgba(255, 0, 85, 0.4),
-                0 1px 2px rgba(0, 0, 0, 0.3);
+            background-color: var(--primary-color);
+            color: var(--bg-primary);
+            text-shadow: 0 0 1px var(--bg-primary), 0 0 2px var(--primary-color);
         }
 
-        ::-webkit-selection {
-            background-color: #ff0055;
-            color: #ffffff;
-            text-shadow:
-                0 0 8px rgba(255, 0, 85, 0.4),
-                0 1px 2px rgba(0, 0, 0, 0.3);
+        ::-moz-selection {
+            background-color: var(--primary-color);
+            color: var(--bg-primary);
+            text-shadow: 0 0 1px var(--bg-primary), 0 0 2px var(--primary-color);
         }
 
         /* --- Custom Searching Toast --- */
@@ -4476,23 +4471,27 @@
 
         .insert-popover {
             position: absolute;
-            bottom: 100%;
+            bottom: calc(100% + 10px);
             left: 50%;
-            margin-bottom: 8px;
+            transform: translateX(-50%) translateY(5px);
             background-color: var(--bg-secondary);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-lg);
+            border-radius: 14px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13), 0 2px 6px rgba(0, 0, 0, 0.07);
             border: 1px solid var(--border-color);
-            padding: 4px;
+            padding: 8px;
             z-index: 1002;
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+            width: max-content;
+            min-width: 0;
             visibility: hidden;
             opacity: 0;
-            transform: translateX(-50%) translateY(5px);
-            transition: visibility 0s linear 0.5s, opacity 0.2s ease-out 0.5s, transform 0.2s ease-out 0.5s;
+            transition: visibility 0s linear 0.15s, opacity 0.15s ease-out 0.15s, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.15s;
         }
 
-        .insert-toolbar-group:hover .insert-popover {
+        .insert-toolbar-group:hover .insert-popover,
+        .insert-toolbar-group.popover-open .insert-popover {
             visibility: visible;
             opacity: 1;
             transform: translateX(-50%) translateY(0);
@@ -4500,7 +4499,144 @@
         }
 
         .insert-popover .btn-icon {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        /* Mobile: keep reasonably touchable on small screens */
+        @media (max-width: 612px) {
+            .insert-popover {
+                padding: 9px;
+                gap: 6px;
+                border-radius: 16px;
+            }
+
+            .insert-popover .btn-icon {
+                width: 50px;
+                height: 50px;
+                min-width: 50px;
+                min-height: 50px;
+                border-radius: 12px;
+            }
+        }
+
+        /* --- Find in Article Bar --- */
+        #nk-find-bar {
+            position: fixed;
+            top: 4.5rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(-12px);
+            z-index: 1050;
+            background: rgba(var(--bg-secondary-rgb), 0.97);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 8px 10px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            min-width: 280px;
+            max-width: min(90vw, 420px);
+            opacity: 0;
+            transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #nk-find-bar.is-visible {
+            display: flex;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #nk-find-input {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 0.9rem;
+            font-family: var(--font-body);
+            outline: none;
+            min-width: 0;
+            transition: border-color 0.15s;
+        }
+
+        #nk-find-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.15);
+        }
+
+        .nk-find-count {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            min-width: 48px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .nk-find-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s, color 0.15s;
+            flex-shrink: 0;
+            touch-action: manipulation;
+        }
+
+        .nk-find-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--primary-color);
+        }
+
+        .nk-find-btn:disabled {
+            opacity: 0.35;
+            cursor: default;
+        }
+
+        .nk-find-btn.nk-find-case-active {
+            color: var(--primary-color);
+            background: rgba(var(--primary-color-rgb), 0.12);
+        }
+
+        .nk-find-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border-color);
+            flex-shrink: 0;
+        }
+
+        /* Highlight styles for find matches */
+        mark.nk-find-hl {
+            background: rgba(250, 204, 21, 0.4);
+            color: inherit;
+            border-radius: 2px;
+            padding: 0 1px;
+            transition: background 0.15s;
+        }
+
+        mark.nk-find-hl.nk-find-hl-current {
+            background: rgba(234, 88, 12, 0.55);
+            box-shadow: 0 0 0 1.5px rgba(234, 88, 12, 0.6);
+            border-radius: 3px;
         }
 
         /* --- Color Picker Styles --- */
@@ -5650,8 +5786,8 @@
         .focus-mode-overlay.sigma-mode-article .focus-mode-body>* {
             max-width: 100% !important;
             box-sizing: border-box;
-            padding-left: 3rem;
-            padding-right: 3rem;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
         }
 
         /* Style the scrollbar to be less obtrusive and match the app's theme. */
@@ -5677,9 +5813,11 @@
             cursor: pointer;
             transition: all 0.2s ease-in-out;
             border: 2px solid transparent;
-            padding: 1px, 3px, 1px, 3px;
+            padding: 2px 2px;
             border-radius: var(--border-radius);
             line-height: 1.5;
+            width: fit-content;
+            max-width: 100%;
         }
 
         .focus-mode-body .nk-accordion {
@@ -5705,7 +5843,7 @@
         .focus-mode-body .nk-text-tile {
             display: flex;
             width: 100%;
-            max-width: 100%;
+            max-width: 100% !important;
             margin: 0;
         }
 
@@ -5860,6 +5998,9 @@
             display: block;
             height: 100%;
             scrollbar-width: none;
+            width: 100%;
+            max-width: 100%;
+            padding: 2rem 0;
         }
 
         .focus-mode-overlay.stage-mode-active .focus-mode-content::-webkit-scrollbar {
@@ -5868,9 +6009,10 @@
 
         .focus-mode-overlay.stage-mode-active .focus-mode-title {
             position: static;
-            margin-bottom: 1rem;
+            margin-bottom: 2rem;
             margin-top: 1rem;
             flex-shrink: 0;
+            text-align: center;
         }
 
         .focus-mode-overlay.stage-mode-active .focus-mode-body {
@@ -5880,6 +6022,10 @@
             overflow: visible;
             height: auto;
             display: block;
+            margin: 0 auto;
+            max-width: 1400px;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
         }
 
         .focus-mode-overlay.stage-mode-active .focus-mode-body::-webkit-scrollbar {
@@ -5935,7 +6081,7 @@
         }
 
         .focus-mode-overlay.stage-mode-active {
-            padding: 1rem 2vw;
+            padding: 0;
         }
 
         /* --- H. Stage Mode Articulator & Toolbar Upgrades --- */
@@ -11939,10 +12085,6 @@
             transform: translate(-50%, -50%);
         }
 
-        body.write-mode .nk-mcq-option[data-is-correct="true"] .nk-mcq-option-text {
-            border-color: color-mix(in srgb, var(--success-color) 40%, transparent);
-            background: color-mix(in srgb, var(--success-color) 8%, var(--bg-secondary));
-        }
 
         /* --- Read Mode Specific Styles - POLISHED --- */
         body.read-mode .nk-mcq-add-option,
@@ -11979,9 +12121,10 @@
             box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
-
         body.read-mode .nk-mcq-option .nk-mcq-option-text {
             padding-left: 34px;
+            background: transparent;
+            border: none;
         }
 
         /* Hover state - show inner dot */
@@ -16971,6 +17114,625 @@
             flex-shrink: 0;
             white-space: nowrap;
         }
+
+        /* --- Pro Presenter Mode --- */
+        .pro-presenter-wave-overlay {
+            position: fixed;
+            inset: 6px;
+            /* Distinct gap from window edge */
+            pointer-events: none;
+            z-index: 999998;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 20px;
+            /* Modern rounded app feel */
+            box-shadow: inset 0 0 120px color-mix(in srgb, var(--primary-color) 8%, transparent);
+        }
+
+        body.is-pro-presenter-active .pro-presenter-wave-overlay {
+            opacity: 1;
+        }
+
+        /* Hide the old SVG waves from the DOM */
+        .pro-wave {
+            display: none !important;
+        }
+
+        .pro-presenter-wave-overlay::before,
+        .pro-presenter-wave-overlay::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+
+        /*  PRO PRESENTER — LIVING CELL (Mode 1)  */
+        .pro-presenter-wave-overlay::before {
+            border: 4px solid color-mix(in srgb, var(--primary-color) 40%, transparent);
+            margin: 4px;
+            box-shadow: inset 0 0 50px color-mix(in srgb, var(--primary-color) 15%, transparent),
+                0 0 50px color-mix(in srgb, var(--primary-color) 15%, transparent);
+            animation: livingCellBreathing 13s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+            opacity: 0.6;
+            mix-blend-mode: screen;
+        }
+
+        .pro-presenter-wave-overlay::after {
+            border: 2px solid color-mix(in srgb, var(--text-primary) 30%, transparent);
+            margin: 12px;
+            box-shadow: inset 0 0 25px color-mix(in srgb, var(--primary-color) 25%, transparent),
+                0 0 25px color-mix(in srgb, var(--primary-color) 25%, transparent);
+            animation: livingCellBreathingInner 10s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate-reverse;
+            opacity: 0.4;
+        }
+
+        [data-theme="light"] .pro-presenter-wave-overlay::before {
+            mix-blend-mode: multiply;
+        }
+
+        @keyframes livingCellBreathing {
+            0% {
+                transform: scale(0.995);
+                opacity: 0.4;
+                box-shadow: inset 0 0 20px color-mix(in srgb, var(--primary-color) 5%, transparent),
+                    0 0 20px color-mix(in srgb, var(--primary-color) 5%, transparent);
+            }
+
+            100% {
+                transform: scale(1.002);
+                opacity: 0.8;
+                box-shadow: inset 0 0 70px color-mix(in srgb, var(--primary-color) 25%, transparent),
+                    0 0 70px color-mix(in srgb, var(--primary-color) 25%, transparent);
+                border-color: color-mix(in srgb, var(--primary-color) 60%, transparent);
+            }
+        }
+
+        @keyframes livingCellBreathingInner {
+            0% {
+                transform: scale(0.992);
+                opacity: 0.3;
+                border-color: color-mix(in srgb, var(--text-primary) 15%, transparent);
+                margin: 16px;
+                border-width: 2px;
+            }
+
+            100% {
+                transform: scale(1.005);
+                opacity: 0.9;
+                border-color: color-mix(in srgb, var(--primary-color) 50%, transparent);
+                box-shadow: inset 0 0 40px color-mix(in srgb, var(--primary-color) 40%, transparent),
+                    0 0 40px color-mix(in srgb, var(--primary-color) 40%, transparent);
+                margin: 4px;
+                border-width: 4px;
+                filter: brightness(1.3) contrast(1.2);
+            }
+        }
+
+        /*  PRO PRESENTER — LIQUID GLOW */
+
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay {
+            overflow: visible;
+            border-radius: 20px;
+            border: 2px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+            box-shadow: inset 0 0 20px color-mix(in srgb, var(--primary-color) 5%, transparent);
+        }
+
+        /* Ambient Outer Glow */
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay::before {
+            content: "";
+            position: absolute;
+            inset: 0px;
+            border-radius: inherit;
+            box-shadow: 0 0 60px 10px var(--primary-color), 0 0 100px 20px color-mix(in srgb, var(--primary-color) 60%, transparent);
+            opacity: 0.6;
+            animation: liquidGlowPulse 12s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        /* Extra soft bright halo */
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay::after {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 24px;
+            border: 4px solid var(--primary-color);
+            filter: blur(8px);
+            opacity: 0.8;
+            animation: liquidGlowPulse 12s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes liquidGlowPulse {
+            0% {
+                opacity: 0.2;
+                filter: blur(8px);
+                transform: scale(0.99);
+            }
+
+            50% {
+                opacity: 0.9;
+                filter: blur(15px);
+                transform: scale(1.02);
+            }
+
+            100% {
+                opacity: 0.5;
+                filter: blur(6px);
+                transform: scale(1);
+            }
+        }
+
+
+        /*  PRO PRESENTER — BREATHING BORDER (Mode 3)                 */
+
+
+        [data-pro-presenter-mode="breathing-border"] .pro-presenter-wave-overlay {
+            overflow: visible;
+        }
+
+        [data-pro-presenter-mode="breathing-border"] .pro-presenter-wave-overlay::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: transparent;
+            animation: breatheExpand 10s ease-in-out infinite;
+        }
+
+        @keyframes breatheExpand {
+
+            0%,
+            100% {
+                border: 1px solid color-mix(in srgb, var(--primary-color) 60%, transparent);
+                box-shadow: 0 0 4px color-mix(in srgb, var(--primary-color) 40%, transparent),
+                    inset 0 0 4px color-mix(in srgb, var(--primary-color) 20%, transparent);
+                opacity: 0.5;
+            }
+
+            50% {
+                border: 8px solid var(--primary-color);
+                box-shadow: 0 0 40px var(--primary-color),
+                    inset 0 0 30px color-mix(in srgb, var(--primary-color) 40%, transparent);
+                opacity: 1;
+                filter: brightness(1.4);
+            }
+        }
+
+
+        /*  PRO PRESENTER — ELECTRIC FLOW (Mode 4)                    */
+
+        @property --electric-angle {
+            syntax: "<angle>";
+            inherits: false;
+            initial-value: 0deg;
+        }
+
+        @keyframes electricFlowAnim {
+            0% {
+                --electric-angle: 0deg;
+            }
+
+            100% {
+                --electric-angle: 360deg;
+            }
+        }
+
+        [data-pro-presenter-mode="electric-flow"] .pro-presenter-wave-overlay {
+            overflow: visible;
+            box-shadow: 0 0 20px color-mix(in srgb, var(--primary-color) 15%, transparent) inset;
+        }
+
+        [data-pro-presenter-mode="electric-flow"] .pro-presenter-wave-overlay::before {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 24px;
+            background: conic-gradient(from var(--electric-angle),
+                    transparent 50%,
+                    color-mix(in srgb, var(--primary-color) 20%, transparent) 80%,
+                    var(--primary-color) 99%,
+                    #ffffff 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            padding: 4px;
+            animation: electricFlowAnim 7s linear infinite;
+            filter: drop-shadow(0 0 10px var(--primary-color)) drop-shadow(0 0 4px #ffffff);
+        }
+
+
+        /*  PRO PRESENTER — SONIC SPIKE (Mode 5)                   */
+        /* A music-visualizer-inspired border: spiky radial pulses ride
+           along all four edges, synced to the ambiance theme color.    */
+
+        @property --spike-angle {
+            syntax: "<angle>";
+            inherits: false;
+            initial-value: 0deg;
+        }
+
+        @keyframes sonicSpikeRotate {
+            to {
+                --spike-angle: 360deg;
+            }
+        }
+
+        @keyframes sonicSpikePulse {
+            0% {
+                opacity: 0.55;
+                filter: blur(0px) brightness(1.0);
+            }
+
+            25% {
+                opacity: 1;
+                filter: blur(0.5px) brightness(1.6);
+            }
+
+            50% {
+                opacity: 0.65;
+                filter: blur(0px) brightness(1.1);
+            }
+
+            75% {
+                opacity: 1;
+                filter: blur(1px) brightness(1.8);
+            }
+
+            100% {
+                opacity: 0.55;
+                filter: blur(0px) brightness(1.0);
+            }
+        }
+
+        @keyframes sonicSpikeInner {
+            0% {
+                clip-path: polygon(0% 2%, 100% 0%, 100% 98%, 0% 100%);
+                opacity: 0.5;
+            }
+
+            20% {
+                clip-path: polygon(0% 0%, 100% 3%, 100% 100%, 0% 97%);
+                opacity: 0.9;
+            }
+
+            40% {
+                clip-path: polygon(0% 3%, 100% 0%, 100% 97%, 0% 100%);
+                opacity: 0.6;
+            }
+
+            60% {
+                clip-path: polygon(0% 0%, 100% 2%, 100% 100%, 0% 98%);
+                opacity: 1.0;
+            }
+
+            80% {
+                clip-path: polygon(0% 2%, 100% 1%, 100% 99%, 0% 98%);
+                opacity: 0.7;
+            }
+
+            100% {
+                clip-path: polygon(0% 2%, 100% 0%, 100% 98%, 0% 100%);
+                opacity: 0.5;
+            }
+        }
+
+        [data-pro-presenter-mode="sleek-trace"] .pro-presenter-wave-overlay {
+            overflow: visible;
+            /* Baseline ambient atmosphere */
+            box-shadow:
+                inset 0 0 60px color-mix(in srgb, var(--primary-color) 6%, transparent),
+                0 0 0 1px color-mix(in srgb, var(--primary-color) 18%, transparent);
+        }
+
+        /* ── Outer spike ring: conic with many fine teeth ── */
+        [data-pro-presenter-mode="sleek-trace"] .pro-presenter-wave-overlay::before {
+            content: "";
+            position: absolute;
+            inset: -6px;
+            border-radius: 26px;
+            /* 24 spike teeth around the ring */
+            background: conic-gradient(from var(--spike-angle),
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 0deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 6deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 15deg,
+                    color-mix(in srgb, var(--primary-color) 70%, transparent) 21deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 30deg,
+                    color-mix(in srgb, var(--primary-color) 85%, transparent) 36deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 45deg,
+                    color-mix(in srgb, var(--primary-color) 95%, transparent) 51deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 60deg,
+                    color-mix(in srgb, var(--primary-color) 75%, transparent) 66deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 75deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 81deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 90deg,
+                    color-mix(in srgb, var(--primary-color) 80%, transparent) 96deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 105deg,
+                    color-mix(in srgb, var(--primary-color) 95%, transparent) 111deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 120deg,
+                    color-mix(in srgb, var(--primary-color) 70%, transparent) 126deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 135deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 141deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 150deg,
+                    color-mix(in srgb, var(--primary-color) 85%, transparent) 156deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 165deg,
+                    color-mix(in srgb, var(--primary-color) 95%, transparent) 171deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 180deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 186deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 195deg,
+                    color-mix(in srgb, var(--primary-color) 75%, transparent) 201deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 210deg,
+                    color-mix(in srgb, var(--primary-color) 85%, transparent) 216deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 225deg,
+                    color-mix(in srgb, var(--primary-color) 95%, transparent) 231deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 240deg,
+                    color-mix(in srgb, var(--primary-color) 80%, transparent) 246deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 255deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 261deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 270deg,
+                    color-mix(in srgb, var(--primary-color) 85%, transparent) 276deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 285deg,
+                    color-mix(in srgb, var(--primary-color) 95%, transparent) 291deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 300deg,
+                    color-mix(in srgb, var(--primary-color) 70%, transparent) 306deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 315deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 321deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 330deg,
+                    color-mix(in srgb, var(--primary-color) 80%, transparent) 336deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 345deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 351deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 360deg);
+            /* Cut out the interior — spikes only on the border strip */
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            padding: 6px;
+            animation: sonicSpikeRotate 38s linear infinite,
+                sonicSpikePulse 6s ease-in-out infinite;
+            filter: drop-shadow(0 0 5px var(--primary-color)) drop-shadow(0 0 12px color-mix(in srgb, var(--primary-color) 60%, transparent));
+        }
+
+        /* ── Inner fine-line ambient ring that shimmers independently ── */
+        [data-pro-presenter-mode="sleek-trace"] .pro-presenter-wave-overlay::after {
+            content: "";
+            position: absolute;
+            inset: 4px;
+            border-radius: 16px;
+            border: 1.5px solid color-mix(in srgb, var(--primary-color) 30%, transparent);
+            box-shadow:
+                inset 0 0 30px color-mix(in srgb, var(--primary-color) 12%, transparent),
+                0 0 20px color-mix(in srgb, var(--primary-color) 15%, transparent);
+            animation: sonicSpikeInner 8s ease-in-out infinite;
+        }
+
+        /* ── Sleek Trace: cursor spotlight layer ── */
+        .sleek-trace-spotlight {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999998;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle,
+                    color-mix(in srgb, var(--text-primary) 12%, transparent) 0%,
+                    color-mix(in srgb, var(--primary-color) 8%, transparent) 30%,
+                    transparent 70%);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            will-change: transform, left, top;
+        }
+
+        body.is-pro-presenter-active[data-pro-presenter-mode="sleek-trace"] .sleek-trace-spotlight {
+            opacity: 1;
+        }
+
+        /* ── Pro Cursor ── */
+        .pro-presenter-cursor-glow {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999999;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            background: var(--bg-primary, #ffffff);
+            border: 2.5px solid var(--primary-color);
+            box-shadow:
+                0 0 15px color-mix(in srgb, var(--primary-color) 50%, transparent),
+                inset 0 0 4px color-mix(in srgb, var(--text-primary) 20%, transparent),
+                0 0 0 6px color-mix(in srgb, var(--text-primary) 8%, transparent);
+            animation: cursorPulse 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: transform, left, top;
+        }
+
+        @keyframes cursorPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 15px color-mix(in srgb, var(--primary-color) 50%, transparent), inset 0 0 4px color-mix(in srgb, var(--text-primary) 20%, transparent), 0 0 0 6px color-mix(in srgb, var(--text-primary) 8%, transparent);
+            }
+
+            50% {
+                box-shadow: 0 0 25px 4px color-mix(in srgb, var(--primary-color) 70%, transparent), inset 0 0 6px color-mix(in srgb, var(--text-primary) 30%, transparent), 0 0 0 10px color-mix(in srgb, var(--text-primary) 3%, transparent);
+            }
+        }
+
+        /* Click burst */
+        .pro-presenter-cursor-glow.is-clicking {
+            transform: translate(-50%, -50%) scale(0.65) !important;
+            background: var(--primary-color) !important;
+            border-color: var(--text-primary) !important;
+            box-shadow: 0 0 35px 10px color-mix(in srgb, var(--primary-color) 80%, transparent), 0 0 0 14px color-mix(in srgb, var(--text-primary) 15%, transparent) !important;
+            transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.1s ease, border-color 0.1s ease !important;
+        }
+
+        body.is-pro-presenter-active,
+        body.is-pro-presenter-active * {
+            cursor: none !important;
+        }
+
+        body.is-pro-presenter-active .pro-presenter-cursor-glow {
+            opacity: 0.88;
+            visibility: visible;
+        }
+
+        /* Ensure default cursor returns immediately on exit */
+        body:not(.is-pro-presenter-active) {
+            cursor: auto !important;
+        }
+
+        body:not(.is-pro-presenter-active) .pro-presenter-cursor-glow {
+            display: none !important;
+        }
+
+        /* Pro Presenter Mode - Zoom effect on hover */
+        body.is-pro-presenter-active .focus-mode-body .snippet,
+        body.is-pro-presenter-active .focus-mode-body .nk-text-tile,
+        body.is-pro-presenter-active .focus-mode-body table,
+        body.is-pro-presenter-active .focus-mode-body .nk-mcq-block,
+        body.is-pro-presenter-active .focus-mode-body .nk-accordion {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                filter 0.4s ease;
+            will-change: transform;
+        }
+
+
+        body.is-pro-presenter-active .focus-mode-body .snippet:hover,
+        body.is-pro-presenter-active .focus-mode-body .nk-text-tile:hover,
+        body.is-pro-presenter-active .focus-mode-body table:hover,
+        body.is-pro-presenter-active .focus-mode-body .nk-mcq-block:hover,
+        body.is-pro-presenter-active .focus-mode-body .nk-accordion:hover {
+            transform: translateY(-4px);
+            /* Removed horizontal scale to prevent border cutoff */
+            z-index: 100;
+            position: relative;
+            box-shadow: 0 15px 40px color-mix(in srgb, var(--primary-color) 18%, transparent),
+                0 5px 15px color-mix(in srgb, var(--text-primary) 8%, transparent);
+            filter: brightness(1.08);
+            outline: 1px solid color-mix(in srgb, var(--primary-color) 30%, transparent);
+            outline-offset: 4px;
+        }
+
+        .pro-presenter-ripple {
+            position: fixed;
+            border-radius: 50%;
+            border: 2px solid var(--primary-color);
+            transform: scale(0.4);
+            animation: proRippleAnim 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+            pointer-events: none;
+            z-index: 9999999;
+            box-shadow: 0 0 20px color-mix(in srgb, var(--primary-color) 60%, transparent);
+            background: color-mix(in srgb, var(--primary-color) 15%, transparent);
+        }
+
+        @keyframes proRippleAnim {
+            0% {
+                transform: scale(0.4);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(2.0);
+                opacity: 0;
+            }
+        }
+
+        .pro-presenter-progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: color-mix(in srgb, var(--bg-secondary) 40%, transparent);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 9999999;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+        }
+
+        body.is-pro-presenter-active .pro-presenter-progress-container {
+            opacity: 1;
+        }
+
+        .pro-presenter-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg,
+                    var(--primary-color),
+                    color-mix(in srgb, var(--primary-color) 80%, white),
+                    var(--primary-color));
+            background-size: 200% 100%;
+            animation: proProgressGlow 3s linear infinite;
+            width: 0%;
+            box-shadow: 0 0 15px var(--primary-color);
+            transition: width 0.4s cubic-bezier(0.1, 0.7, 0.1, 1);
+        }
+
+        @keyframes proProgressGlow {
+            0% {
+                background-position: 100% 0%;
+            }
+
+            100% {
+                background-position: -100% 0%;
+            }
+        }
+
+        .pro-presenter-watermark {
+            position: fixed;
+            top: 24px;
+            right: 32px;
+            z-index: 999999;
+            font-family: 'Inter', var(--font-body), sans-serif;
+            font-size: 0.80rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            opacity: 0;
+            letter-spacing: 0.1em;
+            pointer-events: none;
+            text-transform: uppercase;
+            transform: translateY(-10px);
+            transition: opacity 1.2s ease, transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.5s ease;
+            background: color-mix(in srgb, var(--bg-secondary) 25%, transparent);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 6px;
+            border: 1px solid color-mix(in srgb, var(--border-color) 20%, transparent);
+        }
+
+        body.is-pro-presenter-active .pro-presenter-watermark {
+            opacity: 0.6;
+            transform: translateY(0);
+            animation: proWatermarkBreathe 4s ease-in-out infinite;
+        }
+
+        @keyframes proWatermarkBreathe {
+
+            0%,
+            100% {
+                text-shadow: 0 1px 2px color-mix(in srgb, var(--bg-primary) 80%, transparent);
+                box-shadow: 0 1px 3px color-mix(in srgb, var(--primary-color) 20%, transparent),
+                    inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent);
+                border-color: color-mix(in srgb, var(--border-color) 20%, transparent);
+            }
+
+            50% {
+                text-shadow: 0 0 8px color-mix(in srgb, var(--primary-color) 80%, transparent);
+                box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color) 40%, transparent),
+                    inset 0 1px 0 color-mix(in srgb, #ffffff 20%, transparent);
+                border-color: color-mix(in srgb, var(--primary-color) 40%, transparent);
+            }
+        }
     </style>
 
 </head>
@@ -17876,6 +18638,43 @@
 
 
     <div id="study-view-container"></div>
+    <!-- Find in Article Bar -->
+    <div id="nk-find-bar" role="search" aria-label="Find in article">
+        <svg id="nk-find-bar-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            style="flex-shrink:0;opacity:0.5;">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+        </svg>
+        <input type="text" id="nk-find-input" placeholder="Find in article…" autocomplete="off" spellcheck="false"
+            aria-label="Search text" />
+        <span class="nk-find-count" id="nk-find-count" aria-live="polite"></span>
+        <div class="nk-find-divider"></div>
+        <button class="nk-find-btn" id="nk-find-prev" title="Previous match (Shift+Enter)" aria-label="Previous match"
+            disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                style="transform:rotate(180deg)">
+                <polyline points="6 9 12 15 18 9" />
+            </svg>
+        </button>
+        <button class="nk-find-btn" id="nk-find-next" title="Next match (Enter)" aria-label="Next match" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+            </svg>
+        </button>
+        <div class="nk-find-divider"></div>
+        <button class="nk-find-btn" id="nk-find-case" title="Toggle Case Sensitive" aria-label="Toggle case sensitivity"
+            style="font-size:11px;font-weight:700;font-family:var(--font-body);letter-spacing:0.05em;width:36px;">Aa</button>
+        <button class="nk-find-btn" id="nk-find-close" title="Close (Esc)" aria-label="Close find bar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+        </button>
+    </div>
     <div id="article-controls" class="article-controls"></div>
     <button id="focus-mode-toggle" class="btn-icon" onclick="App.events.toggleFocusMode()" title="Exit Focus Mode (Esc)"
         aria-label="Toggle focus mode"></button>
@@ -18927,6 +19726,7 @@
                     jpegQuality: 0.9,
                     imageFormat: 'jpeg', // 'jpeg' for compression, 'png' for reliability
                     ocrThreshold: 128,
+                    proPresenterMode: 'living-cell', // Options: living-cell | tidal-waves | deep-breath | neon-pulse | aurora-flow
                     audioBitrate: 32000,
                     pdfTextViewFontSize: '1.1rem',
                     pdfTextViewTheme: 'default',
@@ -21716,21 +22516,24 @@
                             <i class="fa-solid fa-layer-group" style="font-size: 18px;"></i>
                         </button>
                         <div class="insert-popover">
+                            
+                            <button class="btn-icon" title="Find in Article (Ctrl+F)" onmousedown="event.preventDefault()" onclick="App.find.open()" aria-label="Find in article" id="insert-find-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                            </button>
                             <button class="btn-icon" title="Manage Table" data-action="manageTable" onmousedown="event.preventDefault()" aria-label="Insert or modify table">${App.util.icons.table}</button>
-                            <button class="btn-icon" title="Insert Accordion Card" data-action="insertAccordion" onmousedown="event.preventDefault()" aria-label="Insert accordion card">
-                                ${App.util.icons.accordion}
-                            </button>
-                            <button class="btn-icon" title="Insert Image from Gallery" onmousedown="event.preventDefault()" onclick="document.getElementById('write-mode-image-input').click()" aria-label="Insert image from gallery">
-                                ${App.util.icons.image}
-                            </button>
-                            <button class="btn-icon" title="Import PDF" onmousedown="event.preventDefault()" onclick="App.pdf.triggerImport()" aria-label="Import PDF">
-                                ${App.util.icons.pdf}
-                            </button>
+                            <button class="btn-icon" title="Insert Accordion Card" data-action="insertAccordion" onmousedown="event.preventDefault()" aria-label="Insert accordion card">${App.util.icons.accordion}</button>
+                            <button class="btn-icon" title="Insert Image from Gallery" onmousedown="event.preventDefault()" onclick="document.getElementById('write-mode-image-input').click()" aria-label="Insert image from gallery">${App.util.icons.image}</button>
+                            <button class="btn-icon" title="Import PDF" onmousedown="event.preventDefault()" onclick="App.pdf.triggerImport()" aria-label="Import PDF">${App.util.icons.pdf}</button>
+                            
                             <button class="btn-icon" title="Insert Checkbox" data-action="insertCheckbox" onmousedown="event.preventDefault()" aria-label="Insert checkbox">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path><polyline points="9 11 12 14 22 4"></polyline></svg>
                             </button>
-                            <!-- Moved Pen (Focus Mode) to Insert Menu for Mobile Optimization -->
+                            <button class="btn-icon" title="Whiteboard / Sketch" onmousedown="event.preventDefault()" onclick="App.whiteboard.open('cursor')" aria-label="Open whiteboard sketch">
+                                <i class="fa-solid fa-pen-nib" style="font-size:17px;"></i>
+                            </button>
                             <button class="btn-icon" data-action="toggleFocusMode" title="Focus Mode" onmousedown="event.preventDefault()" aria-label="Toggle focus mode">${App.util.icons.pen}</button>
+                           
+                            
                         </div>
                     </div>
                     <input type="file" id="write-mode-image-input" accept="image/*" style="display:none" onchange="App.events.handleWriteModeImageUpload(event)">
@@ -22698,8 +23501,14 @@
                     }
 
                     overlay.className = `focus-mode-overlay ${session.isStageMode ? 'stage-mode-active' : ''} ${session.activeTheme && session.activeTheme !== 'default' ? 'ambiance-' + session.activeTheme : ''}`;
-                    if (session.isCinematicActive) {
-                        overlay.classList.add('cinematic-active');
+                    if (session.isProPresenterActive) {
+                        overlay.classList.add('is-pro-presenter-active');
+                    }
+
+                    // SYNC: Apply ambiance theme to body so Pro Presenter elements on body inherit theme variables
+                    document.body.className = document.body.className.replace(/\bambiance-\S+/g, '').trim();
+                    if (session.activeTheme && session.activeTheme !== 'default') {
+                        document.body.classList.add(`ambiance-${session.activeTheme}`);
                     }
 
                     const highlightsVisible = App.settings.get('categoryHighlightsVisible') !== false;
@@ -22776,6 +23585,11 @@
                     overlay.querySelectorAll('canvas[data-chart-config]').forEach(canvas => {
                         App.ui.renderChartOnCanvas(canvas);
                     });
+
+                    // Pro Presenter: Refresh listeners/re-bind scroll if active
+                    if (session.isProPresenterActive && App.events.presentation?._initProPresenter) {
+                        setTimeout(() => App.events.presentation._initProPresenter(), 50);
+                    }
 
                     if (session.isStageMode) {
                         setTimeout(() => {
@@ -22859,6 +23673,11 @@
                         bodyEl.addEventListener('mouseout', App.events.handleSpotlight);
                     }
                     overlay.querySelector('.focus-mode-content').focus();
+
+                    // RE-INIT PRO PRESENTER if active (Ensures elements and listeners are correct for new layout)
+                    if (session.isProPresenterActive) {
+                        App.events.presentation._initProPresenter();
+                    }
                 },
 
                 renderFocusModeControls() {
@@ -22945,19 +23764,15 @@
                                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 3h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM4 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1v-1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h1V2H4z"/><path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg>
                              </button>
                              <button class="btn-icon mobile-only-option ${highlightsVisible ? 'active' : ''}" onclick="App.events.toggleStageModeHighlights(this)" title="Toggle Highlight Colors (H)">${highlighterIcon}</button>
-                             <div class="mobile-only-option ${premiumLockClass}">
-                                 <button class="btn-icon ${cinematicActive ? 'active' : ''}" onclick="${cinematicOnClick}" title="Toggle Cinematic Reveal">${cinematicIcon}</button>
-                             </div>
-                             <div class="mobile-only-option ${premiumLockClass}">
-                                 <button class="btn-icon annotation-btn" onclick="${annotationOnClick}" title="Toggle Annotation (D)">
-                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
-                                 </button>
-                             </div>
+                
                              <!-- Regular More Options items -->
                              <button id="focus-mode-immersive-toggle" class="btn-icon" onclick="App.events.toggleFocusModeControls()" title="Toggle Immersive Mode (F)">${App.util.icons.expand}</button>
-                             <div class="${premiumLockClass}">
+                             <div class="${premiumLockClass}" style="display: contents;">
                                 <button class="btn-icon" onclick="${exportOnClick}" title="Screenshot (P)">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" /></svg>
+                                </button>
+                                <button class="btn-icon ${session.isProPresenterActive ? 'active' : ''}" id="pro-presenter-toggle-btn" onclick="App.events.presentation.toggleProPresenter()" title="Pro Presenter Mode">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                                 </button>
                              </div>
                              <button class="btn-icon" id="laser-pointer-toggle" title="Toggle Laser Pointer (L)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25a8.25 8.25 0 00-8.25 8.25c0 1.721.576 3.322 1.568 4.675A8.25 8.25 0 0012 21.75a8.25 8.25 0 008.25-8.25c0-4.556-3.694-8.25-8.25-8.25z" /></svg></button>
@@ -25843,6 +26658,19 @@
                     const captionAlignOptions = captionAlignments.map(a => `<option value="${a.id}" ${currentCaptionAlign === a.id ? 'selected' : ''}>${a.name}</option>`).join('');
 
 
+                    const proPresenterModes = [
+                        { id: 'living-cell', name: '🔬 Living Cell' },
+                        { id: 'liquid-glow', name: '💧 Liquid Glow' },
+                        { id: 'breathing-border', name: '🫁 Breathing Border' },
+                        { id: 'electric-flow', name: '⚡️ Electric Flow' },
+                        { id: 'sleek-trace', name: '🎯 Sleek Trace' }
+                    ];
+                    const currentProPresenterMode = App.settings.get('proPresenterMode') || 'living-cell';
+                    const isProPresenterLocked = !App.license.isPremium();
+                    const proPresenterModeOptions = proPresenterModes.map(m =>
+                        `<option value="${m.id}" ${currentProPresenterMode === m.id ? 'selected' : ''} ${isProPresenterLocked ? 'disabled' : ''}>${m.name}${isProPresenterLocked ? ' 👑' : ''}</option>`
+                    ).join('');
+
                     const modalHTML = `
                 <div class="modal-backdrop" onclick="if(event.target === this) App.ui.closeModal()">
                     <div class="modal-content ui-card" style="max-width: 600px;" onclick="event.stopPropagation()">
@@ -25918,6 +26746,14 @@
                         </div>
                         
                         <div class="settings-section">
+                            <h4><i class="fa-solid fa-display"></i> Pro Presenter ${isProPresenterLocked ? '<span style="font-size:0.7em;opacity:0.6;">👑 Premium</span>' : ''}</h4>
+                            <div class="settings-grid">
+                                <div class="settings-label" title="Choose the animated border style shown when Pro Presenter is active. Each style is theme-sensitive."><b>Border Style</b></div>
+                                <select id="pro-presenter-mode-select" class="btn btn-secondary" ${isProPresenterLocked ? 'disabled' : ''}>${proPresenterModeOptions}</select>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
                             <h4><i class="fa-solid fa-mobile-screen-button"></i> View Mode</h4>
                             <div class="settings-item">
                                 <div class="settings-label" id="mobile-view-label-container"><b>${mobileViewLabel}</b><small>${mobileViewDescription}</small></div>
@@ -25947,6 +26783,17 @@
                     document.getElementById('caption-theme-select').addEventListener('change', (e) => App.settings.set('captionTheme', e.target.value));
                     document.getElementById('caption-align-select').addEventListener('change', (e) => App.settings.set('captionAlign', e.target.value));
                     document.getElementById('image-format-select').addEventListener('change', (e) => App.settings.set('imageFormat', e.target.value));
+                    const ppModeSelect = document.getElementById('pro-presenter-mode-select');
+                    if (ppModeSelect) {
+                        ppModeSelect.addEventListener('change', (e) => {
+                            const newMode = e.target.value;
+                            App.settings.set('proPresenterMode', newMode);
+                            // Apply immediately if Pro Presenter is active
+                            if (document.body.classList.contains('is-pro-presenter-active')) {
+                                document.body.setAttribute('data-pro-presenter-mode', newMode);
+                            }
+                        });
+                    }
                 },
 
                 showFlashcardSettingsModal() {
@@ -27667,8 +28514,6 @@
                         if (!e.target.closest('#selection-toolbar')) App.ui.hideSelectionToolbar();
                         if (!e.target.closest('#image-toolbar')) App.ui.hideImageToolbar();
                         if (!e.target.closest('.context-menu')) App.ui.hideContextMenu();
-
-
                     });
 
                     document.addEventListener('click', (e) => {
@@ -27866,7 +28711,6 @@
                                 App.state.guardianObserver = new MutationObserver(guardianCallback);
                                 App.state.guardianObserver.observe(contentDiv, { childList: true });
                                 guardianCallback();
-                                contentDiv.addEventListener('mouseup', App.events.handleSelection);
 
                                 contentDiv.addEventListener('focusin', (e) => {
                                     if (document.body.classList.contains('mobile-view') && App.util.isMobile()) {
@@ -27890,6 +28734,9 @@
                                 contentDiv.addEventListener('dragleave', App.events.handleDragLeave);
                                 contentDiv.addEventListener('drop', App.events.handleImageDrop);
                             }
+
+                            // Register in BOTH read & write mode so the word-count toast works
+                            contentDiv.addEventListener('mouseup', App.events.handleSelection);
                             break;
                         case 'tags':
                             setupDebouncedSearch('tag-search-input', App.events.filterAndRenderTags);
@@ -28599,6 +29446,200 @@
                     ],
                     currentThemeIndex: 0,
                     currentSnippetIndex: -1,
+                    _proPresenterState: { isActive: false, elements: {}, listeners: {} },
+                    toggleProPresenter() {
+                        const isPremium = App.license.isPremium();
+                        if (!isPremium) {
+                            App.ui.showToast('Pro Presenter Mode is a Premium feature.', 'info');
+                            return;
+                        }
+                        const state = this._proPresenterState;
+                        state.isActive = !state.isActive;
+                        App.state.focusSession.isProPresenterActive = state.isActive; // keeping state persistent
+
+                        const btn = document.getElementById('pro-presenter-toggle-btn');
+                        if (btn) btn.classList.toggle('active', state.isActive);
+
+                        document.body.classList.toggle('is-pro-presenter-active', state.isActive);
+
+                        if (state.isActive) {
+                            // Automatically activate Stage Mode if it's not already active to ensure a presentation-like layout
+                            if (!App.state.focusSession.isStageMode) {
+                                App.events.toggleStageMode();
+                            }
+                            this._initProPresenter();
+                            App.ui.showToast('Pro Presenter Mode Activated', 'success');
+                        } else {
+                            this._cleanupProPresenter();
+                            App.ui.showToast('Pro Presenter Mode Deactivated', 'info');
+                        }
+                    },
+                    _initProPresenter() {
+                        const state = this._proPresenterState;
+                        const overlay = document.getElementById('focus-mode-overlay');
+                        if (!overlay) return;
+
+                        // Set the Pro Presenter border mode on body
+                        const currentMode = App.settings.get('proPresenterMode') || 'living-cell';
+                        document.body.setAttribute('data-pro-presenter-mode', currentMode);
+
+                        // Create Wave Overlay (Idempotent)
+                        if (!state.elements.waveOverlay) {
+                            const waveOverlay = document.createElement('div');
+                            waveOverlay.className = 'pro-presenter-wave-overlay';
+                            waveOverlay.innerHTML = `
+                                <svg class="pro-wave pro-wave-top" preserveAspectRatio="none" viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M0,50 C320,100 420,0 740,50 C1060,100 1120,0 1440,50 L1440,0 L0,0 Z"></path>
+                                </svg>
+                                <svg class="pro-wave pro-wave-bottom" preserveAspectRatio="none" viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M0,50 C320,0 420,100 740,50 C1060,0 1120,100 1440,50 L1440,100 L0,100 Z"></path>
+                                </svg>
+                            `;
+                            document.body.appendChild(waveOverlay);
+                            state.elements.waveOverlay = waveOverlay;
+                        }
+
+                        // Create Cursor Glow (Idempotent)
+                        if (!state.elements.cursorGlow) {
+                            const cursorGlow = document.createElement('div');
+                            cursorGlow.className = 'pro-presenter-cursor-glow';
+                            document.body.appendChild(cursorGlow);
+                            state.elements.cursorGlow = cursorGlow;
+                        }
+
+                        // Create Watermark (Idempotent)
+                        if (!state.elements.watermark) {
+                            let brandNameText = App.settings.get('brandName');
+                            if (!brandNameText || brandNameText.trim() === '') brandNameText = 'PRO PRESENTER';
+                            const watermark = document.createElement('div');
+                            watermark.className = 'pro-presenter-watermark';
+                            watermark.textContent = brandNameText;
+                            document.body.appendChild(watermark);
+                            state.elements.watermark = watermark;
+                        }
+
+                        // Create Progress Bar (Idempotent - ensure it exists in DOM)
+                        if (!state.elements.progressContainer || !document.body.contains(state.elements.progressContainer)) {
+                            // If it exists in state but not in DOM, remove old reference
+                            if (state.elements.progressContainer && state.elements.progressContainer.parentNode) {
+                                state.elements.progressContainer.parentNode.removeChild(state.elements.progressContainer);
+                            }
+
+                            const progressContainer = document.createElement('div');
+                            progressContainer.className = 'pro-presenter-progress-container';
+                            const progressBar = document.createElement('div');
+                            progressBar.className = 'pro-presenter-progress-bar';
+                            progressContainer.appendChild(progressBar);
+                            document.body.appendChild(progressContainer);
+                            state.elements.progressBar = progressBar;
+                            state.elements.progressContainer = progressContainer;
+                        }
+
+                        // Mouse Move Listener
+                        if (!state.listeners.mousemove) {
+                            // Create sleek-trace spotlight layer (idempotent)
+                            if (!state.elements.spotlight) {
+                                const spotlight = document.createElement('div');
+                                spotlight.className = 'sleek-trace-spotlight';
+                                document.body.appendChild(spotlight);
+                                state.elements.spotlight = spotlight;
+                            }
+
+                            // Direct positioning — no lerp, cursor feel is handled by OS system settings
+                            state.listeners.mousemove = (e) => {
+                                const glow = state.elements.cursorGlow;
+                                if (glow) {
+                                    glow.style.left = `${e.clientX}px`;
+                                    glow.style.top = `${e.clientY}px`;
+                                }
+                                const spot = state.elements.spotlight;
+                                if (spot) {
+                                    spot.style.left = `${e.clientX}px`;
+                                    spot.style.top = `${e.clientY}px`;
+                                }
+                            };
+                            document.addEventListener('mousemove', state.listeners.mousemove);
+                        }
+
+                        // Click Ripple + Cursor Pop-scale Listener
+                        if (!state.listeners.click) {
+                            state.listeners.click = (e) => {
+                                // --- Ripple ---
+                                const ripple = document.createElement('div');
+                                ripple.className = 'pro-presenter-ripple';
+                                const size = 60;
+                                ripple.style.left = `${e.clientX - size / 2}px`;
+                                ripple.style.top = `${e.clientY - size / 2}px`;
+                                ripple.style.width = `${size}px`;
+                                ripple.style.height = `${size}px`;
+                                document.body.appendChild(ripple);
+                                setTimeout(() => {
+                                    if (ripple.parentNode) ripple.parentNode.removeChild(ripple);
+                                }, 800);
+
+                                // --- Cursor pop-scale burst ---
+                                const glow = state.elements.cursorGlow;
+                                if (glow) {
+                                    glow.classList.add('is-clicking');
+                                    setTimeout(() => glow.classList.remove('is-clicking'), 200);
+                                }
+                            };
+                            document.addEventListener('click', state.listeners.click);
+                        }
+
+                        // Scroll Progress Listener (Always update to new scrollEl)
+                        // STAGE MODE FIX: In stage mode, .focus-mode-content scrolls. In snippets/sigma mode, .focus-mode-body scrolls.
+                        const scrollEl = App.state.focusSession.isStageMode ? overlay.querySelector('.focus-mode-content') : overlay.querySelector('.focus-mode-body');
+
+                        if (scrollEl) {
+                            // Cleanup old scroll listener if exists on a different element
+                            if (state.listeners.scroll && state.elements.scrollEl && state.elements.scrollEl !== scrollEl) {
+                                state.elements.scrollEl.removeEventListener('scroll', state.listeners.scroll);
+                            }
+
+                            state.listeners.scroll = () => {
+                                const scrollTop = scrollEl.scrollTop;
+                                const scrollHeight = scrollEl.scrollHeight - scrollEl.clientHeight;
+                                const scrollPercent = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+                                if (state.elements.progressBar) {
+                                    state.elements.progressBar.style.width = scrollPercent + "%";
+                                }
+                            };
+                            scrollEl.addEventListener('scroll', state.listeners.scroll);
+                            state.elements.scrollEl = scrollEl;
+
+                            // Initialize position immediately
+                            state.listeners.scroll();
+                        }
+                    },
+                    _cleanupProPresenter() {
+                        const state = this._proPresenterState;
+                        if (state.elements.waveOverlay && state.elements.waveOverlay.parentNode) {
+                            state.elements.waveOverlay.parentNode.removeChild(state.elements.waveOverlay);
+                        }
+                        if (state.elements.cursorGlow && state.elements.cursorGlow.parentNode) {
+                            state.elements.cursorGlow.parentNode.removeChild(state.elements.cursorGlow);
+                        }
+                        if (state.elements.spotlight && state.elements.spotlight.parentNode) {
+                            state.elements.spotlight.parentNode.removeChild(state.elements.spotlight);
+                        }
+
+                        if (state.elements.progressContainer && state.elements.progressContainer.parentNode) {
+                            state.elements.progressContainer.parentNode.removeChild(state.elements.progressContainer);
+                        }
+                        if (state.elements.watermark && state.elements.watermark.parentNode) {
+                            state.elements.watermark.parentNode.removeChild(state.elements.watermark);
+                        }
+                        if (state.listeners.mousemove) document.removeEventListener('mousemove', state.listeners.mousemove);
+                        if (state.listeners.click) document.removeEventListener('click', state.listeners.click);
+                        if (state.listeners.scroll && state.elements.scrollEl) {
+                            state.elements.scrollEl.removeEventListener('scroll', state.listeners.scroll);
+                        }
+                        // Also cleanup body ambiance classes if deactivated
+                        document.body.className = document.body.className.replace(/\bambiance-\S+/g, '').trim();
+                        state.elements = {};
+                        state.listeners = {};
+                    },
                     _revealFirstVisibleSnippet() {
                         const overlay = document.getElementById('focus-mode-overlay');
                         if (!overlay) return;
@@ -28641,6 +29682,12 @@
 
                         const themeName = newTheme.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                         App.ui.showToast(`${themeName}`, { type: 'info', duration: 1500 });
+
+                        // SYNC BODY THEME (Persistence for Pro Presenter)
+                        document.body.className = document.body.className.replace(/\bambiance-\S+/g, '').trim();
+                        if (newTheme !== 'default') {
+                            document.body.classList.add(`ambiance-${newTheme}`);
+                        }
                     },
 
                     // This function now correctly resets the theme using direct, reliable logic.
@@ -28655,6 +29702,9 @@
                         session.activeTheme = 'default';
 
                         App.ui.showToast('Theme reset to default', { type: 'success', duration: 2000 });
+
+                        // SYNC BODY THEME
+                        document.body.className = document.body.className.replace(/\bambiance-\S+/g, '').trim();
                     },
 
                     toggleCinematicMotion(buttonEl) {
@@ -30191,10 +31241,12 @@
                     // Use a small timeout to let the browser finalize the selection
                     setTimeout(() => {
                         const selection = window.getSelection();
+                        const WC_TOAST_ID = 'wc-selection-toast';
+
                         if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
-                            // If selection is lost or collapsed, hide all toolbars
                             App.ui.hideSelectionToolbar();
                             App.ui.aiMagic.hide();
+                            App.ui.hideToast(WC_TOAST_ID);
                             return;
                         }
 
@@ -30204,7 +31256,10 @@
 
                         // Ensure the selection is within our main editor
                         const editor = document.getElementById('article-content');
-                        if (!editor || !editor.contains(parentElement) || !editor.isContentEditable) {
+                        if (!editor || !editor.contains(parentElement)) {
+                            return;
+                        }
+                        if (App.state.currentMode === 'write' && !editor.isContentEditable) {
                             return;
                         }
 
@@ -30212,14 +31267,49 @@
                         if (selection.toString().trim() === '') {
                             App.ui.hideSelectionToolbar();
                             App.ui.aiMagic.hide();
+                            App.ui.hideToast(WC_TOAST_ID);
                             return;
                         }
 
-                        // Show the standard formatting toolbar
-                        App.ui.showSelectionToolbar(range);
+                        if (App.state.currentMode === 'write') {
+                            App.ui.showSelectionToolbar(range);
+                            App.ui.aiMagic.show(range);
+                        }
 
-                        // Show our new AI Magic Toolbox
-                        App.ui.aiMagic.show(range);
+                        // Show word-count toast in both read & write mode
+                        if (App.state.currentMode === 'write' || App.state.currentMode === 'read') {
+                            const wordCount = selection.toString().trim().split(/\s+/).filter(w => w.length > 0).length;
+                            const existing = document.getElementById(WC_TOAST_ID);
+
+                            const htmlMessage = `<div style="display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-align-left" style="opacity: 0.6; font-size: 0.9em;"></i><span style="font-weight: 500; letter-spacing: 0.3px;">${wordCount} word${wordCount !== 1 ? 's' : ''}</span></div>`;
+
+                            if (existing) {
+                                App.ui.updateToast(existing, htmlMessage);
+                                existing.style.backgroundColor = "var(--bg-tertiary)";
+                                existing.style.color = "var(--text-primary)";
+                                existing.style.border = "1px solid var(--border-color)";
+                                existing.style.backdropFilter = "blur(12px)";
+                                existing.style.boxShadow = "var(--shadow-md)";
+
+                                if (existing.dataset.hideTimeout) clearTimeout(parseInt(existing.dataset.hideTimeout));
+                                existing.dataset.hideTimeout = setTimeout(() => {
+                                    App.ui.hideToast(existing);
+                                }, 2500);
+                            } else {
+                                const newToast = App.ui.showToast(htmlMessage, { type: 'info', duration: 0, id: WC_TOAST_ID });
+                                if (newToast) {
+                                    newToast.style.backgroundColor = "var(--bg-tertiary)";
+                                    newToast.style.color = "var(--text-primary)";
+                                    newToast.style.border = "1px solid var(--border-color)";
+                                    newToast.style.backdropFilter = "blur(12px)";
+                                    newToast.style.boxShadow = "var(--shadow-md)";
+
+                                    newToast.dataset.hideTimeout = setTimeout(() => {
+                                        App.ui.hideToast(newToast);
+                                    }, 2500);
+                                }
+                            }
+                        }
 
                     }, 10);
                 },
@@ -34864,6 +35954,11 @@
                 exitFocusMode() {
                     if (!App.state.focusSession.isActive) return;
 
+                    // Ensure Pro Presenter is deactivated when exiting focus mode
+                    if (App.state.focusSession.isProPresenterActive) {
+                        App.events.presentation.toggleProPresenter();
+                    }
+
                     const aiMagicToggle = document.getElementById('ai-magic-toggle');
                     if (aiMagicToggle) aiMagicToggle.style.display = 'none';
                     // NEW: Save annotations before closing
@@ -36332,7 +37427,7 @@
                             .nk-accordion-chevron, .nk-accordion-controls, .nk-mcq-toolbar, .nk-mcq-delete-option, .nk-mcq-add-option, .nk-mcq-delete-block, .nk-mcq-copy-block { display: none !important; }
                             
                             /* Legacy Web Link Cards (forced inline minimal style) */
-                            a.nk-web-link-card { 
+                            .nk-web-link-container { 
                                 display: inline-flex !important; 
                                 align-items: center !important; 
                                 justify-content: center !important;
@@ -36351,9 +37446,9 @@
                                 height: auto !important;
                                 flex-direction: row !important;
                             }
-                            a.nk-web-link-card img, a.nk-web-link-card > div.favicon-placeholder, a.nk-web-link-card p { display: none !important; }
-                            a.nk-web-link-card > div, a.nk-web-link-card h3 { display: inline-flex !important; margin: 0 !important; padding: 0 !important; font-size: inherit !important; font-weight: inherit !important; color: inherit !important; background: transparent !important; }
-                            a.nk-web-link-card::before { content: "🌐"; font-size: 1.1em; line-height: 1; margin-right: 4px; }
+                            .nk-web-link-container img, .nk-web-link-container > div.favicon-placeholder, .nk-web-link-container p { display: none !important; }
+                            .nk-web-link-container > div, .nk-web-link-container h3 { display: inline-flex !important; margin: 0 !important; padding: 0 !important; font-size: inherit !important; font-weight: inherit !important; color: inherit !important; background: transparent !important; }
+                            .nk-web-link-container::before { content: "🌐"; font-size: 1.1em; line-height: 1; margin-right: 4px; }
                         `;
 
                         return `<!DOCTYPE html>
@@ -36453,8 +37548,8 @@
                         });
 
                         // Ensure web links in html export show full URL instead of potentially truncated/styled versions
-                        doc.querySelectorAll('.nk-web-link, .nk-web-link-card').forEach(link => {
-                            const url = link.getAttribute('href');
+                        doc.querySelectorAll('.nk-web-link, .nk-web-link-card, .nk-web-link-container').forEach(link => {
+                            const url = link.getAttribute('href') || link.querySelector('a')?.getAttribute('href');
                             if (url) {
                                 link.style.maxWidth = '100%';
                                 link.style.wordBreak = 'break-all';
@@ -36631,18 +37726,41 @@
                             let embeddedCount = 0;
                             let skippedCount = 0;
 
-                            Array.from(allImages).forEach(img => {
+                            const standardizeImage = async (src) => {
+                                return new Promise((resolve) => {
+                                    if (!src) return resolve(null);
+                                    if (src.startsWith('data:image/jpeg') || src.startsWith('data:image/png')) {
+                                        return resolve(src); // Already safe formats for pdfmake
+                                    }
+                                    const img = new Image();
+                                    img.onload = () => {
+                                        const canvas = document.createElement('canvas');
+                                        canvas.width = img.naturalWidth || img.width;
+                                        canvas.height = img.naturalHeight || img.height;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx.fillStyle = '#FFFFFF';
+                                        ctx.fillRect(0, 0, canvas.width, canvas.height); // white bg for transparent SVG/WebP
+                                        ctx.drawImage(img, 0, 0);
+                                        resolve(canvas.toDataURL('image/jpeg', 0.9));
+                                    };
+                                    img.onerror = () => resolve(src); // fallback
+                                    img.src = src;
+                                });
+                            };
+
+                            for (const img of Array.from(allImages)) {
                                 const src = img.getAttribute('src');
                                 if (src && src.startsWith('data:')) {
-                                    imageCache.set(src, src);
+                                    const safeSrc = await standardizeImage(src);
+                                    imageCache.set(src, safeSrc);
                                     embeddedCount++;
                                 } else if (src) {
                                     skippedCount++;
                                 }
-                            });
+                            }
 
                             if (embeddedCount > 0 || skippedCount > 0) {
-                                console.log(`PDF Export: ${embeddedCount} embedded images, ${skippedCount} external URLs skipped`);
+                                console.log(`PDF Export: ${embeddedCount} embedded images processed, ${skippedCount} external URLs skipped`);
                             }
 
                             App.ui.updateToast(toastId, '📄 Building PDF...');
@@ -36652,535 +37770,363 @@
                                 const div = document.createElement('div');
                                 div.innerHTML = App.util.sanitizeHTML(App.util.parseShortcuts(html));
 
-                                const content = [];
-                                // ═══ PDF HIGHLIGHT STYLING - Elegant Underlines (No blocky backgrounds) ═══
+                                // ─── COLOR MAPS ─────────────────────────────────────────────────────
                                 const highlightUnderlineMap = {
-                                    'highlight-1': '#EAB308',  // Yellow-500 (Gold)
-                                    'highlight-2': '#16A34A',  // Green-600
-                                    'highlight-3': '#2563EB',  // Blue-600
-                                    'highlight-4': '#DC2626',  // Red-600
-                                    'highlight-5': '#9333EA',  // Purple-600
-                                    'highlight-6': '#0891B2',  // Cyan-600
-                                    'highlight-7': '#DB2777'   // Pink-600
+                                    'highlight-1': '#EAB308', 'highlight-2': '#16A34A',
+                                    'highlight-3': '#2563EB', 'highlight-4': '#DC2626',
+                                    'highlight-5': '#9333EA', 'highlight-6': '#0891B2',
+                                    'highlight-7': '#DB2777'
                                 };
-
-                                // ═══ PDF TEXT COLORS - All 7 text colors ═══
                                 const textColorMap = {
-                                    'text-red': '#DC2626',     // Red - vibrant
-                                    'text-green': '#16A34A',   // Green - forest
-                                    'text-blue': '#2563EB',    // Blue - royal
-                                    'text-magenta': '#C026D3', // Magenta - Fuchsia 600 (Darker for contrast)
-                                    'text-orange': '#EA580C',  // Orange - warm
-                                    'text-teal': '#0D9488',    // Teal - Teal 600
-                                    'text-slate': '#475569',   // Slate - Slate 600
-                                    // Aliases for robustness
-                                    'text-purple': '#C026D3',
-                                    'text-cyan': '#0891B2',
-                                    'text-pink': '#DB2777'
+                                    'text-red': '#DC2626', 'text-green': '#16A34A',
+                                    'text-blue': '#2563EB', 'text-magenta': '#C026D3',
+                                    'text-orange': '#EA580C', 'text-teal': '#0D9488',
+                                    'text-slate': '#475569', 'text-purple': '#C026D3',
+                                    'text-cyan': '#0891B2', 'text-pink': '#DB2777'
                                 };
 
-                                // 🎨 EMOJI RENDERING HELPER
-                                // Draws emoji to a canvas and returns base64 image to prevent "blank boxes" in PDF
+                                // ─── EMOJI RENDERER ─────────────────────────────────────────────────────
                                 const emojiCanvas = document.createElement('canvas');
-                                const ctx = emojiCanvas.getContext('2d');
-                                const getEmojiDataUrl = (emoji) => {
-                                    // High res for crisp PDF
-                                    emojiCanvas.width = 64;
-                                    emojiCanvas.height = 64;
-                                    ctx.clearRect(0, 0, 64, 64);
-                                    ctx.font = '54px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
-                                    ctx.textAlign = 'center';
-                                    ctx.textBaseline = 'middle';
-                                    ctx.fillText(emoji, 32, 36); // Slight offset for vertical centering
+                                const emojiCtx = emojiCanvas.getContext('2d');
+                                const emojiRe = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/u;
+                                const renderEmoji = (emoji) => {
+                                    emojiCanvas.width = emojiCanvas.height = 64;
+                                    emojiCtx.clearRect(0, 0, 64, 64);
+                                    emojiCtx.font = '54px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+                                    emojiCtx.textAlign = 'center'; emojiCtx.textBaseline = 'middle';
+                                    emojiCtx.fillText(emoji, 32, 36);
                                     return emojiCanvas.toDataURL('image/png');
                                 };
+                                // Split text into plain/emoji segments
+                                const splitEmoji = (s) => s.split(/([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}])/gu).filter(Boolean);
 
-                                const emojiRegex = /([\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F1E6}-\u{1F1FF}]{2}|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA70}-\u{1FAFF}]|[\u{200D}])/gu;
-
-                                const processTextWithEmojis = (text, inheritedStyles) => {
+                                // ─── TEXT NODE → inline run(s) ──────────────────────────────────────────
+                                const textRuns = (text, styles, isLink = false) => {
                                     if (!text) return null;
-
-                                    // If no emojis, return simple text object
-                                    if (!text.match(emojiRegex)) {
-                                        return { text: text, ...inheritedStyles };
-                                    }
-
-                                    // Split by emoji and map to objects
-                                    const parts = text.split(emojiRegex);
-                                    const resultArray = [];
-
-                                    parts.forEach(part => {
-                                        if (!part) return;
-                                        if (part.match(emojiRegex)) {
-                                            // It's an emoji - render as image
-                                            resultArray.push({
-                                                image: getEmojiDataUrl(part),
-                                                width: 13,  // Slightly larger than text size
-                                                height: 13,
-                                                margin: [0, 1, 0, -2] // Inline alignment adjustment
-                                            });
-                                        } else {
-                                            // Regular text
-                                            resultArray.push({ text: part, ...inheritedStyles });
-                                        }
-                                    });
-                                    return resultArray;
+                                    // if it's a link, we don't want to parse emojis inside the URL
+                                    if (isLink || !emojiRe.test(text)) return { text, ...styles };
+                                    const parts = splitEmoji(text);
+                                    if (parts.length === 1) return { text: parts[0], ...styles };
+                                    return parts.map(p => emojiRe.test(p)
+                                        ? { image: renderEmoji(p), width: 13, height: 13, margin: [0, 1, 0, -2] }
+                                        : { text: p, ...styles });
                                 };
 
-                                const processNode = (node, inheritedStyles = {}) => {
-                                    if (node.nodeType === Node.TEXT_NODE) {
-                                        const text = node.textContent;
-                                        // Skip empty whitespace-only nodes unless they are significant (e.g. spaces between words)
-                                        // But here we usually just trim or check if it's meaningful
-                                        if (text.replace(/[\n\r]+/, '').length > 0) {
-                                            return processTextWithEmojis(text, inheritedStyles);
+                                // ─── STYLE EXTRACTOR ────────────────────────────────────────────────────
+                                // Returns pdfmake styles contributed by ONE element (not children).
+                                const extractStyles = (node, inherited = {}) => {
+                                    const s = { ...inherited };
+                                    switch (node.tagName.toLowerCase()) {
+                                        case 'b': case 'strong': s.bold = true; break;
+                                        case 'i': case 'em': s.italics = true; break;
+                                        case 'u': s.decoration = 'underline'; break;
+                                        case 's': case 'strike': case 'del': s.decoration = 'lineThrough'; break;
+                                        case 'sup': s.sup = true; s.fontSize = 8; break;
+                                        case 'sub': s.sub = true; s.fontSize = 8; break;
+                                    }
+                                    (node.classList || []).forEach(cls => {
+                                        if (highlightUnderlineMap[cls]) {
+                                            s.decoration = 'underline';
+                                            s.decorationStyle = 'double';
+                                            s.decorationColor = highlightUnderlineMap[cls];
                                         }
-                                        return null;
+                                        if (textColorMap[cls]) { s.color = textColorMap[cls]; s.bold = true; }
+                                    });
+                                    const inlineStyle = node.getAttribute('style') || '';
+                                    const bgM = inlineStyle.match(/background(?:-color)?:\s*([^;]+)/i);
+                                    const colM = inlineStyle.match(/(?:^|[^-])color:\s*([^;]+)/i);
+                                    if (bgM?.[1]?.trim().match(/^(#|rgb)/)) s.background = bgM[1].trim();
+                                    if (colM?.[1]?.trim().match(/^(#|rgb)/)) s.color = colM[1].trim();
+                                    return s;
+                                };
+
+                                // ─── BLOCK TAG SET ───────────────────────────────────────────────────────
+                                const BLOCK_TAGS = new Set([
+                                    'p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                                    'ul', 'ol', 'li', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
+                                    'hr', 'figure', 'figcaption', 'section', 'article', 'header', 'footer',
+                                    'aside', 'main', 'nav', 'form', 'fieldset', 'details', 'summary'
+                                ]);
+                                const isBlockNode = (n) => {
+                                    if (n.nodeType !== Node.ELEMENT_NODE) return false;
+                                    if (BLOCK_TAGS.has(n.tagName.toLowerCase())) return true;
+                                    const cl = n.classList;
+                                    return cl && (cl.contains('nk-text-tile') || cl.contains('nk-mcq-block') ||
+                                        cl.contains('nk-accordion') || cl.contains('image-container') ||
+                                        cl.contains('video-container') || cl.contains('se-video-container') ||
+                                        cl.contains('nk-map-embed') || cl.contains('nk-video-embed') ||
+                                        cl.contains('whiteboard-block') || cl.contains('nk-web-link-container'));
+                                };
+
+                                // ─── INLINE COLLECTOR ────────────────────────────────────────────────────
+                                // Recursively flattens ALL inline content under a node into a run array.
+                                const collectInlineRuns = (node, styles = {}) => {
+                                    const runs = [];
+                                    const walk = (n, s) => {
+                                        if (n.nodeType === Node.TEXT_NODE) {
+                                            const t = n.textContent;
+                                            if (!t.replace(/[\n\r]+/g, '').length) return;
+                                            // Check if we are currently styled as a link, to disable emojis in URLs
+                                            const isLink = !!s?.link;
+                                            const r = textRuns(t, s, isLink);
+                                            if (!r) return;
+                                            Array.isArray(r) ? runs.push(...r) : runs.push(r);
+                                            return;
+                                        }
+                                        if (n.nodeType !== Node.ELEMENT_NODE) return;
+                                        if (n.classList && n.classList.contains('favicon-placeholder')) return;
+                                        const tag = n.tagName.toLowerCase();
+                                        if (tag === 'br') { runs.push({ text: '\n' }); return; }
+                                        if (tag === 'a') {
+                                            const href = n.getAttribute('href');
+                                            const ls = href ? { ...s, link: href, color: '#2563EB', decoration: 'underline' } : s;
+                                            n.childNodes.forEach(c => walk(c, ls));
+                                            return;
+                                        }
+                                        // Don't descend into block children — shouldn't happen inside <p>, but safety net
+                                        if (isBlockNode(n)) return;
+                                        const cs = extractStyles(n, s);
+                                        n.childNodes.forEach(c => walk(c, cs));
+                                    };
+                                    node.childNodes.forEach(c => walk(c, styles));
+                                    return runs;
+                                };
+
+                                const makePara = (runs, extra = {}) => {
+                                    if (!runs.length) {
+                                        return { text: '\n', margin: [0, 0, 0, 4] };
                                     }
 
+                                    // if it's a single run, unwrap it to keep pdfmake clean
+                                    const textContent = runs.length === 1 ? runs[0] : runs;
+
+                                    return {
+                                        text: textContent,
+                                        margin: [0, 0, 0, 4],
+                                        lineHeight: 1.6,
+                                        ...extra
+                                    };
+                                };
+
+                                // ─── BLOCK PROCESSOR ────────────────────────────────────────────────────
+                                const PDF_HEADING_STYLES = {
+                                    1: { fontSize: 20, margin: [0, 18, 0, 8], color: '#8c1717' },
+                                    2: { fontSize: 17, margin: [0, 16, 0, 7], color: '#991B1B' },
+                                    3: { fontSize: 14, margin: [0, 14, 0, 6], color: '#B91C1C' },
+                                    4: { fontSize: 12, margin: [0, 10, 0, 5], color: '#DC2626' },
+                                    5: { fontSize: 11, margin: [0, 8, 0, 4], color: '#EF4444' },
+                                    6: { fontSize: 10, margin: [0, 6, 0, 4], color: '#6B7280' }
+                                };
+                                // Returns ONE pdfmake block object for a single DOM block element.
+                                const processBlock = (node) => {
+                                    if (node.nodeType === Node.TEXT_NODE) {
+                                        const t = node.textContent.replace(/[\n\r]+/g, '').trim();
+                                        return t ? makePara([{ text: t }]) : null;
+                                    }
                                     if (node.nodeType !== Node.ELEMENT_NODE) return null;
 
                                     const tag = node.tagName.toLowerCase();
-                                    const styles = { ...inheritedStyles };
+                                    const cl = node.classList;
 
-                                    // Apply styles based on classes
-                                    const classList = Array.from(node.classList || []);
-                                    classList.forEach(cls => {
-                                        // 🎨 INNOVATION: "Premium Double Underline"
-                                        if (highlightUnderlineMap[cls]) {
-                                            styles.decoration = 'underline';
-                                            styles.decorationStyle = 'double'; // Thicker, "3D-like" premium effect
-                                            styles.decorationColor = highlightUnderlineMap[cls];
-                                            // Fix for overlap: Increase line height slightly for highlighted text
-                                            styles.lineHeight = 1.6;
-                                        }
-                                        if (textColorMap[cls]) {
-                                            styles.color = textColorMap[cls];
-                                            styles.bold = true; // colored text often needs emphasis
-                                        }
-                                    });
-
-                                    // Also check inline styles for colors
-                                    const inlineStyle = node.getAttribute('style') || '';
-                                    const bgMatch = inlineStyle.match(/background(?:-color)?:\s*([^;]+)/i);
-                                    const colorMatch = inlineStyle.match(/(?:^|[^-])color:\s*([^;]+)/i);
-
-                                    if (bgMatch && bgMatch[1]) {
-                                        const bgColor = bgMatch[1].trim();
-                                        if (bgColor.startsWith('#') || bgColor.startsWith('rgb')) {
-                                            styles.background = bgColor;
-                                        }
-                                    }
-                                    if (colorMatch && colorMatch[1]) {
-                                        const textColor = colorMatch[1].trim();
-                                        if (textColor.startsWith('#') || textColor.startsWith('rgb')) {
-                                            styles.color = textColor;
-                                        }
+                                    // YouTube, Video and Map embeds
+                                    if (tag === 'iframe' || cl?.contains('video-container') || cl?.contains('se-video-container') || cl?.contains('nk-map-embed') || cl?.contains('nk-video-embed')) {
+                                        return null; // Completely ignore in PDF export
                                     }
 
-                                    // Apply styles based on tag
-                                    switch (tag) {
-                                        case 'b':
-                                        case 'strong':
-                                            styles.bold = true;
-                                            break;
-                                        case 'i':
-                                        case 'em':
-                                            styles.italics = true;
-                                            break;
-                                        case 'u':
-                                            styles.decoration = 'underline';
-                                            break;
-                                        case 's':
-                                        case 'strike':
-                                            styles.decoration = 'lineThrough';
-                                            break;
-                                        case 'sup':
-                                            styles.sup = true;
-                                            styles.fontSize = 8;
-                                            break;
-                                        case 'sub':
-                                            styles.sub = true;
-                                            styles.fontSize = 8;
-                                            break;
-                                        case 'a':
-                                            // Handle our custom aesthetic web links in PDF gracefully and clickably
-                                            if (node.classList?.contains('nk-web-link') || node.classList?.contains('nk-web-link-card')) {
-                                                const url = node.getAttribute('href') || '';
-                                                return {
-                                                    text: [
-                                                        { text: 'Click --> ' + url, link: url, color: '#2563EB', decoration: 'underline', fontSize: 10, italics: true }
-                                                    ],
-                                                    margin: [0, 2, 0, 2]
-                                                };
-                                            }
-                                            if (node.getAttribute('href')) {
-                                                styles.link = node.getAttribute('href');
-                                                styles.color = '#2563EB';
-                                                styles.decoration = 'underline';
-                                            }
-                                            break;
-                                    }
-
-                                    // ═══ Handle Youtube/Video Embeds - Graceful Fallback to Link ═══
-                                    if (tag === 'iframe' || node.classList?.contains('video-container') || node.classList?.contains('se-video-container')) {
-                                        let src = node.getAttribute('src') || node.querySelector('iframe')?.getAttribute('src');
-
-                                        if (src && (src.includes('youtube.com') || src.includes('youtu.be'))) {
-                                            // Compact clickable link as requested
-                                            return {
-                                                text: [
-                                                    { text: 'Click --> ', color: '#374151', fontSize: 10, bold: true },
-                                                    { text: src, link: src, color: '#2563EB', decoration: 'underline', fontSize: 10, italics: true }
-                                                ],
-                                                margin: [0, 2, 0, 2], // Minimal margin
-                                                _isBlock: true // Ensure it handles own spacing
-                                            };
+                                    // Web link cards
+                                    if (tag === 'span' && cl?.contains('nk-web-link-container')) {
+                                        let linkNode = node.querySelector('a.nk-web-link') || node.querySelector('a');
+                                        let url = linkNode ? (linkNode.getAttribute('href') || '') : '';
+                                        if (url) {
+                                            if (url.startsWith('//')) url = 'https:' + url;
+                                            else if (!url.startsWith('http')) url = 'https://' + url;
                                         }
-                                        return null; // Skip non-youtube iframes
-                                    }
-
-                                    // ═══ Handle image-container divs - Centered, compact layout ═══
-                                    if (node.classList?.contains('image-container')) {
-                                        const img = node.querySelector('img');
-                                        if (img) {
-                                            const src = img.getAttribute('src');
-                                            // Only process base64 images (external URLs are skipped)
-                                            if (src && src.startsWith('data:')) {
-                                                const base64 = imageCache.get(src);
-                                                if (base64) {
-                                                    // Dynamic Sizing for Container Images
-                                                    let imgWidth = 200;
-                                                    const attrWidth = img.getAttribute('width');
-                                                    const styleWidth = img.style.width;
-
-                                                    if (attrWidth) {
-                                                        imgWidth = parseInt(attrWidth);
-                                                    } else if (styleWidth && styleWidth.includes('px')) {
-                                                        imgWidth = parseInt(styleWidth);
-                                                    }
-
-                                                    if (isNaN(imgWidth) || imgWidth <= 0) imgWidth = 200;
-                                                    imgWidth = Math.min(imgWidth, 300); // Capped at 300px 
-
-                                                    // Compact centered image
-                                                    return {
-                                                        image: base64,
-                                                        width: imgWidth,
-                                                        margin: [0, 2, 0, 2],
-                                                        alignment: 'center'
-                                                    };
-                                                }
-                                            }
-                                            // External URL image
-                                            if (src && !src.startsWith('data:')) {
-                                                return {
-                                                    text: '[ External image ]',
-                                                    fontSize: 9,
-                                                    italics: true,
-                                                    color: '#9CA3AF',
-                                                    alignment: 'center',
-                                                    margin: [0, 2, 0, 2]
-                                                };
-                                            }
-                                        }
-                                        return null; // Empty container
-                                    }
-
-                                    // ═══ Text Tile (Textile) - Aesthetic Box ═══
-                                    if (node.classList?.contains('nk-text-tile')) {
-                                        let tileColor = 'default';
-                                        node.classList.forEach(cls => {
-                                            if (cls.startsWith('color-')) tileColor = cls;
-                                        });
-
-                                        const tileStyles = {
-                                            'color-1': { bg: '#F0F9FF', border: '#0EA5E9', text: '#0C4A6E' }, // Sky
-                                            'color-2': { bg: '#DCFCE7', border: '#16A34A', text: '#14532D' }, // Green
-                                            'color-3': { bg: '#FFF7ED', border: '#EA580C', text: '#7C2D12' }, // Orange
-                                            'color-4': { bg: '#FEF2F2', border: '#DC2626', text: '#7F1D1D' }, // Red
-                                            'color-5': { bg: '#FAF5FF', border: '#9333EA', text: '#581C87' }, // Purple
-                                            'color-6': { bg: '#FDF4FF', border: '#C026D3', text: '#701A75' }, // Fuchsia
-                                            'color-7': { bg: '#F0FDFA', border: '#0D9488', text: '#134E4A' }, // Teal
-                                            'color-8': { bg: '#FFFBEB', border: '#D97706', text: '#78350F' }, // Amber
-                                            'color-9': { bg: '#EEF2FF', border: '#4F46E5', text: '#312E81' }, // Indigo
-                                            'default': { bg: '#F3F4F6', border: '#6B7280', text: '#1F2937' }  // Gray
-                                        };
-                                        const style = tileStyles[tileColor] || tileStyles['default'];
-
-                                        const content = [];
-                                        const contentNode = node.querySelector('.nk-text-tile-content') || node;
-
-                                        contentNode.childNodes.forEach(child => {
-                                            const processed = processNode(child, { ...styles, color: style.text });
-                                            if (processed) {
-                                                if (Array.isArray(processed)) content.push(...processed);
-                                                else content.push(processed);
-                                            }
-                                        });
-
-                                        // Simplified: Use 'text' property for inline wrapping unless heavy blocks present
-                                        const hasHeavyBlocks = content.some(c => c.table || c.ul || c.ol || (c.stack && !c._isBlock));
-
-                                        if (content.length === 0) content.push({ text: '' });
+                                        let linkText = linkNode ? (linkNode.textContent || url) : url;
 
                                         return {
                                             table: {
                                                 widths: ['*'],
-                                                body: [[
-                                                    {
-                                                        // Simplified: Toggle stack vs text based on content type
-                                                        [hasHeavyBlocks ? 'stack' : 'text']: content,
-                                                        fillColor: style.bg,
-                                                        borderColor: [style.border, style.border, style.border, style.border],
-                                                        margin: [10, 6, 10, 6]
-                                                    }
-                                                ]]
+                                                body: [
+                                                    [
+                                                        {
+                                                            stack: [
+                                                                { text: 'Access Link below -->', fontSize: 11, color: '#6B7280', margin: [0, 0, 0, 4] },
+                                                                { text: linkText, link: url, color: '#2563EB', decoration: 'underline', fontSize: 10, italics: true }
+                                                            ],
+                                                            fillColor: '#F9FAFB',
+                                                            borderColor: ['#E5E7EB', '#E5E7EB', '#E5E7EB', '#E5E7EB'],
+                                                            margin: [10, 8, 10, 8]
+                                                        }
+                                                    ]
+                                                ]
                                             },
                                             layout: {
                                                 hLineWidth: () => 1.5,
                                                 vLineWidth: () => 1.5,
-                                                hLineColor: () => style.border,
-                                                vLineColor: () => style.border,
+                                                hLineColor: () => '#E5E7EB',
+                                                vLineColor: () => '#E5E7EB',
                                                 paddingLeft: () => 0,
                                                 paddingRight: () => 0,
                                                 paddingTop: () => 0,
                                                 paddingBottom: () => 0
                                             },
-                                            margin: [0, 8, 0, 8],
-                                            _isBlock: true
+                                            margin: [0, 8, 0, 8]
                                         };
                                     }
 
-                                    // ═══ MCQ & ACCORDION - Unified Q&A Card Format (MUST be before generic div handler) ═══
-                                    if (node.classList?.contains('nk-mcq-block') || node.classList?.contains('nk-accordion')) {
-                                        let qText = [], aText = [], eText = [];
+                                    if (tag === 'a' && (cl?.contains('nk-web-link') || cl?.contains('nk-web-link-card'))) {
+                                        let url = node.getAttribute('href') || '';
+                                        if (url) {
+                                            if (url.startsWith('//')) url = 'https:' + url;
+                                            else if (!url.startsWith('http')) url = 'https://' + url;
+                                        }
+                                        let linkText = node.textContent || url;
+                                        return {
+                                            text: [
+                                                { text: linkText, link: url, color: '#2563EB', decoration: 'underline', fontSize: 10, italics: true }
+                                            ],
+                                            margin: [0, 1, 0, 1]
+                                        };
+                                    }
 
-                                        if (node.classList.contains('nk-mcq-block')) {
-                                            // Extract Question with rich text
-                                            const questionNode = node.querySelector('.nk-mcq-question');
-                                            if (questionNode) {
-                                                questionNode.childNodes.forEach(child => {
-                                                    const processed = processNode(child, styles);
-                                                    if (processed) {
-                                                        if (Array.isArray(processed)) qText.push(...processed);
-                                                        else qText.push(processed);
+                                    // Image containers and Whiteboards
+                                    if (cl?.contains('image-container') || cl?.contains('whiteboard-block')) {
+                                        const img = node.querySelector('img');
+                                        if (!img) return null;
+
+                                        const src = img.getAttribute('src');
+                                        if (src?.startsWith('data:') && imageCache.has(src)) {
+                                            let defaultWidth = cl.contains('whiteboard-block') ? 420 : 350;
+                                            let w = parseInt(img.getAttribute('width') || img.style.width) || defaultWidth;
+                                            if (!w || w <= 0) w = defaultWidth;
+                                            // 'fit' gracefully handles portrait images (e.g., max width 420, max height 500)
+                                            return { image: imageCache.get(src), fit: [Math.min(w * 1.5, 420), 550], margin: [0, 0, 0, 4], alignment: 'center' };
+                                        }
+
+                                        if (src) {
+                                            return { text: '[ External image ]', fontSize: 9, italics: true, color: '#9CA3AF', alignment: 'center', margin: [0, 0, 0, 2] };
+                                        }
+                                        return null;
+                                    }
+
+                                    // Text tiles
+                                    if (cl?.contains('nk-text-tile')) {
+                                        let tck = 'default';
+                                        cl.forEach(c => { if (c.startsWith('color-')) tck = c; });
+
+                                        const TILE = {
+                                            'color-1': { bg: '#F0F9FF', border: '#0EA5E9', text: '#0C4A6E' },
+                                            'color-2': { bg: '#DCFCE7', border: '#16A34A', text: '#14532D' },
+                                            'color-3': { bg: '#FFF7ED', border: '#EA580C', text: '#7C2D12' },
+                                            'color-4': { bg: '#FEF2F2', border: '#DC2626', text: '#7F1D1D' },
+                                            'color-5': { bg: '#FAF5FF', border: '#9333EA', text: '#581C87' },
+                                            'color-6': { bg: '#FDF4FF', border: '#C026D3', text: '#701A75' },
+                                            'color-7': { bg: '#F0FDFA', border: '#0D9488', text: '#134E4A' },
+                                            'color-8': { bg: '#FFFBEB', border: '#D97706', text: '#78350F' },
+                                            'color-9': { bg: '#EEF2FF', border: '#4F46E5', text: '#312E81' },
+                                            'default': { bg: '#F3F4F6', border: '#6B7280', text: '#1F2937' }
+                                        };
+                                        const ts = TILE[tck] || TILE['default'];
+
+                                        const inner = node.querySelector('.nk-text-tile-content') || node;
+                                        const tileBlocks = processChildren(inner, { color: ts.text });
+                                        const hasHeavy = tileBlocks.some(b => b.stack || b.table || b.ul || b.ol);
+
+                                        return {
+                                            table: {
+                                                widths: ['*'],
+                                                body: [
+                                                    [
+                                                        {
+                                                            [hasHeavy ? 'stack' : 'text']: tileBlocks.length ? tileBlocks : [{ text: '' }],
+                                                            fillColor: ts.bg,
+                                                            borderColor: [ts.border, ts.border, ts.border, ts.border],
+                                                            margin: [10, 6, 10, 6]
+                                                        }
+                                                    ]
+                                                ]
+                                            },
+                                            layout: {
+                                                hLineWidth: () => 1.5,
+                                                vLineWidth: () => 1.5,
+                                                hLineColor: () => ts.border,
+                                                vLineColor: () => ts.border,
+                                                paddingLeft: () => 0,
+                                                paddingRight: () => 0,
+                                                paddingTop: () => 0,
+                                                paddingBottom: () => 0
+                                            },
+                                            margin: [0, 8, 0, 8]
+                                        };
+                                    }
+
+                                    // MCQ & Accordion
+                                    if (cl?.contains('nk-mcq-block') || cl?.contains('nk-accordion')) {
+                                        const isMCQ = cl.contains('nk-mcq-block');
+                                        const wr = blocks => blocks.length ? (blocks.length === 1 && !blocks[0].stack && !blocks[0].table ? blocks[0] : { stack: blocks }) : { text: '' };
+                                        const pdfStack = [];
+
+                                        if (isMCQ) {
+                                            const qEl = node.querySelector('.nk-mcq-question');
+                                            const eEl = node.querySelector('.nk-mcq-explanation');
+                                            const qBlocks = qEl ? processChildren(qEl, { bold: true }) : [];
+                                            const eBlocks = eEl && eEl.innerText.trim() ? processChildren(eEl, { color: '#36354b' }) : [];
+
+                                            pdfStack.push({ text: 'Question:', bold: true, fontSize: 12.6, color: '#6366F1', margin: [0, 0, 0, 2] });
+                                            pdfStack.push(wr(qBlocks));
+
+                                            const options = Array.from(node.querySelectorAll('.nk-mcq-option'));
+                                            if (options.length) {
+                                                options.forEach((opt, idx) => {
+                                                    const textEl = opt.querySelector('.nk-mcq-option-text');
+                                                    if (textEl) {
+                                                        const optChar = String.fromCharCode(65 + idx) + ')';
+                                                        const tBlocks = processChildren(textEl, {});
+                                                        pdfStack.push({
+                                                            columns: [
+                                                                { text: optChar, width: 25, bold: true, color: '#4F46E5', alignment: 'right', margin: [0, 0, 8, 0] },
+                                                                { stack: [wr(tBlocks)], width: '*' }
+                                                            ],
+                                                            margin: [0, 2, 0, 4]
+                                                        });
                                                     }
                                                 });
                                             }
 
-                                            // Extract Correct Option with rich text
-                                            const correctOptNode = node.querySelector('.nk-mcq-option[data-is-correct="true"] .nk-mcq-option-text');
-                                            if (correctOptNode) {
-                                                correctOptNode.childNodes.forEach(child => {
-                                                    const processed = processNode(child, styles);
-                                                    if (processed) {
-                                                        if (Array.isArray(processed)) aText.push(...processed);
-                                                        else aText.push(processed);
-                                                    }
-                                                });
+                                            const correctOpt = node.querySelector('.nk-mcq-option[data-is-correct="true"] .nk-mcq-option-text');
+                                            const aBlocks = correctOpt ? processChildren(correctOpt, { color: '#065F46' }) : [];
+                                            if (aBlocks.length) {
+                                                pdfStack.push({ text: 'Answer:', bold: true, fontSize: 12.6, color: '#16A34A', margin: [0, 6, 0, 2] });
+                                                pdfStack.push(wr(aBlocks));
                                             }
 
-                                            // Extract Explanation (New Feature)
-                                            const explanationNode = node.querySelector('.nk-mcq-explanation');
-                                            if (explanationNode && explanationNode.innerText.trim()) {
-                                                // Only add if not empty (check innerText to avoid empty HTML tags)
-                                                explanationNode.childNodes.forEach(child => {
-                                                    const processed = processNode(child, styles);
-                                                    if (processed) {
-                                                        if (Array.isArray(processed)) eText.push(...processed);
-                                                        else eText.push(processed);
-                                                    }
-                                                });
+                                            if (eBlocks.length) {
+                                                pdfStack.push({ text: 'Explanation:', bold: true, fontSize: 12.6, color: '#F59E0B', margin: [0, 6, 0, 2] });
+                                                pdfStack.push(wr(eBlocks));
                                             }
-
                                         } else {
-                                            // Accordion
-                                            const titleNode = node.querySelector('.nk-accordion-title');
-                                            if (titleNode) {
-                                                titleNode.childNodes.forEach(child => {
-                                                    const processed = processNode(child, styles);
-                                                    if (processed) {
-                                                        if (Array.isArray(processed)) qText.push(...processed);
-                                                        else qText.push(processed);
-                                                    }
-                                                });
-                                            }
+                                            const qEl = node.querySelector('.nk-accordion-title');
+                                            const aEl = node.querySelector('.nk-accordion-content');
+                                            const qBlocks = qEl ? processChildren(qEl, { bold: true }) : [];
+                                            const aBlocks = aEl ? processChildren(aEl, {}) : [];
 
-                                            const contentNode = node.querySelector('.nk-accordion-content');
-                                            if (contentNode) {
-                                                contentNode.childNodes.forEach(child => {
-                                                    const processed = processNode(child, styles);
-                                                    if (processed) {
-                                                        if (Array.isArray(processed)) aText.push(...processed);
-                                                        else aText.push(processed);
-                                                    }
-                                                });
-                                            }
-                                        }
+                                            if (!qBlocks.length && !aBlocks.length) return null;
 
-                                        if (qText.length === 0 && aText.length === 0) return null;
-
-                                        // FIX: Check if content has blocks to decide between stack (vertical) or text (inline)
-                                        const hasBlockQ = qText.some(c => c._isBlock || c.stack || c.table || c.ul || c.ol);
-                                        const qContainer = qText.length ? { [hasBlockQ ? 'stack' : 'text']: qText, margin: [0, 0, 0, 4] } : { text: '' };
-
-                                        const hasBlockA = aText.some(c => c._isBlock || c.stack || c.table || c.ul || c.ol);
-                                        const aContainer = aText.length ? { [hasBlockA ? 'stack' : 'text']: aText } : { text: '' };
-
-                                        // Explanation Container logic
-                                        const hasBlockE = eText.some(c => c._isBlock || c.stack || c.table || c.ul || c.ol);
-                                        const eContainer = eText.length ? { [hasBlockE ? 'stack' : 'text']: eText } : null;
-
-                                        const pdfStack = [
-                                            {
-                                                text: [
-                                                    { text: 'Question: ', bold: true, color: '#6366F1' }
-                                                ],
-                                                margin: [0, 0, 0, 2]
-                                            },
-                                            qContainer,
-                                            {
-                                                text: [
-                                                    { text: 'Answer: ', bold: true, color: '#16A34A' }
-                                                ],
-                                                margin: [0, 6, 0, 2]
-                                            },
-                                            aContainer
-                                        ];
-
-                                        if (eContainer) {
-                                            pdfStack.push({
-                                                text: [
-                                                    { text: 'Explanation: ', bold: true, color: '#F59E0B' }
-                                                ],
-                                                margin: [0, 6, 0, 2]
-                                            });
-                                            pdfStack.push(eContainer);
+                                            pdfStack.push({ text: 'Question:', bold: true, fontSize: 12.6, color: '#6366F1', margin: [0, 0, 0, 2] });
+                                            pdfStack.push(wr(qBlocks));
+                                            pdfStack.push({ text: 'Answer:', bold: true, fontSize: 12.6, color: '#16A34A', margin: [0, 6, 0, 2] });
+                                            pdfStack.push(wr(aBlocks));
                                         }
 
                                         return {
                                             table: {
                                                 widths: [3, '*'],
-                                                body: [[
-                                                    { text: '', fillColor: '#6366F1' },
-                                                    {
-                                                        stack: pdfStack,
-                                                        margin: [10, 8, 8, 8]
-                                                    }
-                                                ]]
-                                            },
-                                            layout: { hLineWidth: () => 0, vLineWidth: () => 0, paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0 },
-                                            margin: [0, 8, 0, 8],
-                                            _isBlock: true // Mark as block
-                                        };
-                                    }
-
-                                    // Handle block elements (p, div, etc)
-                                    if (['p', 'div'].includes(tag)) {
-                                        let children = [];
-                                        node.childNodes.forEach(child => {
-                                            const processed = processNode(child, styles);
-                                            if (processed) {
-                                                if (Array.isArray(processed)) children.push(...processed);
-                                                else children.push(processed);
-                                            }
-                                        });
-                                        if (children.length === 0) return { text: '\n', margin: [0, 4, 0, 4] };
-
-                                        // CRITICAL FIX: Robust block detection
-                                        // If any child is a block (header, list, table, or explicitly marked), current element MUST be a stack
-                                        const hasBlockElements = children.some(c =>
-                                            c._isBlock ||           // Explicit flag
-                                            c.stack ||              // Is a stack
-                                            c.table ||              // Is a table
-                                            c.ul || c.ol ||         // Is a list
-                                            (c.image && c.width > 50) // Is a large image
-                                        );
-
-                                        if (hasBlockElements) {
-                                            // FIX: Filter out whitespace-only text nodes if we are in block mode
-                                            // This prevents indentation/newlines in HTML from creating "junk" empty lines around images
-                                            children = children.filter(c => {
-                                                if (c.text && typeof c.text === 'string' && !c.text.trim()) return false;
-                                                return true;
-                                            });
-
-                                            return {
-                                                stack: children,
-                                                margin: [0, 0, 0, 4], // Reduced wrapper margin (let blocks handle own spacing)
-                                                _isBlock: true // Propagate block status up
-                                            };
-                                        }
-                                        // Otherwise, it's an inline paragraph
-                                        return {
-                                            text: children,
-                                            margin: [0, 0, 0, 4], // Reduced margin for compactness
-                                            lineHeight: 1.6,
-                                            _isBlock: true // Paragraphs are blocks in the grand scheme (breaks flow)
-                                        };
-                                    }
-
-                                    if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)) {
-                                        const level = parseInt(tag[1]);
-                                        const sizes = { 1: 20, 2: 17, 3: 14, 4: 12, 5: 11, 6: 10 };
-                                        const margins = { 1: [0, 18, 0, 8], 2: [0, 16, 0, 7], 3: [0, 14, 0, 6], 4: [0, 10, 0, 5], 5: [0, 8, 0, 4], 6: [0, 6, 0, 4] };
-                                        const headingColors = { 1: '#111827', 2: '#1F2937', 3: '#374151', 4: '#4B5563', 5: '#6B7280', 6: '#6B7280' };
-
-                                        // Process children (headers might have emojis)
-                                        const children = [];
-                                        node.childNodes.forEach(child => {
-                                            const processed = processNode(child, styles);
-                                            if (processed) {
-                                                if (Array.isArray(processed)) children.push(...processed);
-                                                else children.push(processed);
-                                            }
-                                        });
-
-                                        return {
-                                            text: children.length ? children : node.textContent, // Fallback to content if simple
-                                            fontSize: sizes[level],
-                                            bold: true,
-                                            color: headingColors[level],
-                                            margin: margins[level],
-                                            lineHeight: 1.3,
-                                            _isBlock: true // Headers are blocks
-                                        };
-                                    }
-
-                                    if (tag === 'blockquote') {
-                                        let children = [];
-                                        node.childNodes.forEach(child => {
-                                            const processed = processNode(child, { ...styles, italics: true, color: '#6B7280' });
-                                            if (processed) {
-                                                if (Array.isArray(processed)) children.push(...processed);
-                                                else children.push(processed);
-                                            }
-                                        });
-
-                                        const hasBlockElements = children.some(c =>
-                                            c._isBlock || c.stack || c.table || c.ul || c.ol || (c.image && c.width > 50) || (typeof c === 'object' && !c.text && !c.image)
-                                        );
-
-                                        if (hasBlockElements) {
-                                            children = children.filter(c => {
-                                                if (c.text && typeof c.text === 'string' && !c.text.trim()) return false;
-                                                return true;
-                                            });
-                                        }
-
-                                        const contentNode = hasBlockElements
-                                            ? { stack: children.length ? children : [{ text: '' }], margin: [12, 6, 0, 6] }
-                                            : { text: children.length ? children : '', margin: [12, 6, 0, 6], lineHeight: 1.6 };
-
-                                        // Elegant left-bordered quote
-                                        return {
-                                            table: {
-                                                widths: [3, '*'],
-                                                body: [[
-                                                    { text: '', fillColor: '#6366F1' },
-                                                    contentNode
-                                                ]]
+                                                body: [
+                                                    [
+                                                        { text: '', fillColor: '#6366F1' },
+                                                        { stack: pdfStack, margin: [10, 8, 8, 8] }
+                                                    ]
+                                                ]
                                             },
                                             layout: {
                                                 hLineWidth: () => 0,
@@ -37190,251 +38136,207 @@
                                                 paddingTop: () => 0,
                                                 paddingBottom: () => 0
                                             },
-                                            margin: [0, 10, 0, 10],
-                                            _isBlock: true // Quotes are blocks
+                                            margin: [0, 8, 0, 8]
                                         };
                                     }
 
+                                    // Paragraphs & generic divs
+                                    if (tag === 'p' || tag === 'div') {
+                                        if (Array.from(node.childNodes).some(isBlockNode)) {
+                                            return { stack: processChildren(node), margin: [0, 0, 0, 4] };
+                                        }
+                                        return makePara(collectInlineRuns(node));
+                                    }
+
+                                    // Headings
+                                    if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)) {
+                                        const lv = parseInt(tag[1]);
+
+                                        const style = PDF_HEADING_STYLES[lv];
+
+                                        const runs = collectInlineRuns(node);
+                                        const textContent = runs.length ? (runs.length === 1 ? runs[0] : runs) : node.textContent;
+
+                                        return {
+                                            text: textContent,
+                                            fontSize: style.fontSize,
+                                            bold: true,
+                                            color: style.color,
+                                            margin: style.margin,
+                                            lineHeight: 1.3
+                                        };
+                                    }
+
+                                    // Blockquote
+                                    if (tag === 'blockquote') {
+                                        const runs = collectInlineRuns(node, { italics: true, color: '#6B7280' });
+                                        const contentBlock = makePara(runs, { margin: [12, 6, 0, 6] });
+
+                                        return {
+                                            table: {
+                                                widths: [3, '*'],
+                                                body: [
+                                                    [
+                                                        { text: '', fillColor: '#6366F1' },
+                                                        contentBlock
+                                                    ]
+                                                ]
+                                            },
+                                            layout: {
+                                                hLineWidth: () => 0,
+                                                vLineWidth: () => 0,
+                                                paddingLeft: () => 0,
+                                                paddingRight: () => 0,
+                                                paddingTop: () => 0,
+                                                paddingBottom: () => 0
+                                            },
+                                            margin: [0, 10, 0, 10]
+                                        };
+                                    }
+
+                                    // Lists
                                     if (tag === 'ul' || tag === 'ol') {
                                         const items = [];
+                                        node.querySelectorAll(':scope > li').forEach(li => {
+                                            const subList = li.querySelector(':scope > ul, :scope > ol');
+                                            if (subList) {
+                                                const clone = li.cloneNode(true);
+                                                clone.querySelectorAll('ul,ol').forEach(s => s.remove());
 
-                                        // Process all children to catch mis-nested lists
-                                        node.childNodes.forEach(child => {
-                                            const isElement = child.nodeType === Node.ELEMENT_NODE;
+                                                const liBlock = makePara(collectInlineRuns(clone), { margin: [0, 2, 0, 2], color: '#374151', lineHeight: 1.5 });
+                                                const subBlock = processBlock(subList);
 
-                                            // Skip empty text nodes between li elements
-                                            if (!isElement && (child.nodeType !== Node.TEXT_NODE || child.textContent.trim() === '')) {
-                                                return;
-                                            }
-
-                                            const childTag = isElement ? child.tagName.toLowerCase() : null;
-
-                                            if (childTag === 'li') {
-                                                const liChildren = [];
-                                                child.childNodes.forEach(c => {
-                                                    const processed = processNode(c, styles);
-                                                    if (processed) {
-                                                        if (Array.isArray(processed)) liChildren.push(...processed);
-                                                        else liChildren.push(processed);
-                                                    }
-                                                });
-
-                                                if (liChildren.length > 0) {
-                                                    const hasBlock = liChildren.some(c =>
-                                                        c._isBlock || c.stack || c.table || c.ul || c.ol || (c.image && c.width > 200) || (typeof c === 'object' && !c.text && !c.image)
-                                                    );
-
-                                                    if (hasBlock) {
-                                                        items.push({
-                                                            stack: liChildren,
-                                                            margin: [0, 2, 0, 2],
-                                                            color: '#374151',
-                                                            lineHeight: 1.5,
-                                                        });
-                                                    } else {
-                                                        items.push({
-                                                            text: liChildren,
-                                                            margin: [0, 2, 0, 2],
-                                                            color: '#374151',
-                                                            lineHeight: 1.5,
-                                                        });
-                                                    }
-                                                }
+                                                items.push({ stack: [liBlock, subBlock].filter(Boolean), margin: [0, 2, 0, 2] });
                                             } else {
-                                                // Catch malformed nested lists (ul directly inside ul), divs, text nodes, etc
-                                                const processed = processNode(child, styles);
-                                                if (processed) {
-                                                    if (items.length > 0) {
-                                                        const lastItem = items[items.length - 1];
-                                                        if (lastItem.stack) {
-                                                            lastItem.stack.push(processed);
-                                                        } else if (lastItem.text) {
-                                                            // Upgrade to stack
-                                                            const textContent = lastItem.text;
-                                                            items[items.length - 1] = {
-                                                                stack: [{ text: textContent }, processed],
-                                                                margin: [0, 2, 0, 2],
-                                                                color: '#374151',
-                                                                lineHeight: 1.5
-                                                            };
-                                                        } else {
-                                                            // lastItem is already a block or object without text/stack, upgrade to stack
-                                                            items[items.length - 1] = {
-                                                                stack: [lastItem, processed],
-                                                                margin: [0, 2, 0, 2],
-                                                                color: '#374151',
-                                                                lineHeight: 1.5
-                                                            };
-                                                        }
-                                                    } else {
-                                                        if (childTag === 'ul' || childTag === 'ol') {
-                                                            processed.listType = 'none'; // Avoid bullet for the container
-                                                        }
-                                                        items.push(processed);
-                                                    }
-                                                }
+                                                items.push(makePara(collectInlineRuns(li), { margin: [0, 2, 0, 2], color: '#374151', lineHeight: 1.5 }));
                                             }
                                         });
 
                                         return {
-                                            [tag]: items.length ? items : [''], // ensure list is never completely empty
+                                            [tag]: items.length ? items : [{ text: '' }],
                                             margin: [8, 4, 0, 12],
-                                            color: '#6366F1',
-                                            _isBlock: true
+                                            color: '#6366F1'
                                         };
                                     }
 
-                                    if (tag === 'br') {
-                                        return { text: '\n' };
-                                    }
-
+                                    // HR
                                     if (tag === 'hr') {
-                                        // Elegant centered divider
                                         return {
-                                            canvas: [{
-                                                type: 'line',
-                                                x1: 167, y1: 0,
-                                                x2: 348, y2: 0,  // Centered, 180px wide
-                                                lineWidth: 0.75,
-                                                lineColor: '#D1D5DB'
-                                            }],
-                                            margin: [0, 16, 0, 16],
-                                            _isBlock: true // HR is block
+                                            canvas: [
+                                                { type: 'line', x1: 167, y1: 0, x2: 348, y2: 0, lineWidth: 0.75, lineColor: '#D1D5DB' }
+                                            ],
+                                            margin: [0, 16, 0, 16]
                                         };
                                     }
 
-                                    // ═══ IMAGES - Centered, base64 only ═══
+                                    // BR at block level
+                                    if (tag === 'br') return { text: '\n' };
+
+                                    // Standalone images
                                     if (tag === 'img') {
                                         const src = node.getAttribute('src');
-                                        if (src && src.startsWith('data:')) {
-                                            const base64 = imageCache.get(src);
-                                            if (base64) {
-                                                // Dynamic Sizing Logic
-                                                let imgWidth = 200; // Default fallback
+                                        if (src?.startsWith('data:') && imageCache.has(src)) {
+                                            let w = parseInt(node.getAttribute('width') || node.style.width) || 350;
+                                            if (!w || w <= 0) w = 350;
 
-                                                // Try to get width from attribute or style
-                                                const attrWidth = node.getAttribute('width');
-                                                const styleWidth = node.style.width;
-
-                                                if (attrWidth) {
-                                                    imgWidth = parseInt(attrWidth);
-                                                } else if (styleWidth && styleWidth.includes('px')) {
-                                                    imgWidth = parseInt(styleWidth);
-                                                }
-
-                                                // Cap width at 450 (approx print width) to prevent overflow                                                if (isNaN(imgWidth) || imgWidth <= 0) imgWidth = 200;
-                                                imgWidth = Math.min(imgWidth, 325); // Capped at 325px 
-
-                                                return {
-                                                    image: base64,
-                                                    width: imgWidth,
-                                                    margin: [0, 2, 0, 2], // Reduced margins
-                                                    alignment: 'center',
-                                                    _isBlock: true // Treat images as blocks for layout safety
-                                                };
-                                            }
-                                        }
-                                        // External URL or failed load - show subtle indicator
-                                        if (src && !src.startsWith('data:')) {
                                             return {
-                                                text: '[ External image ]',
-                                                fontSize: 9,
-                                                italics: true,
-                                                color: '#9CA3AF',
-                                                alignment: 'center',
-                                                margin: [0, 4, 0, 4],
-                                                _isBlock: true
+                                                image: imageCache.get(src),
+                                                fit: [Math.min(w * 1.5, 420), 550],
+                                                margin: [0, 0, 0, 4],
+                                                alignment: 'center'
                                             };
+                                        }
+
+                                        if (src) {
+                                            return { text: '[ External image ]', fontSize: 9, italics: true, color: '#9CA3AF', alignment: 'center', margin: [0, 0, 0, 2] };
                                         }
                                         return null;
                                     }
 
-                                    // Handle tables
+                                    // Tables
                                     if (tag === 'table') {
                                         const rows = [];
                                         node.querySelectorAll('tr').forEach(tr => {
                                             const cells = [];
-                                            tr.querySelectorAll('td, th').forEach(cell => {
+                                            tr.querySelectorAll('td,th').forEach(cell => {
                                                 const colspan = parseInt(cell.getAttribute('colspan') || '1');
-                                                const rowspan = parseInt(cell.getAttribute('rowspan') || '1');
-
-                                                // Process cell content recursively
-                                                const cellChildren = [];
-                                                cell.childNodes.forEach(child => {
-                                                    const processed = processNode(child, cell.tagName === 'TH' ? { ...styles, bold: true } : styles);
-                                                    if (processed) {
-                                                        if (Array.isArray(processed)) cellChildren.push(...processed);
-                                                        else cellChildren.push(processed);
-                                                    }
-                                                });
+                                                const isTH = cell.tagName === 'TH';
+                                                const runs = collectInlineRuns(cell, isTH ? { bold: true } : {});
 
                                                 cells.push({
-                                                    stack: cellChildren.length ? cellChildren : [{ text: '' }],
-                                                    fillColor: cell.tagName === 'TH' ? colors.paper : null,
-                                                    margin: [2, 2, 2, 2],
-                                                    colSpan: colspan,
-                                                    rowSpan: rowspan
+                                                    text: runs.length ? (runs.length === 1 ? runs[0] : runs) : '',
+                                                    fillColor: isTH ? '#F9FAFB' : null,
+                                                    margin: [4, 4, 4, 4],
+                                                    colSpan: colspan
                                                 });
-                                                // Support colSpan by adding empty cells for pdfmake
-                                                for (let i = 1; i < colspan; i++) {
-                                                    cells.push({});
-                                                }
+                                                for (let ci = 1; ci < colspan; ci++) cells.push({});
                                             });
-                                            if (cells.length > 0) rows.push(cells);
+                                            if (cells.length) rows.push(cells);
                                         });
-
-                                        if (rows.length > 0) {
-                                            const maxCols = Math.max(...rows.map(r => r.length));
-
-                                            // Normalization
-                                            rows.forEach(row => {
-                                                while (row.length < maxCols) {
-                                                    row.push({ text: '', margin: [2, 2, 2, 2] });
-                                                }
-                                            });
-
-                                            return {
-                                                table: {
-                                                    headerRows: 1,
-                                                    widths: Array(maxCols).fill('auto'), // FIX: auto width prevents cutoff
-                                                    body: rows
-                                                },
-                                                margin: [0, 10, 0, 10],
-                                                _isBlock: true
-                                            };
-                                        }
-
+                                        if (!rows.length) return null;
+                                        const maxCols = Math.max(...rows.map(r => r.length));
+                                        rows.forEach(row => { while (row.length < maxCols) row.push({ text: '', margin: [4, 4, 4, 4] }); });
+                                        return { table: { headerRows: 1, widths: Array(maxCols).fill('*'), body: rows }, margin: [0, 10, 0, 10], _isBlock: true };
                                     }
 
-                                    // Default: process children with inherited styles
-                                    const children = [];
-                                    node.childNodes.forEach(child => {
-                                        const processed = processNode(child, styles);
-                                        if (processed) {
-                                            if (Array.isArray(processed)) children.push(...processed);
-                                            else children.push(processed);
+                                    // Fallback: treat as inline paragraph
+                                    const runs = collectInlineRuns(node);
+                                    return runs.length ? makePara(runs) : null;
+                                };
+
+                                // ─── PROCESS CHILDREN (entry point for any container) ────────────────────
+                                const processChildren = (container, inheritedStyles = {}) => {
+                                    const blocks = [];
+                                    let pendingRuns = [];
+
+                                    const flushInline = () => {
+                                        if (pendingRuns.length) {
+                                            blocks.push(makePara(pendingRuns));
+                                            pendingRuns = [];
+                                        }
+                                    };
+
+                                    container.childNodes.forEach(child => {
+                                        if (child.nodeType === Node.TEXT_NODE) {
+                                            const t = child.textContent.replace(/[\n\r]/g, '');
+                                            if (!t.trim() && !pendingRuns.length) return;
+                                            const r = textRuns(t, inheritedStyles);
+                                            if (!r) return;
+                                            Array.isArray(r) ? pendingRuns.push(...r) : pendingRuns.push(r);
+                                            return;
+                                        }
+                                        if (child.nodeType !== Node.ELEMENT_NODE) return;
+
+                                        const tag = child.tagName.toLowerCase();
+
+                                        if (isBlockNode(child)) {
+                                            flushInline();
+                                            const b = processBlock(child);
+                                            if (b) blocks.push(b);
+                                        } else if (tag === 'br') {
+                                            flushInline(); // line break terminates inline run
+                                        } else if (tag === 'img') {
+                                            flushInline();
+                                            const b = processBlock(child);
+                                            if (b) blocks.push(b);
+                                        } else if (tag === 'a' && (child.classList?.contains('nk-web-link') || child.classList?.contains('nk-web-link-card'))) {
+                                            flushInline();
+                                            const b = processBlock(child);
+                                            if (b) blocks.push(b);
+                                        } else {
+                                            // Inline element: gather its runs into the pending accumulator
+                                            const s = extractStyles(child, inheritedStyles);
+                                            const runs = collectInlineRuns(child, s);
+                                            pendingRuns.push(...runs);
                                         }
                                     });
 
-                                    if (children.length === 0) return null;
-                                    if (children.length === 1) return children[0];
-                                    return children; // Return array for pdfmake to handle as text mix
+                                    flushInline();
+                                    return blocks;
                                 };
 
-                                // Process all top-level nodes
-                                div.childNodes.forEach(node => {
-                                    const processed = processNode(node);
-                                    if (processed) {
-                                        if (Array.isArray(processed) && processed.some(p => p.stack || p.table)) {
-                                            // logic to keep blocks separated
-                                            content.push({ stack: processed });
-                                        } else {
-                                            content.push(processed);
-                                        }
-                                    }
-                                });
-
-                                return content;
+                                // ─── ENTRY POINT ────────────────────────────────────────────────────────
+                                return processChildren(div);
                             };
 
                             const createUpsellPage = (isAtEnd = false) => this._getUpsellPdfBlock(isAtEnd);
@@ -40185,6 +41087,12 @@
                             el.style.removeProperty('background-color');
                             el.style.removeProperty('background');
                             el.style.removeProperty('color');
+
+                            // Remove inline borders which might have been computed/copied by Chrome
+                            el.style.removeProperty('border');
+                            el.style.removeProperty('border-color');
+                            el.style.removeProperty('border-style');
+                            el.style.removeProperty('border-width');
                             // FIX Bug#1: Strip bold/italic/underline inline styles from pasted content
                             // These leak into existing notes and override user's carefully applied bold.
                             el.style.removeProperty('font-weight');
@@ -41372,6 +42280,7 @@
                         { id: 'task', title: 'Create Task', desc: 'e.g., task:cat: name #priority', icon: '✅' },
 
                         { id: 'clip', title: 'Clip Webpage', desc: 'e.g., clip https://example.com', icon: '✂️', isPremium: true },
+                        { id: 'copy', title: 'Copy All Content', desc: 'Copy entire note exactly as it is', icon: '📋', execute: () => App.commandPalette.copyAllContents() },
                         { id: 'pastefast', title: 'Quick Paste', desc: 'Paste content, preserving styles except background', icon: '⚡️', execute: () => App.commandPalette.pasteFast() },
                         { id: 'onenoteimport', title: 'Import from OneNote', desc: 'Clean paste from OneNote', icon: '💜', execute: () => App.commandPalette.importOneNote() },
                         { id: 'video', title: 'Insert Video', desc: 'YT/X/Insta e.g. video https://...', icon: '🎬', execute: () => { App.commandPalette.els.input.value = 'video '; App.commandPalette.filter(); } },
@@ -41581,6 +42490,52 @@
                         }
                     }
                     App.state.isArticleDirty = true;
+                },
+
+                copyAllContents() {
+                    try {
+                        this._restoreEditor();
+                        const articleContent = document.getElementById('article-content');
+                        if (!articleContent) {
+                            App.ui.showToast('Nothing to copy.', { type: 'warning' });
+                            return;
+                        }
+
+                        // Temporarily bypass contenteditable="false" restriction for copying rich blocks like MCQs
+                        const uneditableElements = articleContent.querySelectorAll('[contenteditable="false"]');
+                        uneditableElements.forEach(el => el.setAttribute('contenteditable', 'true'));
+
+                        const selection = window.getSelection();
+                        let savedRange = null;
+                        if (selection.rangeCount > 0) {
+                            savedRange = selection.getRangeAt(0);
+                        }
+
+                        const range = document.createRange();
+                        range.selectNodeContents(articleContent);
+
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+
+                        const successful = document.execCommand('copy');
+
+                        // Restore contenteditable states
+                        uneditableElements.forEach(el => el.setAttribute('contenteditable', 'false'));
+
+                        selection.removeAllRanges();
+                        if (savedRange) {
+                            selection.addRange(savedRange);
+                        }
+
+                        if (successful) {
+                            App.ui.showToast('Copied full note to clipboard!', { type: 'success' });
+                        } else {
+                            App.ui.showToast('Could not copy note.', { type: 'error' });
+                        }
+                    } catch (err) {
+                        console.error('Copy All failed:', err);
+                        App.ui.showToast('Could not copy note.', { type: 'error' });
+                    }
                 },
 
                 async pasteFast() {
@@ -42231,10 +43186,10 @@
 
                         // Beautiful, minimal aesthetic inline tag for any web link
                         let html = `
-                        <a href="${url}" target="_blank" contenteditable="false" class="nk-web-link" style="display: inline-flex; align-items: center; justify-content: flex-start; gap: 6px; padding: 4px 12px; margin: 2px 4px; background: var(--bg-secondary, #f0f4f8); border: 1px solid var(--border-color, #d9e2ec); border-radius: 20px; text-decoration: none; color: var(--primary-color, #007bff); font-family: inherit; font-weight: 500; font-size: 0.9em; box-shadow: 0 1px 2px rgba(0,0,0,0.05); user-select: text; transition: all 0.2s ease; word-break: break-all; max-width: 100%;">
+                        <span class="nk-web-link-container" contenteditable="false" style="display: inline-flex; align-items: center; justify-content: flex-start; gap: 6px; padding: 4px 12px; margin: 2px 4px; background: var(--bg-secondary, #f0f4f8); border: 1px solid var(--border-color, #d9e2ec); border-radius: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); user-select: text; transition: all 0.2s ease; word-break: break-all; max-width: 100%;">
                             <span style="font-size: 1.1em; line-height: 1; flex-shrink: 0;">🌐</span>
-                            <span style="color: var(--text-color, #333);">${url}</span>
-                        </a>&nbsp;`;
+                            <a href="${url}" target="_blank" class="nk-web-link" style="text-decoration: none; color: var(--text-secondary); font-family: inherit; font-weight: 500; font-size: 0.9em;">${url}</a>
+                        </span>&nbsp;`;
 
                         document.execCommand('insertHTML', false, html);
                         App.state.isArticleDirty = true;
@@ -52021,6 +52976,182 @@
                 },
             },
 
+            find: {
+                _bar: null,
+                _input: null,
+                _count: null,
+                _prevBtn: null,
+                _nextBtn: null,
+                _caseBtn: null,
+                _matches: [],
+                _current: -1,
+                _caseSensitive: false,
+                _debounceTimer: null,
+
+                init() {
+                    this._bar = document.getElementById('nk-find-bar');
+                    this._input = document.getElementById('nk-find-input');
+                    this._count = document.getElementById('nk-find-count');
+                    this._prevBtn = document.getElementById('nk-find-prev');
+                    this._nextBtn = document.getElementById('nk-find-next');
+                    this._caseBtn = document.getElementById('nk-find-case');
+                    if (!this._bar) return;
+
+                    // Input: debounced live search
+                    this._input.addEventListener('input', () => {
+                        clearTimeout(this._debounceTimer);
+                        this._debounceTimer = setTimeout(() => this._run(), 120);
+                    });
+
+                    this._input.addEventListener('keydown', e => {
+                        if (e.key === 'Enter') { e.preventDefault(); this._navigate(e.shiftKey ? -1 : 1); }
+                        else if (e.key === 'Escape') this.close();
+                    });
+
+                    this._prevBtn.addEventListener('click', () => this._navigate(-1));
+                    this._nextBtn.addEventListener('click', () => this._navigate(1));
+
+                    this._caseBtn.addEventListener('click', () => {
+                        this._caseSensitive = !this._caseSensitive;
+                        this._caseBtn.classList.toggle('nk-find-case-active', this._caseSensitive);
+                        this._caseBtn.title = this._caseSensitive ? 'Case Sensitive (active)' : 'Toggle Case Sensitive';
+                        this._run();
+                    });
+
+                    document.getElementById('nk-find-close').addEventListener('click', () => this.close());
+
+                    // Global Ctrl+F / Cmd+F shortcut
+                    document.addEventListener('keydown', (e) => {
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                            if (App.state && App.state.activeArticleId) {
+                                e.preventDefault();
+                                this.open();
+                            }
+                        }
+                    });
+                },
+
+                open() {
+                    if (!this._bar) return;
+                    this._bar.style.display = 'flex';
+                    requestAnimationFrame(() => {
+                        this._bar.classList.add('is-visible');
+                    });
+                    setTimeout(() => this._input.focus(), 60);
+                    if (this._input.value.trim()) this._run();
+                },
+
+                close() {
+                    if (!this._bar) return;
+                    this._bar.classList.remove('is-visible');
+                    setTimeout(() => { this._bar.style.display = 'none'; }, 220);
+                    this._clear();
+                    this._count.textContent = '';
+                    this._setNavEnabled(false);
+                },
+
+                _run() {
+                    this._clear();
+                    const query = this._input.value.trim();
+                    if (!query) {
+                        this._count.textContent = '';
+                        this._setNavEnabled(false);
+                        return;
+                    }
+                    const content = document.getElementById('article-content');
+                    if (!content) return;
+
+                    // Escape regex special chars for literal match
+                    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const flags = this._caseSensitive ? 'g' : 'gi';
+                    let regex;
+                    try { regex = new RegExp(escaped, flags); } catch (e) { return; }
+
+                    this._highlightNode(content, regex);
+
+                    if (this._matches.length === 0) {
+                        this._count.textContent = 'No results';
+                        this._count.style.color = 'var(--danger-color)';
+                        this._setNavEnabled(false);
+                        return;
+                    }
+
+                    this._count.style.color = '';
+                    this._current = 0;
+                    this._updateCount();
+                    this._scrollTo(0);
+                    this._setNavEnabled(true);
+                },
+
+                _highlightNode(root, regex) {
+                    const skip = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'INPUT', 'SELECT']);
+                    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                        acceptNode: node => {
+                            const p = node.parentElement;
+                            return (!p || skip.has(p.tagName) || p.closest('#nk-find-bar'))
+                                ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+                        }
+                    });
+                    const nodes = [];
+                    let n; while ((n = walker.nextNode())) nodes.push(n);
+
+                    for (const tn of nodes) {
+                        const text = tn.nodeValue;
+                        if (!text) continue;
+                        const parts = [];
+                        let last = 0, m;
+                        regex.lastIndex = 0;
+                        while ((m = regex.exec(text)) !== null) {
+                            if (m.index > last) parts.push(document.createTextNode(text.slice(last, m.index)));
+                            const mark = document.createElement('mark');
+                            mark.className = 'nk-find-hl';
+                            mark.textContent = m[0];
+                            parts.push(mark);
+                            this._matches.push(mark);
+                            last = regex.lastIndex;
+                            if (regex.lastIndex === m.index) regex.lastIndex++;
+                        }
+                        if (!parts.length) continue;
+                        if (last < text.length) parts.push(document.createTextNode(text.slice(last)));
+                        const frag = document.createDocumentFragment();
+                        parts.forEach(p => frag.appendChild(p));
+                        tn.parentNode.replaceChild(frag, tn);
+                    }
+                },
+
+                _clear() {
+                    const content = document.getElementById('article-content');
+                    if (!content) return;
+                    content.querySelectorAll('mark.nk-find-hl').forEach(m => {
+                        m.parentNode.replaceChild(document.createTextNode(m.textContent), m);
+                    });
+                    content.normalize();
+                    this._matches = [];
+                    this._current = -1;
+                },
+
+                _navigate(dir) {
+                    if (!this._matches.length) return;
+                    this._current = (this._current + dir + this._matches.length) % this._matches.length;
+                    this._updateCount();
+                    this._scrollTo(this._current);
+                },
+
+                _scrollTo(index) {
+                    this._matches.forEach((m, i) => m.classList.toggle('nk-find-hl-current', i === index));
+                    const el = this._matches[index];
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                },
+
+                _updateCount() {
+                    this._count.textContent = `${this._current + 1} / ${this._matches.length}`;
+                },
+
+                _setNavEnabled(on) {
+                    this._prevBtn.disabled = !on;
+                    this._nextBtn.disabled = !on;
+                },
+            },
 
         };
 
@@ -52039,6 +53170,7 @@
             App.globalSearch.init();
             App.commandPalette.init();
             App.whiteboard.init();
+            App.find.init();
 
             App.globalSearch._initCheckboxListener();
 
@@ -52291,6 +53423,241 @@
                 }
             };
         }
+
+        // --- INTERACTIVE CURSOR SPLASH SYSTEM --- //
+        class InteractiveCursorSplash {
+            constructor() {
+                this.canvas = document.createElement('canvas');
+                this.canvas.id = 'interactive-cursor-splash';
+                this.ctx = this.canvas.getContext('2d', { alpha: true });
+                this.particles = [];
+                this.lastSpawnTime = 0;
+                this.threshold = 20; // Reduced from 40 to perfectly match the 6px inset + border width
+                this.primaryColor = '#ffffff';
+                this.currentEffect = null;
+                this.effectChangeTime = 0;
+
+                Object.assign(this.canvas.style, {
+                    position: 'fixed',
+                    top: '0', left: '0',
+                    width: '100vw', height: '100vh',
+                    pointerEvents: 'none',
+                    zIndex: '999999',
+                    display: 'none'
+                });
+
+                document.body.appendChild(this.canvas);
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                window.addEventListener('mousemove', (e) => this.handleMouseMove(e), { passive: true, capture: true });
+
+                this.effectTypes = ['snowflake', 'pulse', 'stardust'];
+
+                this.loop();
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            updateColor() {
+                // Safely grab the primary color from the active theme, checking body and html root
+                const rootStyle = getComputedStyle(document.documentElement);
+                const bodyStyle = getComputedStyle(document.body);
+
+                let p = bodyStyle.getPropertyValue('--primary-color').trim() ||
+                    rootStyle.getPropertyValue('--primary-color').trim();
+
+                if (p) {
+                    this.primaryColor = p;
+                }
+            }
+
+            handleMouseMove(e) {
+                if (!document.body.classList.contains('is-pro-presenter-active')) {
+                    this.canvas.style.display = 'none';
+                    return;
+                }
+                this.canvas.style.display = 'block';
+
+                const x = e.clientX, y = e.clientY, w = this.canvas.width, h = this.canvas.height, t = this.threshold;
+                let nx = 0, ny = 0;
+
+                if (x <= t) nx = 1; else if (x >= w - t) nx = -1;
+                if (y <= t) ny = 1; else if (y >= h - t) ny = -1;
+
+                if (nx !== 0 || ny !== 0) {
+                    const now = performance.now();
+                    if (now - this.lastSpawnTime > 40) { // Slight throttle for performance
+                        this.updateColor();
+
+                        // Select effect based on time constraint (e.g. 5 seconds per effect block)
+                        if (!this.currentEffect || now - this.effectChangeTime > 5000) {
+                            this.currentEffect = this.effectTypes[Math.floor(Math.random() * this.effectTypes.length)];
+                            this.effectChangeTime = now;
+                        }
+
+                        this.spawnParticles(x, y, this.currentEffect);
+                        this.lastSpawnTime = now;
+                    }
+                }
+            }
+
+            spawnParticles(x, y, effect) {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                // Physics: base angle is calculated directly towards the center of the screen
+                const centerAngle = Math.atan2(centerY - y, centerX - x);
+
+                const count = effect === 'snowflake' ? 2 + Math.random() * 2 :
+                    effect === 'pulse' ? 1 + Math.random() * 2 :
+                        3 + Math.random() * 2; // stardust
+
+                for (let i = 0; i < count; i++) {
+                    const spread = centerAngle + (Math.random() - 0.5) * 1.2;
+
+                    const speed = effect === 'pulse' ? 16 + Math.random() * 12 :
+                        effect === 'snowflake' ? 7 + Math.random() * 8 :
+                            10 + Math.random() * 10;
+
+                    this.particles.push({
+                        x: x, y: y,
+                        vx: Math.cos(spread) * speed,
+                        vy: Math.sin(spread) * speed,
+                        life: 1.0,
+                        decay: effect === 'snowflake' ? 0.003 + Math.random() * 0.002 :
+                            effect === 'pulse' ? 0.005 + Math.random() * 0.003 :
+                                0.004 + Math.random() * 0.002,
+                        size: effect === 'snowflake' ? 4 + Math.random() * 4 :
+                            effect === 'pulse' ? 1.5 + Math.random() * 1.5 :
+                                2 + Math.random() * 3,
+                        color: this.primaryColor,
+                        gravity: 0.2 + Math.random() * 0.15, // Downward gravity
+                        type: effect,
+                        wobble: Math.random() * Math.PI * 2,
+                        wobbleSpeed: 0.05 + Math.random() * 0.1,
+                        friction: 0.97 // Air resistance creates smooth halting
+                    });
+                }
+            }
+
+            loop() {
+                requestAnimationFrame(() => this.loop());
+                if (this.particles.length === 0) return;
+
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.globalCompositeOperation = 'screen';
+
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    let p = this.particles[i];
+
+                    // Smooth velocity dampening (flings towards center, gracefully slows down)
+                    p.vx *= p.friction;
+                    p.vy *= p.friction;
+                    p.vy += p.gravity; // Gravity starts pulling downward
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Bounce at the bottom
+                    if (p.y >= this.canvas.height - 10) {
+                        p.y = this.canvas.height - 10;
+                        p.vy *= -0.5; // Bounce up
+                        p.vx *= 0.8; // Slow down slightly on bounce horizontally
+                        p.decay = Math.max(p.decay, 0.03); // Die faster after bounce
+                    }
+
+                    if (p.type === 'snowflake' || p.type === 'stardust') {
+                        p.x += Math.sin(p.wobble) * 1.2; // organic float
+                        p.wobble += p.wobbleSpeed;
+                    }
+
+                    p.life -= p.decay;
+
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+
+                    this.ctx.save();
+                    this.ctx.globalAlpha = p.life;
+
+                    if (p.type === 'pulse') {
+                        // Laser pulse / Streak lines
+                        this.ctx.strokeStyle = p.color;
+                        this.ctx.lineWidth = p.size;
+                        this.ctx.lineCap = 'round';
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(p.x, p.y);
+                        this.ctx.lineTo(p.x - p.vx * 2.5, p.y - p.vy * 2.5); // Directional tail
+
+                        this.ctx.shadowBlur = 12;
+                        this.ctx.shadowColor = p.color;
+                        this.ctx.stroke();
+
+                        // Ultra bright inner core
+                        this.ctx.strokeStyle = '#ffffff';
+                        this.ctx.lineWidth = p.size * 0.4;
+                        this.ctx.stroke();
+
+                    } else if (p.type === 'snowflake') {
+                        // Snowflake: Soft, spherical, layered light bubbles
+                        this.ctx.fillStyle = p.color;
+                        this.ctx.shadowBlur = 15;
+                        this.ctx.shadowColor = p.color;
+                        this.ctx.beginPath();
+                        this.ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                        this.ctx.fill();
+
+                        // Luminous core
+                        this.ctx.fillStyle = '#ffffff';
+                        this.ctx.globalAlpha = p.life * 0.9;
+                        this.ctx.shadowBlur = 0;
+                        this.ctx.beginPath();
+                        this.ctx.arc(p.x, p.y, (p.size * p.life) * 0.4, 0, Math.PI * 2);
+                        this.ctx.fill();
+
+                    } else if (p.type === 'stardust') {
+                        // Stardust: Sharp, glittering geometric stars
+                        this.ctx.fillStyle = p.color;
+                        this.ctx.shadowBlur = 10;
+                        this.ctx.shadowColor = p.color;
+
+                        const s = p.size * p.life;
+                        this.ctx.translate(p.x, p.y);
+                        this.ctx.rotate(p.wobble); // Majestic spinning
+
+                        // Draw a diamond star shape
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(0, -s * 2);
+                        this.ctx.lineTo(s * 0.5, -s * 0.5);
+                        this.ctx.lineTo(s * 2, 0);
+                        this.ctx.lineTo(s * 0.5, s * 0.5);
+                        this.ctx.lineTo(0, s * 2);
+                        this.ctx.lineTo(-s * 0.5, s * 0.5);
+                        this.ctx.lineTo(-s * 2, 0);
+                        this.ctx.lineTo(-s * 0.5, -s * 0.5);
+                        this.ctx.closePath();
+                        this.ctx.fill();
+
+                        // Searing white center pinprick
+                        this.ctx.fillStyle = '#ffffff';
+                        this.ctx.globalAlpha = p.life * 0.9;
+                        this.ctx.shadowBlur = 0;
+                        this.ctx.fillRect(-s * 0.3, -s * 0.3, s * 0.6, s * 0.6);
+                    }
+
+                    this.ctx.restore();
+                }
+            }
+        }
+
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            new InteractiveCursorSplash();
+        });
     </script>
 </body>
 
