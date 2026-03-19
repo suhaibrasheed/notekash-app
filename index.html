@@ -2227,6 +2227,24 @@
             margin: 2em 0;
         }
 
+        /* Inline icons inserted from command palette (behave like text) */
+        .nk-inline-icon {
+            display: inline-flex;
+            align-items: baseline;
+            user-select: text;
+            -webkit-user-select: text;
+            color: inherit;
+        }
+
+        .nk-inline-icon i {
+            font-size: 1em;
+            line-height: 1;
+            vertical-align: -0.125em;
+            pointer-events: auto;
+            cursor: text;
+            color: inherit;
+        }
+
         body.write-mode #article-content {
             border-left: 2px solid var(--border-color);
             padding-left: 1em;
@@ -7739,7 +7757,7 @@
         /* Text boxes - PREMIUM GLASSMORPHISM DESIGN */
         .wb-text-box {
             position: absolute;
-            padding: 14px 18px;
+            padding: 10px 12px;
             background: linear-gradient(135deg,
                     rgba(var(--bg-secondary-rgb, 255, 255, 255), 0.85) 0%,
                     rgba(var(--bg-secondary-rgb, 255, 255, 255), 0.65) 100%);
@@ -7760,7 +7778,7 @@
             z-index: 15;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
         }
 
         .wb-text-box.active {
@@ -8057,6 +8075,7 @@
         .wb-text-box .wb-text-content {
             outline: none;
             min-width: 80px;
+            width: 100%;
             white-space: pre-wrap;
             word-break: break-word;
             line-height: 1.4;
@@ -8064,8 +8083,8 @@
             padding: 0;
             margin: 0;
             min-height: 1.4em;
-            display: flex;
-            align-items: center;
+            display: block;
+            text-align: center;
         }
 
         /* Text box controls bar - Premium floating toolbar */
@@ -19326,6 +19345,16 @@
                     overlay.innerHTML = '<div style="font-size: 2rem; margin-bottom: 1rem;">🚀</div><h2>Updating NoteKash...</h2><p>The app will reload in a moment.</p>';
                     document.body.appendChild(overlay);
 
+                    // Never wipe caches while offline; it can permanently break "open the app offline".
+                    const isOnline = navigator.onLine;
+                    if (!isOnline) {
+                        overlay.innerHTML = '<div style="font-size: 2rem; margin-bottom: 1rem;">Offline update deferred</div><h2>Connect to the internet to apply updates safely.</h2><p>Please try again when you’re online.</p>';
+                        setTimeout(() => {
+                            overlay.remove();
+                        }, 3500);
+                        return;
+                    }
+
                     // 1. Unregister Service Workers
                     if ('serviceWorker' in navigator) {
                         const registrations = await navigator.serviceWorker.getRegistrations();
@@ -19340,9 +19369,9 @@
                         await Promise.all(keys.map(key => caches.delete(key)));
                     }
 
-                    // 3. Force Reload from Server (ignoring cache)
+                    // 3. Reload (caches already cleared, so the network fetch will populate fresh offline shell)
                     setTimeout(() => {
-                        window.location.reload(true);
+                        window.location.reload();
                     }, 1000);
                 }
             },
@@ -19816,6 +19845,26 @@
             // --- OFFLINE HANDLING MODULE ---
             offline: {
                 isOffline: false,
+                onlineQueue: [],
+                runWhenOnline(task) {
+                    if (!this.isOffline) {
+                        return Promise.resolve().then(task);
+                    }
+                    if (typeof task === 'function') this.onlineQueue.push(task);
+                    return null;
+                },
+                flushOnlineQueue() {
+                    const queue = this.onlineQueue.slice();
+                    this.onlineQueue.length = 0;
+                    return Promise.allSettled(queue.map(fn => {
+                        try {
+                            return fn();
+                        } catch (e) {
+                            console.error('Queued online task failed:', e);
+                            return null;
+                        }
+                    }));
+                },
                 init() {
                     // 1. Inject CSS for the offline indicator (Minimal fix)
                     const style = document.createElement('style');
@@ -19893,6 +19942,8 @@
                     window.addEventListener('online', () => {
                         checkStatus();
                         App.ui.showToast('You are back online!', { type: 'success' });
+                        App.offline.flushOnlineQueue();
+                        if (App.settings.get('enableDropboxSync') && App.state.dropboxToken && App.dropbox.isReady()) App.dropbox.syncChanges(true);
                     });
                     window.addEventListener('offline', () => {
                         checkStatus();
@@ -20119,10 +20170,9 @@
                 }
 
                 App.ui.updateHeaderState();
-                await this.dropbox.init();
-                if (this.dropbox.isReady() && this.settings.get('enableDropboxSync')) {
-                    this.dropbox.syncChanges(true);
-                }
+                // Keep boot fully local-first; Dropbox validation/sync is network-only.
+                await this.offline.runWhenOnline(() => this.dropbox.init());
+                if (!this.offline.isOffline && this.dropbox.isReady() && this.settings.get('enableDropboxSync')) this.dropbox.syncChanges(true);
 
                 await App.util.reconcileCategories();
 
@@ -20622,6 +20672,10 @@
                         if (App.state.dropboxToken) App.ui.showToast(`Connected as ${user.name.display_name}.`, { type: 'success' });
                     } catch (error) {
                         console.error("Token validation failed:", error);
+                        if (App.offline.isOffline || error.message === 'Network error') {
+                            console.warn("Offline mode detected. Pausing Dropbox token validation.");
+                            return;
+                        }
                         // Already disconnected by apiCall if 401, but just in case
                         if (App.state.dropboxToken) this.disconnect(true);
                     }
@@ -20711,12 +20765,19 @@
                     } catch (e) {
                         if (e instanceof TypeError) {
                             console.warn("Network error during Dropbox API call:", e);
+                            if (App.offline.isOffline || e.message === 'Failed to fetch') {
+                                throw new Error('Network error');
+                            }
                         }
                         throw e;
                     }
                 },
 
                 async syncChanges(isSilent = false) {
+                    if (App.offline.isOffline) {
+                        if (!isSilent) App.ui.showToast("Offline. Sync paused.", { type: 'warning' });
+                        return;
+                    }
                     if (App.state.isSyncing) {
                         if (!isSilent) App.ui.showToast("Sync already in progress.", { type: 'warning' });
                         return;
@@ -27448,7 +27509,7 @@
                         
                         <div class="settings-section" style="margin-top: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
                             <h4 style="font-size: 1.1em; margin-bottom: 0.5rem; color: var(--text-primary);"><i class="fa-solid fa-copyright" style="color: var(--primary-color); margin-right: 8px;"></i>Brand Settings</h4>
-                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Personalize your PDF and HTML exports. Changes are auto-saved.</p>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Personalize your Export Branding. Changes are auto-saved.</p>
                             <div class="license-form-grid" style="text-align:left;">
                                 <label for="brand-name-input" style="font-weight: 600;">Brand Name</label>
                                 <input type="text" id="brand-name-input" class="text-input" value="${App.util.escapeHtml(brandName)}" placeholder="e.g. My Study Notes" onchange="App.settings.set('brandName', this.value.trim())" style="background: var(--bg-primary);">
@@ -28701,6 +28762,7 @@
                                     setDirty();
                                     contentDiv.classList.remove('is-empty');
                                     debouncedAutosave();
+                                    requestAnimationFrame(() => App.util.ensureCaretVisible());
                                     clearTimeout(audioInitTimeout);
                                     audioInitTimeout = setTimeout(() => {
                                         App.audio.initializePlayersIn(contentDiv);
@@ -31454,7 +31516,8 @@
 
                     const range = selection.getRangeAt(0);
                     const elementsToUnwrap = new Set();
-                    const formattingSelector = 'span[class*="highlight-"], span[class*="text-"], b, i, u, strong, em, del, .rendered-tag';
+                    // Important: don't treat FontAwesome icon <i> tags as "italics formatting"
+                    const formattingSelector = 'span[class*="highlight-"], span[class*="text-"], b, i:not([class*="fa-"]), u, strong, em, del, .rendered-tag';
 
                     // 1. Check Ancestors: If selection is inside a formatted element
                     const checkAncestors = (node) => {
@@ -39473,6 +39536,7 @@
                 },
                 ai: {
                     async queryGenerativeAI(systemPrompt, userPrompt) {
+                        if (!App.offline.check('AI Features')) throw new Error("Offline");
                         const provider = App.settings.get('aiProvider') || 'openrouter';
                         const modelName = App.settings.get('openRouterModel');
 
@@ -40098,6 +40162,29 @@
                 insertGuardianBlock(html) {
                     document.execCommand('insertHTML', false, html + '<p><br></p>');
                     App.state.isArticleDirty = true;
+                },
+
+                ensureCaretVisible() {
+                    if (App.state.currentMode !== 'write') return;
+                    const controls = document.getElementById('article-controls');
+                    if (!controls) return;
+
+                    const sel = window.getSelection();
+                    if (!sel || sel.rangeCount === 0) return;
+
+                    const r = sel.getRangeAt(0).cloneRange();
+                    r.collapse(false);
+                    const rect = (r.getClientRects && r.getClientRects()[0]) || (r.getBoundingClientRect && r.getBoundingClientRect());
+                    if (!rect) return;
+
+                    const toolbarTop = controls.getBoundingClientRect().top;
+                    const margin = 12;
+                    if (rect.bottom <= toolbarTop - margin) return;
+
+                    const delta = rect.bottom - (toolbarTop - margin);
+                    const main = document.querySelector('main');
+                    if (main && main.scrollHeight > main.clientHeight) main.scrollTop += delta;
+                    else window.scrollBy(0, delta);
                 },
 
                 extractSnippets(source = null, types = ['highlight'], returnHtml = false) {
@@ -44054,8 +44141,42 @@
                                 break;
                             case 'emojis': document.execCommand('insertText', false, item.e); break;
                             case 'icons':
-                                // Insert icon cleanly - inherits font-size, no style pollution
-                                document.execCommand('insertHTML', false, `<i class="${item.class}"></i> `);
+                                // Insert as an inline element, but keep caret OUT of the <i> (prevents FontAwesome font "leaking" into typed text)
+                                (() => {
+                                    const selection = window.getSelection();
+                                    const contentDiv = document.getElementById('article-content');
+                                    if (!selection || selection.rangeCount === 0 || !contentDiv) {
+                                        document.execCommand('insertHTML', false, `<span class="nk-inline-icon" data-nk-inline-icon="1"><i class="${item.class}"></i></span> `);
+                                        return;
+                                    }
+
+                                    const range = selection.getRangeAt(0);
+                                    if (!contentDiv.contains(range.commonAncestorContainer)) {
+                                        document.execCommand('insertHTML', false, `<span class="nk-inline-icon" data-nk-inline-icon="1"><i class="${item.class}"></i></span> `);
+                                        return;
+                                    }
+
+                                    range.deleteContents();
+                                    const wrapper = document.createElement('span');
+                                    wrapper.className = 'nk-inline-icon';
+                                    wrapper.setAttribute('data-nk-inline-icon', '1');
+
+                                    const iconEl = document.createElement('i');
+                                    iconEl.className = item.class;
+                                    iconEl.setAttribute('contenteditable', 'false');
+                                    iconEl.setAttribute('aria-hidden', 'true');
+                                    wrapper.appendChild(iconEl);
+
+                                    range.insertNode(wrapper);
+                                    const trailingSpace = document.createTextNode(' ');
+                                    wrapper.parentNode.insertBefore(trailingSpace, wrapper.nextSibling);
+
+                                    const newRange = document.createRange();
+                                    newRange.setStartAfter(trailingSpace);
+                                    newRange.collapse(true);
+                                    selection.removeAllRanges();
+                                    selection.addRange(newRange);
+                                })();
                                 break;
                             case 'definition-prompt': break;
                             case 'definitions':
@@ -47473,6 +47594,17 @@
                         const bgImg = this.els.overlay.querySelector('#whiteboard-bg-image');
                         if (bgImg) bgImg.style.display = 'none';
                     }
+                    // Preserve caret for cursor insert (overlay steals focus/selection)
+                    if (insertMode === 'cursor' && App.state.currentMode === 'write') {
+                        const contentDiv = document.getElementById('article-content');
+                        const sel = window.getSelection();
+                        if (contentDiv && sel && sel.rangeCount > 0) {
+                            const range = sel.getRangeAt(0);
+                            if (contentDiv.contains(range.commonAncestorContainer)) {
+                                App.state.savedRange = range.cloneRange();
+                            }
+                        }
+                    }
                     this.state.insertMode = insertMode;
                     this.state.isOpen = true;
                     this.state.editingBlockId = null; // Fresh whiteboard, not editing existing
@@ -48296,6 +48428,83 @@
                     { name: 'Handwriting', value: "'Comic Sans MS', 'Segoe Print', cursive" }
                 ],
 
+                // Smart text box resizing (auto-grow to avoid clipping/overflow)
+                ensureTextMeasureEl() {
+                    if (this.state.textMeasureEl && document.body.contains(this.state.textMeasureEl)) return this.state.textMeasureEl;
+                    const el = document.createElement('div');
+                    el.setAttribute('data-role', 'wb-text-measure');
+                    el.style.position = 'fixed';
+                    el.style.left = '-10000px';
+                    el.style.top = '-10000px';
+                    el.style.visibility = 'hidden';
+                    el.style.pointerEvents = 'none';
+                    el.style.whiteSpace = 'pre-wrap';
+                    el.style.wordBreak = 'break-word';
+                    el.style.padding = '0';
+                    el.style.margin = '0';
+                    el.style.border = '0';
+                    el.style.boxSizing = 'border-box';
+                    document.body.appendChild(el);
+                    this.state.textMeasureEl = el;
+                    return el;
+                },
+
+                autoResizeTextBox(tb, opts = {}) {
+                    const box = tb?.element;
+                    if (!box) return;
+                    const content = box.querySelector('.wb-text-content');
+                    if (!content) return;
+
+                    // Don't fight the user's active drag gesture
+                    if (box.classList.contains('dragging')) return;
+
+                    const csBox = getComputedStyle(box);
+                    const padX = (parseFloat(csBox.paddingLeft) || 0) + (parseFloat(csBox.paddingRight) || 0);
+                    const padY = (parseFloat(csBox.paddingTop) || 0) + (parseFloat(csBox.paddingBottom) || 0);
+
+                    const measure = this.ensureTextMeasureEl();
+                    const csContent = getComputedStyle(content);
+                    measure.style.fontFamily = csContent.fontFamily;
+                    measure.style.fontSize = csContent.fontSize;
+                    measure.style.fontWeight = csContent.fontWeight;
+                    measure.style.lineHeight = csContent.lineHeight;
+
+                    const text = (content.innerText || '').replace(/\u00A0/g, ' ');
+                    const safeText = text.length ? text : ' '; // keep one line measurable
+
+                    // === Height auto-grow (respect current width/wrapping) ===
+                    const innerW = Math.max(80, (box.clientWidth || box.offsetWidth || 0) - padX);
+                    measure.style.whiteSpace = 'pre-wrap';
+                    measure.style.wordBreak = 'break-word';
+                    measure.style.width = innerW + 'px';
+                    measure.textContent = safeText;
+                    const desiredH = Math.ceil(measure.scrollHeight + padY);
+                    const minH = Math.max(50, desiredH); // allow growth; enforce minimum
+                    if ((box.offsetHeight || 0) < minH || opts.force) {
+                        // Only grow; never shrink automatically (keeps manual resize intent)
+                        box.style.height = Math.max(minH, box.offsetHeight || 0, 50) + 'px';
+                    }
+
+                    // === Width auto-grow (only if content would overflow horizontally) ===
+                    // Measure longest line without wrapping. Cap to container width remaining.
+                    measure.style.whiteSpace = 'pre';
+                    measure.style.wordBreak = 'normal';
+                    measure.style.width = 'auto';
+                    measure.style.display = 'inline-block';
+                    measure.textContent = safeText;
+                    const measuredW = Math.ceil(measure.scrollWidth + padX + 8); // small breathing room
+                    measure.style.display = 'block';
+
+                    const container = this.els?.container;
+                    const maxAllowed = container ? Math.max(160, container.scrollWidth - (tb.x || 0) - 24) : measuredW;
+                    const desiredW = Math.min(Math.max(120, measuredW), maxAllowed);
+                    if ((box.offsetWidth || 0) < desiredW) {
+                        box.style.width = desiredW + 'px';
+                    }
+
+                    this.drawConnectors?.();
+                },
+
                 createTextBox(e) {
                     // If connecting via dot drag, don't create new box
                     if (this.state.isConnecting) return;
@@ -48360,6 +48569,7 @@
                     setTimeout(() => {
                         content.focus();
                         this.selectTextBox(textBoxData);
+                        this.autoResizeTextBox(textBoxData, { force: true });
                     }, 50);
 
                     return textBoxData;
@@ -48897,6 +49107,14 @@
                         self.selectTextBox(tb);
                     });
 
+                    // Smart auto-resize while typing/pasting (grow only)
+                    if (content) {
+                        const scheduleResize = (force = false) => requestAnimationFrame(() => self.autoResizeTextBox(tb, { force }));
+                        content.addEventListener('input', () => scheduleResize(false));
+                        content.addEventListener('paste', () => setTimeout(() => scheduleResize(true), 0));
+                        content.addEventListener('focus', () => scheduleResize(true));
+                    }
+
                     // Control buttons
                     box.querySelectorAll('[data-action]').forEach(btn => {
                         btn.addEventListener('click', (e) => {
@@ -48992,6 +49210,7 @@
                     tb.fontSize = Math.min(48, Math.max(10, (tb.fontSize || 16) + delta));
                     const content = tb.element.querySelector('.wb-text-content');
                     content.style.fontSize = tb.fontSize + 'px';
+                    this.autoResizeTextBox(tb, { force: true });
                 },
 
                 cycleFontFamily(tb) {
@@ -49001,6 +49220,7 @@
                     const content = tb.element.querySelector('.wb-text-content');
                     content.style.fontFamily = font.value;
                     App.ui.showToast(`Font: ${font.name}`, { duration: 1200 });
+                    this.autoResizeTextBox(tb, { force: true });
                 },
 
                 cycleBoxStyle(tb) {
@@ -49012,6 +49232,7 @@
                     tb.element.setAttribute('data-box-style', newStyle);
 
                     this.updateTextBoxVisuals(tb);
+                    this.autoResizeTextBox(tb, { force: true });
 
                     App.ui.showToast(`Style: ${styleNames[tb.boxStyleIndex]}`, { duration: 1200 });
                 },
@@ -49878,6 +50099,12 @@
                             el.style.display = 'none';
                         });
 
+                        // Temporarily hide the actual tape boxes so they don't get baked into the image
+                        const tapesToHide = this.els.container.querySelectorAll('.wb-tape-box');
+                        tapesToHide.forEach(tape => {
+                            tape.style.display = 'none';
+                        });
+
                         // Also hide any active selection/focus states
                         document.querySelectorAll('.wb-text-box.selected, .wb-img-box.selected, .wb-tape-box.selected').forEach(el => {
                             el.classList.remove('selected');
@@ -49936,6 +50163,9 @@
                         // Restore visibility of controls
                         controlsToHide.forEach(el => {
                             el.style.display = '';
+                        });
+                        tapesToHide.forEach(tape => {
+                            tape.style.display = 'block';
                         });
 
                         // === NON-DESTRUCTIVE EMBED: Serialize and store state ===
@@ -50090,12 +50320,14 @@
                                 contentDiv.insertAdjacentHTML('beforeend', `<p>${html}</p><p><br></p>`);
                             }
                         } else if (this.state.insertMode === 'cursor' && App.state.currentMode === 'write') {
+                            if (App.state.savedRange) App.util.restoreSelection();
                             const selection = window.getSelection();
-                            if (selection.rangeCount > 0 && contentDiv.contains(selection.anchorNode)) {
+                            if (selection && selection.rangeCount > 0 && contentDiv.contains(selection.anchorNode)) {
                                 document.execCommand('insertHTML', false, `<p>${html}</p><p><br></p>`);
                             } else {
                                 contentDiv.insertAdjacentHTML('beforeend', `<p>${html}</p><p><br></p>`);
                             }
+                            App.state.savedRange = null;
                         } else {
                             contentDiv.insertAdjacentHTML('beforeend', `<p>${html}</p><p><br></p>`);
                         }
@@ -50303,6 +50535,22 @@
                             this.drawConnectors();
                         }
 
+                        // Restore tape boxes (Visual Flashcard occlusions)
+                        if (savedState.tapeBoxes && savedState.tapeBoxes.length > 0) {
+                            savedState.tapeBoxes.forEach(tbData => {
+                                const tape = this.addTapeBox(tbData.x, tbData.y, tbData.w, tbData.h);
+                                if (tbData.revealed) {
+                                    tape.revealed = true;
+                                    tape.element.classList.add('revealed');
+                                }
+                            });
+                            // Update tape ID counter
+                            const maxId = Math.max(...savedState.tapeBoxes.map(t => t.id || 0));
+                            if (maxId >= this.state.tapeIdCounter) {
+                                this.state.tapeIdCounter = maxId + 1;
+                            }
+                        }
+
                         // Set default tool
                         this.setTool(savedState.tool || 'pen');
                         if (savedState.color) this.state.color = savedState.color;
@@ -50328,6 +50576,7 @@
                         canvasData: this.els.canvas.toDataURL('image/png', 0.8),
                         canvasWidth: this.els.canvas.width,
                         canvasHeight: this.els.canvas.height,
+                        tapeBoxes: this.state.tapeBoxes,
                         dpr: dpr,
                         backgroundStyle: this.state.backgroundStyle,
                         textBoxes: this.state.textBoxes.map(tb => ({

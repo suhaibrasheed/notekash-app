@@ -1,6 +1,7 @@
 const CACHE_NAME = 'notekash-v2-cache-v1.0';
 // Updated the HTML file name in the list of assets to cache.
 const urlsToCache = [
+  './',
   './index.html',
   './manifest.json',
   './icons/icon-192x192.png',
@@ -16,6 +17,7 @@ self.addEventListener('install', event => {
         return cache.addAll(urlsToCache);
       })
   );
+  self.skipWaiting();
 });
 
 // Activate the service worker and clean up old caches
@@ -32,10 +34,28 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  event.waitUntil(self.clients.claim());
 });
 
 // Intercept fetch requests and serve from cache if available
 self.addEventListener('fetch', event => {
+  // Ensure app loads offline for normal navigations like "/"
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Cache the latest index.html when online
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put('./index.html', copy);
+          });
+          return response;
+        })
+        .catch(() => caches.match('./index.html', { ignoreSearch: true }) || caches.match('./', { ignoreSearch: true }))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
