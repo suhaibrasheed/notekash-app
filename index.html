@@ -37792,21 +37792,27 @@
                             const standardizeImage = async (src) => {
                                 return new Promise((resolve) => {
                                     if (!src) return resolve(null);
-                                    if (src.startsWith('data:image/jpeg') || src.startsWith('data:image/png')) {
-                                        return resolve(src); // Already safe formats for pdfmake
-                                    }
                                     const img = new Image();
                                     img.onload = () => {
+                                        const naturalW = img.naturalWidth || img.width || 0;
+                                        const naturalH = img.naturalHeight || img.height || 0;
+
+                                        // If already a safe format for pdfmake, keep as-is (zero recompress),
+                                        // but still return dimensions so we can smart-fit portrait images.
+                                        if (src.startsWith('data:image/jpeg') || src.startsWith('data:image/png')) {
+                                            return resolve({ dataUrl: src, width: naturalW, height: naturalH });
+                                        }
+
                                         const canvas = document.createElement('canvas');
-                                        canvas.width = img.naturalWidth || img.width;
-                                        canvas.height = img.naturalHeight || img.height;
+                                        canvas.width = naturalW;
+                                        canvas.height = naturalH;
                                         const ctx = canvas.getContext('2d');
                                         ctx.fillStyle = '#FFFFFF';
                                         ctx.fillRect(0, 0, canvas.width, canvas.height); // white bg for transparent SVG/WebP
                                         ctx.drawImage(img, 0, 0);
-                                        resolve(canvas.toDataURL('image/jpeg', 0.9));
+                                        resolve({ dataUrl: canvas.toDataURL('image/jpeg', 0.9), width: naturalW, height: naturalH });
                                     };
-                                    img.onerror = () => resolve(src); // fallback
+                                    img.onerror = () => resolve({ dataUrl: src, width: 0, height: 0 }); // fallback
                                     img.src = src;
                                 });
                             };
@@ -37814,8 +37820,8 @@
                             for (const img of Array.from(allImages)) {
                                 const src = img.getAttribute('src');
                                 if (src && src.startsWith('data:')) {
-                                    const safeSrc = await standardizeImage(src);
-                                    imageCache.set(src, safeSrc);
+                                    const safe = await standardizeImage(src);
+                                    if (safe?.dataUrl) imageCache.set(src, safe);
                                     embeddedCount++;
                                 } else if (src) {
                                     skippedCount++;
@@ -37923,8 +37929,9 @@
 
                                 // ─── INLINE COLLECTOR ────────────────────────────────────────────────────
                                 // Recursively flattens ALL inline content under a node into a run array.
-                                const collectInlineRuns = (node, styles = {}) => {
+                                const collectInlineRuns = (node, styles = {}, opts = {}) => {
                                     const runs = [];
+                                    const options = { includeBlockDescendants: false, ...opts };
                                     const walk = (n, s) => {
                                         if (n.nodeType === Node.TEXT_NODE) {
                                             const t = n.textContent;
@@ -37937,7 +37944,7 @@
                                             return;
                                         }
                                         if (n.nodeType !== Node.ELEMENT_NODE) return;
-                                        if (n.classList && n.classList.contains('favicon-placeholder')) return;
+                                        if (n.classList && (n.classList.contains('favicon-placeholder') || n.classList.contains('ql-ui'))) return;
                                         const tag = n.tagName.toLowerCase();
                                         if (tag === 'br') { runs.push({ text: '\n' }); return; }
                                         if (tag === 'a') {
@@ -37946,8 +37953,16 @@
                                             n.childNodes.forEach(c => walk(c, ls));
                                             return;
                                         }
-                                        // Don't descend into block children — shouldn't happen inside <p>, but safety net
-                                        if (isBlockNode(n)) return;
+                                        // Default behavior: don't descend into block children (keeps inline parsing clean).
+                                        // But some editors/sanitizers wrap list item text in block containers; allow opting in.
+                                        if (isBlockNode(n)) {
+                                            if (!options.includeBlockDescendants) return;
+                                            const cs = extractStyles(n, s);
+                                            n.childNodes.forEach(c => walk(c, cs));
+                                            // Separate block runs so text doesn't glue together
+                                            if (runs.length && runs[runs.length - 1]?.text !== '\n') runs.push({ text: '\n' });
+                                            return;
+                                        }
                                         const cs = extractStyles(n, s);
                                         n.childNodes.forEach(c => walk(c, cs));
                                     };
@@ -38059,11 +38074,24 @@
 
                                         const src = img.getAttribute('src');
                                         if (src?.startsWith('data:') && imageCache.has(src)) {
+                                            const cached = imageCache.get(src);
+                                            const dataUrl = cached?.dataUrl || cached;
+                                            const iw = cached?.width || 0;
+                                            const ih = cached?.height || 0;
+
                                             let defaultWidth = cl.contains('whiteboard-block') ? 420 : 350;
                                             let w = parseInt(img.getAttribute('width') || img.style.width) || defaultWidth;
                                             if (!w || w <= 0) w = defaultWidth;
-                                            // 'fit' gracefully handles portrait images (e.g., max width 420, max height 500)
-                                            return { image: imageCache.get(src), fit: [Math.min(w * 1.5, 420), 550], margin: [0, 0, 0, 4], alignment: 'center' };
+                                            const maxW = Math.min(w * 1.5, 420);
+
+                                            // Portrait/tall images can waste lots of page space if we allow huge maxHeight.
+                                            // Reduce maxHeight for portrait ratios to keep PDFs compact.
+                                            const ratio = (iw > 0 && ih > 0) ? (ih / iw) : 1;
+                                            const maxH = cl.contains('whiteboard-block')
+                                                ? 550
+                                                : (ratio >= 1.6 ? 320 : (ratio >= 1.15 ? 360 : 520));
+
+                                            return { image: dataUrl, fit: [maxW, maxH], margin: [0, 0, 0, 6], alignment: 'center' };
                                         }
 
                                         if (src) {
@@ -38232,7 +38260,9 @@
 
                                     // Blockquote
                                     if (tag === 'blockquote') {
-                                        const runs = collectInlineRuns(node, { italics: true, color: '#6B7280' });
+                                        // Some editors wrap quote text in inner <p>/<div> blocks. Include block descendants
+                                        // so we don't export "empty" quotes.
+                                        const runs = collectInlineRuns(node, { italics: true, color: '#6B7280' }, { includeBlockDescendants: true });
                                         const contentBlock = makePara(runs, { margin: [12, 6, 0, 6] });
 
                                         return {
@@ -38266,12 +38296,20 @@
                                                 const clone = li.cloneNode(true);
                                                 clone.querySelectorAll('ul,ol').forEach(s => s.remove());
 
-                                                const liBlock = makePara(collectInlineRuns(clone), { margin: [0, 2, 0, 2], color: '#374151', lineHeight: 1.5 });
+                                                const liBlock = makePara(
+                                                    collectInlineRuns(clone, {}, { includeBlockDescendants: true }),
+                                                    { margin: [0, 2, 0, 2], color: '#374151', lineHeight: 1.5 }
+                                                );
                                                 const subBlock = processBlock(subList);
 
                                                 items.push({ stack: [liBlock, subBlock].filter(Boolean), margin: [0, 2, 0, 2] });
                                             } else {
-                                                items.push(makePara(collectInlineRuns(li), { margin: [0, 2, 0, 2], color: '#374151', lineHeight: 1.5 }));
+                                                items.push(
+                                                    makePara(
+                                                        collectInlineRuns(li, {}, { includeBlockDescendants: true }),
+                                                        { margin: [0, 2, 0, 2], color: '#374151', lineHeight: 1.5 }
+                                                    )
+                                                );
                                             }
                                         });
 
@@ -38299,13 +38337,20 @@
                                     if (tag === 'img') {
                                         const src = node.getAttribute('src');
                                         if (src?.startsWith('data:') && imageCache.has(src)) {
+                                            const cached = imageCache.get(src);
+                                            const dataUrl = cached?.dataUrl || cached;
+                                            const iw = cached?.width || 0;
+                                            const ih = cached?.height || 0;
+
                                             let w = parseInt(node.getAttribute('width') || node.style.width) || 350;
                                             if (!w || w <= 0) w = 350;
-
+                                            const maxW = Math.min(w * 1.5, 420);
+                                            const ratio = (iw > 0 && ih > 0) ? (ih / iw) : 1;
+                                            const maxH = (ratio >= 1.6 ? 320 : (ratio >= 1.15 ? 360 : 520));
                                             return {
-                                                image: imageCache.get(src),
-                                                fit: [Math.min(w * 1.5, 420), 550],
-                                                margin: [0, 0, 0, 4],
+                                                image: dataUrl,
+                                                fit: [maxW, maxH],
+                                                margin: [0, 0, 0, 6],
                                                 alignment: 'center'
                                             };
                                         }
@@ -38339,7 +38384,23 @@
                                         if (!rows.length) return null;
                                         const maxCols = Math.max(...rows.map(r => r.length));
                                         rows.forEach(row => { while (row.length < maxCols) row.push({ text: '', margin: [4, 4, 4, 4] }); });
-                                        return { table: { headerRows: 1, widths: Array(maxCols).fill('*'), body: rows }, margin: [0, 10, 0, 10], _isBlock: true };
+
+                                        // Prefer an 'auto' first column (topic/feature names) and let remaining columns expand.
+                                        const textLen = (v) => {
+                                            if (!v) return 0;
+                                            if (typeof v === 'string') return v.trim().length;
+                                            if (Array.isArray(v)) return v.reduce((sum, x) => sum + textLen(x), 0);
+                                            if (typeof v === 'object') return textLen(v.text);
+                                            return 0;
+                                        };
+
+                                        const col0Max = rows.reduce((m, r) => Math.max(m, textLen(r?.[0]?.text)), 0);
+                                        const widths = Array(maxCols).fill('*');
+                                        if (maxCols >= 2 && col0Max > 0 && col0Max <= 32) {
+                                            widths[0] = 'auto';
+                                        }
+
+                                        return { table: { headerRows: 1, widths, body: rows }, margin: [0, 10, 0, 10], _isBlock: true };
                                     }
 
                                     // Fallback: treat as inline paragraph
