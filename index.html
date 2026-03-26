@@ -2517,46 +2517,53 @@
         }
 
         .rendered-tag {
+            /* SuperTag: distinct magenta “chip”, lighter + more elegant */
             cursor: pointer;
-            background: linear-gradient(120deg, var(--hl-7-bg) 0%, color-mix(in srgb, var(--hl-7-bg) 92%, var(--hl-7-border) 8%) 100%);
-            padding: 0.2em 0.55em;
-            margin: 0 0.1em;
-            border-radius: 6px;
-            border: 1.5px solid color-mix(in srgb, var(--hl-7-border) 60%, transparent 40%);
-            box-shadow: 0 1px 3px rgba(192, 38, 211, 0.08),
-                inset 0 0 0 1px rgba(192, 38, 211, 0.1);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-block;
             position: relative;
+            padding: 0.18em 0.55em;
+            margin: 0 0.1em;
+            border-radius: 9999px;
+
+            background: linear-gradient(
+                120deg,
+                color-mix(in srgb, var(--text-magenta) 16%, transparent) 0%,
+                color-mix(in srgb, var(--text-magenta) 8%, transparent) 100%
+            );
+            border: 1px solid color-mix(in srgb, var(--text-magenta) 38%, transparent);
+            color: color-mix(in srgb, var(--text-primary) 35%, var(--text-magenta) 65%);
+            font-weight: 850;
+
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px) saturate(150%);
+            -webkit-backdrop-filter: blur(8px) saturate(150%);
+
+            transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
         }
 
         .rendered-tag::after {
             content: '';
             position: absolute;
-            inset: -1px;
-            border-radius: 6px;
-            padding: 1px;
-            background: linear-gradient(135deg, var(--hl-7-border), transparent 60%);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude;
-            opacity: 0.4;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--text-magenta) 40%, transparent), transparent 60%);
+            opacity: 0.18;
             pointer-events: none;
         }
 
         .rendered-tag:hover {
-            background: linear-gradient(120deg,
-                    color-mix(in srgb, var(--hl-7-bg) 88%, var(--hl-7-border) 12%) 0%,
-                    color-mix(in srgb, var(--hl-7-bg) 85%, var(--hl-7-border) 15%) 100%);
-            border-color: color-mix(in srgb, var(--hl-7-border) 75%, transparent 25%);
-            box-shadow: 0 2px 8px rgba(192, 38, 211, 0.15),
-                0 1px 3px rgba(192, 38, 211, 0.1),
-                inset 0 0 0 1px rgba(192, 38, 211, 0.15);
             transform: translateY(-0.5px);
+            border-color: color-mix(in srgb, var(--text-magenta) 60%, transparent 40%);
+            box-shadow: 0 10px 26px -14px color-mix(in srgb, var(--text-magenta) 60%, transparent), inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+            background: linear-gradient(
+                120deg,
+                color-mix(in srgb, var(--text-magenta) 20%, transparent) 0%,
+                color-mix(in srgb, var(--text-magenta) 10%, transparent) 100%
+            );
         }
 
         .rendered-tag:hover::after {
-            opacity: 0.6;
+            opacity: 0.26;
         }
 
         .tag-suggestion {
@@ -2572,6 +2579,11 @@
         .focus-mode-body .rendered-tag,
         #mindmap-view .rendered-tag {
             display: none !important;
+        }
+
+        /* Sigma Article Mode should not hide Supertags */
+        .focus-mode-overlay.sigma-mode-article .focus-mode-body .rendered-tag {
+            display: inline-block !important;
         }
 
 
@@ -3713,7 +3725,8 @@
 
         .task-item {
             display: flex;
-            align-items: center;
+            align-items: stretch;
+            justify-content: space-between;
             gap: 12px;
             padding: 12px;
             border-radius: var(--border-radius);
@@ -3745,9 +3758,9 @@
         }
 
         .task-item.completed .task-title {
-            text-decoration: line-through;
             color: var(--success-color);
-            text-decoration-color: var(--success-color);
+            background-size: 100% 2px;
+            background-position: 0 55%;
         }
 
         .task-checkbox {
@@ -3757,12 +3770,25 @@
             accent-color: var(--primary-color);
         }
 
+        .task-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
         .task-title {
-            flex-grow: 1;
-            margin-right: 8px;
+            flex: 1 1 auto;
             white-space: normal;
             word-break: break-word;
             font-size: calc(var(--article-font-size) * 0.9);
+            line-height: 1.35;
+            background-image: linear-gradient(var(--success-color), var(--success-color));
+            background-repeat: no-repeat;
+            background-position: 0 55%;
+            background-size: 0% 2px;
+            transition: background-size 220ms ease, color 220ms ease;
         }
 
         .task-item.is-backlog {
@@ -3774,13 +3800,31 @@
             font-weight: 500;
         }
 
+        .task-trailing {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            flex: 0 0 auto;
+            min-width: 230px;
+        }
+
         .task-meta {
             display: flex;
             align-items: center;
             gap: 8px;
             font-size: 0.8rem;
             color: var(--text-secondary);
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            justify-content: flex-end;
+        }
+
+        .task-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+            flex-shrink: 0;
         }
 
         .task-meta .due-date.overdue {
@@ -3816,6 +3860,7 @@
             background-color: var(--bg-tertiary);
             padding: 2px 8px;
             border-radius: 12px;
+            white-space: nowrap;
         }
 
         .pomo-counter-display svg {
@@ -4127,6 +4172,102 @@
             display: flex;
             gap: 1rem;
             align-items: center;
+        }
+
+        .hub-mini-timer {
+            position: fixed;
+            top: 96px;
+            right: 20px;
+            width: 210px;
+            z-index: 12000;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            transform: translateY(6px) scale(0.96);
+            pointer-events: none;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .hub-mini-timer.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .hub-mini-timer-drag {
+            height: 12px;
+            cursor: grab;
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .hub-mini-timer-inner {
+            position: relative;
+            padding: 8px 10px 10px;
+            overflow: hidden;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .hub-mini-progress-frame {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .hub-mini-timer-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hub-mini-time {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 8px 0 6px;
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hub-mini-controls {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hub-mini-timer .hub-mini-timer-top .btn-icon,
+        .hub-mini-timer .hub-mini-controls .btn-icon {
+            width: 30px;
+            height: 30px;
+            min-width: 30px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hub-mini-timer .hub-mini-timer-top .btn-icon svg,
+        .hub-mini-timer .hub-mini-controls .btn-icon svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .hub-mini-category-pill {
+            max-width: 118px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.7rem;
+            padding: 2px 8px;
         }
 
         #pomodoro-settings-popup {
@@ -4855,15 +4996,33 @@
         }
 
         .cloze-flashcard {
-            background-color: var(--cloze-bg);
-            border-bottom: 2px dotted var(--cloze-border);
-            padding: 0 4px;
-            border-radius: 4px;
-            display: inline;
+            /* Ambient-sensitive “glass ink” (no bulky borders/shadows) */
+            display: inline-block;
+            padding: 0.02em 0.42em;
+            border-radius: 7px;
             box-decoration-break: clone;
             -webkit-box-decoration-break: clone;
             cursor: pointer;
-            transition: background-color 0.2s;
+
+            background: linear-gradient(180deg, rgba(var(--primary-color-rgb), 0.22), rgba(var(--primary-color-rgb), 0.10));
+            border: 1px solid rgba(var(--primary-color-rgb), 0.28);
+            border-bottom: 2px dotted rgba(var(--primary-color-rgb), 0.55);
+
+            backdrop-filter: blur(8px) saturate(140%);
+            -webkit-backdrop-filter: blur(8px) saturate(140%);
+
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 8px 18px rgba(0, 0, 0, 0.08);
+            transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
+            font-weight: 900;
+            color: color-mix(in srgb, var(--text-primary) 35%, var(--primary-color) 65%);
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18), 0 0 9px rgba(var(--primary-color-rgb), 0.20);
+        }
+
+        .cloze-flashcard:hover {
+            transform: translateY(-1px);
+            border-color: rgba(var(--primary-color-rgb), 0.40);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 22px rgba(0, 0, 0, 0.10);
         }
 
         .flashcard-view-header {
@@ -5121,15 +5280,31 @@
         }
 
         .cloze-revealed-wrapper {
-            background-color: var(--cloze-bg);
-            border-radius: 4px;
-            padding: 0.1em 0.3em;
+            /* Ambient-sensitive frosted glass around revealed cloze */
+            display: inline-block;
+            background: linear-gradient(
+                180deg,
+                rgba(var(--primary-color-rgb), 0.20) 0%,
+                rgba(var(--primary-color-rgb), 0.06) 100%
+            );
+            border-radius: 10px;
+            padding: 0.10em 0.50em;
             margin: 0 -0.1em;
+            border: 1px solid rgba(var(--primary-color-rgb), 0.22);
+            backdrop-filter: blur(10px) saturate(160%);
+            -webkit-backdrop-filter: blur(10px) saturate(160%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.10),
+                0 10px 26px rgba(0, 0, 0, 0.10);
         }
 
         .cloze-revealed {
-            color: var(--cloze-revealed-text);
-            font-weight: bold;
+            color: color-mix(in srgb, var(--text-primary) 30%, var(--primary-color) 70%);
+            font-weight: 950;
+            letter-spacing: 0.01em;
+            text-shadow:
+                0 1px 0 rgba(0, 0, 0, 0.20),
+                0 0 12px rgba(var(--primary-color-rgb), 0.22);
         }
 
         .study-controls-container {
@@ -9738,6 +9913,37 @@
             padding-bottom: 0.5rem;
         }
 
+        .stats-section-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 2.5rem 0 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .stats-section-title-row .stats-section-title {
+            margin: 0;
+            padding: 0;
+            border: none;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .stats-export-btn {
+            opacity: 0.55;
+            flex-shrink: 0;
+        }
+
+        .stats-export-btn:hover {
+            opacity: 1;
+        }
+
+        .stats-export-block {
+            border-radius: var(--border-radius-lg);
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -10071,6 +10277,39 @@
 
             .pomodoro-controls .btn-icon {
                 transform: scale(0.9);
+            }
+
+            .task-item {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .task-main {
+                width: 100%;
+            }
+
+            .task-trailing {
+                width: 100%;
+                min-width: 0;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .task-meta {
+                flex-wrap: wrap;
+                justify-content: flex-start;
+            }
+
+            .task-actions {
+                margin-left: auto;
+            }
+
+            .hub-mini-timer {
+                right: 12px;
+                bottom: 72px;
+                top: auto;
+                width: 198px;
             }
 
             .stats-dashboard-view {
@@ -10934,8 +11173,16 @@
         }
 
         .sticky-note-content .rendered-tag {
-            background-color: var(--hl-7-bg) !important;
-            border-color: var(--hl-7-border) !important;
+            /* Keep SuperTags looking like chips inside sticky notes */
+            border-bottom: none !important;
+            padding: 0.18em 0.45em !important;
+            border-radius: 9999px !important;
+            background: linear-gradient(
+                120deg,
+                color-mix(in srgb, var(--text-magenta) 16%, transparent) 0%,
+                color-mix(in srgb, var(--text-magenta) 8%, transparent) 100%
+            ) !important;
+            border-color: color-mix(in srgb, var(--text-magenta) 38%, transparent) !important;
         }
 
         .sticky-note-content .mindmap-snippet,
@@ -19750,6 +19997,7 @@
                     lastSyncTimestamp: null,
                     pomodoroWork: 25,
                     pomodoroBreak: 5,
+                    hubSoundEnabled: true,
                     studySessionSize: 25,
                     studyCardFontSize: '1.6rem',
                     jpegQuality: 0.9,
@@ -22312,8 +22560,13 @@
                     // -------------------------------------------------------------
 
                     if (isWriteMode) {
-                        contentDiv.innerHTML = article.content;
-                        const isEffectivelyEmpty = article.content.trim() === '' || article.content.trim() === '<p><br></p>';
+                        const normalizedWriteContent = App.util.normalizeRenderedClozeToTokens(article.content || '');
+                        if (normalizedWriteContent !== article.content) {
+                            article.content = normalizedWriteContent;
+                            App.state.isArticleDirty = true;
+                        }
+                        contentDiv.innerHTML = normalizedWriteContent;
+                        const isEffectivelyEmpty = normalizedWriteContent.trim() === '' || normalizedWriteContent.trim() === '<p><br></p>';
                         contentDiv.classList.toggle('is-empty', isEffectivelyEmpty);
                         contentDiv.setAttribute('data-placeholder', "Start writing... Use [[tags]] for Visual Map, ==keywords== for Highlights, or {{c1::cloze}} for flashcards or {{m1::sentence}} for Mind Maps (further m2, m3 for sub nodes).");
 
@@ -23446,9 +23699,14 @@
                 </div>
             `).join('');
 
+                    const quizTotalSessions = quizStats.totalQuizzes || 0;
+                    const statsExportBtn = (key, aria) => `<button type="button" class="btn-icon stats-export-btn" title="Export for sharing" aria-label="${aria}" onclick="App.ui.exportStatsBrag('${key}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>`;
+
                     container.innerHTML = `
-                <div class="stats-section-title">Cards Quiz Stats</div>
-                <div class="quiz-stats-container">
+                <div class="stats-section-title-row"><div class="stats-section-title">Focus Calendar</div>${statsExportBtn('focus', 'Export focus calendar')}</div>
+                <div id="stats-export-focus" class="stats-export-block"><div class="heatmap-container"><div class="heatmap-header"><b>${monthNames[currentMonth]} ${currentYear}</b></div><div class="heatmap-grid">${heatmapHtml}</div></div></div>
+                <div class="stats-section-title-row"><div class="stats-section-title">Cards Quiz Stats</div>${statsExportBtn('quiz', 'Export quiz stats')}</div>
+                <div id="stats-export-quiz" class="stats-export-block"><div class="quiz-stats-container">
                     <div class="streak-container">
                         <div class="streak-display daily" title="${dailyStreak > 0 ? `You're on a ${dailyStreak}-day streak!` : 'Complete a quiz today to start a streak!'}">
                             <div class="streak-value">${dailyStreak}</div>
@@ -23462,11 +23720,9 @@
                         <div class="stat-card"><div class="stat-card-value">${quizStats.lastScore.toFixed(1)}</div><div class="stat-card-label">Last Score</div></div>
                         <div class="stat-card"><div class="stat-card-value">${quizStats.bestScore.toFixed(1)}</div><div class="stat-card-label">Best Score</div></div>
                         <div class="stat-card"><div class="stat-card-value">${quizStats.avgScore.toFixed(2)}</div><div class="stat-card-label">Avg. Score</div></div>
-                        <div class="stat-card"><div class="stat-card-value">${quizStats.totalScore.toFixed(1)}/${quizStats.totalQuizzes * 10}</div><div class="stat-card-label">Total Score</div></div>
+                        <div class="stat-card" title="Every quiz session builds recall — keep the habit going"><div class="stat-card-value">${quizTotalSessions}</div><div class="stat-card-label">Quizzes done</div></div>
                     </div>
-                </div>
-                <div class="stats-section-title">Focus Calendar</div>
-                <div class="heatmap-container"><div class="heatmap-header"><b>${monthNames[currentMonth]} ${currentYear}</b></div><div class="heatmap-grid">${heatmapHtml}</div></div>
+                </div></div>
                 <div class="stats-section-title">Pomodoro Focus Stats</div>
                 <div class="stats-grid">
                     <div class="stat-card"><div class="stat-card-value">${App.hub.util.formatSecondsToDecimalHours(hubStats.pomodoro.today)}</div><div class="stat-card-label">Today</div></div>
@@ -23485,7 +23741,7 @@
                     <div class="stat-card"><div class="stat-card-value">${hubStats.tasks.backlog}</div><div class="stat-card-label">Backlog</div></div>
                     <div class="stat-card"><div class="stat-card-value">${hubStats.tasks.upcoming}</div><div class="stat-card-label">Upcoming</div></div>
                 </div>
-                <div class="stats-section-title">Flashcard Spaced Repetition</div>
+                <div class="stats-section-title-row"><div class="stats-section-title">Flashcard Spaced Repetition</div>${statsExportBtn('flashchart', 'Export flashcard activity chart')}</div>
                 <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));">
                     <div class="stat-card"><div class="stat-card-value">${flashcardStats.total}</div><div class="stat-card-label">Total Cards</div></div>
                     <div class="stat-card"><div class="stat-card-value">${flashcardStats.due}</div><div class="stat-card-label">To Study</div></div>
@@ -23495,7 +23751,7 @@
                     <div class="stat-card"><div class="stat-card-value" style="color:var(--success-color);">${todayFlashcards}</div><div class="stat-card-label">Today</div></div>
                 </div>
                 <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                    <div><canvas id="flashcardActivityChart" style="margin-top: 1rem;"></canvas></div>
+                    <div id="stats-export-flashchart" class="stats-export-block" style="padding:8px;"><canvas id="flashcardActivityChart" style="margin-top: 1rem;"></canvas></div>
                 </div>
                 <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
                     <div>
@@ -23509,7 +23765,7 @@
                         <canvas id="cardEaseDistributionChart"></canvas>
                     </div>
                 </div>
-                <div class="stats-section-title">Reading Stats</div>
+                <div class="stats-section-title-row"><div class="stats-section-title">Reading Stats</div>${statsExportBtn('readingchart', 'Export reading activity chart')}</div>
                 <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));">
                     <div class="stat-card"><div class="stat-card-value">${readingStats.total}</div><div class="stat-card-label">Total Articles</div></div>
                     <div class="stat-card"><div class="stat-card-value">${readingStats.completed}</div><div class="stat-card-label">Completed</div></div>
@@ -23519,7 +23775,7 @@
                     <div class="stat-card"><div class="stat-card-value" style="color:var(--success-color);">${todayArticles}</div><div class="stat-card-label">Today</div></div>
                 </div>
                 <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                    <div><canvas id="readingActivityChart" style="margin-top: 1rem;"></canvas></div>
+                    <div id="stats-export-readingchart" class="stats-export-block" style="padding:8px;"><canvas id="readingActivityChart" style="margin-top: 1rem;"></canvas></div>
                 </div>
                 <div class="stats-section-title" style="margin-top: 3rem; text-align:center; border:none;">View Historical Data</div>
                 <div style="display:flex; justify-content:center; gap: 1rem; margin-top: -0.5rem;">
@@ -23583,8 +23839,14 @@
                     let contentHTML = '';
 
                     if (sigmaMode === 'article') {
-                        // SIGMA MODE: FULL ARTICLE - Remove restrictive inline styles to allow CSS to control width
-                        contentHTML = `<div class="article-content-wrapper">${currentArticle.content}</div>`;
+                        // SIGMA MODE: FULL ARTICLE - Render like Read Mode (not raw editor tokens)
+                        let parsedContent = App.util.parseShortcuts(currentArticle.content);
+                        let finalContent = App.util.renderClozeForDisplay(parsedContent);
+                        // Mirror Read Mode: remove any write-time contenteditable markers
+                        finalContent = finalContent
+                            .replaceAll(' contenteditable="true"', '')
+                            .replaceAll(" contenteditable='true'", '');
+                        contentHTML = `<div class="article-content-wrapper">${App.util.sanitizeHTML(finalContent)}</div>`;
                     } else {
                         // SIGMA MODE: PRESENTATION (Snippets)
                         contentHTML = currentArticle.snippets.map(item => {
@@ -26295,6 +26557,125 @@
                     container.innerHTML = `<div class="context-menu" style="left: ${x}px; top: ${y}px;">${menuHtml}</div>`;
                 },
                 hideContextMenu() { document.getElementById('context-menu-container').innerHTML = ''; },
+
+                _roundRectPath(ctx, x, y, w, h, r) {
+                    const rr = Math.min(r, w / 2, h / 2);
+                    ctx.beginPath();
+                    ctx.moveTo(x + rr, y);
+                    ctx.arcTo(x + w, y, x + w, y + h, rr);
+                    ctx.arcTo(x + w, y + h, x, y + h, rr);
+                    ctx.arcTo(x, y + h, x, y, rr);
+                    ctx.arcTo(x, y, x + w, y, rr);
+                    ctx.closePath();
+                },
+
+                async exportStatsBrag(key) {
+                    const map = { focus: 'stats-export-focus', quiz: 'stats-export-quiz', flashchart: 'stats-export-flashchart', readingchart: 'stats-export-readingchart' };
+                    const id = map[key];
+                    if (!id) return;
+                    const el = document.getElementById(id);
+                    if (!el) { this.showToast('Nothing to export yet.', 'warning'); return; }
+                    const h2c = typeof html2canvas === 'function' ? html2canvas : (typeof window !== 'undefined' && window.html2canvas);
+                    if (typeof h2c !== 'function') { this.showToast('Image export unavailable (html2canvas not loaded).', 'warning'); return; }
+                    const bgPrimary = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim() || '#fdf6e3';
+                    const bgSecondary = getComputedStyle(document.documentElement).getPropertyValue('--bg-secondary').trim() || '#f5f0e6';
+                    const onclone = (clonedDoc) => {
+                        const node = clonedDoc.getElementById(id);
+                        if (!node) return;
+                        node.style.boxSizing = 'border-box';
+                        node.style.width = '440px';
+                        node.style.maxWidth = '440px';
+                        node.style.margin = '0';
+                        node.style.padding = key === 'focus' ? '16px 18px 20px' : '18px 20px 22px';
+                        node.style.borderRadius = '16px';
+                        node.style.backgroundColor = bgSecondary;
+                        node.style.border = '1px solid rgba(93, 74, 52, 0.14)';
+                        node.style.boxShadow = '0 6px 28px rgba(0,0,0,0.08)';
+                        if (key === 'quiz') {
+                            const qz = node.querySelector('.quiz-stats-container');
+                            if (qz) { qz.style.alignItems = 'stretch'; qz.style.width = '100%'; qz.style.gap = '1rem'; }
+                            const streak = node.querySelector('.streak-container');
+                            if (streak) {
+                                streak.style.width = '100%';
+                                streak.style.justifyContent = 'space-between';
+                                streak.style.alignItems = 'center';
+                                streak.style.flexWrap = 'nowrap';
+                                streak.style.gap = '14px';
+                            }
+                            const cal = node.querySelector('.weekly-streak-calendar');
+                            if (cal) { cal.style.maxWidth = 'none'; cal.style.flex = '1'; cal.style.minWidth = '0'; cal.style.height = '128px'; }
+                            const grid = node.querySelector('.sub-stats-grid');
+                            if (grid) { grid.style.width = '100%'; grid.style.gridTemplateColumns = 'repeat(4, minmax(0, 1fr))'; grid.style.gap = '10px'; }
+                            const circle = node.querySelector('.streak-display.daily');
+                            if (circle) { circle.style.width = '132px'; circle.style.height = '132px'; circle.style.flexShrink = '0'; }
+                        }
+                        if (key === 'flashchart' || key === 'readingchart') {
+                            node.style.padding = '16px';
+                        }
+                    };
+                    try {
+                        const canvas = await h2c(el, {
+                            scale: 2,
+                            useCORS: true,
+                            logging: false,
+                            backgroundColor: bgPrimary,
+                            onclone,
+                        });
+                        const band = Math.round(Math.max(48, canvas.height * 0.065));
+                        const out = document.createElement('canvas');
+                        out.width = canvas.width;
+                        out.height = canvas.height + band;
+                        const octx = out.getContext('2d');
+                        octx.fillStyle = bgPrimary;
+                        octx.fillRect(0, 0, out.width, out.height);
+                        octx.drawImage(canvas, 0, 0);
+                        const fs = Math.max(14, Math.round(out.width / 38));
+                        const wm = 'notekash.com';
+                        octx.font = `600 ${fs}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+                        const tw = octx.measureText(wm).width;
+                        const padX = 12;
+                        const padY = 7;
+                        const pillW = tw + padX * 2;
+                        const pillH = fs + padY * 2;
+                        const px = out.width - pillW - 16;
+                        const py = out.height - pillH - 10;
+                        octx.fillStyle = 'rgba(55, 42, 32, 0.9)';
+                        this._roundRectPath(octx, px, py, pillW, pillH, 8);
+                        octx.fill();
+                        octx.fillStyle = 'rgba(255, 252, 248, 0.96)';
+                        octx.textBaseline = 'middle';
+                        octx.fillText(wm, px + padX, py + pillH / 2);
+                        const filename = `notekash-${key}.png`;
+                        const blob = await new Promise((resolve, reject) => {
+                            out.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
+                        });
+                        const file = new File([blob], filename, { type: 'image/png' });
+                        let usedShare = false;
+                        try {
+                            if (navigator.share) {
+                                const ok = !navigator.canShare || navigator.canShare({ files: [file] });
+                                if (ok) {
+                                    await navigator.share({ files: [file], title: 'NoteKash', text: 'My stats from NoteKash' });
+                                    usedShare = true;
+                                }
+                            }
+                        } catch (e) {
+                            if (e.name === 'AbortError') return;
+                        }
+                        if (!usedShare) {
+                            const u = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.download = filename;
+                            a.href = u;
+                            a.click();
+                            setTimeout(() => URL.revokeObjectURL(u), 5000);
+                        }
+                        this.showToast(usedShare ? 'Pick an app to share.' : 'Image saved.', 'success');
+                    } catch (err) {
+                        console.error('exportStatsBrag', err);
+                        this.showToast('Could not create image.', 'error');
+                    }
+                },
 
                 showToast(message, options = {}) {
                     if (typeof options === 'string') { options = { type: options }; }
@@ -30444,20 +30825,24 @@
                             return;
                         }
 
+                        const articleInMemory = App.storage.getArticle(id) || {};
+                        const isWriteMode = App.state.currentMode === 'write';
                         const titleInput = document.getElementById('article-title');
                         const contentDiv = document.getElementById('article-content');
-                        if (!titleInput || !contentDiv) {
+                        if (!titleInput && !articleInMemory.title) {
                             if (!isAutosave) App.ui.showToast("Save failed. Editor not found.", { type: 'error' });
                             return;
                         }
 
-                        const title = titleInput.value.trim();
+                        const title = (isWriteMode && titleInput)
+                            ? titleInput.value.trim()
+                            : (articleInMemory.title || '').trim();
 
                         // --- FIX: Handle Fullscreen Maps before getting content ---
                         const fullscreenMaps = Array.from(document.querySelectorAll('.nk-map-embed.is-viewport-fullscreen'));
                         const restoredMaps = [];
 
-                        if (!newContent) {
+                        if (!newContent && isWriteMode && contentDiv) {
                             fullscreenMaps.forEach(map => {
                                 const placeholderId = map.dataset.placeholderId;
                                 if (placeholderId) {
@@ -30471,7 +30856,18 @@
                             });
                         }
 
-                        let content = newContent ?? contentDiv.innerHTML.trim();
+                        let content = '';
+                        if (newContent !== undefined) {
+                            content = newContent;
+                        } else if (isWriteMode && contentDiv) {
+                            content = contentDiv.innerHTML.trim();
+                        } else {
+                            // In read/focus/pdf contexts, never persist display-rendered HTML as source content.
+                            content = articleInMemory.content || '';
+                        }
+
+                        // Recovery + safety: convert any rendered cloze spans back to canonical tokens.
+                        content = App.util.normalizeRenderedClozeToTokens(content);
 
                         // --- Restore Fullscreen Maps state (so user doesn't see them disappear) ---
                         restoredMaps.forEach(({ map, placeholder }) => {
@@ -30496,7 +30892,6 @@
                         tempDiv.querySelectorAll('.nk-map-placeholder').forEach(ph => ph.remove());
 
                         // Get in-memory attachments to include in hash calculation
-                        const articleInMemory = App.storage.getArticle(id) || {};
                         let attachments = articleInMemory.attachments || [];
 
                         // --- Fix: Hoist Category Logic so it's included in Hash ---
@@ -31471,6 +31866,10 @@
                         }
                         const selectedHTML = tempDiv.innerHTML;
                         document.execCommand('insertHTML', false, `{{c${existingClozes + 1}::${selectedHTML}}}`);
+
+                        // Cloze creation/editing must persist reliably.
+                        App.state.isArticleDirty = true;
+                        App.events.saveArticle({ isAutosave: true });
                     } else {
                         document.execCommand('styleWithCSS', false, true);
                         const span = document.createElement('span');
@@ -34695,18 +35094,33 @@
                     });
                 },
                 navigateToTagInArticle(articleId, tag, shouldNavigate = true) {
-                    if (shouldNavigate) { App.router.navigateTo('article', { id: articleId, mode: 'read', focusTag: tag }); App.ui.closeModal(); }
-                    else {
+                    const scrollToTaggedElement = () => {
                         const contentDiv = document.getElementById('article-content');
-                        if (contentDiv) {
-                            const firstTaggedElement = contentDiv.querySelector(`[data-tag-text="${tag}"], [data-tag="${tag}"]`);
-                            if (firstTaggedElement) {
-                                firstTaggedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                firstTaggedElement.style.transition = 'background-color 0.5s';
-                                firstTaggedElement.style.backgroundColor = 'var(--hl-1-bg)';
-                                setTimeout(() => { firstTaggedElement.style.backgroundColor = ''; }, 2000);
-                            }
-                        }
+                        if (!contentDiv) return false;
+
+                        const firstTaggedElement = contentDiv.querySelector(`[data-tag-text="${tag}"], [data-tag="${tag}"]`);
+                        if (!firstTaggedElement) return false;
+
+                        firstTaggedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstTaggedElement.style.transition = 'background-color 0.5s';
+                        firstTaggedElement.style.backgroundColor = 'var(--hl-1-bg)';
+                        setTimeout(() => { firstTaggedElement.style.backgroundColor = ''; }, 2000);
+                        return true;
+                    };
+
+                    if (shouldNavigate) {
+                        App.router.navigateTo('article', { id: articleId, mode: 'read' });
+                        App.ui.closeModal();
+
+                        // Article content mounts async; retry briefly until the element exists.
+                        let attempts = 0;
+                        const timer = setInterval(() => {
+                            attempts++;
+                            const done = scrollToTaggedElement();
+                            if (done || attempts >= 15) clearInterval(timer);
+                        }, 150);
+                    } else {
+                        scrollToTaggedElement();
                     }
                 },
                 changeCategorySort(e, category) { App.settings.set('categorySortBy', e.target.value); App.ui.renderCategoryView(document.getElementById('category-view'), category); },
@@ -36104,7 +36518,8 @@
 
                     // --- NEW: SIGMA ARTICLE NAVIGATION ---
                     if (session.sigmaMode === 'article') {
-                        const body = document.querySelector('.focus-mode-body');
+                        const body = document.querySelector('.focus-mode-overlay .focus-mode-content') ||
+                            document.querySelector('.focus-mode-body');
                         const overlay = document.querySelector('.focus-mode-overlay');
                         if (body && overlay) {
                             const scrollAmount = window.innerHeight * 0.8; // Scroll 80% of screen height
@@ -36230,16 +36645,16 @@
                         pointer.id = pointerId;
                         Object.assign(pointer.style, {
                             position: 'fixed',
-                            width: '8px',
-                            height: '8px',
+                            width: '12px',
+                            height: '12px',
                             background: '#ff0055',
                             borderRadius: '50%',
-                            boxShadow: '0 0 5px #ff0055, 0 0 10px #ff0055, 0 0 20px #ff0055',
+                            boxShadow: '0 0 8px #ff0055, 0 0 16px #ff0055',
                             pointerEvents: 'none',
                             zIndex: '2147483647',
                             display: 'none',
                             transform: 'translate(-50%, -50%)',
-                            transition: 'transform 0.04s linear' // Faster follow
+                            transition: 'transform 0.035s linear, box-shadow 0.2s ease, background 0.2s ease'
                         });
                         overlay.appendChild(pointer);
                     }
@@ -36279,29 +36694,34 @@
                         const glowColor = rawPrimary || laserColor;
 
                         overlay.classList.add(activeClass);
-                        pointer.style.display = 'block';
+                        // Hide pointer until first movement to avoid a "stuck center dot"
+                        // caused by showing a fixed element before coordinates are set.
+                        pointer.style.display = 'none';
+                        pointer.style.left = '-9999px';
+                        pointer.style.top = '-9999px';
 
                         // Apply Aesthetic Update to Pointer
                         const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
                         const isDarkTheme = currentTheme === 'dark'; // 'sepia' counts as light-ish for laser physics
 
                         if (isDarkTheme) {
-                            // Dark Mode: Hot Plasma / Neon
-                            pointer.style.background = `radial-gradient(circle at 35% 35%, #fff 0%, ${laserColor} 50%, ${glowColor} 100%)`;
-                            pointer.style.boxShadow = `0 0 5px ${glowColor}, 0 0 10px ${laserColor}, 0 0 20px ${glowColor}`;
-                            pointer.style.border = 'none';
+                            pointer.style.background = `radial-gradient(circle at 32% 30%, #ffffff 0%, ${laserColor} 45%, ${glowColor} 100%)`;
+                            pointer.style.boxShadow = `0 0 10px ${glowColor}, 0 0 20px ${laserColor}, 0 0 30px ${glowColor}`;
+                            pointer.style.border = `1px solid color-mix(in srgb, #ffffff 35%, transparent)`;
                         } else {
-                            // Light/Sepia Mode: Wet Ink / High-End Marker
-                            pointer.style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, ${laserColor} 55%)`;
-                            pointer.style.boxShadow = `0 2px 5px rgba(0,0,0,0.25)`; // Physical shadow for depth
-                            pointer.style.border = `1px solid rgba(255,255,255,0.2)`;
+                            pointer.style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.98) 0%, ${laserColor} 58%, color-mix(in srgb, ${glowColor} 70%, #000 30%) 100%)`;
+                            pointer.style.boxShadow = `0 1px 6px rgba(0,0,0,0.22), 0 0 14px color-mix(in srgb, ${glowColor} 35%, transparent)`;
+                            pointer.style.border = `1px solid color-mix(in srgb, ${laserColor} 25%, #ffffff 75%)`;
                         }
 
                         laserCanvas.style.display = 'block';
 
-                        // In Read Mode, we need to capture events via canvas. In Stage, overlay might handle it.
-                        laserCanvas.style.pointerEvents = 'all';
+                        // Do not block native Stage scrolling; capture on scroll container instead.
+                        laserCanvas.style.pointerEvents = context === 'stage' ? 'none' : 'auto';
                         laserCanvas.style.cursor = 'none';
+                        const eventTarget = context === 'stage'
+                            ? (overlay.querySelector('.focus-mode-content') || overlay)
+                            : laserCanvas;
 
                         if (context === 'stage') document.getElementById('laser-pointer-toggle')?.classList.add('active');
 
@@ -36381,13 +36801,14 @@
 
                         // Event Handlers
                         const moveHandler = (e) => {
+                            if (pointer.style.display !== 'block') pointer.style.display = 'block';
                             pointer.style.left = `${e.clientX}px`;
                             pointer.style.top = `${e.clientY}px`;
                             if (currentPath) currentPath.push({ x: e.clientX, y: e.clientY });
                         };
                         const downHandler = (e) => {
                             if (e.button !== 0) return;
-                            e.preventDefault();
+                            if (context !== 'stage') e.preventDefault();
                             currentPath = [{ x: e.clientX, y: e.clientY }];
                         };
                         const upHandler = () => {
@@ -36401,20 +36822,13 @@
                             }
                         };
 
-                        // NEW: Wheel Handler for Scrolling while Laser is active
                         const wheelHandler = (e) => {
-                            let scrollTarget;
-                            if (context === 'stage') {
-                                scrollTarget = document.querySelector('.focus-mode-body');
-                            } else {
-                                // For Read Mode, the content is usually in <main>
-                                scrollTarget = document.querySelector('main') || document.scrollingElement || document.documentElement || document.body;
-                            }
-
-                            if (scrollTarget) {
-                                scrollTarget.scrollTop += e.deltaY;
-                                scrollTarget.scrollLeft += e.deltaX;
-                            }
+                            if (context === 'stage') return; // keep Stage native
+                            const scrollTarget = document.querySelector('main') || document.scrollingElement || document.documentElement || document.body;
+                            if (!scrollTarget) return;
+                            e.preventDefault();
+                            scrollTarget.scrollTop += e.deltaY;
+                            scrollTarget.scrollLeft += e.deltaX;
                         };
 
                         // Unified Key Handler
@@ -36426,19 +36840,23 @@
                             }
                         };
 
-                        laserCanvas.addEventListener('mousemove', moveHandler);
-                        laserCanvas.addEventListener('mousedown', downHandler);
-                        laserCanvas.addEventListener('wheel', wheelHandler, { passive: true });
+                        eventTarget.addEventListener('mousemove', moveHandler);
+                        eventTarget.addEventListener('mousedown', downHandler);
+                        if (context !== 'stage') {
+                            eventTarget.addEventListener('wheel', wheelHandler, { passive: false });
+                        }
                         window.addEventListener('mouseup', upHandler);
-                        laserCanvas.addEventListener('click', tripleClickHandler);
+                        eventTarget.addEventListener('click', tripleClickHandler);
                         document.addEventListener('keydown', keyHandler, true); // Capture phase importance
 
                         laserCanvas._cleanup = () => {
-                            laserCanvas.removeEventListener('mousemove', moveHandler);
-                            laserCanvas.removeEventListener('mousedown', downHandler);
-                            laserCanvas.removeEventListener('wheel', wheelHandler);
+                            eventTarget.removeEventListener('mousemove', moveHandler);
+                            eventTarget.removeEventListener('mousedown', downHandler);
+                            if (context !== 'stage') {
+                                eventTarget.removeEventListener('wheel', wheelHandler);
+                            }
                             window.removeEventListener('mouseup', upHandler);
-                            laserCanvas.removeEventListener('click', tripleClickHandler);
+                            eventTarget.removeEventListener('click', tripleClickHandler);
                             document.removeEventListener('keydown', keyHandler, true);
                             cancelAnimationFrame(animationFrameId);
                         };
@@ -37365,7 +37783,16 @@
                             '--hl-1-bg', '--hl-1-border', '--hl-2-bg', '--hl-2-border', '--hl-3-bg', '--hl-3-border',
                             '--hl-4-bg', '--hl-4-border', '--hl-5-bg', '--hl-5-border', '--hl-6-bg', '--hl-6-border',
                             '--hl-7-bg', '--hl-7-border', '--text-red', '--text-green', '--text-blue',
-                            '--success-color', '--danger-color', '--border-radius-lg', '--transition-fast', '--shadow'
+                            '--success-color', '--danger-color', '--border-radius-lg', '--transition-fast', '--shadow',
+                            '--textile-bg-1', '--textile-border-1', '--textile-text-1',
+                            '--textile-bg-2', '--textile-border-2', '--textile-text-2',
+                            '--textile-bg-3', '--textile-border-3', '--textile-text-3',
+                            '--textile-bg-4', '--textile-border-4', '--textile-text-4',
+                            '--textile-bg-5', '--textile-border-5', '--textile-text-5',
+                            '--textile-bg-6', '--textile-border-6', '--textile-text-6',
+                            '--textile-bg-7', '--textile-border-7', '--textile-text-7',
+                            '--textile-bg-8', '--textile-border-8', '--textile-text-8',
+                            '--textile-bg-9', '--textile-border-9', '--textile-text-9'
                         ].map(v => `${v}: ${styles.getPropertyValue(v)};`).join('\n');
 
                         // Inject article font family into root
@@ -37474,6 +37901,31 @@
                             .nk-accordion-content { padding: 1rem 1.25rem; border-top: 1px solid var(--border-color); display: block; animation: slideDown 0.3s ease-out; }
                             @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
                             
+                            /* Tables */
+                            table {
+                                width: 100% !important;
+                                border-collapse: separate;
+                                border-spacing: 0;
+                                margin: 1.5em 0;
+                                border: 1px solid var(--border-color);
+                                border-radius: 10px;
+                                overflow: hidden;
+                                table-layout: auto;
+                            }
+                            th, td {
+                                border-bottom: 1px solid var(--border-color);
+                                padding: 12px 16px;
+                                text-align: left;
+                                vertical-align: top;
+                            }
+                            td { border-left: 1px solid var(--border-color); }
+                            td:first-child, th:first-child { border-left: none; }
+                            th {
+                                background-color: color-mix(in srgb, var(--primary-color) 10%, transparent);
+                                font-weight: 600;
+                            }
+                            tr:last-child td { border-bottom: none; }
+
                             /* MCQ */
                             .nk-mcq-block { position: relative; background: var(--bg-secondary); border: 1px solid var(--border-color); border-left: 3px solid var(--primary-color); border-radius: 10px; padding: 1.25rem 1.5rem; margin: 1.5em 0; }
                             .nk-mcq-question { font-weight: 600; font-size: 1.05em; margin-bottom: 1rem; color: var(--text-primary); }
@@ -37481,6 +37933,64 @@
                             .nk-mcq-option { display: flex; align-items: center; gap: 0.75rem; padding: 8px; border-radius: 6px; border: 1px solid transparent; }
                             .nk-mcq-option-radio { width: 18px; height: 18px; border: 2px solid var(--text-secondary); border-radius: 50%; display: grid; place-items: center; }
                             .nk-mcq-option[data-is-correct="true"] .nk-mcq-option-radio { border-color: var(--success-color); background-color: var(--success-color); }
+
+                            /* Textile (single) + Textile Deck */
+                            .nk-text-tile {
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                                border: 2px solid var(--border-color);
+                                border-radius: 12px;
+                                padding: 0.65rem 1.25rem;
+                                margin: 0.75rem 0;
+                                box-sizing: border-box;
+                                background: transparent;
+                                color: var(--text-primary);
+                            }
+                            .nk-text-tile-content {
+                                color: inherit;
+                                width: 100%;
+                                white-space: pre-wrap;
+                                word-break: break-word;
+                                overflow-wrap: anywhere;
+                                line-height: 1.6;
+                            }
+                            .nk-textile-deck {
+                                display: flex;
+                                flex-wrap: wrap;
+                                gap: 8px;
+                                padding: 1rem;
+                                border-radius: 12px;
+                                border: 1px dashed var(--border-color);
+                                background-color: color-mix(in srgb, var(--border-color) 10%, transparent);
+                                margin: 1.5em 0;
+                                position: relative;
+                            }
+                            .nk-textile-deck .nk-text-tile {
+                                margin: 0;
+                                flex-grow: 1;
+                                min-width: 150px;
+                                width: auto;
+                            }
+                            .nk-textile-deck.layout-stack {
+                                flex-direction: column;
+                                align-items: stretch;
+                            }
+                            .deck-layout-toggle, .deck-add-tile-btn { display: none !important; }
+
+                            .nk-text-tile.color-1 { background: var(--textile-bg-1); border-color: var(--textile-border-1); color: var(--textile-text-1); }
+                            .nk-text-tile.color-2 { background: var(--textile-bg-2); border-color: var(--textile-border-2); color: var(--textile-text-2); }
+                            .nk-text-tile.color-3 { background: var(--textile-bg-3); border-color: var(--textile-border-3); color: var(--textile-text-3); }
+                            .nk-text-tile.color-4 { background: var(--textile-bg-4); border-color: var(--textile-border-4); color: var(--textile-text-4); }
+                            .nk-text-tile.color-5 { background: var(--textile-bg-5); border-color: var(--textile-border-5); color: var(--textile-text-5); }
+                            .nk-text-tile.color-6 { background: var(--textile-bg-6); border-color: var(--textile-border-6); color: var(--textile-text-6); }
+                            .nk-text-tile.color-7 { background: var(--textile-bg-7); border-color: var(--textile-border-7); color: var(--textile-text-7); }
+                            .nk-text-tile.color-8 { background: var(--textile-bg-8); border-color: var(--textile-border-8); color: var(--textile-text-8); }
+                            .nk-text-tile.color-9 { background: var(--textile-bg-9); border-color: var(--textile-border-9); color: var(--textile-text-9); }
+                            .nk-text-tile.color-default {
+                                background: color-mix(in srgb, var(--primary-color) 3%, var(--bg-tertiary));
+                                border-color: var(--primary-color);
+                            }
                             
                             /* Image Interactions */
                             img { transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: zoom-in; }
@@ -40405,6 +40915,15 @@
                     return processed.replace(/{{c\d+::((?:(?!{{c\d+::)[\s\S])*?)}}/g, '<span class="cloze-flashcard">$1</span>');
                 },
 
+                normalizeRenderedClozeToTokens(text) {
+                    if (!text) return '';
+                    let clozeCounter = 0;
+                    return text.replace(
+                        /<span\b[^>]*\bclass=(["'])[^"']*\bcloze-flashcard\b[^"']*\1[^>]*>([\s\S]*?)<\/span>/gi,
+                        (match, quote, content) => `{{c${++clozeCounter}::${content}}}`
+                    );
+                },
+
                 hashString(str) {
                     let hash = 5381;
                     for (let i = 0; i < str.length; i++) {
@@ -40466,7 +40985,7 @@
                     let limitReachedMessageShown = false;
 
                     const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = html;
+                    tempDiv.innerHTML = App.util.normalizeRenderedClozeToTokens(html);
                     const newCards = {};
 
                     const checkAndShowLimitMessage = () => {
@@ -41460,6 +41979,53 @@
                         }
                     },
                 },
+                audio: {
+                    state: { context: null },
+                    getContext() {
+                        if (!App.settings.get('hubSoundEnabled')) return null;
+                        if (!this.state.context) {
+                            const Ctx = window.AudioContext || window.webkitAudioContext;
+                            if (!Ctx) return null;
+                            this.state.context = new Ctx();
+                        }
+                        return this.state.context;
+                    },
+                    playTone({ frequency = 660, duration = 0.08, type = 'sine', gain = 0.04, when = 0 }) {
+                        try {
+                            const ctx = this.getContext();
+                            if (!ctx) return;
+                            const now = ctx.currentTime + when;
+                            const osc = ctx.createOscillator();
+                            const g = ctx.createGain();
+                            osc.type = type;
+                            osc.frequency.setValueAtTime(frequency, now);
+                            g.gain.setValueAtTime(gain, now);
+                            g.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                            osc.connect(g);
+                            g.connect(ctx.destination);
+                            osc.start(now);
+                            osc.stop(now + duration);
+                        } catch (e) { }
+                    },
+                    playTaskComplete() {
+                        this.playTone({ frequency: 740, duration: 0.06, gain: 0.05 });
+                        this.playTone({ frequency: 980, duration: 0.08, gain: 0.045, when: 0.05 });
+                    },
+                    playTimerStart() {
+                        this.playTone({ frequency: 620, duration: 0.06, gain: 0.04 });
+                    },
+                    playWorkEnd() {
+                        this.playTone({ frequency: 780, duration: 0.08, gain: 0.05 });
+                        this.playTone({ frequency: 1040, duration: 0.1, gain: 0.05, when: 0.08 });
+                    },
+                    playBreakStart() {
+                        this.playTone({ frequency: 520, duration: 0.08, gain: 0.04 });
+                    },
+                    playBreakEnd() {
+                        this.playTone({ frequency: 660, duration: 0.08, gain: 0.04 });
+                        this.playTone({ frequency: 820, duration: 0.08, gain: 0.04, when: 0.07 });
+                    }
+                },
                 tasks: {
                     state: { currentFilter: 'today', composer: { title: '', category: 'General', priority: 'low', due: new Date().toISOString().slice(0, 10), pomodoroGoal: 0 } },
                     resetComposer() { const defaultCategoryName = (App.settings.get('userCategories').find(c => c.isDefault) || { name: 'General' }).name; this.state.composer = { title: '', category: defaultCategoryName, priority: 'low', due: App.hub.util.getTodayISO(), pomodoroGoal: 0 }; },
@@ -41494,8 +42060,14 @@
                         if (!isCurrentlyCompleted) {
                             App.util.hapticFeedback('heavy'); // <-- ADD THIS LINE
                             App.ui.showToast("Great job! ✨", 'success');
+                            App.hub.audio.playTaskComplete();
                             const checkbox = event?.target;
-                            if (checkbox) App.hub.ui.showConfetti(checkbox.getBoundingClientRect().left, checkbox.getBoundingClientRect().top);
+                            if (checkbox) {
+                                const rect = checkbox.getBoundingClientRect();
+                                const x = Math.max(16, Math.min(window.innerWidth - 16, rect.left + rect.width / 2));
+                                const y = Math.max(16, Math.min(window.innerHeight - 16, rect.top + rect.height / 2));
+                                App.hub.ui.showConfetti(x, y);
+                            }
                         }
                         taskEl.classList.toggle('completed', !isCurrentlyCompleted);
                         if (shouldRemove) {
@@ -41505,13 +42077,30 @@
                     },
                     getFilteredTasks() {
                         const today = App.hub.util.getTodayISO();
-                        const allTasks = [...App.hub.state.tasks].sort((a, b) => { const pO = { high: 0, medium: 1, low: 2 }; return pO[a.priority] - pO[b.priority]; });
+                        const allTasks = [...App.hub.state.tasks];
+                        const pO = { high: 0, medium: 1, low: 2 };
+                        const byCreatedDesc = (a, b) => App.hub.util.isoToMs(b.createdAt) - App.hub.util.isoToMs(a.createdAt);
+                        const byDueAsc = (a, b) => App.hub.util.isoDateToMs(a.due) - App.hub.util.isoDateToMs(b.due) || byCreatedDesc(a, b);
+                        const byDueDesc = (a, b) => App.hub.util.isoDateToMs(b.due) - App.hub.util.isoDateToMs(a.due) || byCreatedDesc(a, b);
+                        const byCompletedDesc = (a, b) => App.hub.util.isoToMs(b.completedAt) - App.hub.util.isoToMs(a.completedAt) || byCreatedDesc(a, b);
+                        const byRecentRelevantDesc = (a, b) => {
+                            const aMs = a.status === 'completed' ? App.hub.util.isoToMs(a.completedAt) : App.hub.util.isoDateToMs(a.due);
+                            const bMs = b.status === 'completed' ? App.hub.util.isoToMs(b.completedAt) : App.hub.util.isoDateToMs(b.due);
+                            return bMs - aMs || byCreatedDesc(a, b);
+                        };
                         switch (this.state.currentFilter) {
-                            case 'today': return allTasks.filter(t => t.status === 'pending' && t.due === today);
-                            case 'backlog': return allTasks.filter(t => t.status === 'pending' && t.due < today);
-                            case 'upcoming': return allTasks.filter(t => t.status === 'pending' && t.due > today).sort((a, b) => new Date(a.due) - new Date(b.due));
-                            case 'completed': return allTasks.filter(t => t.status === 'completed').sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-                            default: return allTasks;
+                            case 'today':
+                                return allTasks
+                                    .filter(t => t.status === 'pending' && t.due === today)
+                                    .sort((a, b) => (pO[a.priority] - pO[b.priority]) || byCreatedDesc(a, b));
+                            case 'backlog':
+                                return allTasks.filter(t => t.status === 'pending' && t.due < today).sort(byDueDesc);
+                            case 'upcoming':
+                                return allTasks.filter(t => t.status === 'pending' && t.due > today).sort(byDueAsc);
+                            case 'completed':
+                                return allTasks.filter(t => t.status === 'completed').sort(byCompletedDesc);
+                            default:
+                                return allTasks.sort(byRecentRelevantDesc);
                         }
                     },
                 },
@@ -41615,6 +42204,7 @@
                         if (this.state.isRunning || this.state.timeLeft <= 0) return;
                         this.state.isRunning = true;
                         this.state.worker?.postMessage({ command: 'start', newTimeLeft: this.state.timeLeft });
+                        App.hub.audio.playTimerStart();
                         App.hub.ui.updatePomodoroDisplay();
                     },
                     pause() {
@@ -41629,6 +42219,7 @@
                         await this.savePartialProgress();
                         this.state.sessionCount = 0;
                         this.resetState(true);
+                        App.hub.ui.hideMiniTimer();
                         localStorage.removeItem('pomodoroSession');
                     },
                     async savePartialProgress() { await this.saveProgress(this.state.totalDuration - this.state.timeLeft); },
@@ -41659,16 +42250,20 @@
                     async sessionEnd() {
                         this.pause(); const w = App.settings.get('pomodoroWork'), b = App.settings.get('pomodoroBreak');
                         if (this.state.mode === 'work') {
+                            App.hub.audio.playWorkEnd();
                             await this.saveProgress(this.state.totalDuration);
                             if (this.state.sessionCount > 0 && this.state.sessionCount < 4) {
+                                App.hub.audio.playBreakStart();
                                 App.ui.showToast(`Session ${this.state.sessionCount} complete! Time for a break.`, 'success', 8000);
                                 this.resetState(false, 'break', b); this.resume();
                             } else {
                                 App.ui.showToast(`Pomodoro cycle complete! Great work!`, 'success', 10000);
                                 this.state.sessionCount = 0; this.resetState(true, 'work', w);
+                                App.hub.ui.hideMiniTimer();
                                 localStorage.removeItem('pomodoroSession');
                             }
                         } else {
+                            App.hub.audio.playBreakEnd();
                             this.state.sessionCount++; App.ui.showToast(`Break over! Starting session ${this.state.sessionCount} of 4.`, 'info', 5000);
                             this.resetState(false, 'work', w); this.resume();
                         }
@@ -41695,6 +42290,16 @@
                 util: {
                     getTodayISO: () => new Date().toISOString().slice(0, 10),
                     getYesterdayISO: () => new Date(Date.now() - 864e5).toISOString().slice(0, 10),
+                    isoToMs(v) {
+                        if (!v) return 0;
+                        const ms = Date.parse(v);
+                        return Number.isNaN(ms) ? 0 : ms;
+                    },
+                    isoDateToMs(v) {
+                        if (!v) return 0;
+                        const ms = Date.parse(`${v}T00:00:00Z`);
+                        return Number.isNaN(ms) ? 0 : ms;
+                    },
                     formatTime: (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`,
                     formatSecondsToDecimalHours(seconds) { if (!seconds || seconds < 1) return "0.0 hr"; return `${(seconds / 3600).toFixed(1)} hr`; },
                     escapeHtml: (u) => u ? u.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") : '',
@@ -41736,6 +42341,7 @@
                         App.hub.tasks.resetComposer();
                         const modalContainer = document.getElementById('modal-container');
                         if (document.getElementById('productivity-modal')) { this.closeModal(); return; }
+                        this.hideMiniTimer();
 
                         App.hub.state.elementThatOpenedHub = document.activeElement;
                         // Default to split if undefined, or keep existing session state
@@ -41880,7 +42486,10 @@
                             // UPDATED: Logic to get category color
                             const categoryObj = App.settings.get('userCategories').find(c => c.name === t.category) || { name: t.category, colorIndex: 0 };
                             const categoryPillHTML = `<div class="category-pill" style="background-color: ${App.util.getCategoryColor(categoryObj.colorIndex)};">${App.util.getCategoryDisplayName(categoryObj.name)}</div>`;
-                            return `<div class="task-item ${t.status === 'completed' ? 'completed' : ''} ${t.due < today && t.status === 'pending' ? 'is-backlog' : ''}" data-id="${t.id}" data-priority="${t.priority}">${checkboxHTML}<span class="task-title" title="${App.hub.util.escapeHtml(t.title)}">${App.hub.util.escapeHtml(t.title)}</span><div class="task-meta">${t.pomodoroGoal > 0 ? `<div class="pomo-counter-display" title="Pomodoro Progress"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-1a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/><path d="M8 4.5a.5.5 0 0 0-1 0V7H6.5a.5.5 0 0 0 0 1H7v2.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H8V4.5Z"/></svg> <span>${t.pomodoros || 0}/${t.pomodoroGoal}</span></div>` : (t.pomodoros > 0 ? `<div class="pomo-counter-display" title="Pomodoros Completed"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-1a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/><path d="M8 4.5a.5.5 0 0 0-1 0V7H6.5a.5.5 0 0 0 0 1H7v2.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H8V4.5Z"/></svg> <span>${t.pomodoros}</span></div>` : '')}${categoryPillHTML}<span class="due-date ${t.due < today && t.status === 'pending' ? 'overdue' : ''}">${new Date(t.due + 'T00:00:00Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' })}</span><button class="btn-icon" data-action="start-pomodoro" data-task-id="${t.id}" title="Start Pomodoro Cycle"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/></svg></button><button class="btn-icon btn-danger" data-action="delete-task" data-task-id="${t.id}" title="Delete Task"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg></button></div></div>`;
+                            const progressPill = t.pomodoroGoal > 0
+                                ? `<div class="pomo-counter-display" title="Pomodoro Progress"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-1a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/><path d="M8 4.5a.5.5 0 0 0-1 0V7H6.5a.5.5 0 0 0 0 1H7v2.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H8V4.5Z"/></svg> <span>${t.pomodoros || 0}/${t.pomodoroGoal}</span></div>`
+                                : (t.pomodoros > 0 ? `<div class="pomo-counter-display" title="Pomodoros Completed"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-1a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/><path d="M8 4.5a.5.5 0 0 0-1 0V7H6.5a.5.5 0 0 0 0 1H7v2.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H8V4.5Z"/></svg> <span>${t.pomodoros}</span></div>` : '');
+                            return `<div class="task-item ${t.status === 'completed' ? 'completed' : ''} ${t.due < today && t.status === 'pending' ? 'is-backlog' : ''}" data-id="${t.id}" data-priority="${t.priority}"><div class="task-main">${checkboxHTML}<span class="task-title" title="${App.hub.util.escapeHtml(t.title)}">${App.hub.util.escapeHtml(t.title)}</span></div><div class="task-trailing"><div class="task-meta">${progressPill}${categoryPillHTML}<span class="due-date ${t.due < today && t.status === 'pending' ? 'overdue' : ''}">${new Date(t.due + 'T00:00:00Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' })}</span></div><div class="task-actions"><button class="btn-icon" data-action="start-pomodoro" data-task-id="${t.id}" title="Start Pomodoro Cycle"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/></svg></button><button class="btn-icon btn-danger" data-action="delete-task" data-task-id="${t.id}" title="Delete Task"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg></button></div></div></div>`;
                         }).join('');
                     },
 
@@ -41895,10 +42504,14 @@
                     },
 
                     updatePomodoroDisplay() {
-                        const c = document.querySelector('.pomodoro-section'); if (!c) return;
+                        const c = document.querySelector('.pomodoro-section');
                         const { isRunning, timeLeft, task, currentCategory, sessionCount, mode } = App.hub.pomodoro.state;
                         const { percentage, colorValue } = App.hub.pomodoro.getProgressInfo();
                         const p = percentage * 4;
+                        if (!c) {
+                            this.updateMiniTimerWidget();
+                            return;
+                        }
 
                         let pillIndicator = '';
                         if (mode === 'break') {
@@ -41933,13 +42546,113 @@
                     `;
                         document.querySelectorAll('.progress-segment').forEach(el => { el.style.backgroundColor = colorValue; });
                         if (document.getElementById('zen-timer-display')) this.renderZenMode(true);
+                        this.updateMiniTimerWidget();
                     },
                     showPomodoroSettings() {
-                        const modal = document.createElement('div'); modal.id = 'pomodoro-settings-modal'; modal.innerHTML = `<div class="modal-backdrop" id="settings-backdrop"><div id="pomodoro-settings-popup" class="ui-card"><h3>Timer Settings</h3><label>Work Duration (minutes)</label><input type="number" id="pomo-work" class="text-input" value="${App.settings.get('pomodoroWork')}"><label>Break Duration (minutes)</label><input type="number" id="pomo-break" class="text-input" value="${App.settings.get('pomodoroBreak')}"><div style="display:flex; justify-content:flex-end; gap:8px; margin-top:1rem;"><button class="btn btn-secondary" id="settings-cancel">Cancel</button><button class="btn btn-primary" id="settings-save">Save</button></div></div></div>`;
+                        const modal = document.createElement('div'); modal.id = 'pomodoro-settings-modal'; modal.innerHTML = `<div class="modal-backdrop" id="settings-backdrop"><div id="pomodoro-settings-popup" class="ui-card"><h3>Timer Settings</h3><label>Work Duration (minutes)</label><input type="number" id="pomo-work" class="text-input" value="${App.settings.get('pomodoroWork')}"><label>Break Duration (minutes)</label><input type="number" id="pomo-break" class="text-input" value="${App.settings.get('pomodoroBreak')}"><label style="display:flex;align-items:center;gap:8px;font-weight:500;"><input type="checkbox" id="hub-sound-enabled" style="width:16px;height:16px;accent-color:var(--primary-color);" ${App.settings.get('hubSoundEnabled') ? 'checked' : ''}> Productivity sounds</label><div style="display:flex; justify-content:flex-end; gap:8px; margin-top:1rem;"><button class="btn btn-secondary" id="settings-cancel">Cancel</button><button class="btn btn-primary" id="settings-save">Save</button></div></div></div>`;
                         document.getElementById('modal-container').appendChild(modal);
                         document.getElementById('settings-backdrop').addEventListener('click', (e) => { if (e.target === e.currentTarget) modal.remove() });
                         document.getElementById('settings-cancel').addEventListener('click', () => modal.remove());
+                        document.getElementById('hub-sound-enabled').addEventListener('change', (e) => App.settings.set('hubSoundEnabled', !!e.target.checked));
                         document.getElementById('settings-save').addEventListener('click', () => App.hub.pomodoro.changeTime(document.getElementById('pomo-work').value, document.getElementById('pomo-break').value));
+                    },
+                    getMiniTimerWidget() {
+                        return document.getElementById('hub-mini-timer');
+                    },
+                    ensureMiniTimerWidget() {
+                        let widget = this.getMiniTimerWidget();
+                        if (widget) return widget;
+                        widget = document.createElement('div');
+                        widget.id = 'hub-mini-timer';
+                        widget.className = 'hub-mini-timer';
+                        const miniExpandSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 1A.5.5 0 0 1 2 0h4.5a.5.5 0 0 1 0 1H3v2.5a.5.5 0 0 1-1 0V1zm12 0a.5.5 0 0 1 .5-.5H15v2.5a.5.5 0 0 1-1 0V1h-2.5a.5.5 0 0 1 0-1zm0 12a.5.5 0 0 1 .5.5V15h-2.5a.5.5 0 0 1 0-1H14v-2.5a.5.5 0 0 1 1 0zM2 15v-2.5a.5.5 0 0 1 1 0V14h2.5a.5.5 0 0 1 0 1H2a.5.5 0 0 1-.5-.5z"/></svg>';
+                        const miniCloseSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/></svg>';
+                        widget.innerHTML = `<div class="hub-mini-timer-drag"></div><div class="hub-mini-timer-inner"><div class="hub-mini-progress-frame"><div class="progress-segment progress-top"></div><div class="progress-segment progress-right"></div><div class="progress-segment progress-bottom"></div><div class="progress-segment progress-left"></div></div><div class="hub-mini-timer-top"><span id="hub-mini-mode-pill" class="category-pill hub-mini-category-pill" style="background-color:var(--bg-tertiary);color:var(--text-primary);">—</span><button type="button" class="btn-icon" id="hub-mini-open-btn" title="Open Productivity Hub">${miniExpandSvg}</button></div><div id="hub-mini-time" class="hub-mini-time">00:00</div><div class="hub-mini-controls"><button type="button" class="btn-icon" id="hub-mini-playpause-btn" title="Play / Pause"></button><button type="button" class="btn-icon" id="hub-mini-stop-btn" title="Stop & Reset">${miniCloseSvg}</button></div></div>`;
+                        document.body.appendChild(widget);
+                        this.setupMiniTimerDrag(widget);
+                        const openBtn = document.getElementById('hub-mini-open-btn');
+                        const playPauseBtn = document.getElementById('hub-mini-playpause-btn');
+                        const stopBtn = document.getElementById('hub-mini-stop-btn');
+                        openBtn?.addEventListener('click', (e) => { e.stopPropagation(); this.hideMiniTimer(); this.showProductivityModal(); });
+                        playPauseBtn?.addEventListener('click', (e) => { e.stopPropagation(); App.hub.pomodoro.togglePlayPause(); });
+                        stopBtn?.addEventListener('click', async (e) => { e.stopPropagation(); await App.hub.pomodoro.stopAndReset(); this.hideMiniTimer(); });
+                        const saved = localStorage.getItem('nk-hub-mini-timer-pos');
+                        if (saved) {
+                            try {
+                                const pos = JSON.parse(saved);
+                                widget.style.top = pos.top;
+                                widget.style.right = pos.right;
+                            } catch (e) { }
+                        }
+                        return widget;
+                    },
+                    setupMiniTimerDrag(widget) {
+                        let startX = 0, startY = 0, initialTop = 0, initialRight = 0, moved = false;
+                        const handle = widget.querySelector('.hub-mini-timer-drag') || widget;
+                        const onMove = (e) => {
+                            const dx = e.clientX - startX;
+                            const dy = e.clientY - startY;
+                            if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+                            const maxTop = window.innerHeight - widget.offsetHeight - 12;
+                            const maxRight = window.innerWidth - widget.offsetWidth - 12;
+                            widget.style.top = `${Math.max(12, Math.min(initialTop + dy, maxTop))}px`;
+                            widget.style.right = `${Math.max(12, Math.min(initialRight - dx, maxRight))}px`;
+                        };
+                        const onUp = () => {
+                            document.removeEventListener('mousemove', onMove);
+                            document.removeEventListener('mouseup', onUp);
+                            if (moved) localStorage.setItem('nk-hub-mini-timer-pos', JSON.stringify({ top: widget.style.top, right: widget.style.right }));
+                            setTimeout(() => { moved = false; }, 80);
+                        };
+                        handle.addEventListener('mousedown', (e) => {
+                            if (e.target.closest('.btn-icon')) return;
+                            moved = false;
+                            startX = e.clientX;
+                            startY = e.clientY;
+                            const rect = widget.getBoundingClientRect();
+                            initialTop = rect.top;
+                            initialRight = window.innerWidth - rect.right;
+                            document.addEventListener('mousemove', onMove);
+                            document.addEventListener('mouseup', onUp);
+                            e.preventDefault();
+                        });
+                    },
+                    showMiniTimer() {
+                        const widget = this.ensureMiniTimerWidget();
+                        widget.classList.add('visible');
+                        this.updateMiniTimerWidget();
+                    },
+                    hideMiniTimer() {
+                        const widget = this.getMiniTimerWidget();
+                        widget?.classList.remove('visible');
+                    },
+                    updateMiniTimerWidget() {
+                        const widget = this.getMiniTimerWidget();
+                        if (!widget || !widget.classList.contains('visible')) return;
+                        const { isRunning, timeLeft, mode, sessionCount, currentCategory } = App.hub.pomodoro.state;
+                        const { percentage, colorValue } = App.hub.pomodoro.getProgressInfo();
+                        const p = percentage * 4;
+                        const modePill = document.getElementById('hub-mini-mode-pill');
+                        const timeEl = document.getElementById('hub-mini-time');
+                        const playPauseBtn = document.getElementById('hub-mini-playpause-btn');
+                        if (modePill) {
+                            if (mode === 'break') {
+                                modePill.outerHTML = `<span id="hub-mini-mode-pill" class="break-pill">Break</span>`;
+                            } else {
+                                const categoryObj = App.settings.get('userCategories').find(cat => cat.name === currentCategory) || { name: currentCategory || 'General', colorIndex: 0 };
+                                const bg = App.util.getCategoryColor(categoryObj.colorIndex);
+                                const label = App.util.getCategoryDisplayName(categoryObj.name);
+                                const safe = App.hub.util.escapeHtml(label);
+                                modePill.outerHTML = `<span id="hub-mini-mode-pill" class="category-pill hub-mini-category-pill" style="background-color:${bg};" title="${safe}">${safe}</span>`;
+                            }
+                        }
+                        if (timeEl) timeEl.textContent = App.hub.util.formatTime(timeLeft);
+                        if (playPauseBtn) playPauseBtn.innerHTML = isRunning ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>';
+                        widget.querySelector('.progress-top').style.width = `${Math.min(1, p) * 100}%`;
+                        widget.querySelector('.progress-right').style.height = `${p > 1 ? Math.min(1, p - 1) * 100 : 0}%`;
+                        widget.querySelector('.progress-bottom').style.width = `${p > 2 ? Math.min(1, p - 2) * 100 : 0}%`;
+                        widget.querySelector('.progress-left').style.height = `${p > 3 ? Math.min(1, p - 3) * 100 : 0}%`;
+                        widget.querySelectorAll('.progress-segment').forEach(el => { el.style.backgroundColor = colorValue; });
                     },
 
                     renderZenMode(isUpdate = false) {
@@ -42016,6 +42729,8 @@
                         document.body.classList.remove('hub-open'); // Ensures header reappears
                         document.getElementById('modal-container').innerHTML = '';
                         document.removeEventListener('keydown', App.events.handleProductivityHubKeyDown, true);
+                        if (App.hub.pomodoro.state.isRunning) this.showMiniTimer();
+                        else this.hideMiniTimer();
                     },
                 }
             },
@@ -45141,10 +45856,13 @@
 
                         // STATE MACHINE FOR HIERARCHICAL MIND MAP
                         const lastNodes = { 0: rootNode.id };
+                        // Track the most recent mindmap node level so highlighted images
+                        let lastMindmapLevel = 1;
 
                         snippetsData.forEach((snippet) => {
-                            const level = snippet.level || 1;
-                            const nodeText = snippet.isImage ? `<img src="${snippet.src}">` : snippet.text;
+                            const isImageSnippet = !!snippet.isImage;
+                            const level = isImageSnippet ? lastMindmapLevel : (snippet.level || 1);
+                            const nodeText = isImageSnippet ? `<img src="${snippet.src}">` : snippet.text;
                             const childDims = this.calculateNodeDimensions(nodeText, 'child');
 
                             const nodeData = {
@@ -45168,8 +45886,12 @@
                                 parentNode.hasChildren = true;
                             }
 
-                            lastNodes[level] = snippet.id;
-                            Object.keys(lastNodes).forEach(k => { if (parseInt(k) > level) delete lastNodes[k]; });
+                            // Images are "attachments" to the current mindmap position.
+                            if (!isImageSnippet) {
+                                lastMindmapLevel = level;
+                                lastNodes[level] = snippet.id;
+                                Object.keys(lastNodes).forEach(k => { if (parseInt(k) > level) delete lastNodes[k]; });
+                            }
                         });
                     });
 
@@ -53021,7 +53743,16 @@
                                     App.router.navigateTo('flashcard');
                                     break;
                                 case 'filterNotesByTag':
-                                    App.events.showTagModal(item.id);
+                                    // For navigation parity with highlight snippets: jump to the first
+                                    // occurrence of this supertag.
+                                    const articlesWithTag = (App.state.articles || [])
+                                        .filter(a => a.tags && a.tags.includes(item.id))
+                                        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                                    if (articlesWithTag.length > 0) {
+                                        App.events.navigateToTagInArticle(articlesWithTag[0].id, item.id, true);
+                                    } else {
+                                        App.ui.showToast('No articles found for this tag.', { type: 'info' });
+                                    }
                                     break;
                             }
                             break;
