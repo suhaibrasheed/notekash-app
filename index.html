@@ -1211,6 +1211,7 @@
             font-size: 1.25rem;
             font-weight: 700;
             background: linear-gradient(135deg, var(--primary-color), var(--accent-color, var(--primary-color-hover)));
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -1885,6 +1886,7 @@
             margin: 0;
             background: linear-gradient(45deg, #4facfe, #00f2fe);
             background-clip: text;
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -1897,12 +1899,14 @@
         [data-theme="light"] .library-title {
             background: linear-gradient(45deg, #FF8C42, #FFD05A, #00A896, #A2E869, #05A387);
             background-clip: text;
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         [data-theme="dark"] .library-title {
             background: linear-gradient(45deg, #E0B453, #E6845E, #C159A1);
+            background-clip: text;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -1911,6 +1915,7 @@
         [data-theme="sepia"] .library-title,
         .focus-mode-title {
             background: linear-gradient(45deg, #8c6d46, #704214);
+            background-clip: text;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -2525,11 +2530,9 @@
             margin: 0 0.1em;
             border-radius: 9999px;
 
-            background: linear-gradient(
-                120deg,
-                color-mix(in srgb, var(--text-magenta) 16%, transparent) 0%,
-                color-mix(in srgb, var(--text-magenta) 8%, transparent) 100%
-            );
+            background: linear-gradient(120deg,
+                    color-mix(in srgb, var(--text-magenta) 16%, transparent) 0%,
+                    color-mix(in srgb, var(--text-magenta) 8%, transparent) 100%);
             border: 1px solid color-mix(in srgb, var(--text-magenta) 38%, transparent);
             color: color-mix(in srgb, var(--text-primary) 35%, var(--text-magenta) 65%);
             font-weight: 850;
@@ -2555,11 +2558,9 @@
             transform: translateY(-0.5px);
             border-color: color-mix(in srgb, var(--text-magenta) 60%, transparent 40%);
             box-shadow: 0 10px 26px -14px color-mix(in srgb, var(--text-magenta) 60%, transparent), inset 0 0 0 1px rgba(255, 255, 255, 0.10);
-            background: linear-gradient(
-                120deg,
-                color-mix(in srgb, var(--text-magenta) 20%, transparent) 0%,
-                color-mix(in srgb, var(--text-magenta) 10%, transparent) 100%
-            );
+            background: linear-gradient(120deg,
+                    color-mix(in srgb, var(--text-magenta) 20%, transparent) 0%,
+                    color-mix(in srgb, var(--text-magenta) 10%, transparent) 100%);
         }
 
         .rendered-tag:hover::after {
@@ -5282,11 +5283,9 @@
         .cloze-revealed-wrapper {
             /* Ambient-sensitive frosted glass around revealed cloze */
             display: inline-block;
-            background: linear-gradient(
-                180deg,
-                rgba(var(--primary-color-rgb), 0.20) 0%,
-                rgba(var(--primary-color-rgb), 0.06) 100%
-            );
+            background: linear-gradient(180deg,
+                    rgba(var(--primary-color-rgb), 0.20) 0%,
+                    rgba(var(--primary-color-rgb), 0.06) 100%);
             border-radius: 10px;
             padding: 0.10em 0.50em;
             margin: 0 -0.1em;
@@ -5385,8 +5384,27 @@
         }
 
         .study-progress-bar::-webkit-progress-value {
-            background-color: var(--primary-color);
-            transition: width 0.3s ease;
+            background: linear-gradient(90deg,
+                    var(--primary-color) 0%,
+                    color-mix(in srgb, var(--primary-color) 90%, white) 25%,
+                    color-mix(in srgb, var(--primary-color) 80%, white) 50%,
+                    color-mix(in srgb, var(--primary-color) 90%, white) 75%,
+                    var(--primary-color) 100%);
+            background-size: 200% 100%;
+            animation: studyProgressFlow 3s linear infinite;
+            box-shadow: 0 0 12px color-mix(in srgb, var(--primary-color) 40%, transparent);
+            transition: width 0.45s cubic-bezier(0.19, 1, 0.22, 1);
+            border-radius: 4px;
+        }
+
+        @keyframes studyProgressFlow {
+            from {
+                background-position: 200% 0;
+            }
+
+            to {
+                background-position: -200% 0;
+            }
         }
 
         .study-progress-wrapper {
@@ -10096,6 +10114,8 @@
             font-weight: 700;
             margin: 1.5rem 0;
             background: linear-gradient(45deg, var(--primary-color), var(--primary-color-hover));
+            background-clip: text;
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -11177,11 +11197,9 @@
             border-bottom: none !important;
             padding: 0.18em 0.45em !important;
             border-radius: 9999px !important;
-            background: linear-gradient(
-                120deg,
-                color-mix(in srgb, var(--text-magenta) 16%, transparent) 0%,
-                color-mix(in srgb, var(--text-magenta) 8%, transparent) 100%
-            ) !important;
+            background: linear-gradient(120deg,
+                    color-mix(in srgb, var(--text-magenta) 16%, transparent) 0%,
+                    color-mix(in srgb, var(--text-magenta) 8%, transparent) 100%) !important;
             border-color: color-mix(in srgb, var(--text-magenta) 38%, transparent) !important;
         }
 
@@ -11563,6 +11581,7 @@
             margin: 0 0 0.75rem 0;
             background-image: var(--action-button-gradient);
             background-size: 100%;
+            background-clip: text;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -13299,6 +13318,7 @@
             background-size: 200% auto;
             color: #000;
             background-clip: text;
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: witty-text-glow 5s linear infinite;
@@ -14098,6 +14118,7 @@
             margin: 0.8em 0 0.4em 0;
             font-size: 1.1em;
             background: linear-gradient(120deg, var(--primary-color), #a78bfa);
+            background-clip: text;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -14403,6 +14424,10 @@
             border-radius: 50%;
             pointer-events: none;
             z-index: -1;
+        }
+
+        .welcome-container::before,
+        .welcome-container::after {
             filter: blur(90px);
             opacity: 0.18;
         }
@@ -14444,6 +14469,7 @@
                     color-mix(in srgb, var(--primary-color) 70%, #a855f7) 70%,
                     var(--primary-color) 100%);
             background-size: 300% auto;
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -15851,6 +15877,7 @@
             background-size: 200% auto;
             color: #000;
             background-clip: text;
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: witty-text-glow 6s linear infinite;
@@ -16540,8 +16567,10 @@
 
         .upsell-progress {
             height: 100%;
-            background-color: var(--primary-color);
+            background: linear-gradient(90deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, white));
             border-radius: 3px;
+            transition: width 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            box-shadow: 0 0 8px color-mix(in srgb, var(--primary-color) 30%, transparent);
         }
 
         .upsell-cta {
@@ -16588,8 +16617,10 @@
 
         .premium-progress {
             height: 100%;
-            background-color: var(--primary-color);
+            background: linear-gradient(90deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, white));
             border-radius: 3px;
+            transition: width 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            box-shadow: 0 0 8px color-mix(in srgb, var(--primary-color) 30%, transparent);
         }
 
         .premium-cta-text {
@@ -16821,6 +16852,7 @@
         /* --- NEW: Reusable Gradient Text Style --- */
         .btn-gradient-text {
             background-size: 200% auto;
+            background-clip: text;
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
@@ -17416,118 +17448,241 @@
 
 
         /*  PRO PRESENTER — LIVING CELL (Mode 1)  */
-        .pro-presenter-wave-overlay::before {
-            border: 4px solid color-mix(in srgb, var(--primary-color) 40%, transparent);
-            margin: 4px;
-            box-shadow: inset 0 0 50px color-mix(in srgb, var(--primary-color) 15%, transparent),
-                0 0 50px color-mix(in srgb, var(--primary-color) 15%, transparent);
-            animation: livingCellBreathing 13s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-            opacity: 0.6;
-            mix-blend-mode: screen;
+        /* Enhanced Organic Double Membrane Effect */
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay {
+            box-shadow: inset 0 0 100px color-mix(in srgb, var(--primary-color) 5%, transparent);
+            background: radial-gradient(circle at 50% 50%,
+                    transparent 75%,
+                    color-mix(in srgb, var(--primary-color) 2%, transparent) 90%,
+                    color-mix(in srgb, var(--primary-color) 4%, transparent) 100%);
         }
 
-        .pro-presenter-wave-overlay::after {
-            border: 2px solid color-mix(in srgb, var(--text-primary) 30%, transparent);
-            margin: 12px;
-            box-shadow: inset 0 0 25px color-mix(in srgb, var(--primary-color) 25%, transparent),
-                0 0 25px color-mix(in srgb, var(--primary-color) 25%, transparent);
-            animation: livingCellBreathingInner 10s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate-reverse;
-            opacity: 0.4;
-        }
-
-        [data-theme="light"] .pro-presenter-wave-overlay::before {
-            mix-blend-mode: multiply;
-        }
-
-        @keyframes livingCellBreathing {
-            0% {
-                transform: scale(0.995);
-                opacity: 0.4;
-                box-shadow: inset 0 0 20px color-mix(in srgb, var(--primary-color) 5%, transparent),
-                    0 0 20px color-mix(in srgb, var(--primary-color) 5%, transparent);
-            }
-
-            100% {
-                transform: scale(1.002);
-                opacity: 0.8;
-                box-shadow: inset 0 0 70px color-mix(in srgb, var(--primary-color) 25%, transparent),
-                    0 0 70px color-mix(in srgb, var(--primary-color) 25%, transparent);
-                border-color: color-mix(in srgb, var(--primary-color) 60%, transparent);
-            }
-        }
-
-        @keyframes livingCellBreathingInner {
-            0% {
-                transform: scale(0.992);
-                opacity: 0.3;
-                border-color: color-mix(in srgb, var(--text-primary) 15%, transparent);
-                margin: 16px;
-                border-width: 2px;
-            }
-
-            100% {
-                transform: scale(1.005);
-                opacity: 0.9;
-                border-color: color-mix(in srgb, var(--primary-color) 50%, transparent);
-                box-shadow: inset 0 0 40px color-mix(in srgb, var(--primary-color) 40%, transparent),
-                    0 0 40px color-mix(in srgb, var(--primary-color) 40%, transparent);
-                margin: 4px;
-                border-width: 4px;
-                filter: brightness(1.3) contrast(1.2);
-            }
-        }
-
-        /*  PRO PRESENTER — LIQUID GLOW */
-
-        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay {
-            overflow: visible;
-            border-radius: 20px;
-            border: 2px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
-            box-shadow: inset 0 0 20px color-mix(in srgb, var(--primary-color) 5%, transparent);
-        }
-
-        /* Ambient Outer Glow */
-        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay::before {
-            content: "";
-            position: absolute;
-            inset: 0px;
-            border-radius: inherit;
-            box-shadow: 0 0 60px 10px var(--primary-color), 0 0 100px 20px color-mix(in srgb, var(--primary-color) 60%, transparent);
-            opacity: 0.6;
-            animation: liquidGlowPulse 12s ease-in-out infinite alternate;
+        /* Organelle Blobs */
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::before,
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::after {
             z-index: -1;
         }
 
-        /* Extra soft bright halo */
-        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay::after {
-            content: "";
+        /* Note: Using pseudo elements on the wave overlay itself for performance */
+
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::before,
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::after {
+            content: '';
             position: absolute;
-            inset: -4px;
-            border-radius: 24px;
-            border: 4px solid var(--primary-color);
-            filter: blur(8px);
-            opacity: 0.8;
-            animation: liquidGlowPulse 12s ease-in-out infinite alternate-reverse;
+            pointer-events: none;
+            border-radius: inherit;
+            mix-blend-mode: screen;
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        @keyframes liquidGlowPulse {
-            0% {
-                opacity: 0.2;
-                filter: blur(8px);
-                transform: scale(0.99);
+        /* Outer Membrane (Eczo-membrane) — Positioned to hug the progress bar area */
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::before {
+            inset: -2px;
+            /* Hug closer to edges */
+            border: 4px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
+            box-shadow:
+                0 0 40px color-mix(in srgb, var(--primary-color) 15%, transparent),
+                inset 0 0 60px color-mix(in srgb, var(--primary-color) 15%, transparent);
+            animation: livingCellOuterWarp 20s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+            opacity: 0.8;
+            filter: blur(0.5px) saturate(1.4);
+            z-index: 1;
+        }
+
+        /* Inner Membrane (Endo-membrane) — Dynamic Collision Layer */
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::after {
+            inset: 12px;
+            border: 1.5px solid color-mix(in srgb, var(--primary-color) 40%, transparent);
+            box-shadow:
+                0 0 20px color-mix(in srgb, var(--primary-color) 20%, transparent),
+                inset 0 0 30px color-mix(in srgb, var(--primary-color) 20%, transparent);
+            animation: livingCellInnerWarp 15s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+            opacity: 0.6;
+            filter: blur(0.3px) brightness(1.2) saturate(1.6);
+            z-index: 2;
+        }
+
+        [data-theme="light"] [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::before,
+        [data-theme="light"] [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::after {
+            mix-blend-mode: multiply;
+            opacity: 0.45;
+        }
+
+        /* SYNCED MEMBRANE WARP — Creates GLOW when they meet */
+        @keyframes livingCellOuterWarp {
+
+            0%,
+            100% {
+                border-radius: 20px 24px 22px 26px;
+                transform: scale(1);
+                opacity: 0.8;
+                filter: blur(0.5px) brightness(1);
             }
 
             50% {
-                opacity: 0.9;
-                filter: blur(15px);
-                transform: scale(1.02);
+                border-radius: 28px 22px 28px 22px;
+                transform: scale(1.015);
+                /* Expand slightly */
+                opacity: 1;
+                /* Peak brightness */
+                filter: blur(0.8px) brightness(1.4);
+                border-color: var(--primary-color);
+            }
+        }
+
+        @keyframes livingCellInnerWarp {
+
+            0%,
+            100% {
+                border-radius: 14px 18px 16px 20px;
+                transform: scale(1);
+                inset: 12px;
+                opacity: 0.6;
+                filter: blur(0.3px) brightness(1.2);
             }
 
-            100% {
-                opacity: 0.5;
-                filter: blur(6px);
-                transform: scale(1);
+            50% {
+                border-radius: 22px 28px 22px 28px;
+                /* Meet the outer membrane's shape */
+                transform: scale(1.025);
+                /* Collision point */
+                inset: 4px;
+                /* Move VERY close to outer membrane */
+                opacity: 0.95;
+                filter: blur(1px) brightness(2) contrast(1.2);
+                /* THE BRIGHT GLOW EFFECT */
+                border-color: #ffffff;
+                box-shadow: 0 0 40px #ffffff, inset 0 0 40px #ffffff;
             }
+        }
+
+        /* Reactivity */
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay.is-clicking::before {
+            transform: scale(1.025) !important;
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 100px color-mix(in srgb, var(--primary-color) 40%, transparent),
+                inset 0 0 100px color-mix(in srgb, var(--primary-color) 40%, transparent) !important;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.1s ease !important;
+        }
+
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay.is-clicking::after {
+            transform: scale(0.97) !important;
+            inset: 28px !important;
+            border-color: var(--primary-color) !important;
+            opacity: 1 !important;
+            filter: brightness(2) !important;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), inset 0.2s ease !important;
+        }
+
+        /*  PRO PRESENTER — LIQUID GLOW */
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none;
+            overflow: hidden;
+            inset: 3px !important;
+            top: 5px !important;
+            border-radius: 30px !important;
+        }
+
+        /* The Shimmer - The Bright Comet Head */
+        /* Increased thickness and brightness for a more substantial "liquid" feel */
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay::before {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            padding: 3.5px;
+            /* Thicker for premium prominence */
+            background: conic-gradient(from var(--liquid-angle, 0deg),
+                    transparent 0deg,
+                    color-mix(in srgb, var(--primary-color) 60%, transparent) 4deg,
+                    #ffffff 14deg,
+                    color-mix(in srgb, var(--primary-color) 60%, transparent) 26deg,
+                    transparent 45deg,
+                    transparent 180deg,
+                    color-mix(in srgb, var(--primary-color) 60%, transparent) 184deg,
+                    #ffffff 194deg,
+                    color-mix(in srgb, var(--primary-color) 60%, transparent) 206deg,
+                    transparent 225deg);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            animation: liquidModeBorderOrbit 24s linear infinite;
+            filter: drop-shadow(0 0 8px var(--primary-color)) brightness(1.6);
+            z-index: 2;
+        }
+
+        /* The Comet Atmosphere - Pulsating Glow */
+        /* Nicely designed glow that pulsates (breathes) while following the shimmer */
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            padding: 15px;
+            background: conic-gradient(from var(--liquid-angle, 0deg),
+                    transparent 0deg,
+                    color-mix(in srgb, var(--primary-color) 80%, white) 14deg,
+                    color-mix(in srgb, var(--primary-color) 40%, transparent) 70deg,
+                    transparent 110deg,
+                    transparent 180deg,
+                    color-mix(in srgb, var(--primary-color) 80%, white) 194deg,
+                    color-mix(in srgb, var(--primary-color) 40%, transparent) 250deg,
+                    transparent 290deg);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            filter: blur(45px);
+            opacity: 0.2;
+            animation:
+                liquidModeBorderOrbit 24s linear infinite,
+                liquidCometPulse 4s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes liquidCometPulse {
+
+            0%,
+            100% {
+                opacity: 0.15;
+                filter: blur(45px) brightness(1);
+            }
+
+            50% {
+                opacity: 0.45;
+                filter: blur(60px) brightness(1.3);
+            }
+        }
+
+        @property --liquid-angle {
+            syntax: "<angle>";
+            inherits: false;
+            initial-value: 0deg;
+        }
+
+        @keyframes liquidModeBorderOrbit {
+            from {
+                --liquid-angle: 0deg;
+            }
+
+            to {
+                --liquid-angle: 360deg;
+            }
+        }
+
+        /* Reactivity for Liquid Glow - Atmospheric expansion on click */
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay.is-clicking::before {
+            padding: 8px;
+            filter: drop-shadow(0 0 30px var(--primary-color)) brightness(1.5);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay.is-clicking::after {
+            opacity: 0.55;
+            padding: 40px;
+            filter: blur(70px) brightness(1.5);
+            transition: all 0.3s ease;
         }
 
 
@@ -17544,75 +17699,147 @@
             inset: 0;
             border-radius: inherit;
             background: transparent;
-            animation: breatheExpand 10s ease-in-out infinite;
+            /* 14s Meditative Cycle: Restored to a premium, subtle elegance */
+            animation: breatheExpand 14s cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite;
+            pointer-events: none;
+            will-change: transform, box-shadow, opacity;
+            z-index: 10;
         }
 
         @keyframes breatheExpand {
 
             0%,
             100% {
-                border: 1px solid color-mix(in srgb, var(--primary-color) 60%, transparent);
-                box-shadow: 0 0 4px color-mix(in srgb, var(--primary-color) 40%, transparent),
-                    inset 0 0 4px color-mix(in srgb, var(--primary-color) 20%, transparent);
-                opacity: 0.5;
+                /* Barely-there resting state - nearly invisible for maximum focus */
+                border: 1px solid color-mix(in srgb, var(--primary-color) 15%, transparent);
+                box-shadow:
+                    0 0 8px color-mix(in srgb, var(--primary-color) 4%, transparent),
+                    inset 0 0 5px color-mix(in srgb, var(--primary-color) 2%, transparent);
+                opacity: 0.25;
+                transform: scale(1);
             }
 
+            /* Peak Expansion - Refined & Subtle */
             50% {
-                border: 8px solid var(--primary-color);
-                box-shadow: 0 0 40px var(--primary-color),
-                    inset 0 0 30px color-mix(in srgb, var(--primary-color) 40%, transparent);
-                opacity: 1;
-                filter: brightness(1.4);
+                /* Dialed back to 5.5px for a high-end "ambient" rather than "active" feel */
+                border: 5.5px solid color-mix(in srgb, var(--primary-color) 92%, white);
+                box-shadow:
+                    0 0 45px color-mix(in srgb, var(--primary-color) 35%, transparent),
+                    /* Ambient Bloom */
+                    0 0 20px color-mix(in srgb, var(--primary-color) 25%, transparent),
+                    /* Core Halo */
+                    0 0 5px color-mix(in srgb, var(--primary-color) 12%, transparent),
+                    inset 0 0 15px color-mix(in srgb, var(--primary-color) 18%, transparent);
+                opacity: 0.8;
+                filter: brightness(1.14) blur(0.4px);
+                /* Premium soft-light finish */
+                transform: scale(1.004);
             }
         }
 
 
-        /*  PRO PRESENTER — ELECTRIC FLOW (Mode 4)                    */
-
-        @property --electric-angle {
-            syntax: "<angle>";
-            inherits: false;
-            initial-value: 0deg;
-        }
-
-        @keyframes electricFlowAnim {
-            0% {
-                --electric-angle: 0deg;
-            }
-
-            100% {
-                --electric-angle: 360deg;
-            }
-        }
+        /*  PRO PRESENTER — PHANTOM FLUX (Mode 4)                                   */
+        /*  Technique: slow-sweep background-position on masked border track         */
+        /*  Character: elegant, slow-moving light ribbons (Velvet Flux)              */
+        /*  Presenter-friendly: high-end subtle movement, non-distracting colors     */
 
         [data-pro-presenter-mode="electric-flow"] .pro-presenter-wave-overlay {
-            overflow: visible;
-            box-shadow: 0 0 20px color-mix(in srgb, var(--primary-color) 15%, transparent) inset;
+            overflow: hidden;
+            inset: 3px !important;
+            top: 5px !important;
+            border-radius: 30px !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none;
         }
 
+        /* ── Layer 1: Silky Light Ribbon ────────────────────────────────────────── */
+        /* A wide, soft-edged light sweep that flows slowly around the frame.        */
         [data-pro-presenter-mode="electric-flow"] .pro-presenter-wave-overlay::before {
             content: "";
             position: absolute;
-            inset: -4px;
-            border-radius: 24px;
-            background: conic-gradient(from var(--electric-angle),
-                    transparent 50%,
-                    color-mix(in srgb, var(--primary-color) 20%, transparent) 80%,
-                    var(--primary-color) 99%,
-                    #ffffff 100%);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            inset: 1px;
+            padding: 3.5px;
+            /* Wide, elegant velvet-like gradients — no sharp edges */
+            background: repeating-linear-gradient(-45deg,
+                    transparent 0px,
+                    transparent 100px,
+                    color-mix(in srgb, var(--primary-color) 20%, transparent) 150px,
+                    color-mix(in srgb, var(--primary-color) 85%, white) 200px,
+                    color-mix(in srgb, var(--primary-color) 20%, transparent) 250px,
+                    transparent 300px,
+                    transparent 600px);
+            background-size: 1200px 1200px;
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
             mask-composite: exclude;
-            padding: 4px;
-            animation: electricFlowAnim 7s linear infinite;
-            filter: drop-shadow(0 0 10px var(--primary-color)) drop-shadow(0 0 4px #ffffff);
+            /* Drastically slowed down for presentation focus */
+            animation: pfFlux 11.5s linear infinite;
+            filter: drop-shadow(0 0 8px var(--primary-color)) brightness(1.2);
+            z-index: 12;
+            opacity: 0.9;
+        }
+
+        /* ── Layer 2: Deep Atmospheric Bloom ────────────────────────────────────── */
+        /* A slow breathing opacity pulse that adds weight and depth to the border.  */
+        [data-pro-presenter-mode="electric-flow"] .pro-presenter-wave-overlay::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            padding: 15px;
+            background: linear-gradient(90deg,
+                    transparent,
+                    color-mix(in srgb, var(--primary-color) 45%, transparent),
+                    transparent);
+            background-size: 200% 100%;
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            filter: blur(14px);
+            animation:
+                pfFlux 18s linear infinite,
+                pfBreath 8s ease-in-out infinite;
+            z-index: 11;
+        }
+
+        /* Smooth, non-distracting movement keyframes */
+        @keyframes pfFlux {
+            from {
+                background-position: 0px 0px;
+            }
+
+            to {
+                background-position: 1200px 1200px;
+            }
+        }
+
+        @keyframes pfBreath {
+
+            0%,
+            100% {
+                opacity: 0.15;
+                filter: blur(14px) brightness(1);
+            }
+
+            50% {
+                opacity: 0.55;
+                filter: blur(22px) brightness(1.3);
+            }
         }
 
 
-        /*  PRO PRESENTER — SONIC SPIKE (Mode 5)                   */
-        /* A music-visualizer-inspired border: spiky radial pulses ride
-           along all four edges, synced to the ambiance theme color.    */
+        /*  PRO PRESENTER — SONIC SPIKE (Mode 5)   */
+        /* A music-visualizer-inspired border  */
 
         @property --spike-angle {
             syntax: "<angle>";
@@ -17798,50 +18025,74 @@
 
         /* ── Pro Cursor ── */
         .pro-presenter-cursor-glow {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
             position: fixed;
+            width: 12px;
+            height: 12px;
+            /* Premium multicolor cursor using both essence and accent colors from the ambiance */
+            background: color-mix(in srgb, var(--text-primary) 12%, transparent) !important;
+            border: 2px solid var(--text-primary) !important;
+            border-radius: 50%;
             pointer-events: none;
-            z-index: 9999999;
+            z-index: 999999;
             transform: translate(-50%, -50%);
-            opacity: 0;
-            background: var(--bg-primary, #ffffff);
-            border: 2.5px solid var(--primary-color);
             box-shadow:
-                0 0 15px color-mix(in srgb, var(--primary-color) 50%, transparent),
-                inset 0 0 4px color-mix(in srgb, var(--text-primary) 20%, transparent),
-                0 0 0 6px color-mix(in srgb, var(--text-primary) 8%, transparent);
-            animation: cursorPulse 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-            transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+                0 0 20px color-mix(in srgb, var(--text-primary) 50%, transparent),
+                0 0 40px color-mix(in srgb, var(--primary-color) 40%, transparent),
+                0 0 0 3px color-mix(in srgb, var(--text-primary) 10%, transparent);
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                opacity 0.35s ease,
+                border-color 0.4s ease;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            opacity: 0;
             will-change: transform, left, top;
+            animation: proCursorBreathing 2.4s ease-in-out infinite;
         }
 
-        @keyframes cursorPulse {
+        /* Trail particle removed as per user request */
+        .pro-presenter-trail-particle {
+            display: none !important;
+        }
+
+        @keyframes proCursorBreathing {
 
             0%,
             100% {
-                box-shadow: 0 0 15px color-mix(in srgb, var(--primary-color) 50%, transparent), inset 0 0 4px color-mix(in srgb, var(--text-primary) 20%, transparent), 0 0 0 6px color-mix(in srgb, var(--text-primary) 8%, transparent);
+                box-shadow:
+                    0 0 15px color-mix(in srgb, var(--primary-color) 50%, transparent),
+                    0 0 0 2px color-mix(in srgb, var(--text-primary) 15%, transparent);
+                transform: translate(-50%, -50%) scale(1);
             }
 
             50% {
-                box-shadow: 0 0 25px 4px color-mix(in srgb, var(--primary-color) 70%, transparent), inset 0 0 6px color-mix(in srgb, var(--text-primary) 30%, transparent), 0 0 0 10px color-mix(in srgb, var(--text-primary) 3%, transparent);
+                box-shadow:
+                    0 0 30px color-mix(in srgb, var(--text-primary) 70%, transparent),
+                    0 0 0 5px color-mix(in srgb, var(--primary-color) 25%, transparent);
+                transform: translate(-50%, -50%) scale(1.18);
+                background: color-mix(in srgb, var(--text-primary) 10%, var(--primary-color) 10%) !important;
+                border-color: var(--text-primary) !important;
             }
         }
 
         /* Click burst */
         .pro-presenter-cursor-glow.is-clicking {
-            transform: translate(-50%, -50%) scale(0.65) !important;
-            background: var(--primary-color) !important;
-            border-color: var(--text-primary) !important;
-            box-shadow: 0 0 35px 10px color-mix(in srgb, var(--primary-color) 80%, transparent), 0 0 0 14px color-mix(in srgb, var(--text-primary) 15%, transparent) !important;
-            transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.1s ease, border-color 0.1s ease !important;
+            transform: translate(-50%, -50%) scale(0.7) !important;
+            background: #ffffff !important;
+            border-color: #ffffff !important;
+            box-shadow:
+                0 0 30px 10px color-mix(in srgb, var(--primary-color) 85%, transparent),
+                0 0 0 15px color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.1s ease !important;
         }
 
         body.is-pro-presenter-active,
         body.is-pro-presenter-active * {
             cursor: none !important;
         }
+
+
 
         body.is-pro-presenter-active .pro-presenter-cursor-glow {
             opacity: 0.88;
@@ -17875,26 +18126,27 @@
         body.is-pro-presenter-active .focus-mode-body table:hover,
         body.is-pro-presenter-active .focus-mode-body .nk-mcq-block:hover,
         body.is-pro-presenter-active .focus-mode-body .nk-accordion:hover {
-            transform: translateY(-4px);
-            /* Removed horizontal scale to prevent border cutoff */
+            transform: scale(1.005);
+            /* Subtler non-directional lift */
             z-index: 100;
             position: relative;
-            box-shadow: 0 15px 40px color-mix(in srgb, var(--primary-color) 18%, transparent),
-                0 5px 15px color-mix(in srgb, var(--text-primary) 8%, transparent);
-            filter: brightness(1.08);
-            outline: 1px solid color-mix(in srgb, var(--primary-color) 30%, transparent);
+            box-shadow: 0 0 25px color-mix(in srgb, var(--primary-color) 15%, transparent);
+            filter: brightness(1.05);
+            outline: 1.5px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
             outline-offset: 4px;
         }
 
         .pro-presenter-ripple {
             position: fixed;
             border-radius: 50%;
-            border: 2px solid var(--primary-color);
+            border: 2.5px solid var(--text-primary);
             transform: scale(0.4);
             animation: proRippleAnim 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
             pointer-events: none;
             z-index: 9999999;
-            box-shadow: 0 0 20px color-mix(in srgb, var(--primary-color) 60%, transparent);
+            box-shadow:
+                0 0 20px color-mix(in srgb, var(--text-primary) 60%, transparent),
+                0 0 40px color-mix(in srgb, var(--primary-color) 40%, transparent);
             background: color-mix(in srgb, var(--primary-color) 15%, transparent);
         }
 
@@ -17915,41 +18167,118 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 5px;
-            background: color-mix(in srgb, var(--bg-secondary) 40%, transparent);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            height: 4px;
+            background: rgba(10, 8, 6, 0.45);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             z-index: 9999999;
             opacity: 0;
-            transition: opacity 0.5s ease;
+            transition: opacity 1.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
             pointer-events: none;
-            border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+            overflow: hidden;
+            box-shadow:
+                0 2px 15px rgba(0, 0, 0, 0.4),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+            transform: translateY(-100%);
         }
 
         body.is-pro-presenter-active .pro-presenter-progress-container {
             opacity: 1;
+            transform: translateY(0);
         }
 
         .pro-presenter-progress-bar {
             height: 100%;
             background: linear-gradient(90deg,
-                    var(--primary-color),
-                    color-mix(in srgb, var(--primary-color) 80%, white),
-                    var(--primary-color));
+                    transparent 0%,
+                    color-mix(in srgb, var(--primary-color) 15%, transparent) 10%,
+                    var(--primary-color) 50%,
+                    color-mix(in srgb, var(--primary-color) 15%, transparent) 90%,
+                    transparent 100%);
             background-size: 200% 100%;
-            animation: proProgressGlow 3s linear infinite;
+            animation: proProgressFluid 12s linear infinite;
             width: 0%;
-            box-shadow: 0 0 15px var(--primary-color);
-            transition: width 0.4s cubic-bezier(0.1, 0.7, 0.1, 1);
+            box-shadow:
+                0 0 20px color-mix(in srgb, var(--primary-color) 40%, transparent),
+                0 0 40px color-mix(in srgb, var(--primary-color) 10%, transparent),
+                inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            transition: width 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+            position: relative;
+            border-radius: 0 4px 4px 0;
+            overflow: visible;
         }
 
-        @keyframes proProgressGlow {
+        /* Shimmering liquid overlay */
+        .pro-presenter-progress-bar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(255, 255, 255, 0) 30%,
+                    rgba(255, 255, 255, 0.15) 50%,
+                    rgba(255, 255, 255, 0) 70%,
+                    transparent 100%);
+            background-size: 200% 100%;
+            animation: proProgressShimmer 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+            mix-blend-mode: overlay;
+            filter: blur(2px);
+            opacity: 0.5;
+        }
+
+        /* The Comet Tip */
+        .pro-presenter-progress-bar::after {
+            content: "";
+            position: absolute;
+            right: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow:
+                0 0 15px 2px #ffffff,
+                0 0 30px 6px var(--primary-color),
+                0 0 60px 12px color-mix(in srgb, var(--primary-color) 20%, transparent);
+            filter: blur(0.5px);
+            z-index: 2;
+            animation: proProgressTipPulse 6s ease-in-out infinite;
+        }
+
+        @keyframes proProgressTipPulse {
+
+            0%,
+            100% {
+                transform: translateY(-50%) scale(1);
+                filter: brightness(1.1);
+                opacity: 0.9;
+            }
+
+            50% {
+                transform: translateY(-50%) scale(1.15);
+                filter: brightness(1.3);
+                opacity: 1;
+            }
+        }
+
+        @keyframes proProgressFluid {
             0% {
-                background-position: 100% 0%;
+                background-position: 200% 0%;
             }
 
             100% {
-                background-position: -100% 0%;
+                background-position: -200% 0%;
+            }
+        }
+
+        @keyframes proProgressShimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
             }
         }
 
@@ -18217,6 +18546,7 @@
                 margin: 0;
                 text-transform: uppercase;
                 background: linear-gradient(135deg, #fefae0 30%, #e9ceb3 70%, #d4a373 100%);
+                background-clip: text;
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
@@ -20008,6 +20338,7 @@
                     pdfTextViewFontSize: '1.1rem',
                     pdfTextViewTheme: 'default',
                     intervalModifier: 1.0,
+                    showReadModeWordCount: false, // Default is off
                 },
                 async load() {
                     const savedSettings = await App.fs.read('settings.json');
@@ -22759,6 +23090,15 @@
                                 ${App.util.icons.present}
                             </button>
                             
+                            <!-- Pro Presenter Read Mode -->
+                            <button class="btn-icon" 
+                                onclick="App.events.enterProPresenterReadMode('${article.id}')" 
+                                title="Pro Presenter (Premium)"
+                                style="position: relative;">
+                                ${App.util.icons.proPresent}
+                                ${!App.license.isPremium() ? '<span style="position:absolute; top:-2px; right:-2px; font-size:10px;">👑</span>' : ''}
+                            </button>
+                            
                             <!-- C. Study Flashcards -->
                             <button class="btn-icon" onclick="const allCards = App.util.getAllFlashcards(); const articleCards = allCards.filter(c => c.articleId === '${article.id}'); if(articleCards.length) { App.events.study.start({ quizCards: articleCards, mode: 'custom' }); } else { App.ui.showToast('No flashcards in this article', 'info'); }" title="Study Article Flashcards">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l10-5 10 5-10 5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
@@ -24095,7 +24435,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" /></svg>
                                 </button>
                                 <button class="btn-icon ${session.isProPresenterActive ? 'active' : ''}" id="pro-presenter-toggle-btn" onclick="App.events.presentation.toggleProPresenter()" title="Pro Presenter Mode">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                    ${App.util.icons.proPresent}
                                 </button>
                              </div>
                              <button class="btn-icon" id="laser-pointer-toggle" title="Toggle Laser Pointer (L)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25a8.25 8.25 0 00-8.25 8.25c0 1.721.576 3.322 1.568 4.675A8.25 8.25 0 0012 21.75a8.25 8.25 0 008.25-8.25c0-4.556-3.694-8.25-8.25-8.25z" /></svg></button>
@@ -24522,6 +24862,7 @@
                         .migration-title-gradient {
                             background: linear-gradient(45deg, #FF8C42, #FFD05A, #00A896, #A2E869, #05A387);
                             background-size: 250% 250%;
+                            background-clip: text;
                             -webkit-background-clip: text;
                             background-clip: text;
                             -webkit-text-fill-color: transparent;
@@ -24557,7 +24898,7 @@
                         <p id="migration-status" style="color: var(--text-secondary); min-height: 1.5em;"></p>
                         
                         <div style="width: 100%; background: var(--bg-tertiary); border-radius: 8px; overflow: hidden; margin-top: 0.5rem;">
-                            <div id="migration-progress-bar" class="migration-progress-gradient" style="width: 0%; height: 8px; transition: width 0.3s ease;"></div>
+                            <div id="migration-progress-bar" class="migration-progress-gradient" style="width: 0%; height: 8px; transition: width 0.45s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 0 10px color-mix(in srgb, var(--primary-color) 40%, transparent);"></div>
                         </div>
 
                         <button id="migration-cancel-btn" class="btn migration-cancel-btn-styled" style="margin-top: 1.5rem; width: 50%; align-self: center;">Cancel</button>
@@ -27104,7 +27445,7 @@
                         { id: 'living-cell', name: '🔬 Living Cell' },
                         { id: 'liquid-glow', name: '💧 Liquid Glow' },
                         { id: 'breathing-border', name: '🫁 Breathing Border' },
-                        { id: 'electric-flow', name: '⚡️ Electric Flow' },
+                        { id: 'electric-flow', name: '⚡ Phantom Wire' },
                         { id: 'sleek-trace', name: '🎯 Sleek Trace' }
                     ];
                     const currentProPresenterMode = App.settings.get('proPresenterMode') || 'living-cell';
@@ -27188,7 +27529,7 @@
                         </div>
                         
                         <div class="settings-section">
-                            <h4><i class="fa-solid fa-display"></i> Pro Presenter ${isProPresenterLocked ? '<span style="font-size:0.7em;opacity:0.6;">👑 Premium</span>' : ''}</h4>
+                            <h4><span style="display:inline-flex; align-items:center; vertical-align:middle; margin-right:8px;">${App.util.icons.proPresent}</span> Pro Presenter ${isProPresenterLocked ? '<span style="font-size:0.7em;opacity:0.6;">👑 Premium</span>' : ''}</h4>
                             <div class="settings-grid">
                                 <div class="settings-label" title="Choose the animated border style shown when Pro Presenter is active. Each style is theme-sensitive."><b>Border Style</b></div>
                                 <select id="pro-presenter-mode-select" class="btn btn-secondary" ${isProPresenterLocked ? 'disabled' : ''}>${proPresenterModeOptions}</select>
@@ -27200,6 +27541,14 @@
                             <div class="settings-item">
                                 <div class="settings-label" id="mobile-view-label-container"><b>${mobileViewLabel}</b><small>${mobileViewDescription}</small></div>
                                 <div id="mobile-view-toggle" class="toggle-switch ${isMobileViewEnabled ? 'active' : ''}"></div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><i class="fa-solid fa-calculator"></i> Reading Stats</h4>
+                            <div class="settings-item">
+                                <div class="settings-label"><b>Selection Word Counter</b><small>Show live word count when selecting text in Read Mode.</small></div>
+                                <div id="read-mode-word-count-toggle" class="toggle-switch ${App.settings.get('showReadModeWordCount') ? 'active' : ''}"></div>
                             </div>
                         </div>
 
@@ -27218,6 +27567,10 @@
                     document.getElementById('custom-theme-base').addEventListener('input', App.events.handleCustomThemeBaseChange);
                     document.getElementById('opacity-slider').addEventListener('input', App.events.changeUiOpacity);
                     document.getElementById('mobile-view-toggle').addEventListener('click', App.events.toggleMobileView);
+                    document.getElementById('read-mode-word-count-toggle').addEventListener('click', function () {
+                        this.classList.toggle('active');
+                        App.settings.set('showReadModeWordCount', this.classList.contains('active'));
+                    });
                     document.getElementById('image-quality-slider').addEventListener('input', App.events.changeImageQuality);
                     document.getElementById('ocr-threshold-slider').addEventListener('input', App.events.changeOcrThreshold);
                     document.getElementById('change-bg-btn').addEventListener('click', () => App.events.triggerBgImageUpload());
@@ -29907,7 +30260,8 @@
 
                         if (state.isActive) {
                             // Automatically activate Stage Mode if it's not already active to ensure a presentation-like layout
-                            if (!App.state.focusSession.isStageMode) {
+                            // FIX: Only force Stage Mode if we are actually in a Focus Session
+                            if (App.state.focusSession?.isActive && !App.state.focusSession?.isStageMode) {
                                 App.events.toggleStageMode();
                             }
                             this._initProPresenter();
@@ -29919,12 +30273,13 @@
                     },
                     _initProPresenter() {
                         const state = this._proPresenterState;
-                        const overlay = document.getElementById('focus-mode-overlay');
-                        if (!overlay) return;
+                        // Removed mandatory overlay check for Read Mode compatibility
+
 
                         // Set the Pro Presenter border mode on body
                         const currentMode = App.settings.get('proPresenterMode') || 'living-cell';
                         document.body.setAttribute('data-pro-presenter-mode', currentMode);
+
 
                         // Create Wave Overlay (Idempotent)
                         if (!state.elements.waveOverlay) {
@@ -29978,7 +30333,7 @@
                             state.elements.progressContainer = progressContainer;
                         }
 
-                        // Mouse Move Listener
+                        // Mouse Move Listener with Fire Tail & Dynamic Shadows
                         if (!state.listeners.mousemove) {
                             // Create sleek-trace spotlight layer (idempotent)
                             if (!state.elements.spotlight) {
@@ -29988,8 +30343,15 @@
                                 state.elements.spotlight = spotlight;
                             }
 
-                            // Direct positioning — no lerp, cursor feel is handled by OS system settings
+                            let lastX = 0, lastY = 0, lastTime = Date.now();
+
                             state.listeners.mousemove = (e) => {
+                                const now = Date.now();
+                                const dt = Math.max(now - lastTime, 1);
+                                const dx = e.clientX - lastX;
+                                const dy = e.clientY - lastY;
+                                const speed = Math.sqrt(dx * dx + dy * dy) / dt;
+
                                 const glow = state.elements.cursorGlow;
                                 if (glow) {
                                     glow.style.left = `${e.clientX}px`;
@@ -30000,8 +30362,30 @@
                                     spot.style.left = `${e.clientX}px`;
                                     spot.style.top = `${e.clientY}px`;
                                 }
+
+                                lastX = e.clientX;
+                                lastY = e.clientY;
+                                lastTime = now;
                             };
                             document.addEventListener('mousemove', state.listeners.mousemove);
+                        }
+
+                        // Robust Scrolling Fix: Capture wheel events on window and pass to scrollable container
+                        if (!state.listeners.wheel) {
+                            state.listeners.wheel = (e) => {
+                                if (!this._proPresenterState.isActive) return;
+                                // In Read Mode (no overlay), we let natural scroll handle it, 
+                                // unless we explicitly want to intercept for components.
+                                const overlay = document.getElementById('focus-mode-overlay');
+                                if (!overlay) return;
+                                const scrollEl = App.state.focusSession?.isStageMode ?
+                                    overlay.querySelector('.focus-mode-content') :
+                                    overlay.querySelector('.focus-mode-body');
+                                if (scrollEl) {
+                                    scrollEl.scrollTop += e.deltaY;
+                                }
+                            };
+                            window.addEventListener('wheel', state.listeners.wheel, { passive: true });
                         }
 
                         // Click Ripple + Cursor Pop-scale Listener
@@ -30026,13 +30410,24 @@
                                     glow.classList.add('is-clicking');
                                     setTimeout(() => glow.classList.remove('is-clicking'), 200);
                                 }
+
+                                // --- Wave Overlay react ---
+                                const waveOverlay = document.querySelector('.pro-presenter-wave-overlay');
+                                if (waveOverlay) {
+                                    waveOverlay.classList.add('is-clicking');
+                                    setTimeout(() => waveOverlay.classList.remove('is-clicking'), 400);
+                                }
                             };
                             document.addEventListener('click', state.listeners.click);
                         }
 
                         // Scroll Progress Listener (Always update to new scrollEl)
                         // STAGE MODE FIX: In stage mode, .focus-mode-content scrolls. In snippets/sigma mode, .focus-mode-body scrolls.
-                        const scrollEl = App.state.focusSession.isStageMode ? overlay.querySelector('.focus-mode-content') : overlay.querySelector('.focus-mode-body');
+                        // READ MODE: Root documentElement scrolls.
+                        const overlay = document.getElementById('focus-mode-overlay');
+                        const scrollEl = overlay ?
+                            (App.state.focusSession?.isStageMode ? overlay.querySelector('.focus-mode-content') : overlay.querySelector('.focus-mode-body')) :
+                            document.documentElement;
 
                         if (scrollEl) {
                             // Cleanup old scroll listener if exists on a different element
@@ -30075,11 +30470,15 @@
                         }
                         if (state.listeners.mousemove) document.removeEventListener('mousemove', state.listeners.mousemove);
                         if (state.listeners.click) document.removeEventListener('click', state.listeners.click);
+                        if (state.listeners.wheel) window.removeEventListener('wheel', state.listeners.wheel);
                         if (state.listeners.scroll && state.elements.scrollEl) {
                             state.elements.scrollEl.removeEventListener('scroll', state.listeners.scroll);
                         }
-                        // Also cleanup body ambiance classes if deactivated
+
+                        // Clean up body ambiance and specific mode data
                         document.body.className = document.body.className.replace(/\bambiance-\S+/g, '').trim();
+                        document.body.removeAttribute('data-pro-presenter-mode');
+
                         state.elements = {};
                         state.listeners = {};
                     },
@@ -31733,8 +32132,12 @@
                             App.ui.aiMagic.show(range);
                         }
 
-                        // Show word-count toast in both read & write mode
-                        if (App.state.currentMode === 'write' || App.state.currentMode === 'read') {
+                        // Show word-count toast
+                        const isWriteMode = App.state.currentMode === 'write';
+                        const isReadMode = App.state.currentMode === 'read';
+                        const showInReadMode = App.settings.get('showReadModeWordCount');
+
+                        if (isWriteMode || (isReadMode && showInReadMode)) {
                             const wordCount = selection.toString().trim().split(/\s+/).filter(w => w.length > 0).length;
                             const existing = document.getElementById(WC_TOAST_ID);
 
@@ -34964,6 +35367,23 @@
 
                     if (isFullscreen) {
                         App.ui.showToast('Immersive(f)', 'info');
+                    } else {
+                        // NEW: Auto-deactivate Pro Presenter when exiting fullscreen in Read Mode
+                        if (document.body.classList.contains('is-pro-presenter-active')) {
+                            this.presentation.toggleProPresenter();
+                        }
+                    }
+                },
+                enterProPresenterReadMode(articleId) {
+                    if (!App.license.isPremium()) {
+                        App.ui.showToast('Pro Presenter Mode is a Premium feature.', 'info');
+                        return;
+                    }
+                    if (!App.state.isFullscreen) {
+                        this.toggleFocusMode();
+                    }
+                    if (!document.body.classList.contains('is-pro-presenter-active')) {
+                        this.presentation.toggleProPresenter();
                     }
                 },
                 changeFontFamily(e) {
@@ -36645,8 +37065,8 @@
                         pointer.id = pointerId;
                         Object.assign(pointer.style, {
                             position: 'fixed',
-                            width: '12px',
-                            height: '12px',
+                            width: '11px',
+                            height: '11px',
                             background: '#ff0055',
                             borderRadius: '50%',
                             boxShadow: '0 0 8px #ff0055, 0 0 16px #ff0055',
@@ -36823,9 +37243,11 @@
                         };
 
                         const wheelHandler = (e) => {
-                            if (context === 'stage') return; // keep Stage native
-                            const scrollTarget = document.querySelector('main') || document.scrollingElement || document.documentElement || document.body;
+                            // Manual scroll relay to fix locked scrolling in laser mode
+                            const scrollTarget = context === 'stage' ? eventTarget : (document.querySelector('main') || document.scrollingElement || document.documentElement || document.body);
                             if (!scrollTarget) return;
+
+                            // Prevent native to avoid conflict, manually move the scroll position
                             e.preventDefault();
                             scrollTarget.scrollTop += e.deltaY;
                             scrollTarget.scrollLeft += e.deltaX;
@@ -36842,9 +37264,7 @@
 
                         eventTarget.addEventListener('mousemove', moveHandler);
                         eventTarget.addEventListener('mousedown', downHandler);
-                        if (context !== 'stage') {
-                            eventTarget.addEventListener('wheel', wheelHandler, { passive: false });
-                        }
+                        eventTarget.addEventListener('wheel', wheelHandler, { passive: false });
                         window.addEventListener('mouseup', upHandler);
                         eventTarget.addEventListener('click', tripleClickHandler);
                         document.addEventListener('keydown', keyHandler, true); // Capture phase importance
@@ -36852,9 +37272,7 @@
                         laserCanvas._cleanup = () => {
                             eventTarget.removeEventListener('mousemove', moveHandler);
                             eventTarget.removeEventListener('mousedown', downHandler);
-                            if (context !== 'stage') {
-                                eventTarget.removeEventListener('wheel', wheelHandler);
-                            }
+                            eventTarget.removeEventListener('wheel', wheelHandler);
                             window.removeEventListener('mouseup', upHandler);
                             eventTarget.removeEventListener('click', tripleClickHandler);
                             document.removeEventListener('keydown', keyHandler, true);
@@ -40590,9 +41008,8 @@
                     actions: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M5.52.359A.5.5 0 0 1 6 0h4a.5.5 0 0 1 .474.658L8.694 6H12.5a.5.5 0 0 1 .395.807l-7 9a.5.5 0 0 1-.873-.454L6.823 9.5H3.5a.5.5 0 0 1-.48-.641l2.5-8.5z"/></svg>`,
                     pdfExport: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 13h2"></path><path d="M9 17h6"></path><path d="M13 13h2"></path></svg>`,
 
-                    image: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`,
-                    accordion: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line></svg>`,
                     present: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3" ry="3"></rect><polygon points="10 9 10 15 15 12 10 9" fill="currentColor" stroke="none"></polygon></svg>`,
+                    proPresent: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wand-sparkles"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>`,
 
                 },
 
@@ -54697,7 +55114,7 @@
 
         // Initialize on DOM load
         document.addEventListener('DOMContentLoaded', () => {
-            new InteractiveCursorSplash();
+            window.cursorSplash = new InteractiveCursorSplash();
         });
     </script>
 </body>
