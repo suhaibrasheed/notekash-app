@@ -313,9 +313,6 @@
             --pomo-color-7: #10b981;
             --pomo-color-8: #14b8a6;
             --pomo-color-9: #06b6d4;
-            --pomo-color-10: #3b82f6;
-            --pomo-color-11: #6366f1;
-            --pomo-color-12: #8b5cf6;
             --cycle-color-1: #3b82f6;
             --cycle-color-2: #16a34a;
             --cycle-color-3: #f97316;
@@ -547,6 +544,15 @@
             --heat-4: #a78bfa;
             --heat-5: #60a5fa;
             --heat-6: #34d399;
+            --pomo-color-1: #ff4b60;
+            --pomo-color-2: #ff9d00;
+            --pomo-color-3: #ffea00;
+            --pomo-color-4: #00f59b;
+            --pomo-color-5: #00e5ff;
+            --pomo-color-6: #00bfff;
+            --pomo-color-7: #5e5eff;
+            --pomo-color-8: #b34bff;
+            --pomo-color-9: #ff4bff;
             /* --- A. Unified Text Color (Dark Theme) --- */
             --category-pill-text: #f0f6fc;
             /* --- B. Indexed Background Palette (Dark Theme) --- */
@@ -710,6 +716,15 @@
             --cloze-hidden-text: #c2410c;
             --sm2-unrated: #101010;
             --sticky-sepia-default: #fbf0d9;
+            --pomo-color-1: #a65d5d;
+            --pomo-color-2: #bc7a3d;
+            --pomo-color-3: #b89b4a;
+            --pomo-color-4: #8a9b4a;
+            --pomo-color-5: #5d8c6b;
+            --pomo-color-6: #4a7b8c;
+            --pomo-color-7: #5d5d8c;
+            --pomo-color-8: #8c5d7b;
+            --pomo-color-9: #8c6d5d;
             /* --- A. Unified Text Color (Sepia Theme) --- */
             --category-pill-text: #442d1e;
             --cat-color-0-bg: #d7ccc8;
@@ -3981,13 +3996,16 @@
         }
 
         .pomodoro-section {
-            padding: 1rem 1.5rem;
+            padding: 1.5rem 1.5rem;
             border-top: 1px solid var(--border-color);
             background: var(--bg-tertiary);
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 1rem;
+            flex-shrink: 0;
+            min-height: 180px;
+            /* Ensure space for timer even if content lags */
         }
 
         .pomodoro-display {
@@ -4013,7 +4031,7 @@
         .progress-segment {
             position: absolute;
             background-color: var(--pomo-color-1);
-            transition: background-color 0.5s ease;
+            transition: background-color 0.5s ease, width 0.1s linear, height 0.1s linear;
         }
 
         .progress-top {
@@ -9516,13 +9534,14 @@
         .focus-mode-overlay[class*="ambiance-"],
         #pdf-viewer-container[class*="ambiance-"],
         .article-view-wrapper[class*="ambiance-"],
-        .study-view[class*="ambiance-"] {
+        .study-view[class*="ambiance-"],
+        .zen-mode-overlay[class*="ambiance-"] {
             --bg-secondary: var(--bg-primary);
             --bg-tertiary: color-mix(in srgb, var(--text-primary) 10%, var(--bg-primary));
             --border-color: color-mix(in srgb, var(--text-primary) 20%, var(--bg-primary));
             background-color: var(--bg-primary);
             color: var(--text-primary);
-            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+            transition: background-color 0.4s ease, color 0.4s ease;
         }
 
         /* Scoped overrides for themed views */
@@ -9821,6 +9840,26 @@
             display: none;
         }
 
+        /* ========================================================= */
+        /* ZEN MODE — PREMIUM REDESIGN                               */
+        /* ========================================================= */
+
+        @keyframes zen-glow-pulse {
+
+            0%,
+            100% {
+                text-shadow: 0 0 30px color-mix(in srgb, var(--zen-glow-color, var(--primary-color)) 35%, transparent),
+                    0 0 60px color-mix(in srgb, var(--zen-glow-color, var(--primary-color)) 15%, transparent),
+                    0 2px 10px rgba(0, 0, 0, 0.2);
+            }
+
+            50% {
+                text-shadow: 0 0 50px color-mix(in srgb, var(--zen-glow-color, var(--primary-color)) 65%, transparent),
+                    0 0 110px color-mix(in srgb, var(--zen-glow-color, var(--primary-color)) 30%, transparent),
+                    0 2px 10px rgba(0, 0, 0, 0.2);
+            }
+        }
+
         .zen-mode-overlay {
             position: fixed;
             top: 0;
@@ -9836,13 +9875,80 @@
             animation: fadeIn 0.3s;
             padding: 2.5rem;
             text-align: center;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* Auto-hide bottom controls — fade out by default, reveal on hover */
+        .zen-bottom-controls {
+            position: absolute;
+            bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+
+        .zen-mode-overlay:hover .zen-bottom-controls {
+            opacity: 1;
+        }
+
+        /* Auto-hide ambiance picker — top-right corner, fades in on hover */
+        .zen-ambiance-picker {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            max-width: 420px;
+        }
+
+        .zen-mode-overlay:hover .zen-ambiance-picker {
+            opacity: 1;
+        }
+
+        .progress-comet {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            transition: left 0.1s linear, top 0.1s linear, box-shadow 0.4s ease, background-color 0.4s ease;
+            will-change: left, top;
         }
 
         .zen-timer {
             font-size: clamp(8rem, 20vw, 15rem);
             font-weight: 700;
             line-height: 1;
-            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            animation: zen-glow-pulse 13s ease-in-out infinite;
+            transition: color 0.5s ease;
+            color: var(--text-primary);
+        }
+
+        /* Progress ring with comet */
+        .zen-progress-ring-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .zen-progress-ring-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         .zen-meta-container {
@@ -9860,17 +9966,22 @@
             gap: 12px;
         }
 
-        .zen-pills-row .cycle-pill {
-            margin-right: 20px;
-        }
-
         .zen-pills-row>div {
-            min-width: 80px;
+            min-width: 100px;
             text-align: center;
             justify-content: center;
             display: inline-flex;
             align-items: center;
-            transform: scale(1.2);
+            font-size: 1.05rem;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-weight: 700;
+            background-color: var(--text-primary) !important;
+            color: var(--bg-primary) !important;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            text-transform: capitalize;
+            border: 2px solid transparent;
         }
 
         .zen-task-title {
@@ -9881,6 +9992,7 @@
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             max-width: 90vw;
             line-height: 1.3;
+            color: var(--text-primary);
             white-space: normal;
             display: -webkit-box;
             -webkit-line-clamp: 3;
@@ -9888,14 +10000,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             margin-top: 1.5rem;
-        }
-
-        .zen-bottom-controls {
-            position: absolute;
-            bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
         }
 
         .zen-progress-frame .progress-segment {
@@ -41010,6 +41114,15 @@
 
                     present: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3" ry="3"></rect><polygon points="10 9 10 15 15 12 10 9" fill="currentColor" stroke="none"></polygon></svg>`,
                     proPresent: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wand-sparkles"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>`,
+                    stop: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/></svg>`,
+                    play: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>`,
+                    pause: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/></svg>`,
+                    settings: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1 0 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105 0l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.31-.17a1.464 1.464 0 0 1 2.105-.872l-.1-.34c.413-1.4 2.397-1.4 2.81 0l.1.34a1.464 1.464 0 0 1 2.105.872l.31.17c1.283.698-2.686-.705-1.987-1.987l-.169-.311a1.464 1.464 0 0 1 0-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105 0l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.31.17a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg>`,
+                    zen: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1 12.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5zM12.5 0a.5.5 0 0 1 .5.5v2h-1V.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 1 .5.5v2h-1V.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 1 .5.5v2h-1V.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 1 .5.5v2h-1V.5a.5.5 0 0 1 .5-.5z"/><path fill-rule="evenodd" d="M.5 4a.5.5 0 0 1 .5-.5h14a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-.5-.5h-14a.5.5 0 0 1-.5-.5v-8zM1 4.5v7h14v-7H1z"/></svg>`,
+                    miniExpand: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 1A.5.5 0 0 1 2 0h4.5a.5.5 0 0 1 0 1H3v2.5a.5.5 0 0 1-1 0V1zm12 0a.5.5 0 0 1 .5-.5H15v2.5a.5.5 0 0 1-1 0V1h-2.5a.5.5 0 0 1 0-1zm0 12a.5.5 0 0 1 .5.5V15h-2.5a.5.5 0 0 1 0-1H14v-2.5a.5.5 0 0 1 1 0zM2 15v-2.5a.5.5 0 0 1 1 0V14h2.5a.5.5 0 0 1 0 1H2a.5.5 0 0 1-.5-.5z"/></svg>`,
+                    miniClose: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/></svg>`,
+                    pomoCycle: `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="16" height="16" viewBox="0 0 16 16"><path d="M8 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-1a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/><path d="M8 4.5a.5.5 0 0 0-1 0V7H6.5a.5.5 0 0 0 0 1H7v2.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H8V4.5Z"/></svg>`,
+                    pomoPlay: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/></svg>`
 
                 },
 
@@ -42533,7 +42646,7 @@
                         currentCategory: 'General',
                         sessionCount: 0,
                         zenTitleVisible: true,
-                        saveThrottleCounter: 0
+                        zenAmbianceTheme: 'default'
                     },
                     init() {
                         try {
@@ -42547,12 +42660,6 @@
                                     this.state.timeLeft = timeLeft;
                                     if (timeLeft <= 0) {
                                         this.sessionEnd();
-                                    } else {
-                                        this.state.saveThrottleCounter++;
-                                        if (this.state.saveThrottleCounter >= 150) {
-                                            this.saveSessionState();
-                                            this.state.saveThrottleCounter = 0;
-                                        }
                                     }
                                     App.hub.ui.updatePomodoroDisplay();
                                 }
@@ -42687,9 +42794,39 @@
                     },
                     toggleZenMode() {
                         const c = document.getElementById('zen-mode-container');
-                        if (c.innerHTML) c.innerHTML = ''; else App.hub.ui.renderZenMode();
+                        if (c.innerHTML) {
+                            // Reset session-only theme on exit
+                            this.state.zenAmbianceTheme = 'default';
+                            c.innerHTML = '';
+                        } else {
+                            App.hub.ui.renderZenMode();
+                        }
                     },
                     toggleZenTitleVisibility() { this.state.zenTitleVisible = !this.state.zenTitleVisible; App.hub.ui.renderZenMode(true); },
+                    setZenAmbiance(theme) {
+                        this.state.zenAmbianceTheme = theme;
+                        const overlay = document.querySelector('.zen-mode-overlay');
+                        if (!overlay) return;
+                        // Remove all ambiance-* classes
+                        const toRemove = [...overlay.classList].filter(c => c.startsWith('ambiance-'));
+                        overlay.classList.remove(...toRemove);
+                        if (theme !== 'default') overlay.classList.add('ambiance-' + theme);
+                        // Update active swatch
+                        document.querySelectorAll('.zen-ambiance-swatch').forEach(s => {
+                            s.classList.toggle('active', s.dataset.theme === theme);
+                        });
+                    },
+                    cycleZenAmbiance(reverse = false) {
+                        const themes = App.events.presentation.themes;
+                        let currentIndex = themes.indexOf(this.state.zenAmbianceTheme);
+                        if (currentIndex === -1) currentIndex = 0;
+                        if (reverse) {
+                            currentIndex = (currentIndex - 1 + themes.length) % themes.length;
+                        } else {
+                            currentIndex = (currentIndex + 1) % themes.length;
+                        }
+                        this.setZenAmbiance(themes[currentIndex]);
+                    },
                     async changeTime(work, brk) {
                         await App.settings.set('pomodoroWork', parseInt(work, 10) || 25);
                         await App.settings.set('pomodoroBreak', parseInt(brk, 10) || 5);
@@ -42697,9 +42834,10 @@
                     },
                     getProgressInfo() {
                         const { timeLeft, totalDuration } = this.state;
-                        if (totalDuration === 0) return { percentage: 1, colorValue: 'var(--pomo-color-12)' };
+                        // Use 9 colors as requested
+                        if (totalDuration === 0) return { percentage: 1, colorValue: 'var(--pomo-color-9)' };
                         const p = (totalDuration - timeLeft) / totalDuration;
-                        const c = ['--pomo-color-1', '--pomo-color-2', '--pomo-color-3', '--pomo-color-4', '--pomo-color-5', '--pomo-color-6', '--pomo-color-7', '--pomo-color-8', '--pomo-color-9', '--pomo-color-10', '--pomo-color-11', '--pomo-color-12'];
+                        const c = ['--pomo-color-1', '--pomo-color-2', '--pomo-color-3', '--pomo-color-4', '--pomo-color-5', '--pomo-color-6', '--pomo-color-7', '--pomo-color-8', '--pomo-color-9'];
                         return { percentage: p, colorValue: `var(${c[Math.min(c.length - 1, Math.floor(p * c.length))]})` };
                     }
                 },
@@ -42717,7 +42855,7 @@
                         const ms = Date.parse(`${v}T00:00:00Z`);
                         return Number.isNaN(ms) ? 0 : ms;
                     },
-                    formatTime: (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`,
+                    formatTime: (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`,
                     formatSecondsToDecimalHours(seconds) { if (!seconds || seconds < 1) return "0.0 hr"; return `${(seconds / 3600).toFixed(1)} hr`; },
                     escapeHtml: (u) => u ? u.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") : '',
                     parseSimpleDate(d) {
@@ -42851,7 +42989,7 @@
                                     <button id="priority-btn" class="priority-btn ${priority}" title="Cycle Priority">${priority}</button>
                                     <select id="category-select">${categoryOptionsHTML}</select>
                                     <button id="pomo-goal-btn" title="Set Pomodoro Goal (Left-click to increment, Right-click to reset)">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-1a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/><path d="M8 4.5a.5.5 0 0 0-1 0V7H6.5a.5.5 0 0 0 0 1H7v2.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H8V4.5Z"/></svg>
+                                        ${App.util.icons.pomoCycle}
                                         <span>${pomodoroGoal > 0 ? pomodoroGoal : ''}</span>
                                     </button>
                                 </div>
@@ -42904,9 +43042,9 @@
                             const categoryObj = App.settings.get('userCategories').find(c => c.name === t.category) || { name: t.category, colorIndex: 0 };
                             const categoryPillHTML = `<div class="category-pill" style="background-color: ${App.util.getCategoryColor(categoryObj.colorIndex)};">${App.util.getCategoryDisplayName(categoryObj.name)}</div>`;
                             const progressPill = t.pomodoroGoal > 0
-                                ? `<div class="pomo-counter-display" title="Pomodoro Progress"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-1a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/><path d="M8 4.5a.5.5 0 0 0-1 0V7H6.5a.5.5 0 0 0 0 1H7v2.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H8V4.5Z"/></svg> <span>${t.pomodoros || 0}/${t.pomodoroGoal}</span></div>`
-                                : (t.pomodoros > 0 ? `<div class="pomo-counter-display" title="Pomodoros Completed"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-1a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/><path d="M8 4.5a.5.5 0 0 0-1 0V7H6.5a.5.5 0 0 0 0 1H7v2.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H8V4.5Z"/></svg> <span>${t.pomodoros}</span></div>` : '');
-                            return `<div class="task-item ${t.status === 'completed' ? 'completed' : ''} ${t.due < today && t.status === 'pending' ? 'is-backlog' : ''}" data-id="${t.id}" data-priority="${t.priority}"><div class="task-main">${checkboxHTML}<span class="task-title" title="${App.hub.util.escapeHtml(t.title)}">${App.hub.util.escapeHtml(t.title)}</span></div><div class="task-trailing"><div class="task-meta">${progressPill}${categoryPillHTML}<span class="due-date ${t.due < today && t.status === 'pending' ? 'overdue' : ''}">${new Date(t.due + 'T00:00:00Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' })}</span></div><div class="task-actions"><button class="btn-icon" data-action="start-pomodoro" data-task-id="${t.id}" title="Start Pomodoro Cycle"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/></svg></button><button class="btn-icon btn-danger" data-action="delete-task" data-task-id="${t.id}" title="Delete Task"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg></button></div></div></div>`;
+                                ? `<div class="pomo-counter-display" title="Pomodoro Progress">${App.util.icons.pomoCycle} <span>${t.pomodoros || 0}/${t.pomodoroGoal}</span></div>`
+                                : (t.pomodoros > 0 ? `<div class="pomo-counter-display" title="Pomodoros Completed">${App.util.icons.pomoCycle} <span>${t.pomodoros}</span></div>` : '');
+                            return `<div class="task-item ${t.status === 'completed' ? 'completed' : ''} ${t.due < today && t.status === 'pending' ? 'is-backlog' : ''}" data-id="${t.id}" data-priority="${t.priority}"><div class="task-main">${checkboxHTML}<span class="task-title" title="${App.hub.util.escapeHtml(t.title)}">${App.hub.util.escapeHtml(t.title)}</span></div><div class="task-trailing"><div class="task-meta">${progressPill}${categoryPillHTML}<span class="due-date ${t.due < today && t.status === 'pending' ? 'overdue' : ''}">${new Date(t.due + 'T00:00:00Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' })}</span></div><div class="task-actions"><button class="btn-icon" data-action="start-pomodoro" data-task-id="${t.id}" title="Start Pomodoro Cycle">${App.util.icons.pomoPlay}</button><button class="btn-icon btn-danger" data-action="delete-task" data-task-id="${t.id}" title="Delete Task">${App.util.icons.trash}</button></div></div></div>`;
                         }).join('');
                     },
 
@@ -42921,47 +43059,47 @@
                     },
 
                     updatePomodoroDisplay() {
-                        const c = document.querySelector('.pomodoro-section');
                         const { isRunning, timeLeft, task, currentCategory, sessionCount, mode } = App.hub.pomodoro.state;
-                        const { percentage, colorValue } = App.hub.pomodoro.getProgressInfo();
-                        const p = percentage * 4;
-                        if (!c) {
-                            this.updateMiniTimerWidget();
-                            return;
+                        const { colorValue } = App.hub.pomodoro.getProgressInfo();
+
+                        // Auto-save every 30s to preserve state
+                        if (timeLeft % 30 === 0) App.hub.pomodoro.saveSessionState();
+
+                        // 1. Update Productivity Hub Section (if visible)
+                        const section = document.querySelector('.pomodoro-section');
+                        if (section) {
+                            // Find or create current category pill
+                            const categoryObj = App.settings.get('userCategories').find(cat => cat.name === currentCategory) || { name: currentCategory, colorIndex: 0 };
+                            const bg = App.util.getCategoryColor(categoryObj.colorIndex);
+                            const pillHTML = mode === 'break' ? `<div class="break-pill">Break</div>` : (sessionCount > 0 ? `<div class="cycle-pill" data-cycle="${sessionCount}">${sessionCount} / 4</div>` : '');
+                            const catPillHTML = `<div class="category-pill" style="background-color: ${bg};">${App.util.getCategoryDisplayName(currentCategory)}</div>`;
+
+                            if (!section.querySelector('.pomodoro-display')) {
+                                section.innerHTML = `<div class="pomodoro-display"><div class="pomodoro-progress-frame"><div class="progress-segment progress-top"></div><div class="progress-segment progress-right"></div><div class="progress-segment progress-bottom"></div><div class="progress-segment progress-left"></div></div><div class="pomodoro-time-display"></div><div class="pomodoro-task-title"></div><div class="pomodoro-meta"></div></div><div class="pomodoro-controls"><button class="btn-icon" onclick="App.hub.pomodoro.stopAndReset()" title="Stop & Reset">${App.util.icons.stop}</button><button class="btn-icon" id="hub-pomodoro-play-btn" style="transform: scale(1.4);" onclick="App.hub.pomodoro.togglePlayPause()"></button><button class="btn-icon" onclick="App.hub.ui.showPomodoroSettings()" title="Settings">${App.util.icons.settings}</button><button class="btn-icon" onclick="App.hub.pomodoro.toggleZenMode()" title="Zen Mode">${App.util.icons.zen}</button></div>`;
+                            }
+
+                            const timeStr = App.hub.util.formatTime(Math.floor(timeLeft));
+                            section.querySelector('.pomodoro-time-display').textContent = timeStr;
+                            const titleEl = section.querySelector('.pomodoro-task-title');
+                            titleEl.textContent = task?.title || 'Focus Session';
+                            titleEl.style.color = colorValue;
+                            section.querySelector('.pomodoro-meta').innerHTML = pillHTML + catPillHTML;
+
+                            const p = (App.hub.pomodoro.getProgressInfo().percentage || 0) * 4;
+                            section.querySelector('.progress-top').style.width = `${Math.min(1, p) * 100}%`;
+                            section.querySelector('.progress-right').style.height = `${p > 1 ? Math.min(1, p - 1) * 100 : 0}%`;
+                            section.querySelector('.progress-bottom').style.width = `${p > 2 ? Math.min(1, p - 2) * 100 : 0}%`;
+                            section.querySelector('.progress-left').style.height = `${p > 3 ? Math.min(1, p - 3) * 100 : 0}%`;
+                            section.querySelectorAll('.progress-segment').forEach(s => s.style.backgroundColor = colorValue);
+
+                            const playBtn = document.getElementById('hub-pomodoro-play-btn');
+                            if (playBtn) {
+                                playBtn.title = isRunning ? 'Pause' : 'Play';
+                                playBtn.innerHTML = isRunning ? App.util.icons.pause : App.util.icons.play;
+                            }
                         }
 
-                        let pillIndicator = '';
-                        if (mode === 'break') {
-                            pillIndicator = `<div class="break-pill">Break</div>`;
-                        } else if (sessionCount > 0) {
-                            pillIndicator = `<div class="cycle-pill" data-cycle="${sessionCount}">${sessionCount} / 4</div>`;
-                        }
-
-                        // NEW: Find the category object to get its color
-                        const categoryObj = App.settings.get('userCategories').find(cat => cat.name === currentCategory) || { name: currentCategory, colorIndex: 0 };
-                        const backgroundColor = App.util.getCategoryColor(categoryObj.colorIndex);
-                        const categoryPillHTML = `<div class="category-pill" style="background-color: ${backgroundColor};">${App.util.getCategoryDisplayName(currentCategory)}</div>`;
-
-                        c.innerHTML = `
-                        <div class="pomodoro-display">
-                            <div class="pomodoro-progress-frame">
-                                <div class="progress-segment progress-top" style="width:${Math.min(1, p) * 100}%;"></div>
-                                <div class="progress-segment progress-right" style="height:${p > 1 ? Math.min(1, p - 1) * 100 : 0}%;"></div>
-                                <div class="progress-segment progress-bottom" style="width:${p > 2 ? Math.min(1, p - 2) * 100 : 0}%;"></div>
-                                <div class="progress-segment progress-left" style="height:${p > 3 ? Math.min(1, p - 3) * 100 : 0}%;"></div>
-                            </div>
-                            <div class="pomodoro-time-display">${App.hub.util.formatTime(timeLeft)}</div>
-                            <div class="pomodoro-task-title" title="${App.hub.util.escapeHtml(task?.title || 'Focus Session')}" style="color: ${colorValue};">${App.hub.util.escapeHtml(task?.title || 'Focus Session')}</div>
-                            <div class="pomodoro-meta">${pillIndicator}${categoryPillHTML}</div>
-                        </div>
-                        <div class="pomodoro-controls">
-                            <button class="btn-icon" onclick="App.hub.pomodoro.stopAndReset()" title="Stop & Reset"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/></svg></button>
-                            <button class="btn-icon" style="transform: scale(1.4);" onclick="App.hub.pomodoro.togglePlayPause()" title="${isRunning ? 'Pause' : 'Play / Start Cycle'}">${isRunning ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>'}</button>
-                            <button class="btn-icon" onclick="App.hub.ui.showPomodoroSettings()" title="Settings"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1 0 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105 0l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.31-.17a1.464 1.464 0 0 1 2.105-.872l-.1-.34c.413-1.4 2.397-1.4 2.81 0l.1.34a1.464 1.464 0 0 1 2.105.872l.31.17c1.283.698-2.686-.705-1.987-1.987l-.169-.311a1.464 1.464 0 0 1 0-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105 0l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.31.17a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg></button>
-                            <button class="btn-icon" onclick="App.hub.pomodoro.toggleZenMode()" title="Zen Mode (Coffee Break)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1 12.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5zM12.5 0a.5.5 0 0 1 .5.5v2h-1V.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 1 .5.5v2h-1V.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 1 .5.5v2h-1V.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 1 .5.5v2h-1V.5a.5.5 0 0 1 .5-.5z"/><path fill-rule="evenodd" d="M.5 4a.5.5 0 0 1 .5-.5h14a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-.5-.5h-14a.5.5 0 0 1-.5-.5v-8zM1 4.5v7h14v-7H1z"/></svg></button>
-                        </div>
-                    `;
-                        document.querySelectorAll('.progress-segment').forEach(el => { el.style.backgroundColor = colorValue; });
+                        // 2. Update Zen Mode & Mini Timer
                         if (document.getElementById('zen-timer-display')) this.renderZenMode(true);
                         this.updateMiniTimerWidget();
                     },
@@ -42982,9 +43120,7 @@
                         widget = document.createElement('div');
                         widget.id = 'hub-mini-timer';
                         widget.className = 'hub-mini-timer';
-                        const miniExpandSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 1A.5.5 0 0 1 2 0h4.5a.5.5 0 0 1 0 1H3v2.5a.5.5 0 0 1-1 0V1zm12 0a.5.5 0 0 1 .5-.5H15v2.5a.5.5 0 0 1-1 0V1h-2.5a.5.5 0 0 1 0-1zm0 12a.5.5 0 0 1 .5.5V15h-2.5a.5.5 0 0 1 0-1H14v-2.5a.5.5 0 0 1 1 0zM2 15v-2.5a.5.5 0 0 1 1 0V14h2.5a.5.5 0 0 1 0 1H2a.5.5 0 0 1-.5-.5z"/></svg>';
-                        const miniCloseSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/></svg>';
-                        widget.innerHTML = `<div class="hub-mini-timer-drag"></div><div class="hub-mini-timer-inner"><div class="hub-mini-progress-frame"><div class="progress-segment progress-top"></div><div class="progress-segment progress-right"></div><div class="progress-segment progress-bottom"></div><div class="progress-segment progress-left"></div></div><div class="hub-mini-timer-top"><span id="hub-mini-mode-pill" class="category-pill hub-mini-category-pill" style="background-color:var(--bg-tertiary);color:var(--text-primary);">—</span><button type="button" class="btn-icon" id="hub-mini-open-btn" title="Open Productivity Hub">${miniExpandSvg}</button></div><div id="hub-mini-time" class="hub-mini-time">00:00</div><div class="hub-mini-controls"><button type="button" class="btn-icon" id="hub-mini-playpause-btn" title="Play / Pause"></button><button type="button" class="btn-icon" id="hub-mini-stop-btn" title="Stop & Reset">${miniCloseSvg}</button></div></div>`;
+                        widget.innerHTML = `<div class="hub-mini-timer-drag"></div><div class="hub-mini-timer-inner"><div class="hub-mini-progress-frame"><div class="progress-segment progress-top"></div><div class="progress-segment progress-right"></div><div class="progress-segment progress-bottom"></div><div class="progress-segment progress-left"></div></div><div class="hub-mini-timer-top"><span id="hub-mini-mode-pill" class="category-pill hub-mini-category-pill" style="background-color:var(--bg-tertiary);color:var(--text-primary);">—</span><button type="button" class="btn-icon" id="hub-mini-open-btn" title="Open Productivity Hub">${App.util.icons.miniExpand}</button></div><div id="hub-mini-time" class="hub-mini-time">00:00</div><div class="hub-mini-controls"><button type="button" class="btn-icon" id="hub-mini-playpause-btn" title="Play / Pause"></button><button type="button" class="btn-icon" id="hub-mini-stop-btn" title="Stop & Reset">${App.util.icons.miniClose}</button></div></div>`;
                         document.body.appendChild(widget);
                         this.setupMiniTimerDrag(widget);
                         const openBtn = document.getElementById('hub-mini-open-btn');
@@ -43063,8 +43199,8 @@
                                 modePill.outerHTML = `<span id="hub-mini-mode-pill" class="category-pill hub-mini-category-pill" style="background-color:${bg};" title="${safe}">${safe}</span>`;
                             }
                         }
-                        if (timeEl) timeEl.textContent = App.hub.util.formatTime(timeLeft);
-                        if (playPauseBtn) playPauseBtn.innerHTML = isRunning ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>';
+                        if (timeEl) timeEl.textContent = App.hub.util.formatTime(Math.floor(timeLeft));
+                        if (playPauseBtn) playPauseBtn.innerHTML = isRunning ? App.util.icons.pause : App.util.icons.play;
                         widget.querySelector('.progress-top').style.width = `${Math.min(1, p) * 100}%`;
                         widget.querySelector('.progress-right').style.height = `${p > 1 ? Math.min(1, p - 1) * 100 : 0}%`;
                         widget.querySelector('.progress-bottom').style.width = `${p > 2 ? Math.min(1, p - 2) * 100 : 0}%`;
@@ -43074,24 +43210,43 @@
 
                     renderZenMode(isUpdate = false) {
                         const container = document.getElementById('zen-mode-container');
-                        const { isRunning, timeLeft, task, currentCategory, sessionCount, mode, zenTitleVisible } = App.hub.pomodoro.state;
+                        const { isRunning, timeLeft, task, currentCategory, sessionCount, mode, zenTitleVisible, zenAmbianceTheme } = App.hub.pomodoro.state;
                         const { percentage, colorValue } = App.hub.pomodoro.getProgressInfo();
                         const p = percentage * 4;
                         const currentTaskTitle = task?.title || 'Focus Session';
 
-                        // NEW: Find the category object to get its color
+                        const overlay = document.querySelector('.zen-mode-overlay') || document.documentElement;
+                        // We set the variable directly and let CSS handle blending via color-mix
+                        overlay.style.setProperty('--zen-glow-color', colorValue);
+
+                        // Find the category object to get its color
                         const categoryObj = App.settings.get('userCategories').find(cat => cat.name === currentCategory) || { name: currentCategory, colorIndex: 0 };
                         const backgroundColor = App.util.getCategoryColor(categoryObj.colorIndex);
-                        const categoryPillHTML = `<div class="category-pill" style="background-color: ${backgroundColor};">${App.util.getCategoryDisplayName(currentCategory)}</div>`;
+                        const categoryPillHTML = `<div class="category-pill">${App.util.getCategoryDisplayName(currentCategory)}</div>`;
 
                         if (isUpdate) {
-                            document.getElementById('zen-timer-display').textContent = App.hub.util.formatTime(timeLeft);
-                            const titleEl = document.getElementById('zen-task-title'), metaContainer = document.querySelector('.zen-meta-container');
-                            titleEl.classList.toggle('hidden', !zenTitleVisible);
-                            metaContainer.classList.toggle('hidden', !zenTitleVisible);
-                            titleEl.textContent = App.hub.util.escapeHtml(currentTaskTitle);
-                            titleEl.style.color = colorValue;
-                            document.getElementById('zen-pills-row').innerHTML = `${mode === 'break' ? `<div class="break-pill">Break</div>` : sessionCount > 0 ? `<div class="cycle-pill" data-cycle="${sessionCount}">${sessionCount} / 4</div>` : ''}${categoryPillHTML}`;
+                            const timerEl = document.getElementById('zen-timer-display');
+                            if (timerEl) {
+                                timerEl.textContent = App.hub.util.formatTime(Math.floor(timeLeft));
+                            }
+                            const titleEl = document.getElementById('zen-task-title');
+                            const metaContainer = document.querySelector('.zen-meta-container');
+                            if (titleEl) {
+                                titleEl.classList.toggle('hidden', !zenTitleVisible);
+                                titleEl.textContent = App.hub.util.escapeHtml(currentTaskTitle);
+                            }
+                            if (metaContainer) metaContainer.classList.toggle('hidden', !zenTitleVisible);
+                            const pillsRow = document.getElementById('zen-pills-row');
+                            if (pillsRow) {
+                                let html = '';
+                                if (mode === 'break') {
+                                    html += `<div class="break-pill" style="box-shadow: 0 0 20px var(--zen-glow-color, var(--break-color))44;">Break</div>`;
+                                } else if (sessionCount > 0) {
+                                    html += `<div class="cycle-pill" data-cycle="${sessionCount}" style="box-shadow: 0 0 20px var(--zen-glow-color, var(--primary-color))44;">${sessionCount} / 4</div>`;
+                                }
+                                html += categoryPillHTML;
+                                pillsRow.innerHTML = html;
+                            }
                             const frame = document.querySelector('.zen-progress-frame');
                             if (frame) {
                                 frame.querySelector('.progress-top').style.width = `${Math.min(1, p) * 100}%`;
@@ -43099,11 +43254,35 @@
                                 frame.querySelector('.progress-bottom').style.width = `${p > 2 ? Math.min(1, p - 2) * 100 : 0}%`;
                                 frame.querySelector('.progress-left').style.height = `${p > 3 ? Math.min(1, p - 3) * 100 : 0}%`;
                                 frame.querySelectorAll('.progress-segment').forEach(el => el.style.backgroundColor = colorValue);
+
+                                const comet = document.getElementById('zen-progress-comet');
+                                if (comet) {
+                                    if (p <= 0 || !isRunning && timeLeft === App.hub.pomodoro.state.totalDuration) {
+                                        comet.style.opacity = '0';
+                                    } else {
+                                        comet.style.opacity = '1';
+                                        comet.style.backgroundColor = 'var(--text-primary)';
+                                        comet.style.boxShadow = `0 0 15px 4px var(--bg-primary), 0 0 25px 10px color-mix(in srgb, var(--zen-glow-color) 70%, transparent), 0 0 45px 20px color-mix(in srgb, var(--zen-glow-color) 40%, transparent)`;
+                                        if (p <= 1) {
+                                            comet.style.left = `${Math.min(1, p) * 100}%`;
+                                            comet.style.top = `6px`;
+                                        } else if (p <= 2) {
+                                            comet.style.left = `calc(100% - 6px)`;
+                                            comet.style.top = `${Math.min(1, p - 1) * 100}%`;
+                                        } else if (p <= 3) {
+                                            comet.style.left = `${(1 - Math.min(1, p - 2)) * 100}%`;
+                                            comet.style.top = `calc(100% - 6px)`;
+                                        } else {
+                                            comet.style.left = `6px`;
+                                            comet.style.top = `${(1 - Math.min(1, p - 3)) * 100}%`;
+                                        }
+                                    }
+                                }
                             }
                             const playPauseBtn = document.getElementById('zen-play-pause-btn');
                             if (playPauseBtn) {
                                 playPauseBtn.title = isRunning ? 'Pause' : 'Play';
-                                playPauseBtn.innerHTML = isRunning ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>';
+                                playPauseBtn.innerHTML = isRunning ? App.util.icons.pause : App.util.icons.play;
                             }
                             const visibilityBtn = document.getElementById('zen-visibility-btn');
                             if (visibilityBtn) {
@@ -43112,23 +43291,25 @@
                             }
                             return;
                         }
+                        const themeBtnHTML = `<button class="btn-icon" onclick="App.hub.pomodoro.cycleZenAmbiance()" oncontextmenu="event.preventDefault(); App.hub.pomodoro.cycleZenAmbiance(true);" title="Cycle Ambiance Theme (Right-click to go back)">${App.util.icons.theme}</button>`;
+
                         container.innerHTML = `
-                        <div class="zen-mode-overlay">
+                        <div class="zen-mode-overlay${zenAmbianceTheme !== 'default' ? ' ambiance-' + zenAmbianceTheme : ''}">
                             <div class="zen-progress-frame pomodoro-progress-frame">
                                 <div class="progress-segment progress-top"></div>
                                 <div class="progress-segment progress-right"></div>
                                 <div class="progress-segment progress-bottom"></div>
                                 <div class="progress-segment progress-left"></div>
+                                <div class="progress-comet" id="zen-progress-comet"></div>
                             </div>
+                            <div class="zen-ambiance-picker">${themeBtnHTML}</div>
                             <div class="zen-meta-container ${!zenTitleVisible ? 'hidden' : ''}">
                                 <div id="zen-pills-row" class="zen-pills-row"></div>
                             </div>
                             <div id="zen-timer-display" class="zen-timer"></div>
                             <div id="zen-task-title" class="zen-task-title ${!zenTitleVisible ? 'hidden' : ''}"></div>
                             <div class="zen-bottom-controls">
-                                <button class="btn-icon" onclick="App.hub.pomodoro.stopAndReset()" title="Stop & Reset">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/></svg>
-                                </button>
+                                <button class="btn-icon" onclick="App.hub.pomodoro.stopAndReset()" title="Stop &amp; Reset">${App.util.icons.stop}</button>
                                 <button id="zen-play-pause-btn" class="btn-icon" style="transform: scale(1.5);" onclick="App.hub.pomodoro.togglePlayPause()"></button>
                                 <button id="zen-visibility-btn" class="btn-icon" onclick="App.hub.pomodoro.toggleZenTitleVisibility()"></button>
                                 <button class="btn-icon" onclick="App.hub.pomodoro.toggleZenMode()" title="Exit Zen Mode">${App.util.icons.close}</button>
