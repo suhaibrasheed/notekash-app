@@ -318,13 +318,14 @@
             --cycle-color-3: #f97316;
             --cycle-color-4: #8b5cf6;
             --break-color: #0891b2;
-            --heat-0: var(--bg-tertiary);
-            --heat-1: #6c757d;
-            --heat-2: #ef4444;
-            --heat-3: #f97316;
-            --heat-4: #8b5cf6;
-            --heat-5: #3b82f6;
-            --heat-6: #22c55e;
+            --heat-0: #f1f3f5;
+            --heat-1: #dee2e6;
+            --heat-2: #ff6b6b;
+            --heat-3: #fcc419;
+            --heat-4: #339af0;
+            --heat-5: #845ef7;
+            --heat-6: #f06595;
+            --heat-7: #51cf66;
 
             /* --- Flashcard Base --- */
             --cloze-bg: rgba(187, 247, 208, 0.5);
@@ -537,13 +538,14 @@
             --cycle-color-3: #fb923c;
             --cycle-color-4: #a78bfa;
             --break-color: #22d3ee;
-            --heat-0: #374151;
-            --heat-1: #9ca3af;
-            --heat-2: #f87171;
-            --heat-3: #fb923c;
-            --heat-4: #a78bfa;
-            --heat-5: #60a5fa;
-            --heat-6: #34d399;
+            --heat-0: #21262d;
+            --heat-1: #484f58;
+            --heat-2: #f85149;
+            --heat-3: #d29922;
+            --heat-4: #58a6ff;
+            --heat-5: #bc8cff;
+            --heat-6: #f680b5;
+            --heat-7: #3fb950;
             --pomo-color-1: #ff4b60;
             --pomo-color-2: #ff9d00;
             --pomo-color-3: #ffea00;
@@ -725,6 +727,14 @@
             --pomo-color-7: #5d5d8c;
             --pomo-color-8: #8c5d7b;
             --pomo-color-9: #8c6d5d;
+            --heat-0: #f4e9d8;
+            --heat-1: #dcd0b3;
+            --heat-2: #a65d5d;
+            --heat-3: #bc7a3d;
+            --heat-4: #4a7b8c;
+            --heat-5: #5d5d8c;
+            --heat-6: #8c5d7b;
+            --heat-7: #5d8c6b;
             /* --- A. Unified Text Color (Sepia Theme) --- */
             --category-pill-text: #442d1e;
             --cat-color-0-bg: #d7ccc8;
@@ -4198,17 +4208,19 @@
             top: 96px;
             right: 20px;
             width: 210px;
+            height: max-content;
+            max-width: 210px;
             z-index: 12000;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            background: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
-            box-shadow: var(--shadow-lg);
+            border: 1px solid color-mix(in srgb, var(--border-color) 40%, transparent);
+            border-radius: 16px;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--bg-secondary) 85%, transparent), color-mix(in srgb, var(--bg-primary) 80%, transparent));
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.2);
             opacity: 0;
-            transform: translateY(6px) scale(0.96);
+            transform: translateY(10px) scale(0.95);
             pointer-events: none;
-            transition: opacity 0.18s ease, transform 0.18s ease;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(24px) saturate(1.2);
+            -webkit-backdrop-filter: blur(24px) saturate(1.2);
         }
 
         .hub-mini-timer.visible {
@@ -4218,10 +4230,18 @@
         }
 
         .hub-mini-timer-drag {
-            height: 12px;
+            height: 14px;
             cursor: grab;
-            border-bottom: 1px solid var(--border-color);
-            border-radius: 12px 12px 0 0;
+            border-bottom: 1px solid color-mix(in srgb, var(--border-color) 40%, transparent);
+            border-radius: 16px 16px 0 0;
+            background: radial-gradient(circle at center, color-mix(in srgb, var(--text-tertiary) 40%, transparent) 1.5px, transparent 1.5px) repeat-x center;
+            background-size: 8px 14px;
+            opacity: 0.4;
+            transition: opacity 0.2s ease;
+        }
+
+        .hub-mini-timer:hover .hub-mini-timer-drag {
+            opacity: 0.8;
         }
 
         .hub-mini-timer-inner {
@@ -10206,6 +10226,10 @@
 
         .heatmap-day.level-6 {
             background-color: var(--heat-6);
+        }
+
+        .heatmap-day.level-7 {
+            background-color: var(--heat-7);
         }
 
         .quiz-result-card {
@@ -20646,9 +20670,60 @@
                 safeChart(ctx, config) {
                     if (typeof Chart !== 'undefined') {
                         try {
-                            return new Chart(ctx, config);
+                            const canvas = ctx.canvas || (ctx.tagName === 'CANVAS' ? ctx : null);
+                            if (!canvas) return new Chart(ctx, config);
+
+                            // Disconnect any existing observer on this canvas to prevent duplicate renderings
+                            if (canvas._chartObserver) {
+                                canvas._chartObserver.disconnect();
+                                delete canvas._chartObserver;
+                            }
+
+                            // Add smooth lively animation settings
+                            if (!config.options) config.options = {};
+                            if (!config.options.animation) {
+                                config.options.animation = {
+                                    duration: 2000,
+                                    easing: 'easeOutQuart'
+                                };
+                            }
+
+                            let chartInstance = null;
+                            const observer = new IntersectionObserver((entries) => {
+                                entries.forEach(entry => {
+                                    if (entry.isIntersecting) {
+                                        // Destroy the chart and recreate it to play the animation every time it comes into view
+                                        if (chartInstance) {
+                                            chartInstance.destroy();
+                                        } else if (Chart.getChart(canvas)) {
+                                            Chart.getChart(canvas).destroy();
+                                        }
+                                        try {
+                                            chartInstance = new Chart(ctx, config);
+                                        } catch (e) {
+                                            console.error("Chart delayed init error:", e);
+                                        }
+                                    }
+                                });
+                            }, { threshold: 0.1 });
+
+                            observer.observe(canvas);
+                            canvas._chartObserver = observer;
+
+                            // Return a wrapper object with a destroy method to integrate smoothly with existing cleanup logic
+                            return {
+                                destroy: () => {
+                                    observer.disconnect();
+                                    delete canvas._chartObserver;
+                                    if (chartInstance) {
+                                        chartInstance.destroy();
+                                    } else if (Chart.getChart(canvas)) {
+                                        Chart.getChart(canvas).destroy();
+                                    }
+                                }
+                            };
                         } catch (e) {
-                            console.error("Chart init error:", e);
+                            console.error("Chart wrapper init error:", e);
                             return null;
                         }
                     } else if (ctx) {
@@ -24106,8 +24181,8 @@
                         const formattedDate = date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' });
                         const formattedTime = App.hub.util.formatSecondsToDecimalHours(seconds);
                         let level = 0; const hours = seconds / 3600;
-                        if (hours >= 8) level = 6; else if (hours >= 6) level = 5; else if (hours >= 4.5) level = 4;
-                        else if (hours >= 3) level = 3; else if (hours >= 1.5) level = 2; else if (hours >= 0.25) level = 1;
+                        if (hours >= 9) level = 7; else if (hours >= 7.5) level = 6; else if (hours >= 6) level = 5;
+                        else if (hours >= 4.5) level = 4; else if (hours >= 3) level = 3; else if (hours >= 2) level = 2; else if (hours >= 1) level = 1;
                         heatmapHtml += `<div class="heatmap-day level-${level}" title="${formattedDate}\n${formattedTime} focused"></div>`;
                     }
                     const dayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
@@ -42546,14 +42621,18 @@
                     },
                     playWorkEnd() {
                         this.playTone({ frequency: 780, duration: 0.08, gain: 0.05 });
-                        this.playTone({ frequency: 1040, duration: 0.1, gain: 0.05, when: 0.08 });
                     },
                     playBreakStart() {
-                        this.playTone({ frequency: 520, duration: 0.08, gain: 0.04 });
+                        for (let i = 0; i < 3; i++) {
+                            this.playTone({ frequency: 523.25, duration: 0.8, type: 'triangle', gain: 0.15, when: i * 1.0 });
+                            this.playTone({ frequency: 659.25, duration: 0.8, type: 'triangle', gain: 0.15, when: i * 1.0 + 0.5 });
+                        }
                     },
                     playBreakEnd() {
-                        this.playTone({ frequency: 660, duration: 0.08, gain: 0.04 });
-                        this.playTone({ frequency: 820, duration: 0.08, gain: 0.04, when: 0.07 });
+                        for (let i = 0; i < 6; i++) {
+                            this.playTone({ frequency: 880, duration: 0.4, type: 'square', gain: 0.2, when: i * 0.5 });
+                            this.playTone({ frequency: 1100, duration: 0.4, type: 'square', gain: 0.2, when: i * 0.5 + 0.25 });
+                        }
                     }
                 },
                 tasks: {
@@ -43120,13 +43199,24 @@
                         widget = document.createElement('div');
                         widget.id = 'hub-mini-timer';
                         widget.className = 'hub-mini-timer';
-                        widget.innerHTML = `<div class="hub-mini-timer-drag"></div><div class="hub-mini-timer-inner"><div class="hub-mini-progress-frame"><div class="progress-segment progress-top"></div><div class="progress-segment progress-right"></div><div class="progress-segment progress-bottom"></div><div class="progress-segment progress-left"></div></div><div class="hub-mini-timer-top"><span id="hub-mini-mode-pill" class="category-pill hub-mini-category-pill" style="background-color:var(--bg-tertiary);color:var(--text-primary);">—</span><button type="button" class="btn-icon" id="hub-mini-open-btn" title="Open Productivity Hub">${App.util.icons.miniExpand}</button></div><div id="hub-mini-time" class="hub-mini-time">00:00</div><div class="hub-mini-controls"><button type="button" class="btn-icon" id="hub-mini-playpause-btn" title="Play / Pause"></button><button type="button" class="btn-icon" id="hub-mini-stop-btn" title="Stop & Reset">${App.util.icons.miniClose}</button></div></div>`;
+                        widget.innerHTML = `<div class="hub-mini-timer-drag"></div><div class="hub-mini-timer-inner"><div class="hub-mini-progress-frame"><div class="progress-segment progress-top"></div><div class="progress-segment progress-right"></div><div class="progress-segment progress-bottom"></div><div class="progress-segment progress-left"></div></div><div class="hub-mini-timer-top"><span id="hub-mini-mode-pill" class="category-pill hub-mini-category-pill" style="background-color:var(--bg-tertiary);color:var(--text-primary);">—</span><div style="display:flex;gap:4px;"><button type="button" class="btn-icon" id="hub-mini-hide-btn" title="Hide Timer" style="opacity:0.8;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button><button type="button" class="btn-icon" id="hub-mini-open-btn" title="Open Productivity Hub"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg></button></div></div><div id="hub-mini-time" class="hub-mini-time">00:00</div><div class="hub-mini-controls"><button type="button" class="btn-icon" id="hub-mini-playpause-btn" title="Play / Pause"></button><button type="button" class="btn-icon" id="hub-mini-stop-btn" title="Stop & Reset"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div></div>`;
                         document.body.appendChild(widget);
                         this.setupMiniTimerDrag(widget);
+                        window.addEventListener('resize', () => {
+                            if (!widget.classList.contains('visible')) return;
+                            const top = parseInt(widget.style.top || 96);
+                            const right = parseInt(widget.style.right || 20);
+                            const maxTop = Math.max(12, window.innerHeight - widget.offsetHeight - 12);
+                            const maxRight = Math.max(12, window.innerWidth - widget.offsetWidth - 12);
+                            widget.style.top = `${Math.max(12, Math.min(top, maxTop))}px`;
+                            widget.style.right = `${Math.max(12, Math.min(right, maxRight))}px`;
+                        });
                         const openBtn = document.getElementById('hub-mini-open-btn');
+                        const hideBtn = document.getElementById('hub-mini-hide-btn');
                         const playPauseBtn = document.getElementById('hub-mini-playpause-btn');
                         const stopBtn = document.getElementById('hub-mini-stop-btn');
-                        openBtn?.addEventListener('click', (e) => { e.stopPropagation(); this.hideMiniTimer(); this.showProductivityModal(); });
+                        openBtn?.addEventListener('click', (e) => { e.stopPropagation(); this.hideMiniTimer(); App.hub.pomodoro.toggleZenMode(); });
+                        hideBtn?.addEventListener('click', (e) => { e.stopPropagation(); this.hideMiniTimer(); App.ui.showToast('Pomodoro in background', 'info'); });
                         playPauseBtn?.addEventListener('click', (e) => { e.stopPropagation(); App.hub.pomodoro.togglePlayPause(); });
                         stopBtn?.addEventListener('click', async (e) => { e.stopPropagation(); await App.hub.pomodoro.stopAndReset(); this.hideMiniTimer(); });
                         const saved = localStorage.getItem('nk-hub-mini-timer-pos');
@@ -43146,8 +43236,8 @@
                             const dx = e.clientX - startX;
                             const dy = e.clientY - startY;
                             if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
-                            const maxTop = window.innerHeight - widget.offsetHeight - 12;
-                            const maxRight = window.innerWidth - widget.offsetWidth - 12;
+                            const maxTop = Math.max(12, window.innerHeight - widget.offsetHeight - 12);
+                            const maxRight = Math.max(12, window.innerWidth - widget.offsetWidth - 12);
                             widget.style.top = `${Math.max(12, Math.min(initialTop + dy, maxTop))}px`;
                             widget.style.right = `${Math.max(12, Math.min(initialRight - dx, maxRight))}px`;
                         };
@@ -43174,6 +43264,14 @@
                         const widget = this.ensureMiniTimerWidget();
                         widget.classList.add('visible');
                         this.updateMiniTimerWidget();
+                        setTimeout(() => {
+                            const top = parseInt(widget.style.top || 96);
+                            const right = parseInt(widget.style.right || 20);
+                            const maxTop = Math.max(12, window.innerHeight - widget.offsetHeight - 12);
+                            const maxRight = Math.max(12, window.innerWidth - widget.offsetWidth - 12);
+                            widget.style.top = `${Math.max(12, Math.min(top, maxTop))}px`;
+                            widget.style.right = `${Math.max(12, Math.min(right, maxRight))}px`;
+                        }, 50);
                     },
                     hideMiniTimer() {
                         const widget = this.getMiniTimerWidget();
@@ -43200,7 +43298,11 @@
                             }
                         }
                         if (timeEl) timeEl.textContent = App.hub.util.formatTime(Math.floor(timeLeft));
-                        if (playPauseBtn) playPauseBtn.innerHTML = isRunning ? App.util.icons.pause : App.util.icons.play;
+                        if (playPauseBtn) {
+                            playPauseBtn.innerHTML = isRunning
+                                ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`
+                                : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+                        }
                         widget.querySelector('.progress-top').style.width = `${Math.min(1, p) * 100}%`;
                         widget.querySelector('.progress-right').style.height = `${p > 1 ? Math.min(1, p - 1) * 100 : 0}%`;
                         widget.querySelector('.progress-bottom').style.width = `${p > 2 ? Math.min(1, p - 2) * 100 : 0}%`;
