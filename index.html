@@ -7932,8 +7932,8 @@
             position: relative;
             overflow: hidden;
             background: var(--bg-primary);
-            border-radius: 12px 12px 0 0;
-            margin: 0.75rem 0.75rem 0 0.75rem;
+            border-radius: 0 0 12px 12px;
+            margin: 0 0.75rem 0.75rem 0.75rem;
         }
 
         /* Background variants */
@@ -7969,7 +7969,10 @@
         }
 
         /* Access items behind canvas when in Select Mode */
-        .wb-tool-select #whiteboard-canvas {
+        .wb-tool-select #whiteboard-canvas,
+        .wb-tool-hand #whiteboard-canvas,
+        .wb-tool-image #whiteboard-canvas,
+        .wb-tool-text #whiteboard-canvas {
             pointer-events: none;
         }
 
@@ -8090,17 +8093,17 @@
             font-size: 14px;
             font-weight: bold;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-            opacity: 0.6;
+            opacity: 0;
+            pointer-events: none;
             transition: all 0.2s;
             z-index: 20;
             transform: scale(0.9);
-            pointer-events: auto;
         }
 
         .wb-image-delete-handle:hover {
-            transform: scale(1.1);
-            background: #dc2626;
-            opacity: 1;
+            transform: scale(1.1) !important;
+            background: #dc2626 !important;
+            opacity: 1 !important;
         }
 
         /* Move Handle (Blue Dot - Top Left) */
@@ -8119,11 +8122,11 @@
             justify-content: center;
             font-size: 14px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-            opacity: 0.6;
+            opacity: 0;
+            pointer-events: none;
             transition: all 0.2s;
             z-index: 20;
             transform: scale(0.9);
-            pointer-events: auto;
         }
 
         .wb-image-move-handle::after {
@@ -8132,8 +8135,8 @@
         }
 
         .wb-image-move-handle:hover {
-            transform: scale(1.1);
-            opacity: 1;
+            transform: scale(1.1) !important;
+            opacity: 1 !important;
         }
 
         /* Resize Handle (Bottom Right) */
@@ -8147,22 +8150,48 @@
             border: 2px solid var(--primary-color);
             border-radius: 50%;
             cursor: nwse-resize;
-            opacity: 0.6;
-            pointer-events: auto;
+            opacity: 0;
+            pointer-events: none;
             transition: opacity 0.2s, transform 0.2s;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         .wb-image-resize-handle:hover {
-            transform: scale(1.2);
-            opacity: 1;
+            transform: scale(1.2) !important;
+            opacity: 1 !important;
         }
 
-        .wb-image-box.active .wb-image-delete-handle,
-        .wb-image-box.active .wb-image-move-handle,
-        .wb-image-box.active .wb-image-resize-handle {
+        .wb-tool-select .wb-image-box,
+        .wb-tool-hand .wb-image-box,
+        .wb-tool-image .wb-image-box {
+            pointer-events: auto;
+        }
+
+        .wb-tool-select .wb-image-box:hover .wb-image-delete-handle,
+        .wb-tool-select .wb-image-box:hover .wb-image-move-handle,
+        .wb-tool-select .wb-image-box:hover .wb-image-resize-handle,
+        .wb-tool-hand .wb-image-box:hover .wb-image-delete-handle,
+        .wb-tool-hand .wb-image-box:hover .wb-image-move-handle,
+        .wb-tool-hand .wb-image-box:hover .wb-image-resize-handle,
+        .wb-tool-image .wb-image-box:hover .wb-image-delete-handle,
+        .wb-tool-image .wb-image-box:hover .wb-image-move-handle,
+        .wb-tool-image .wb-image-box:hover .wb-image-resize-handle {
+            opacity: 0.6;
+            pointer-events: auto;
+        }
+
+        .wb-tool-select .wb-image-box.active .wb-image-delete-handle,
+        .wb-tool-select .wb-image-box.active .wb-image-move-handle,
+        .wb-tool-select .wb-image-box.active .wb-image-resize-handle,
+        .wb-tool-hand .wb-image-box.active .wb-image-delete-handle,
+        .wb-tool-hand .wb-image-box.active .wb-image-move-handle,
+        .wb-tool-hand .wb-image-box.active .wb-image-resize-handle,
+        .wb-tool-image .wb-image-box.active .wb-image-delete-handle,
+        .wb-tool-image .wb-image-box.active .wb-image-move-handle,
+        .wb-tool-image .wb-image-box.active .wb-image-resize-handle {
             opacity: 1;
             transform: scale(1);
+            pointer-events: auto;
         }
 
         .wb-image-box.wb-spawn {
@@ -8476,23 +8505,109 @@
         }
 
 
-        /* BOTTOM TOOLBAR - ALL CONTROLS */
+        /* TOP TOOLBAR - ALL CONTROLS */
         #whiteboard-toolbar {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 4px;
-            padding: 0.75rem 1rem;
-            background: var(--bg-tertiary);
-            border-top: 1px solid var(--border-color);
+            padding: 0.6rem 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
             flex-wrap: wrap;
             position: relative;
+            z-index: 1000;
             width: 100%;
             box-sizing: border-box;
+            order: -1;
+            /* glassmorphism top bar feel */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px 20px 0 0;
         }
 
         #whiteboard-toolbar::-webkit-scrollbar {
             display: none;
+        }
+
+        /* --- Shapes Flyout --- */
+        .wb-shapes-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .wb-shapes-flyout {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 6px;
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.22s cubic-bezier(0.165, 0.84, 0.44, 1);
+            z-index: 9999;
+            white-space: nowrap;
+        }
+
+        .wb-shapes-container.open .wb-shapes-flyout {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Little caret pointing up */
+        .wb-shapes-flyout::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent var(--border-color) transparent;
+            margin-bottom: -1px;
+        }
+
+        .wb-shapes-flyout::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent var(--bg-secondary) transparent;
+        }
+
+        /* Subtle badge on shapes btn showing current shape */
+        .wb-shapes-btn-wrap {
+            position: relative;
+        }
+
+        .wb-shapes-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: none;
+            border: 1.5px solid var(--bg-secondary);
+        }
+
+        .wb-shapes-container.shape-active .wb-shapes-badge {
+            display: block;
         }
 
         /* Cancel button (left) - Uniform size */
@@ -8544,8 +8659,7 @@
 
         /* Add dropdown container */
         .wb-add-dropdown {
-            position: absolute;
-            right: 1rem;
+            position: relative;
         }
 
         .wb-add-dropdown .wb-action-add {
@@ -8553,12 +8667,11 @@
             right: auto;
         }
 
-        /* Add dropdown menu */
+        /* Add dropdown menu - NOW OPENS DOWNWARD since toolbar is at top */
         .wb-add-menu {
             position: absolute;
-            bottom: 100%;
+            top: calc(100% + 8px);
             right: 0;
-            margin-bottom: 8px;
             background: linear-gradient(135deg,
                     rgba(var(--bg-tertiary-rgb, 40, 40, 50), 0.95) 0%,
                     rgba(var(--bg-tertiary-rgb, 40, 40, 50), 0.88) 100%);
@@ -8569,7 +8682,7 @@
             min-width: 180px;
             opacity: 0;
             visibility: hidden;
-            transform: translateY(10px) scale(0.95);
+            transform: translateY(-10px) scale(0.95);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow:
                 0 12px 40px rgba(0, 0, 0, 0.3),
@@ -8745,47 +8858,143 @@
             align-items: center;
         }
 
-        /* More Menu Dropdown */
+        /* More Menu Dropdown -  */
         .wb-more-menu {
             position: absolute;
-            bottom: 110%;
-            right: 0;
+            top: calc(100% + 10px);
+            right: -20px;
             left: auto;
-            transform: translateY(10px);
+            transform: translateY(-8px);
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 8px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            border-radius: 14px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
-            z-index: 100;
+            pointer-events: none;
+            transition: all 0.22s cubic-bezier(0.165, 0.84, 0.44, 1);
+            z-index: 9999;
             width: max-content;
+            min-width: 160px;
         }
 
+        .wb-more-menu .wb-menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: var(--font-body);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s;
+        }
 
-        .wb-more-container:hover .wb-more-menu,
+        .wb-more-menu .wb-menu-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .wb-more-menu .wb-menu-item svg {
+            flex-shrink: 0;
+            color: var(--text-secondary);
+            width: 16px;
+            height: 16px;
+        }
+
+        .wb-more-menu .wb-menu-item.danger-hover:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--text-red);
+        }
+
+        .wb-more-menu .wb-menu-item.danger-hover:hover svg {
+            color: var(--text-red);
+        }
+
+        /* Only .active class opens the menu - NO hover */
         .wb-more-container.active .wb-more-menu {
             opacity: 1;
             visibility: visible;
+            pointer-events: all;
             transform: translateY(0);
         }
 
-        /* Triangle pointer */
+        /* Triangle pointer - points UP */
+        .wb-more-menu::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            right: 25px;
+            left: auto;
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent var(--border-color) transparent;
+            margin-bottom: -1px;
+        }
+
         .wb-more-menu::after {
             content: '';
             position: absolute;
-            top: 100%;
-            right: 13px;
+            bottom: 100%;
+            right: 26px;
             left: auto;
-            margin-left: 0;
-            border-width: 6px;
+            border-width: 5px;
             border-style: solid;
-            border-color: var(--bg-secondary) transparent transparent transparent;
+            border-color: transparent transparent var(--bg-secondary) transparent;
+        }
+
+        /* Lasso Tool Selection Overlay */
+        #wb-lasso-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Lasso Selection Action Bar */
+        #wb-lasso-actionbar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 6px 10px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            z-index: 9998;
+        }
+
+        #wb-lasso-actionbar.visible {
+            display: flex;
+        }
+
+        #wb-lasso-actionbar .wb-tool-btn {
+            width: 34px;
+            height: 34px;
+        }
+
+        #wb-lasso-actionbar .lasso-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border-color);
+            opacity: 0.5;
         }
 
         /* Color swatches */
@@ -9174,13 +9383,14 @@
             }
 
             #whiteboard-canvas-container {
-                margin: 0.5rem 0.5rem 0 0.5rem;
-                border-radius: 8px 8px 0 0;
+                margin: 0 0.5rem 0.5rem 0.5rem;
+                border-radius: 0 0 8px 8px;
             }
 
             #whiteboard-toolbar {
                 padding: 0.6rem;
                 gap: 0.4rem;
+                border-radius: 12px 12px 0 0;
             }
 
             .wb-tool-btn {
@@ -18919,7 +19129,7 @@
 
             </button>
             <button class="btn-icon" id="todo-btn" onclick="App.hub.ui.showProductivityModal()"
-                title="Tasks & Timer (Ctrl+K)">
+                title="Tasks & Timer (Ctrl+;)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -19405,19 +19615,11 @@
     <div id="selection-toolbar" style="display:none; position:absolute; z-index:1001;"></div>
     <div id="image-toolbar" style="display:none; position:absolute; z-index:1001;"></div>
 
-    <!-- WHITEBOARD v3 - FULLSCREEN WITH BOTTOM TOOLBAR -->
+    <!-- WHITEBOARD v3 - FULLSCREEN WITH TOP TOOLBAR -->
     <div id="whiteboard-overlay" tabindex="-1">
         <div id="whiteboard-card">
-            <!-- Canvas area FIRST (takes maximum space) -->
-            <div id="whiteboard-canvas-container">
-                <img id="whiteboard-bg-image"
-                    style="position: absolute; display: none; pointer-events: none; z-index: 0; transform-origin: top left;" />
-                <canvas id="whiteboard-canvas"></canvas>
-                <svg id="whiteboard-connectors"></svg>
-                <!-- Text boxes dynamically inserted here -->
-            </div>
 
-            <!-- Bottom toolbar with ALL controls -->
+            <!-- TOP TOOLBAR with ALL controls -->
             <div id="whiteboard-toolbar">
                 <!-- Cancel button (×) - left -->
                 <button class="wb-action-cancel" id="whiteboard-cancel-btn" title="Close">
@@ -19430,6 +19632,9 @@
 
                 <!-- Drawing Tools -->
                 <div class="wb-tool-group">
+                    <button class="wb-tool-btn" data-tool="hand" title="Hand (Pan / Select)">
+                        <i class="fa-regular fa-hand"></i>
+                    </button>
                     <button class="wb-tool-btn active" data-tool="pen" title="Pen">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24"
                             stroke-width="2" stroke="currentColor">
@@ -19437,30 +19642,70 @@
                                 d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
                         </svg>
                     </button>
-                    <button class="wb-tool-btn" data-tool="line" title="Line">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2">
-                            <line x1="5" y1="19" x2="19" y2="5" />
-                        </svg>
-                    </button>
-                    <button class="wb-tool-btn" data-tool="rect" title="Rectangle">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24"
-                            stroke-width="2" stroke="currentColor">
-                            <rect x="4" y="4" width="16" height="16" rx="2" />
-                        </svg>
-                    </button>
-                    <button class="wb-tool-btn" data-tool="circle" title="Circle">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="9" />
-                        </svg>
-                    </button>
+
+                    <!-- *** SHAPES FLYOUT BUTTON *** -->
+                    <div class="wb-shapes-container" id="wb-shapes-container">
+                        <div class="wb-shapes-btn-wrap">
+                            <!-- The main trigger button; icon swaps to last-used shape -->
+                            <button class="wb-tool-btn" id="wb-shapes-trigger-btn" title="Shapes">
+                                <!-- Default icon: Rectangle (first shape) -->
+                                <svg id="wb-shapes-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                    fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <rect x="4" y="4" width="16" height="16" rx="2" />
+                                </svg>
+                            </button>
+                            <span class="wb-shapes-badge" id="wb-shapes-badge"></span>
+                        </div>
+                        <!-- Flyout dropdown opens BELOW since toolbar is at top -->
+                        <div class="wb-shapes-flyout" id="wb-shapes-flyout">
+                            <button class="wb-tool-btn" data-tool="line" title="Line" id="wb-shape-line">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="19" x2="19" y2="5" />
+                                </svg>
+                            </button>
+                            <button class="wb-tool-btn" data-tool="rect" title="Rectangle" id="wb-shape-rect">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <rect x="4" y="4" width="16" height="16" rx="2" />
+                                </svg>
+                            </button>
+                            <button class="wb-tool-btn" data-tool="circle" title="Circle" id="wb-shape-circle">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="9" />
+                                </svg>
+                            </button>
+                            <button class="wb-tool-btn" data-tool="star" title="Star" id="wb-shape-star">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" stroke-linejoin="round">
+                                    <polygon
+                                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
 
                     <button class="wb-tool-btn" data-tool="eraser" title="Eraser">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <path
                                 d="M20 20H7L3 16a1 1 0 010-1.41l9.586-9.586a2 2 0 012.828 0l4.172 4.172a2 2 0 010 2.828L12 19.586" />
+                        </svg>
+                    </button>
+
+                    <!-- Thickness -->
+                    <button class="wb-tool-btn" id="whiteboard-thickness-btn" title="Thickness">
+                        <svg width="18" height="18" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="4" fill="currentColor" />
+                        </svg>
+                    </button>
+                    <!-- Undo -->
+                    <button class="wb-tool-btn" id="whiteboard-undo-btn" title="Undo (Cmd+Z)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 7v6h6"></path>
+                            <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
                         </svg>
                     </button>
 
@@ -19474,8 +19719,6 @@
                     </button>
 
                 </div>
-
-                <div class="wb-divider"></div>
 
                 <div class="wb-divider"></div>
 
@@ -19530,79 +19773,115 @@
 
                     <!-- Popup Menu Items -->
                     <div class="wb-more-menu" id="wb-more-menu">
-                        <!-- Thickness -->
-                        <button class="wb-tool-btn" id="whiteboard-thickness-btn" title="Thickness">
-                            <svg width="18" height="18" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="4" fill="currentColor" />
-                            </svg>
-                        </button>
-                        <!-- Undo -->
-                        <button class="wb-tool-btn" id="whiteboard-undo-btn" title="Undo (Ctrl+Z)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path d="M3 7v6h6"></path>
-                                <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
-                            </svg>
-                        </button>
                         <!-- Paste -->
-                        <button class="wb-tool-btn" id="whiteboard-paste-btn" title="Paste Image (Ctrl+V)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
+                        <button class="wb-menu-item" id="whiteboard-paste-btn" title="Paste Image (Ctrl+V)">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2">
                                 </path>
                                 <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
                             </svg>
-                        </button>
-                        <!-- Clear Canvas -->
-                        <button class="wb-tool-btn danger-hover" id="whiteboard-clear-btn" title="Clear Canvas">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path
-                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            </svg>
+                            <span>Paste Image</span>
                         </button>
                         <!-- Background Toggle -->
-                        <button class="wb-tool-btn" id="whiteboard-bg-btn"
-                            title="Background Color (Transparent/White/Dark/Grid)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <path
-                                    d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"
-                                    opacity="0.3" />
-                                <path d="M7 12h10M12 7v10" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                                <circle cx="8" cy="8" r="2.5" />
-                                <circle cx="16" cy="16" r="2.5" />
-                                <path d="M16 8l-8 8" stroke="currentColor" stroke-width="2" />
+                        <button class="wb-menu-item" id="whiteboard-bg-btn"
+                            title="Background (Transparent / White / Dark / Grid)">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke-opacity="0.4" />
+                                <circle cx="6" cy="6" r="1.5" fill="currentColor" stroke="none" />
                             </svg>
+                            <span>Toggle Background</span>
+                        </button>
+                        <!-- Lasso Tool -->
+                        <button class="wb-menu-item" id="wb-lasso-btn" title="Lasso Select">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M7 2C4 2 2 4.5 2 7c0 4 4 6 9 6 4 0 7-2 7-5 0-2-1.5-3.5-4-4" />
+                                <path d="M14 8c0 0 1 1 1 3" />
+                                <line x1="12" y1="20" x2="12" y2="14" stroke-width="2.5" stroke-linecap="round" />
+                                <polyline points="9 17 12 20 15 17" />
+                            </svg>
+                            <span>Lasso Select</span>
                         </button>
                         <!-- Auto-Layout -->
-                        <button class="wb-tool-btn" id="wb-auto-layout-btn"
-                            title="Auto-Layout Magic Wand (Rearrange Nodes)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
+                        <button class="wb-menu-item" id="wb-auto-layout-btn" title="Auto-Layout">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M15 4V2m0 2h-2m2 0h2M5 8l-2 2m2-2l2 2m-2-2l2-2m-2 2L3 6" />
                                 <path d="M19 9l2 2m-2-2l-2 2m2-2l2-2m-2 2l-2-2" />
                                 <line x1="15" y1="15" x2="21" y2="21"></line>
                                 <line x1="4" y1="20" x2="10" y2="14"></line>
                             </svg>
+                            <span>Auto-Layout Graph</span>
+                        </button>
+                        <!-- Clear Canvas -->
+                        <button class="wb-menu-item danger-hover" id="whiteboard-clear-btn" title="Clear Canvas">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                            <span>Clear Canvas</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Add to Article button - direct action, no dropdown -->
-                <button class="wb-action-add" id="whiteboard-add-btn" title="Add to Article as PNG">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                <button class="wb-action-add btn-save-circle" id="whiteboard-add-btn" title="Add to Article as Image"
+                    style="display:flex; justify-content:center; align-items:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+                        viewBox="0 0 16 16" style="opacity: 0.8; margin-right: 2px;">
+                        <path
+                            d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z" />
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white"
+                        stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="position:absolute;">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                     </svg>
                 </button>
+            </div>
+
+            <!-- Canvas area (takes maximum space) - after toolbar so it fills remaining room -->
+            <div id="whiteboard-canvas-container">
+                <img id="whiteboard-bg-image"
+                    style="position: absolute; display: none; pointer-events: none; z-index: 0; transform-origin: top left;" />
+                <canvas id="whiteboard-canvas"></canvas>
+                <svg id="whiteboard-connectors"></svg>
+                <!-- Lasso SVG overlay for drawing selection path -->
+                <svg id="wb-lasso-overlay"></svg>
+                <!-- Lasso Action Bar -->
+                <div id="wb-lasso-actionbar">
+
+                    <!-- Copy as PNG -->
+                    <button class="wb-tool-btn" id="lasso-copy-btn" title="Copy selection as PNG">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                    <!-- Delete selected -->
+                    <button class="wb-tool-btn danger-hover" id="lasso-delete-btn" title="Delete selected drawings">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                    </button>
+                    <!-- Dismiss -->
+                    <button class="wb-tool-btn" id="lasso-dismiss-btn" title="Dismiss selection">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+                <!-- Text boxes dynamically inserted here -->
             </div>
         </div>
     </div>
@@ -35768,21 +36047,6 @@
                         }
                     }
 
-                    // **NEW: More Menu Toggle Listener**
-                    document.getElementById('whiteboard-more-btn')?.addEventListener('click', (e) => {
-                        e.stopPropagation(); // Prevent closing immediately
-                        const container = document.getElementById('wb-more-container');
-                        container.classList.toggle('active');
-                    });
-
-                    // Close menu when clicking outside
-                    document.addEventListener('click', (e) => {
-                        const container = document.getElementById('wb-more-container');
-                        if (container && container.classList.contains('active') && !container.contains(e.target)) {
-                            container.classList.remove('active');
-                        }
-                    });
-
                     // Re-render the flashcard grid as before
                     App.ui.filterAndRenderFlashcards();
                 },
@@ -41171,6 +41435,8 @@
                     trash: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>`,
                     list: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>`,
                     table: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="12" y1="3" x2="12" y2="21"></line></svg>`,
+                    accordion: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><path d="m15 14-3 3-3-3"/></svg>`,
+                    image: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`,
                     tag: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 2v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l4.586-4.586a1 1 0 0 0 0-1.414l-7-7A1 1 0 0 0 7.586 2H2zm1 5.586 7 7L15.586 9l-7-7H3v4.586z"/><path d="M5 5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>`,
                     copy: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`, html: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`, clearFormatting: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.646 4.646a.5.5 0 0 1 .708 0L14 6.293l1.646-1.647a.5.5 0 0 1 .708.708L14.707 7l1.647 1.646a.5.5 0 0 1-.708.708L14 7.707l-1.646 1.647a.5.5 0 0 1-.708-.708L13.293 7l-1.647-1.646a.5.5 0 0 1 0-.708z"/><path d="M2.5 0A2.5 2.5 0 0 0 0 2.5v11A2.5 2.5 0 0 0 2.5 16h6.086a2.5 2.5 0 0 0 1.768-.732l3.5-3.5a2.5 2.5 0 0 0 0-3.536l-3.5-3.5A2.5 2.5 0 0 0 8.586 2H2.5zm5.553 4.24a.5.5 0 0 1 .707 0l1.25 1.25a.5.5 0 0 1 0 .707L8.707 7.5l1.25 1.25a.5.5 0 0 1-.707.707L8 8.207 6.75 9.457a.5.5 0 0 1-.707-.707L7.293 7.5 6.043 6.25a.5.5 0 0 1 0-.707l1.25-1.25z"/></svg>`, save: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1-1H7.5a1 1 0 0 0-1 1H2zm3 2h4.5v2.5a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5V2zm7 0v2.5a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5V2h4zM3 14v-7h10v7H3z"/></svg>`, saveAndRead: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>`,
                     expand: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 3H3v6M15 21h6v-6M9 21H3v-6"/></svg>`, compress: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3H5M16 3v3h3M8 21v-3H5M16 21v-3h3"/></svg>`,
@@ -48744,8 +49010,8 @@
                     tool: 'pen',
                     color: '--text-primary',
                     thickness: 3,
-                    thicknesses: [1, 2, 3, 5, 8, 12],
-                    thicknessIndex: 2,
+                    thicknesses: [1, 1.5, 2, 3, 4, 5, 7, 10, 14, 18],
+                    thicknessIndex: 3,
                     isDrawing: false,
                     lastPos: { x: 0, y: 0 },
                     startPos: { x: 0, y: 0 },
@@ -48981,6 +49247,21 @@
                         this.autoLayout();
                     });
 
+                    // More Menu Toggle Listener
+                    document.getElementById('whiteboard-more-btn')?.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent closing immediately
+                        const container = document.getElementById('wb-more-container');
+                        container?.classList.toggle('active');
+                    });
+
+                    // Close menu when clicking outside
+                    document.addEventListener('click', (e) => {
+                        const container = document.getElementById('wb-more-container');
+                        if (container && container.classList.contains('active') && !container.contains(e.target)) {
+                            container.classList.remove('active');
+                        }
+                    });
+
                     // Canvas drawing events - MOVED TO CONTAINER to capture events even if canvas is pointer-events: none
                     this.els.container.addEventListener('mousedown', (e) => this.handleMouseDown(e));
                     this.els.container.addEventListener('mousemove', (e) => this.handleMouseMove(e));
@@ -49050,6 +49331,10 @@
                             e.preventDefault();
                             this.close();
                         }
+                        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+                            e.preventDefault();
+                            this.undo();
+                        }
                     }, true); // Use capture phase
 
                     this.els.overlay.addEventListener('click', (e) => {
@@ -49069,6 +49354,434 @@
                     });
 
 
+                    // --- SHAPES FLYOUT LOGIC ---
+                    const shapesContainer = document.getElementById('wb-shapes-container');
+                    const shapesTriggerBtn = document.getElementById('wb-shapes-trigger-btn');
+                    const shapesFlyout = document.getElementById('wb-shapes-flyout');
+                    const shapesIcon = document.getElementById('wb-shapes-icon');
+
+                    // SVG icons for each shape tool
+                    const shapeIcons = {
+                        line: `<line x1="5" y1="19" x2="19" y2="5"/>`,
+                        rect: `<rect x="4" y="4" width="16" height="16" rx="2"/>`,
+                        circle: `<circle cx="12" cy="12" r="9"/>`,
+                        star: `<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>`
+                    };
+
+                    let lastShapeTool = 'rect'; // default
+                    let shapesOpen = false;
+
+                    const closeFlyout = () => {
+                        shapesOpen = false;
+                        shapesContainer?.classList.remove('open');
+                    };
+
+                    const openFlyout = () => {
+                        shapesOpen = true;
+                        shapesContainer?.classList.add('open');
+                    };
+
+                    const updateShapesIcon = (tool) => {
+                        if (shapesIcon && shapeIcons[tool]) {
+                            shapesIcon.innerHTML = shapeIcons[tool];
+                        }
+                    };
+
+                    shapesTriggerBtn?.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (!shapesOpen) {
+                            openFlyout();
+                        } else {
+                            closeFlyout();
+                        }
+                    });
+
+                    // Handle clicks on individual shape buttons inside the flyout
+                    // Changed 'click' to 'pointerdown' to make it extremely responsive on pens/touch
+                    shapesFlyout?.querySelectorAll('[data-tool]').forEach(btn => {
+                        btn.addEventListener('pointerdown', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const tool = btn.dataset.tool;
+                            lastShapeTool = tool;
+                            this.setTool(tool);
+                            updateShapesIcon(tool);
+                            shapesContainer?.classList.add('shape-active');
+                            closeFlyout();
+                        });
+                        // Prevent click from propagating to canvas
+                        btn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        });
+                    });
+
+                    // Close flyout when pointerdown outside
+                    document.addEventListener('pointerdown', (e) => {
+                        if (shapesContainer && shapesOpen && !shapesContainer.contains(e.target)) {
+                            closeFlyout();
+                        }
+                    }, { capture: true });
+
+                    // When another tool is activated, remove shape-active badge
+                    const origSetTool = this.setTool.bind(this);
+                    this._setToolWithShapeReset = (tool) => {
+                        origSetTool(tool);
+                        if (!['line', 'rect', 'circle', 'star'].includes(tool)) {
+                            shapesContainer?.classList.remove('shape-active');
+                        }
+                    };
+                    // Patch the tool buttons (non-shape) to also reset shapes badge
+                    this.els.overlay.querySelectorAll('[data-tool]').forEach(btn => {
+                        const tool = btn.dataset.tool;
+                        if (!['line', 'rect', 'circle', 'star'].includes(tool)) {
+                            btn.addEventListener('click', () => {
+                                shapesContainer?.classList.remove('shape-active');
+                                closeFlyout();
+                            });
+                        }
+                    });
+
+                    // --- LASSO TOOL LOGIC ---
+                    const lassoBtn = document.getElementById('wb-lasso-btn');
+                    const lassoOverlay = document.getElementById('wb-lasso-overlay');
+                    const lassoActionbar = document.getElementById('wb-lasso-actionbar');
+                    const lassoMoreContainer = document.getElementById('wb-more-container');
+
+                    // Lasso state
+                    this.lasso = {
+                        active: false,
+                        drawing: false,
+                        path: [],
+                        selectedIndices: [],
+                        bbox: null
+                    };
+
+                    const lassoSelf = this;
+
+                    const setLassoActive = (on) => {
+                        lassoSelf.lasso.active = on;
+                        if (on) {
+                            lassoSelf.setTool('pen'); // keep pen cursor logic but override canvas events
+                            lassoBtn?.classList.add('active');
+                            lassoSelf.els.canvas.style.cursor = 'crosshair';
+                            // Close more menu
+                            lassoMoreContainer?.classList.remove('active');
+                        } else {
+                            lassoBtn?.classList.remove('active');
+                            clearLassoUI();
+                        }
+                    };
+
+                    const clearLassoUI = () => {
+                        if (lassoSelf.lasso.floatingCanvas) {
+                            const ctx = lassoSelf.els.canvas.getContext('2d');
+                            const fw = lassoSelf.lasso.floatingCanvas.width / (window.devicePixelRatio || 1);
+                            const fh = lassoSelf.lasso.floatingCanvas.height / (window.devicePixelRatio || 1);
+                            ctx.drawImage(lassoSelf.lasso.floatingCanvas, lassoSelf.lasso.floatingX, lassoSelf.lasso.floatingY, fw, fh);
+                            lassoSelf.saveToHistory();
+                            lassoSelf.lasso.floatingCanvas.remove();
+                            lassoSelf.lasso.floatingCanvas = null;
+                        }
+                        if (lassoOverlay) lassoOverlay.innerHTML = '';
+                        if (lassoActionbar) lassoActionbar.classList.remove('visible');
+                        lassoSelf.lasso.path = [];
+                        lassoSelf.lasso.selectedIndices = [];
+                        lassoSelf.lasso.bbox = null;
+                        lassoSelf.lasso.drawing = false;
+                        lassoSelf.lasso.isMoving = false;
+                        if (lassoSelf.lasso.active) {
+                            lassoSelf.els.canvas.style.cursor = 'crosshair';
+                        }
+                    };
+
+                    const drawLassoPath = (path) => {
+                        if (!lassoOverlay || path.length < 2) return;
+                        const pts = path.map(p => `${p.x},${p.y}`).join(' ');
+                        const lw = Math.max(2, lassoSelf.state.thickness || 2);
+                        lassoOverlay.innerHTML = `
+                            <polygon points="${pts}"
+                                fill="rgba(99,102,241,0.08)"
+                                stroke="rgba(99,102,241,0.8)"
+                                stroke-width="${lw}"
+                                stroke-dasharray="6,3"
+                                stroke-linejoin="round"
+                                fill-rule="evenodd"/>`;
+                    };
+
+                    const pointInPolygon = (px, py, poly) => {
+                        let inside = false;
+                        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+                            const xi = poly[i].x, yi = poly[i].y;
+                            const xj = poly[j].x, yj = poly[j].y;
+                            const intersect = ((yi > py) !== (yj > py)) &&
+                                (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+                            if (intersect) inside = !inside;
+                        }
+                        return inside;
+                    };
+
+                    const findSelectedStrokes = (path) => {
+                        const history = lassoSelf.state.history;
+                        if (!history || history.length === 0) return [];
+                        // Use the latest history snapshot (the most recent state)
+                        const currentSnapshot = history[lassoSelf.state.historyIndex];
+                        if (!currentSnapshot) return [];
+                        const strokes = currentSnapshot.strokes || currentSnapshot;
+                        if (!Array.isArray(strokes)) return [];
+                        const selected = [];
+                        strokes.forEach((stroke, idx) => {
+                            if (!stroke.points || stroke.points.length === 0) return;
+                            // Check if any point of the stroke is inside the lasso
+                            const hits = stroke.points.some(p => pointInPolygon(p.x, p.y, path));
+                            if (hits) selected.push(idx);
+                        });
+                        return selected;
+                    };
+
+                    // Canvas pointer events for lasso
+                    const lassoPointerDown = (e) => {
+                        if (!lassoSelf.lasso.active) return;
+                        if (e.target && e.target.closest && (e.target.closest('#wb-lasso-actionbar') || e.target.closest('#whiteboard-toolbar'))) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const rect = lassoSelf.els.canvas.getBoundingClientRect();
+                        const cx = (e.clientX - rect.left);
+                        const cy = (e.clientY - rect.top);
+
+                        if (lassoSelf.lasso.path && lassoSelf.lasso.path.length > 3 && pointInPolygon(cx, cy, lassoSelf.lasso.path)) {
+                            // We are moving the selection!
+                            lassoSelf.lasso.isMoving = true;
+                            lassoSelf.lasso.moveStartX = cx;
+                            lassoSelf.lasso.moveStartY = cy;
+
+                            if (!lassoSelf.lasso.floatingCanvas) {
+                                // First lift, extract pixels
+                                const path = lassoSelf.lasso.path;
+                                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                                path.forEach(p => {
+                                    if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
+                                    if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y;
+                                });
+                                const w = Math.max(1, Math.ceil(maxX - minX));
+                                const h = Math.max(1, Math.ceil(maxY - minY));
+                                const dpr = window.devicePixelRatio || 1;
+
+                                const fCanvas = document.createElement('canvas');
+                                fCanvas.width = w * dpr;
+                                fCanvas.height = h * dpr;
+                                fCanvas.style.width = w + 'px';
+                                fCanvas.style.height = h + 'px';
+                                fCanvas.style.position = 'absolute';
+                                fCanvas.style.pointerEvents = 'none';
+                                fCanvas.style.zIndex = '25';
+                                fCanvas.style.left = minX + 'px';
+                                fCanvas.style.top = minY + 'px';
+
+                                const offCtx = fCanvas.getContext('2d');
+                                offCtx.scale(dpr, dpr);
+                                offCtx.save();
+                                offCtx.beginPath();
+                                offCtx.moveTo(path[0].x - minX, path[0].y - minY);
+                                path.forEach(p => offCtx.lineTo(p.x - minX, p.y - minY));
+                                offCtx.closePath();
+                                offCtx.clip();
+                                offCtx.drawImage(lassoSelf.els.canvas, minX * dpr, minY * dpr, w * dpr, h * dpr, 0, 0, w, h);
+                                offCtx.restore();
+
+                                document.getElementById('whiteboard-canvas-container').appendChild(fCanvas);
+                                lassoSelf.lasso.floatingCanvas = fCanvas;
+                                lassoSelf.lasso.floatingX = minX;
+                                lassoSelf.lasso.floatingY = minY;
+
+                                // clear main canvas under path
+                                const ctx = lassoSelf.els.canvas.getContext('2d');
+                                ctx.save();
+                                ctx.beginPath();
+                                ctx.moveTo(path[0].x, path[0].y);
+                                path.forEach(p => ctx.lineTo(p.x, p.y));
+                                ctx.closePath();
+                                ctx.clip();
+                                ctx.clearRect(0, 0, lassoSelf.els.canvas.width, lassoSelf.els.canvas.height);
+                                ctx.restore();
+                            }
+                            try { e.target.setPointerCapture(e.pointerId); } catch (_) { }
+                            return;
+                        }
+
+                        // Otherwise start new lasso
+                        clearLassoUI();
+                        lassoSelf.lasso.drawing = true;
+                        lassoSelf.lasso.path = [{ x: cx, y: cy }];
+                        try { e.target.setPointerCapture(e.pointerId); } catch (_) { }
+                    };
+
+                    const lassoPointerMove = (e) => {
+                        if (!lassoSelf.lasso.active) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const rect = lassoSelf.els.canvas.getBoundingClientRect();
+                        const cx = (e.clientX - rect.left);
+                        const cy = (e.clientY - rect.top);
+
+                        if (lassoSelf.lasso.isMoving) {
+                            const dx = cx - lassoSelf.lasso.moveStartX;
+                            const dy = cy - lassoSelf.lasso.moveStartY;
+                            lassoSelf.lasso.moveStartX = cx;
+                            lassoSelf.lasso.moveStartY = cy;
+
+                            lassoSelf.lasso.floatingX += dx;
+                            lassoSelf.lasso.floatingY += dy;
+                            lassoSelf.lasso.floatingCanvas.style.left = lassoSelf.lasso.floatingX + 'px';
+                            lassoSelf.lasso.floatingCanvas.style.top = lassoSelf.lasso.floatingY + 'px';
+
+                            lassoSelf.lasso.path.forEach(p => { p.x += dx; p.y += dy; });
+                            drawLassoPath(lassoSelf.lasso.path);
+                            return;
+                        }
+
+                        if (!lassoSelf.lasso.drawing) return;
+                        lassoSelf.lasso.path.push({ x: cx, y: cy });
+                        drawLassoPath(lassoSelf.lasso.path);
+                    };
+
+                    const lassoPointerUp = (e) => {
+                        if (!lassoSelf.lasso.active) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        if (lassoSelf.lasso.isMoving) {
+                            lassoSelf.lasso.isMoving = false;
+                            return;
+                        }
+
+                        // ending drawing
+                        if (!lassoSelf.lasso.drawing) return;
+                        lassoSelf.lasso.drawing = false;
+                        if (lassoSelf.lasso.path.length > 3) {
+                            // Close the path visually
+                            lassoSelf.lasso.path.push(lassoSelf.lasso.path[0]);
+                            drawLassoPath(lassoSelf.lasso.path);
+                            lassoActionbar?.classList.add('visible');
+                            App.ui.showToast('Selection ready (Drag inside to move)', { duration: 2500 });
+                        } else {
+                            clearLassoUI();
+                        }
+                    };
+
+                    // Add lasso pointer listeners on canvas container
+                    const lassoContainer = document.getElementById('whiteboard-canvas-container');
+                    if (lassoContainer) {
+                        lassoContainer.addEventListener('pointerdown', lassoPointerDown, { capture: true });
+                        lassoContainer.addEventListener('pointermove', lassoPointerMove, { capture: true, passive: false });
+                        lassoContainer.addEventListener('pointerup', lassoPointerUp, { capture: true });
+                    }
+
+                    // Wire lasso button
+                    lassoBtn?.addEventListener('click', () => {
+                        const isNowActive = !lassoSelf.lasso.active;
+                        setLassoActive(isNowActive);
+                        if (!isNowActive) {
+                            // Restore to pen tool
+                            lassoSelf.setTool('pen');
+                        }
+                    });
+
+                    // Lasso delete
+                    document.getElementById('lasso-delete-btn')?.addEventListener('click', () => {
+                        if (!lassoSelf.lasso.path || lassoSelf.lasso.path.length < 3) return;
+
+                        if (lassoSelf.lasso.floatingCanvas) {
+                            lassoSelf.lasso.floatingCanvas.remove();
+                            lassoSelf.lasso.floatingCanvas = null;
+                            // already removed from main canvas during initial drag, so just history save
+                            lassoSelf.saveToHistory();
+                            clearLassoUI();
+                        } else {
+                            // Clear the canvas area inside the lasso polygon using clip
+                            const ctx = lassoSelf.els.canvas.getContext('2d');
+                            if (!ctx) return;
+                            ctx.save();
+                            ctx.beginPath();
+                            const path = lassoSelf.lasso.path;
+                            ctx.moveTo(path[0].x, path[0].y);
+                            path.forEach(p => ctx.lineTo(p.x, p.y));
+                            ctx.closePath();
+                            ctx.clip();
+                            ctx.clearRect(0, 0, lassoSelf.els.canvas.width, lassoSelf.els.canvas.height);
+                            ctx.restore();
+                            // Save to history
+                            lassoSelf.saveToHistory();
+                            clearLassoUI();
+                        }
+                        App.ui.showToast('Selected strokes deleted', { duration: 1200 });
+                    });
+
+                    // Lasso copy as PNG
+                    document.getElementById('lasso-copy-btn')?.addEventListener('click', async () => {
+                        if (!lassoSelf.lasso.path || lassoSelf.lasso.path.length < 3) return;
+
+                        let targetCanvas = lassoSelf.lasso.floatingCanvas;
+
+                        if (!targetCanvas) {
+                            const path = lassoSelf.lasso.path;
+                            // Compute bounding box
+                            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                            path.forEach(p => {
+                                if (p.x < minX) minX = p.x;
+                                if (p.y < minY) minY = p.y;
+                                if (p.x > maxX) maxX = p.x;
+                                if (p.y > maxY) maxY = p.y;
+                            });
+                            const w = Math.ceil(maxX - minX);
+                            const h = Math.ceil(maxY - minY);
+                            if (w < 2 || h < 2) return;
+
+                            const dpr = window.devicePixelRatio || 1;
+                            // Create offscreen canvas
+                            targetCanvas = document.createElement('canvas');
+                            targetCanvas.width = w * dpr;
+                            targetCanvas.height = h * dpr;
+                            // Make it renderable via Blob without implicit scaling issues if drawn later
+                            const offCtx = targetCanvas.getContext('2d');
+                            offCtx.scale(dpr, dpr);
+                            // Clip to lasso shape
+                            offCtx.save();
+                            offCtx.beginPath();
+                            offCtx.moveTo(path[0].x - minX, path[0].y - minY);
+                            path.forEach(p => offCtx.lineTo(p.x - minX, p.y - minY));
+                            offCtx.closePath();
+                            offCtx.clip();
+                            // Draw portion of the main canvas
+                            offCtx.drawImage(lassoSelf.els.canvas, minX * dpr, minY * dpr, w * dpr, h * dpr, 0, 0, w, h);
+                            offCtx.restore();
+                        }
+
+                        try {
+                            targetCanvas.toBlob(async (blob) => {
+                                if (!blob) return;
+                                const item = new ClipboardItem({ 'image/png': blob });
+                                await navigator.clipboard.write([item]);
+                                App.ui.showToast('✅ Copied as PNG — paste anywhere!', { type: 'success' });
+                            }, 'image/png');
+                        } catch (e) {
+                            App.ui.showToast('Copy failed (browser permission needed)', { type: 'error' });
+                        }
+                    });
+
+                    // Lasso dismiss
+                    document.getElementById('lasso-dismiss-btn')?.addEventListener('click', () => {
+                        clearLassoUI();
+                    });
+
+                    // Deactivate lasso when another tool is chosen via toolbar
+                    this.els.overlay.querySelectorAll('[data-tool]').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            if (lassoSelf.lasso.active) {
+                                setLassoActive(false);
+                            }
+                        });
+                    });
                 },
 
                 open(insertMode = 'end', articleId = null) {
@@ -49325,10 +50038,12 @@
                     // Update cursor based on tool
                     const cursors = {
                         'select': 'default',
+                        'hand': 'grab',
                         'pen': 'crosshair',
                         'line': 'crosshair',
                         'rect': 'crosshair',
                         'circle': 'crosshair',
+                        'star': 'crosshair',
                         'text': 'text',
                         'eraser': 'crosshair',
                         'image': 'default',
@@ -49338,7 +50053,7 @@
                     this.els.container.style.cursor = cursors[tool] || 'crosshair'; // Apply to container too
 
                     // Toggle Tool Classes on Container
-                    this.els.container.classList.remove('wb-tool-select', 'wb-tool-pen', 'wb-tool-image', 'wb-tool-text', 'wb-tool-tape');
+                    this.els.container.className = this.els.container.className.replace(/\bwb-tool-\S+/g, '');
                     this.els.container.classList.add(`wb-tool-${tool}`);
 
                     // Handle image tool selection
@@ -49369,6 +50084,32 @@
                         // Change border and text color
                         tb.color = color;
                         this.updateTextBoxVisuals(tb);
+                    }
+
+                    // Recolor Lasso selection if active
+                    if (this.lasso && this.lasso.active && this.lasso.path && this.lasso.path.length >= 3) {
+                        const targetCtx = this.lasso.floatingCanvas ? this.lasso.floatingCanvas.getContext('2d') : this.els.ctx;
+                        if (!targetCtx) return;
+                        targetCtx.save();
+
+                        if (!this.lasso.floatingCanvas) {
+                            targetCtx.beginPath();
+                            const path = this.lasso.path;
+                            targetCtx.moveTo(path[0].x, path[0].y);
+                            path.forEach(p => targetCtx.lineTo(p.x, p.y));
+                            targetCtx.closePath();
+                            targetCtx.clip();
+                        }
+
+                        targetCtx.globalCompositeOperation = 'source-in';
+                        targetCtx.fillStyle = this.getActiveColor();
+                        targetCtx.fillRect(0, 0, targetCtx.canvas.width, targetCtx.canvas.height);
+                        targetCtx.restore();
+
+                        if (!this.lasso.floatingCanvas) {
+                            this.saveToHistory();
+                        }
+                        App.ui.showToast('Selection recolored', { duration: 1200 });
                     }
                 },
 
@@ -49405,6 +50146,13 @@
                     const btn = document.getElementById('whiteboard-thickness-btn');
                     const circle = btn?.querySelector('circle');
                     if (circle) circle.setAttribute('r', 2 + this.state.thickness * 0.5);
+
+                    if (this.lasso && this.lasso.active) {
+                        const lassoPoly = document.querySelector('#wb-lasso-overlay polygon');
+                        if (lassoPoly) {
+                            lassoPoly.setAttribute('stroke-width', Math.max(2, this.state.thickness));
+                        }
+                    }
 
                     App.ui.showToast(`Thickness: ${this.state.thickness}px`, { duration: 1200 });
                 },
@@ -49456,7 +50204,12 @@
 
                 // MOUSE/TOUCH HANDLERS
                 handleMouseDown(e) {
-                    if (this.state.tool === 'select') {
+                    // Prevent drawing if the user is interacting with the toolbar or its flyouts
+                    if (e.target && e.target.closest && e.target.closest('#whiteboard-toolbar')) return;
+                    // Prevent drawing if lasso tool is active (lasso handles its own pointer events)
+                    if (this.lasso && this.lasso.active) return;
+
+                    if (this.state.tool === 'select' || this.state.tool === 'hand') {
                         this.startPanning(e);
                         return;
                     }
@@ -49475,6 +50228,7 @@
                     }
                     this.startDrawing(e);
                 },
+
 
                 handleMouseMove(e) {
                     if (this.state.isPanning) {
@@ -50793,7 +51547,8 @@
                                     canvas.width = naturalWidth;
                                     canvas.height = naturalHeight;
                                     ctx.drawImage(img, 0, 0, naturalWidth, naturalHeight);
-                                    const compressedDataUrl = canvas.toDataURL('image/jpeg', jpegQuality);
+                                    const mimeType = blob.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                                    const compressedDataUrl = canvas.toDataURL(mimeType, jpegQuality);
 
                                     // Display size
                                     let w = naturalWidth;
@@ -50858,7 +51613,8 @@
                                     canvas.width = naturalWidth;
                                     canvas.height = naturalHeight;
                                     ctx.drawImage(img, 0, 0, naturalWidth, naturalHeight);
-                                    const compressedDataUrl = canvas.toDataURL('image/jpeg', jpegQuality);
+                                    const mimeType = blob.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                                    const compressedDataUrl = canvas.toDataURL(mimeType, jpegQuality);
 
                                     // Calculate center
                                     const rect = this.els.container.getBoundingClientRect();
@@ -50923,7 +51679,8 @@
                                         canvas.width = naturalWidth;
                                         canvas.height = naturalHeight;
                                         ctx.drawImage(img, 0, 0, naturalWidth, naturalHeight);
-                                        const compressedDataUrl = canvas.toDataURL('image/jpeg', jpegQuality);
+                                        const mimeType = imageType === 'image/png' ? 'image/png' : 'image/jpeg';
+                                        const compressedDataUrl = canvas.toDataURL(mimeType, jpegQuality);
 
                                         // Default size
                                         let w = naturalWidth;
@@ -51396,7 +52153,7 @@
                     }
 
                     // For shape tools, save the image to restore during preview
-                    if (['line', 'rect', 'circle'].includes(this.state.tool)) {
+                    if (['line', 'rect', 'circle', 'star'].includes(this.state.tool)) {
                         this.state.previewImageData = this.els.ctx.getImageData(0, 0, this.els.canvas.width, this.els.canvas.height);
                     }
                 },
@@ -51466,7 +52223,7 @@
                     this.state.isDrawing = false;
 
                     // Finalize shape if drawing a shape
-                    if (['line', 'rect', 'circle'].includes(this.state.tool) && e) {
+                    if (['line', 'rect', 'circle', 'star'].includes(this.state.tool) && e) {
                         const rect = this.els.canvas.getBoundingClientRect();
                         const pos = {
                             x: (e.clientX - rect.left) / this.state.zoom,
@@ -51501,6 +52258,29 @@
                     } else if (this.state.tool === 'circle') {
                         const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
                         ctx.arc(start.x, start.y, radius, 0, Math.PI * 2);
+                    } else if (this.state.tool === 'star') {
+                        const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+                        const spikes = 5;
+                        const innerRadius = radius / 2;
+                        let rot = Math.PI / 2 * 3;
+                        let x = start.x;
+                        let y = start.y;
+                        const step = Math.PI / spikes;
+
+                        ctx.moveTo(start.x, start.y - radius);
+                        for (let i = 0; i < spikes; i++) {
+                            x = start.x + Math.cos(rot) * radius;
+                            y = start.y + Math.sin(rot) * radius;
+                            ctx.lineTo(x, y);
+                            rot += step;
+
+                            x = start.x + Math.cos(rot) * innerRadius;
+                            y = start.y + Math.sin(rot) * innerRadius;
+                            ctx.lineTo(x, y);
+                            rot += step;
+                        }
+                        ctx.lineTo(start.x, start.y - radius);
+                        ctx.closePath();
                     }
 
                     ctx.stroke();
@@ -51725,7 +52505,35 @@
                             }
                         }
 
-                        // CASE 2: WRITE MODE (Insert into visible Editor DOM)
+                        // CASE 2: READ MODE (Save directly to DB like stage mode)
+                        if (isReadMode && currentArticleId && !this.state.stageModeSrcArticleId) {
+                            try {
+                                const article = App.storage.getArticle(currentArticleId);
+                                if (article) {
+                                    const newContent = (article.content || '') + `<p>${html}</p><p><br></p>`;
+                                    await App.storage.updateArticle(currentArticleId, {
+                                        content: newContent,
+                                        updatedAt: new Date().toISOString()
+                                    });
+                                    this.close();
+                                    App.ui.showToast('🎨 Sketch saved to article!', { type: 'success' });
+                                    // Reload the article view so the embedded whiteboard appears
+                                    if (typeof App.events.loadArticle === 'function') {
+                                        App.events.loadArticle(currentArticleId);
+                                    }
+                                    return;
+                                } else {
+                                    App.ui.showToast('Article not found', { type: 'error' });
+                                    return;
+                                }
+                            } catch (dbErr) {
+                                console.error('Failed to save whiteboard (read mode):', dbErr);
+                                App.ui.showToast('Failed to save: ' + dbErr.message, { type: 'error' });
+                                return;
+                            }
+                        }
+
+                        // CASE 3: WRITE MODE (Insert into visible Editor DOM)
                         // Try to insert into visible article-content
                         let contentDiv = document.getElementById('article-content');
 
