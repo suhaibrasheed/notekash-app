@@ -41290,7 +41290,7 @@
                     if (lines.length < 2) return null; // Need at least question + 1 option
 
                     // Option detection patterns - ordered by specificity
-                    const LETTER_OPTION = /^\s*(?:[\[\(]\s*[a-zA-Z]\s*[\]\)]|[a-zA-Z]\s*[\.\)\-\:])(?:\s+|$)/; // [A], (a), A., a), A-, A: etc.
+                    const LETTER_OPTION = /^\s*(?:[\[\(]\s*[a-zA-Z]\s*[\]\)]|[a-zA-Z][\.\)\-\:]|[a-eA-E]\s+)(?=\s|\d|$)/; // [A], (a), A., a), A-, A: or A space (for A-E) etc.
                     const ROMAN_OPTION = /^\s*(?:[\[\(]\s*[iIvVxX]+\s*[\]\)]|[iIvVxX]+\s*[\.\)\-])(?:\s+|$)/; // (i), (ii), [I], [II], i., ii) etc.
                     const BULLET_OPTION = /^\s*[\u2022\u25E6\u25AA\u25CF\u25CB\u2023•◦▪●○‣\-\*]\s+/; // •, ○, -, * etc.
                     const NUMBER_BRACKET = /^\s*[\[\(]\s*\d+\s*[\]\)]\.?\s+/; // [1], (1), [2] etc.
@@ -41422,20 +41422,45 @@
 
 
                 _finalizeBlock(block) {
-                    const STRIP_OPTION_MARKER = /^\s*(?:[\[\(]\s*[a-zA-Z0-9iIvVxX]+\s*[\]\)]\.?|[a-zA-Z][\.\)\-\:]|[\u2022\u25E6\u25AA\u25CF\u25CB\u2023•◦▪●○‣\-\*]|\d+[\.\)])\s*/;
+                    const STRIP_OPTION_MARKER = /^\s*(?:[\[\(]\s*[a-zA-Z0-9iIvVxX]+\s*[\]\)]\.?|[a-zA-Z][\.\)\-\:]|[a-eA-E]\s+|[\u2022\u25E6\u25AA\u25CF\u25CB\u2023•◦▪●○‣\-\*]|\d+[\.\)])\s*/;
+                    const NUMBERED_STATEMENT = /^\s*\d+[\.\)]\s+(?!\s*only\s|\s*all\s|\s*none\s|\s*both\s)/i;
 
-                    let cleanQ = '';
-                    if (block.question && typeof block.question === 'string') {
-                        cleanQ = block.question;
-                    } else if (block.qLines && Array.isArray(block.qLines)) {
-                        cleanQ = block.qLines.join('<br>').trim();
+                    let qLines = [];
+                    if (block.qLines) {
+                        qLines = [...block.qLines];
+                    } else if (block.question && typeof block.question === 'string') {
+                        qLines = block.question.split(/<br>|\n/);
                     } else if (block.q && typeof block.q === 'string') {
-                        cleanQ = block.q;
+                        qLines = block.q.split(/<br>|\n/);
                     }
 
-                    cleanQ = cleanQ.replace(/^(Question\s*)?\d*[\.:)]?\s*/i, '').trim();
-                    cleanQ = cleanQ.replace(/^Q[\.:]\s*/i, '').trim();
+                    // Filter out MCQ metadata/question numbers from the start
+                    while (qLines.length > 0) {
+                        const line = qLines[0].trim();
+                        if (line.length === 0) {
+                            qLines.shift();
+                            continue;
+                        }
 
+                        // Is it a statement like "1. ..." or "2. ..."? If so, DO NOT STRIP.
+                        if (NUMBERED_STATEMENT.test(line)) break;
+
+                        // Is it a standard question number or prefix (e.g., "7.", "Question 1:", "MCQ:")
+                        const isMetadata = /^(MCQ|Question|Q)?[\d\s\.:)]+$/i.test(line);
+                        if (isMetadata) {
+                            qLines.shift();
+                            continue;
+                        }
+
+                        // Try stripping just the leading marker from the first line (e.g., "7. With reference...")
+                        const leadingMarker = /^(MCQ|Question|Q)?\s*\d+[\.:)]\s*/i;
+                        if (leadingMarker.test(line)) {
+                            qLines[0] = line.replace(leadingMarker, '').trim();
+                        }
+                        break;
+                    }
+
+                    let cleanQ = qLines.join('<br>').trim();
                     const rawOpts = block.options || block.oLines || block.o || [];
 
                     const cleanOptions = rawOpts.map(o => {
