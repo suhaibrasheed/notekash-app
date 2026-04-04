@@ -41286,8 +41286,55 @@
 
 
                 _parseSingleMcq(text) {
-                    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                    if (lines.length < 2) return null; // Need at least question + 1 option
+                    const allLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    if (allLines.length < 2) return null; // Need at least question + 1 option
+
+                    let parsedExplanationLines = [];
+                    let parsedAnswerStr = null;
+
+                    let mcqLinesEndIndex = allLines.length;
+                    let inExplanationZone = false;
+
+                    for (let i = 0; i < allLines.length; i++) {
+                        const line = allLines[i];
+
+                        // Answer detection (before or after explanation)
+                        const ansMatch = line.match(/^(?:Correct\s+Answer|Answer|Ans)[\s\:\-]+([a-eA-E]|[1-5])(?:\s|$|\.)/i);
+                        if (ansMatch && !inExplanationZone) {
+                            parsedAnswerStr = ansMatch[1].trim().toUpperCase();
+                            if (i < mcqLinesEndIndex) mcqLinesEndIndex = i;
+                            continue;
+                        }
+
+                        // Explanation detection
+                        const expMatch = line.match(/^(?:Explanation|Exp|Solution|Sol)[\s\:\-]*(.*)/i);
+                        if (expMatch && !inExplanationZone) {
+                            inExplanationZone = true;
+                            if (i < mcqLinesEndIndex) mcqLinesEndIndex = i;
+                            const firstLineExp = expMatch[1].trim();
+                            if (firstLineExp) parsedExplanationLines.push(firstLineExp);
+                            continue;
+                        }
+
+                        if (inExplanationZone) {
+                            // Can also catch answer inside explanation zone just in case
+                            const ansMatchInExp = line.match(/^(?:Correct\s+Answer|Answer|Ans)[\s\:\-]+([a-eA-E]|[1-5])(?:\s|$|\.)/i);
+                            if (ansMatchInExp) {
+                                parsedAnswerStr = ansMatchInExp[1].trim().toUpperCase();
+                            } else {
+                                parsedExplanationLines.push(line);
+                            }
+                        }
+                    }
+
+                    let lines = allLines.slice(0, mcqLinesEndIndex);
+                    // Fail-safe: if metadata stripping removed too much, fallback
+                    if (lines.length < 2) {
+                        lines = allLines;
+                        parsedExplanationLines = [];
+                        parsedAnswerStr = null;
+                    }
+
 
                     // Option detection patterns - ordered by specificity
                     const LETTER_OPTION = /^\s*(?:[\[\(]\s*[a-zA-Z]\s*[\]\)]|[a-zA-Z][\.\)\-\:]|[a-eA-E]\s+)(?=\s|\d|$)/; // [A], (a), A., a), A-, A: or A space (for A-E) etc.
@@ -41410,7 +41457,9 @@
                     // STEP 3: Clean up and build the result
                     return this._finalizeBlock({
                         qLines: questionLines,
-                        oLines: optionLines
+                        oLines: optionLines,
+                        explanation: parsedExplanationLines.length > 0 ? parsedExplanationLines.join('<br>') : null,
+                        correctAnswerLabel: parsedAnswerStr
                     });
                 },
 
@@ -41480,7 +41529,12 @@
                         return null;
                     }
 
-                    return { question: cleanQ, options: cleanOptions };
+                    return {
+                        question: cleanQ,
+                        options: cleanOptions,
+                        explanation: block.explanation,
+                        correctAnswerLabel: block.correctAnswerLabel
+                    };
                 },
 
                 icons: {
@@ -45108,13 +45162,26 @@
                     }
 
                     const fullHtml = mcqBlocks.map(block => {
-                        const optionsHtml = block.options.map(optText => `
-                            <div class="nk-mcq-option" data-is-correct="false">
+                        const optionsHtml = block.options.map((optText, index) => {
+                            let isCorrect = false;
+                            if (block.correctAnswerLabel) {
+                                const label = block.correctAnswerLabel;
+                                if (/^[A-E]$/i.test(label)) {
+                                    if (index === label.toUpperCase().charCodeAt(0) - 65) isCorrect = true;
+                                } else if (/^[1-5]$/.test(label)) {
+                                    if (index === parseInt(label) - 1) isCorrect = true;
+                                }
+                            }
+
+                            return `
+                            <div class="nk-mcq-option" data-is-correct="${isCorrect ? 'true' : 'false'}">
                                 <div class="nk-mcq-option-radio"></div>
                                 <div class="nk-mcq-option-text" contenteditable="true">${App.util.escapeHtml(optText)}</div>
                                 <button class="nk-mcq-delete-option" title="Delete Option">&times;</button>
                             </div>
-                        `).join('');
+                        `}).join('');
+
+                        const expHtml = `<div class="nk-mcq-explanation" contenteditable="true" data-placeholder="Add answer explanation (optional)...">${block.explanation || ''}</div>`;
 
                         return `
                         <div class="nk-mcq-block" contenteditable="false">
@@ -45126,7 +45193,7 @@
                             <div class="nk-mcq-options">${optionsHtml}</div>
                             <button class="btn btn-secondary nk-mcq-add-option">+ Add Option</button>
                             
-                            <div class="nk-mcq-explanation" contenteditable="true" data-placeholder="Add answer explanation (optional)..."></div>
+                            ${expHtml}
                         </div>
                         <p><br></p>`;
                     }).join('');
