@@ -2734,6 +2734,16 @@
             outline: 2px solid var(--primary-color);
         }
 
+        /* SURGICAL FIX: Disable image selection UI and toolbar in Study Mode */
+        body.study-mode-active .resize-handle,
+        body.study-mode-active #image-toolbar {
+            display: none !important;
+        }
+
+        body.study-mode-active .image-container.selected img {
+            outline: none !important;
+        }
+
         .nk-visual-flashcard.selected .nk-vfc-inner {
             outline: 2px solid var(--primary-color);
             border-radius: 16px;
@@ -32219,13 +32229,52 @@
 
                 handleFocusIn(e) {
                     const target = e.target;
-                    const imageContainer = target.closest('.image-container');
-                    if (!imageContainer) App.events.deselectImage();
+                    const imageContainer = target.closest('.image-container, .nk-visual-flashcard');
+
+                    // SURGICAL FIX: Prevent focus events on MCQ explanations or toolbars from killing image selection
+                    if (!imageContainer && !target.closest('#image-toolbar, .selection-toolbar, .btn-icon, .nk-mcq-explanation, .nk-accordion-content')) {
+                        App.events.deselectImage();
+                    }
                 },
 
                 async handleContentClick(e) {
                     const target = e.target;
                     const isWriteMode = App.state.currentMode === 'write';
+
+                    // --- TOP PRIORITY: Image Selection & Smart Wrapping ---
+                    if (target.tagName === 'IMG') {
+                        let container = target.closest('.image-container, .nk-visual-flashcard');
+
+                        // SURGICAL FIX: Wrap "wild" images (e.g. in MCQ explanations) to make them interactive
+                        if (!container && target.closest('#article-content')) {
+                            container = document.createElement('div');
+                            container.className = 'image-container';
+                            container.contentEditable = 'false';
+
+                            // Capture dimensions for consistent aspect-ratio resizing
+                            target.dataset.originalWidth = target.dataset.originalWidth || target.width || target.naturalWidth || 400;
+                            target.dataset.originalHeight = target.dataset.originalHeight || target.height || target.naturalHeight || 300;
+
+                            target.parentNode.insertBefore(container, target);
+                            container.appendChild(target);
+
+                            const handle = document.createElement('div');
+                            handle.className = 'resize-handle resize-handle-se';
+                            container.appendChild(handle);
+
+                            App.state.isArticleDirty = true;
+                        }
+
+                        if (container) {
+                            App.events.selectImage(container);
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return; // Stop processing MCQ or other clicks when an image is clicked
+                        }
+                    } else if (App.state.selectedImageContainer && !target.closest('.image-container, .nk-visual-flashcard, #image-toolbar, .btn-icon')) {
+                        // Clicked away from image: deselect
+                        App.events.deselectImage();
+                    }
 
                     // --- NEW LOGIC FOR FOCUS/STAGE MODE ACCORDIONS ---
                     const focusOverlay = target.closest('.focus-mode-overlay');
@@ -32577,12 +32626,6 @@
                             if (newDateEl) { App.util.placeCursor(newDateEl); window.getSelection().selectAllChildren(newDateEl); }
                         }
                         return;
-                    }
-                    if (target.tagName === 'IMG') {
-                        const container = target.closest('.image-container');
-                        if (container) App.events.selectImage(container);
-                    } else if (!target.closest('.image-container')) {
-                        App.events.deselectImage();
                     }
                 },
 
