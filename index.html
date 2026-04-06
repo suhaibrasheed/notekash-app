@@ -43758,7 +43758,7 @@
                             const metaContainer = document.querySelector('.zen-meta-container');
                             if (titleEl) {
                                 titleEl.classList.toggle('hidden', !zenTitleVisible);
-                                titleEl.textContent = App.hub.util.escapeHtml(currentTaskTitle);
+                                titleEl.textContent = currentTaskTitle;
                             }
                             if (metaContainer) metaContainer.classList.toggle('hidden', !zenTitleVisible);
                             const pillsRow = document.getElementById('zen-pills-row');
