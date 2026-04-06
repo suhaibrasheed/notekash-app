@@ -21681,7 +21681,7 @@
                     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
                     const authUrl = new URL('https://www.dropbox.com/oauth2/authorize');
 
-                    const dynamicRedirectUri = window.location.origin + window.location.pathname;
+                    const dynamicRedirectUri = (window.location.origin + window.location.pathname).replace(/\/$/, "");
 
                     authUrl.searchParams.set('client_id', clientId);
                     authUrl.searchParams.set('response_type', 'code');
@@ -21713,7 +21713,7 @@
                         return;
                     }
                     try {
-                        const dynamicRedirectUri = window.location.origin + window.location.pathname;
+                        const dynamicRedirectUri = (window.location.origin + window.location.pathname).replace(/\/$/, "");
 
                         const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
                             method: 'POST',
