@@ -21557,8 +21557,9 @@
                     if (!articleInState) return;
                     App.state.articles = App.state.articles.filter(a => a.id !== id);
                     try {
+                        // FIX: Record deletion across BOTH storage modes to stop zombie notes
+                        await this.recordDeletion(id);
                         if (App.state.directoryHandle) {
-                            await this.recordDeletion(id);
                             await App.state.directoryHandle.removeEntry(`${id}.json`).catch(e => { if (e.name !== 'NotFoundError') throw e; });
                             await this.generateIndexFromState();
                         } else {
@@ -21946,7 +21947,8 @@
                             else if (!local && remote) { toDownloadArticles.push(remote); }
                             else if (local && remote) {
                                 const localDate = new Date(local.updatedAt);
-                                const remoteDate = new Date(remote.server_modified);
+                                // FIX: Apples-to-apples comparison using logical editing timestamp (client_modified).
+                                const remoteDate = new Date(remote.client_modified || remote.server_modified);
                                 if (Math.abs(localDate.getTime() - remoteDate.getTime()) > TOLERANCE_MS) {
                                     if (localDate > remoteDate) { toUploadArticles.push(local); }
                                     else { toDownloadArticles.push(remote); }
@@ -21996,7 +21998,16 @@
                             try {
                                 const path = item.type === 'article' ? `/${item.data.id}.json` : `/${item.name}`;
                                 const body = item.type === 'article' ? JSON.stringify(item.data) : JSON.stringify(item.data);
-                                await this.apiCall('files/upload', body, { headers: { 'Dropbox-API-Arg': JSON.stringify({ path, mode: 'overwrite' }) } });
+
+                                const uploadArgs = { path, mode: 'overwrite' };
+                                if (item.type === 'article' && item.data.updatedAt) {
+                                    const dateObj = new Date(item.data.updatedAt);
+                                    if (!isNaN(dateObj.getTime())) {
+                                        uploadArgs.client_modified = dateObj.toISOString().split('.')[0] + 'Z';
+                                    }
+                                }
+
+                                await this.apiCall('files/upload', body, { headers: { 'Dropbox-API-Arg': JSON.stringify(uploadArgs) } });
                                 stats.uploaded++;
                             } catch (e) {
                                 console.error(`Failed upload: ${item.name || item.data.id}`, e);
