@@ -2247,7 +2247,7 @@
             border-left: 3px solid var(--primary-color);
             margin-left: 0;
             padding-left: 1.5em;
-            color: var(--text-secondary);
+            color: color-mix(in srgb, var(--text-primary), transparent 20%);
             font-style: italic;
         }
 
@@ -3795,8 +3795,6 @@
 
         .task-item.completed .task-title {
             color: var(--success-color);
-            background-size: 100% 2px;
-            background-position: 0 55%;
         }
 
         .task-checkbox {
@@ -3820,11 +3818,7 @@
             word-break: break-word;
             font-size: calc(var(--article-font-size) * 0.9);
             line-height: 1.35;
-            background-image: linear-gradient(var(--success-color), var(--success-color));
-            background-repeat: no-repeat;
-            background-position: 0 55%;
-            background-size: 0% 2px;
-            transition: background-size 220ms ease, color 220ms ease;
+            transition: color 220ms ease;
         }
 
         .task-item.is-backlog {
@@ -4934,15 +4928,24 @@
         .nk-checkbox-wrapper {
             display: flex;
             align-items: flex-start;
-            gap: 12px;
-            margin: 0.5em 0;
+            gap: 8px;
+            margin: 0.3em 0;
             cursor: pointer;
-            transition: opacity 0.2s ease;
+            transition: all 0.2s ease;
+        }
+
+        /* Tighter layout inside tables */
+        td .nk-checkbox-wrapper,
+        th .nk-checkbox-wrapper {
+            margin: 0;
+            gap: 8px;
+            align-items: flex-start;
         }
 
         .nk-checkbox-wrapper:hover .nk-checkbox-box {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px var(--bg-tertiary);
+            transform: scale(1.05);
         }
 
         /* Unchecked State - Consistent with Text */
@@ -4951,23 +4954,52 @@
             height: 18px;
             border: 2px solid var(--text-primary);
             border-radius: 6px;
-            margin-right: 12px;
-            margin-top: 5px;
-            /* Centralizes with first line of text */
+            margin-top: 8.5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             flex-shrink: 0;
             background-color: transparent;
         }
 
-        /* Checked State - Premium Green Theme */
+        td .nk-checkbox-wrapper .nk-checkbox-box,
+        th .nk-checkbox-wrapper .nk-checkbox-box {
+            margin-top: 9px;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Checked State - Green Theme */
         .nk-checkbox-wrapper[data-checked="true"] .nk-checkbox-box {
             background-color: var(--text-green);
             border-color: var(--text-green);
-            box-shadow: none;
             opacity: 1;
+        }
+
+        /* Add checkmark icon using SVG inside box when checked */
+        .nk-checkbox-wrapper[data-checked="true"] .nk-checkbox-box::after {
+            content: '';
+            width: 4px;
+            height: 8px;
+            border: solid var(--bg-primary, #000);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+            margin-bottom: 2px;
+            margin-left: 1px;
+            animation: checkmarkIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes checkmarkIn {
+            0% {
+                transform: rotate(45deg) scale(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: rotate(45deg) scale(1);
+                opacity: 1;
+            }
         }
 
         .nk-checkbox-text {
@@ -4975,16 +5007,15 @@
             flex-grow: 1;
             transition: all 0.3s ease;
             color: var(--text-primary);
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
-        /* Use Theme-Sensitive Green for Text when Checked */
+        /* Use Theme-Sensitive Green color for Text when Checked */
         .nk-checkbox-wrapper[data-checked="true"] .nk-checkbox-text {
             color: var(--text-green);
             text-decoration: line-through;
-            text-decoration-color: var(--text-green);
             opacity: 0.8;
-            transition: color 0.2s ease;
+            transition: all 0.2s ease;
         }
 
 
@@ -7672,6 +7703,7 @@
             margin-left: 0.25em;
             padding-left: 0.5em;
             border-left: 3px solid var(--border-color);
+            color: color-mix(in srgb, var(--text-primary), transparent 20%);
             font-style: italic;
         }
 
@@ -21651,6 +21683,8 @@
                 },
                 async _getAllArticlesFromCurrentStore() {
                     // --- SMART SYNC OPTIMIZATION ---
+                    // If we've already loaded and hydrated all articles in memory, use that as the source of truth for sync comparison.
+                    // This avoids hitting the disk for every single article file and prevents the "Loading articles" toast from appearing during background syncs.
                     if (App.state.isHydrated && App.state.articles && App.state.articles.length > 0) {
                         return App.state.articles;
                     }
@@ -23723,9 +23757,6 @@
                             <button class="btn-icon" title="Insert Image from Gallery" onmousedown="event.preventDefault()" onclick="document.getElementById('write-mode-image-input').click()" aria-label="Insert image from gallery">${App.util.icons.image}</button>
                             <button class="btn-icon" title="Import PDF" onmousedown="event.preventDefault()" onclick="App.pdf.triggerImport()" aria-label="Import PDF">${App.util.icons.pdf}</button>
                             
-                            <button class="btn-icon" title="Insert Checkbox" data-action="insertCheckbox" onmousedown="event.preventDefault()" aria-label="Insert checkbox">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path><polyline points="9 11 12 14 22 4"></polyline></svg>
-                            </button>
                             <button class="btn-icon" title="Whiteboard / Sketch" onmousedown="event.preventDefault()" onclick="App.whiteboard.open('cursor')" aria-label="Open whiteboard sketch">
                                 <i class="fa-solid fa-pen-nib" style="font-size:17px;"></i>
                             </button>
@@ -23781,6 +23812,7 @@
                                 <button class="btn-icon" title="Bold (Cmd/Ctrl+B)" data-action="execCommand" data-value="bold" onmousedown="event.preventDefault()" aria-label="Bold text"><b>B</b></button>
                                 <button class="btn-icon" title="Italic (Cmd/Ctrl+I)" data-action="execCommand" data-value="italic" onmousedown="event.preventDefault()" aria-label="Italicize text"><i>I</i></button>
                                 <button class="btn-icon" title="Underline (Cmd/Ctrl+U)" data-action="execCommand" data-value="underline" onmousedown="event.preventDefault()" aria-label="Underline text"><u>U</u></button>
+                                <button class="btn-icon" title="Insert Checkbox" data-action="insertCheckbox" onmousedown="event.preventDefault()" aria-label="Insert Checkbox"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path><polyline points="9 11 12 14 22 4"></polyline></svg></button>
                                 <button class="btn-icon" title="Mind Map Node (Cmd/Ctrl+Shift+M)" onmousedown="event.preventDefault(); App.events.wrapMindMapNode()" aria-label="Create Mind Map Node"><i class="fa-solid fa-sitemap"></i></button>
                         </div>
                     </div>
@@ -25663,6 +25695,7 @@
                                     <button class="btn-icon" title="Bold (Cmd/Ctrl+B)" onmousedown="event.preventDefault(); document.execCommand('bold', false, null);" aria-label="Bold text"><b>B</b></button>
                                     <button class="btn-icon" title="Italic (Cmd/Ctrl+I)" onmousedown="event.preventDefault(); document.execCommand('italic', false, null);" aria-label="Italicize text"><i>I</i></button>
                                     <button class="btn-icon" title="Underline (Cmd/Ctrl+U)" onmousedown="event.preventDefault(); document.execCommand('underline', false, null);" aria-label="Underline text"><u>U</u></button>
+                                    <button class="btn-icon" title="Insert Checkbox" data-action="insertCheckbox" onmousedown="event.preventDefault(); App.events.handleArticleControlsClick({ target: { closest: () => ({ dataset: { action: 'insertCheckbox' } }) } })" aria-label="Insert checkbox"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path><polyline points="9 11 12 14 22 4"></polyline></svg></button>
                                     <button class="btn-icon" title="Create Mind Map Node (Cmd/Ctrl+Shift+M)" onmousedown="event.preventDefault(); App.events.wrapMindMapNode()"><i class="fa-solid fa-sitemap"></i></button>
                                 </div>
                             </div>
@@ -36884,12 +36917,33 @@
                         case 'format': if (value === 'cloze') App.events.applyFormatting('cloze'); else App.events.applyFormatting('class', value); break;
                         case 'manageTable': App.events.showTableModal(); break;
                         case 'insertAccordion': App.events.insertAccordionCard(); break;
-                        case 'insertCheckbox':
-                            const checkboxHTML = `<div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box"></span><span class="nk-checkbox-text"><br></span></div><p><br></p>`;
+                        case 'insertCheckbox': {
+                            const selection = window.getSelection();
+                            let selectedText = '';
+                            if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+                                selectedText = selection.toString().trim().replace(/\n/g, ' ');
+                            }
+                            const checkboxTextContent = selectedText ? selectedText : '<br>';
+                            const insertPara = !selectedText;
+                            const checkboxHTML = `<div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box"></span><span class="nk-checkbox-text">${checkboxTextContent}</span></div>${insertPara ? '<p><br></p>' : ''}`;
                             document.execCommand('insertHTML', false, checkboxHTML);
-                            setTimeout(() => { const lastCheckbox = document.querySelector('.nk-checkbox-wrapper:last-of-type .nk-checkbox-text'); if (lastCheckbox) App.util.placeCursor(lastCheckbox); }, 10);
+                            setTimeout(() => {
+                                if (!selectedText) {
+                                    const sel = window.getSelection();
+                                    if (sel && sel.focusNode) {
+                                        const wrapper = sel.focusNode.nodeType === 1 ? sel.focusNode.previousElementSibling : sel.focusNode.parentElement.previousElementSibling;
+                                        if (wrapper && wrapper.classList && wrapper.classList.contains('nk-checkbox-wrapper')) {
+                                            App.util.placeCursor(wrapper.querySelector('.nk-checkbox-text'));
+                                            return;
+                                        }
+                                    }
+                                    const lastCheckbox = document.querySelector('.nk-checkbox-wrapper:last-of-type .nk-checkbox-text');
+                                    if (lastCheckbox) App.util.placeCursor(lastCheckbox);
+                                }
+                            }, 10);
                             App.state.isArticleDirty = true;
                             break;
+                        }
                         case 'applyListStyle':
                             const selection = window.getSelection(); if (!selection.focusNode) break;
                             const focusElement = selection.focusNode.nodeType === Node.TEXT_NODE ? selection.focusNode.parentElement : selection.focusNode;
@@ -39044,7 +39098,7 @@
                                         .highlight-7 { background-color: var(--hl-7-bg); border-color: var(--hl-7-border); }
                                         .text-red { color: var(--text-red); } .text-green { color: var(--text-green); } .text-blue { color: var(--text-blue); }
                                         .text-underline { text-decoration: underline; }
-                                        blockquote { border-left: 3px solid var(--primary-color); margin-left: 0; padding-left: 1.5em; color: var(--text-secondary); font-style: italic; }
+                                        blockquote { border-left: 3px solid var(--primary-color); margin-left: 0; padding-left: 1.5em; color: color-mix(in srgb, var(--text-primary), transparent 20%); font-style: italic; }
                                         hr { border: none; border-top: 1px solid var(--border-color); margin: 2em 0; } 
                                         ${watermarkCSS}
                                         ${nativeElementsCSS}
