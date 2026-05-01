@@ -44382,6 +44382,7 @@
                         { id: 'deck', title: 'Insert Decktile', desc: 'A container for multiple text tiles', icon: '🗂️', execute: () => App.commandPalette.insertTextileDeck(), isPremium: true },
                         { id: 'convert', title: 'Convert List to Deck', desc: 'Turns a bulleted list into a Decktile', icon: '🪄', execute: () => App.commandPalette.convertListToDeck(), isPremium: true },
                         { id: 'textile', title: 'Insert Text Tile', desc: 'e.g., textile My important quote', icon: '📝', execute: () => App.commandPalette.insertTextTile(), isPremium: true },
+                        { id: 'copymcq', title: 'Copy All MCQs', desc: 'Copy all MCQs in format for Creator Studio', icon: '📋', execute: () => App.commandPalette.copyAllMcqs() },
                         { id: 'convertMcq', title: 'Convert to MCQ', desc: 'Convert selected text to an MCQ block', icon: '🪄', selection: true, execute: () => App.commandPalette.convertSelectionToMcq(), isPremium: true },
                         { id: 'clearFormatting', title: 'Clear Formatting', desc: 'Remove all custom styles from selected text', icon: '🧹', selection: true, execute: () => App.commandPalette.clearFormatting() },
                         { id: 'pdf', title: 'Import PDF', desc: 'Attach a PDF file to this note', icon: '📄', execute: () => App.pdf.triggerImport() },
@@ -44574,48 +44575,32 @@
                 },
 
                 copyAllContents() {
+                    const articleContent = document.getElementById('article-content');
+                    if (!articleContent) {
+                        App.ui.showToast('Nothing to copy.', { type: 'warning' });
+                        return;
+                    }
+
                     try {
-                        this._restoreEditor();
-                        const articleContent = document.getElementById('article-content');
-                        if (!articleContent) {
-                            App.ui.showToast('Nothing to copy.', { type: 'warning' });
-                            return;
-                        }
+                        const html = articleContent.innerHTML;
+                        const text = articleContent.innerText;
 
-                        // Temporarily bypass contenteditable="false" restriction for copying rich blocks like MCQs
-                        const uneditableElements = articleContent.querySelectorAll('[contenteditable="false"]');
-                        uneditableElements.forEach(el => el.setAttribute('contenteditable', 'true'));
+                        const clipboardItem = new ClipboardItem({
+                            "text/html": new Blob([html], { type: "text/html" }),
+                            "text/plain": new Blob([text], { type: "text/plain" })
+                        });
 
-                        const selection = window.getSelection();
-                        let savedRange = null;
-                        if (selection.rangeCount > 0) {
-                            savedRange = selection.getRangeAt(0);
-                        }
-
-                        const range = document.createRange();
-                        range.selectNodeContents(articleContent);
-
-                        selection.removeAllRanges();
-                        selection.addRange(range);
-
-                        const successful = document.execCommand('copy');
-
-                        // Restore contenteditable states
-                        uneditableElements.forEach(el => el.setAttribute('contenteditable', 'false'));
-
-                        selection.removeAllRanges();
-                        if (savedRange) {
-                            selection.addRange(savedRange);
-                        }
-
-                        if (successful) {
+                        navigator.clipboard.write([clipboardItem]).then(() => {
                             App.ui.showToast('Copied full note to clipboard!', { type: 'success' });
-                        } else {
-                            App.ui.showToast('Could not copy note.', { type: 'error' });
-                        }
+                        }).catch(err => {
+                            console.error('Clipboard write failed:', err);
+                            navigator.clipboard.writeText(text);
+                            App.ui.showToast('Copied note to clipboard (text only)!', { type: 'success' });
+                        });
                     } catch (err) {
                         console.error('Copy All failed:', err);
-                        App.ui.showToast('Could not copy note.', { type: 'error' });
+                        navigator.clipboard.writeText(articleContent ? articleContent.innerText : '');
+                        App.ui.showToast('Copied note to clipboard (text only)!', { type: 'success' });
                     }
                 },
 
@@ -45276,6 +45261,62 @@
                         App.state.isArticleDirty = true;
                     } catch (e) {
                         App.ui.showToast('Invalid URL format', { type: 'error' });
+                    }
+                },
+
+                copyAllMcqs() {
+                    const article = document.getElementById('article-content');
+                    if (!article) return;
+
+                    const mcqBlocks = article.querySelectorAll('.nk-mcq-block');
+                    if (mcqBlocks.length === 0) {
+                        App.ui.showToast("No MCQs found in the current article.", { type: 'warning' });
+                        return;
+                    }
+
+                    let htmlPayload = '';
+                    let textPayload = '';
+
+                    mcqBlocks.forEach((block, index) => {
+                        htmlPayload += block.outerHTML + '<p><br></p>';
+
+                        const qEl = block.querySelector('.nk-mcq-question');
+                        let textBlock = (qEl ? qEl.innerText : '').trim() + '\n';
+
+                        let correctLabel = 'A';
+                        const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+                        block.querySelectorAll('.nk-mcq-option').forEach((opt, idx) => {
+                            const lbl = labels[idx] || 'A';
+                            const optTextEl = opt.querySelector('.nk-mcq-option-text');
+                            if (opt.getAttribute('data-is-correct') === 'true') correctLabel = lbl;
+                            textBlock += lbl + '. ' + (optTextEl ? optTextEl.innerText : '').trim() + '\n';
+                        });
+
+                        textBlock += 'Answer: ' + correctLabel + '\n';
+
+                        const expEl = block.querySelector('.nk-mcq-explanation');
+                        if (expEl && expEl.innerText.trim()) {
+                            textBlock += 'Explanation: ' + expEl.innerText.trim() + '\n';
+                        }
+
+                        textPayload += textBlock + (index < mcqBlocks.length - 1 ? '\n>>>\n' : '');
+                    });
+
+                    try {
+                        const clipboardItem = new ClipboardItem({
+                            "text/html": new Blob([htmlPayload], { type: "text/html" }),
+                            "text/plain": new Blob([textPayload], { type: "text/plain" }),
+                        });
+                        navigator.clipboard.write([clipboardItem]).then(() => {
+                            App.ui.showToast(`Copied ${mcqBlocks.length} MCQs to clipboard! Ready for Creator Studio.`, { type: 'success' });
+                        }).catch(err => {
+                            console.error('Failed to copy: ', err);
+                            navigator.clipboard.writeText(textPayload);
+                            App.ui.showToast(`Copied ${mcqBlocks.length} MCQs to clipboard! (Plain Text)`, { type: 'success' });
+                        });
+                    } catch (e) {
+                        navigator.clipboard.writeText(textPayload);
+                        App.ui.showToast(`Copied ${mcqBlocks.length} MCQs to clipboard! (Plain Text)`, { type: 'success' });
                     }
                 },
 
