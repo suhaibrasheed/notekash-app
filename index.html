@@ -2151,7 +2151,7 @@
 
         .card-title {
             margin: 0 0 auto;
-            font-family: var(--font-serif);
+            font-family: var(--article-font-family);
             font-size: 1.2rem;
         }
 
@@ -2202,7 +2202,7 @@
         .article-title-input {
             font-size: 1.75em;
             font-weight: 700;
-            font-family: var(--font-serif);
+            font-family: var(--article-font-family);
             width: 100%;
             border: none;
             background: transparent;
@@ -2282,7 +2282,7 @@
             scroll-padding-top: 30px;
         }
 
-        #article-content :is(p, span, div, li, td, th blockquote):not([class*="highlight-"]):not(.rendered-tag):not(.text-magenta):not(.text-green):not(.text-blue):not(.text-red):not([style]):not([data-user-font]) {
+        #article-content :is(p, span, div, li, td, th, blockquote):not([class*="highlight-"]):not(.rendered-tag):not(.text-magenta):not(.text-green):not(.text-blue):not(.text-red):not([style]):not([data-user-font]) {
             font-family: inherit !important;
             font-size: inherit !important;
             line-height: inherit !important;
@@ -2290,7 +2290,7 @@
         }
 
         #article-content :is(h1, h2, h3, h4, h5, h6) {
-            font-family: var(--font-display) !important;
+            font-family: var(--article-font-family) !important;
             font-size: revert !important;
             line-height: 1.3 !important;
         }
@@ -5349,7 +5349,7 @@
             border-radius: var(--border-radius);
             font-size: var(--study-card-font-size, 2.1rem);
             line-height: 1.5;
-            font-family: var(--font-serif);
+            font-family: var(--article-font-family);
             text-align: left;
             transition: border-color 0.3s ease;
         }
@@ -7662,7 +7662,7 @@
             overflow-y: auto;
             overflow-x: hidden;
             padding: 3rem 0.3rem 1.5rem 0.6rem;
-            font-family: var(--font-serif);
+            font-family: var(--article-font-family);
             font-size: var(--teleprompter-font-size, 1.1rem);
             line-height: 1.6;
             animation: fadeIn 0.3s ease-out;
@@ -11547,7 +11547,7 @@
             padding-bottom: 12px;
             overflow-y: auto;
             overflow-x: hidden;
-            font-family: var(--font-serif);
+            font-family: var(--article-font-family);
             line-height: 1.6;
             font-size: calc(var(--article-font-size) * 0.65);
         }
@@ -11855,7 +11855,7 @@
         .ai-magic-response-content h3 {
             margin-top: 1em;
             margin-bottom: 0.5em;
-            font-family: var(--font-display);
+            font-family: var(--article-font-family);
         }
 
 
