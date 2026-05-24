@@ -2237,6 +2237,12 @@
             margin-block-end: 0.5em;
         }
 
+        #article-content p:has(> .image-container:only-child) {
+            margin-block-start: 0;
+            margin-block-end: 0;
+            line-height: 0;
+        }
+
         #article-content h2 {
             font-size: 1.5em;
             margin-top: 2em;
@@ -2627,7 +2633,11 @@
 
         .image-container {
             position: relative;
-            display: inline-block;
+            display: inline-flex;
+            vertical-align: top;
+            margin: 0;
+            padding: 0;
+            line-height: 0;
         }
 
         /* Whiteboard Embed - Re-editable indicator */
@@ -2667,6 +2677,7 @@
         .image-container img {
             border-radius: 16px;
             transition: border-radius 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+            display: block;
         }
 
         .image-container:hover img {
@@ -16834,20 +16845,19 @@
             text-align: center;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            background: linear-gradient(135deg,
-                    color-mix(in srgb, #f59e0b 12%, transparent),
-                    color-mix(in srgb, #ef4444 8%, transparent));
+            background: linear-gradient(135deg, 
+                color-mix(in srgb, #f59e0b 12%, transparent), 
+                color-mix(in srgb, #ef4444 8%, transparent));
             border: 1px solid color-mix(in srgb, #f59e0b 35%, transparent);
-            box-shadow:
+            box-shadow: 
                 0 0 0 1px color-mix(in srgb, #f59e0b 15%, transparent) inset,
                 0 12px 32px -8px color-mix(in srgb, #f59e0b 20%, transparent);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-            animation: fomo-card-in 0.5s 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            animation: fomo-card-in 0.5s 0.15s cubic-bezier(0.34,1.56,0.64,1) both;
         }
-
         .ascension-fomo-card:hover {
             transform: translateY(-3px) scale(1.01);
-            box-shadow:
+            box-shadow: 
                 0 0 0 1px color-mix(in srgb, #f59e0b 25%, transparent) inset,
                 0 18px 42px -12px color-mix(in srgb, #f59e0b 28%, transparent);
         }
@@ -16885,15 +16895,8 @@
         }
 
         @keyframes fomo-spark-pop {
-
-            0%,
-            100% {
-                transform: scale(1) rotate(0deg);
-            }
-
-            50% {
-                transform: scale(1.4) rotate(15deg);
-            }
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.4) rotate(15deg); }
         }
 
         @keyframes fomo-blink {
@@ -35316,6 +35319,18 @@
                             return;
                         }
 
+                        // ── Apply HEADING highlights NATIVELY FIRST ───────────────────────────
+                        // Automatically make all headings red and bold for the app to understand
+                        const headings = contentDiv.querySelectorAll('h1, h2, h3, h4, h5, h6, h7');
+                        let headingsApplied = 0;
+                        headings.forEach(h => {
+                            if (!h.classList.contains('text-red')) {
+                                h.classList.add('text-red');
+                                h.style.fontWeight = 'bold';
+                                headingsApplied++;
+                            }
+                        });
+
                         // ── DUAL-MODE HIGHLIGHT SYSTEM ─────────────────────────────────────────────
 
 
@@ -35339,7 +35354,8 @@
                         3. Use your intelligence to decide which sections are important. Context will change across articles. 
                         4. Our overall goal is for the notes to look very colorful and visually engaging, so ENSURE you use ALL available background colors  and ALL text colors across your selections. Also use as many times possible.
                         5. "text_highlights" should be used freely and abundantly for keywords. There should be significantly more text_highlights than bg_highlights.
-                        6. Respond ONLY with a single valid JSON object with exactly two keys: "bg_highlights" and "text_highlights".
+                        6. IMPORTANT: Do NOT color code or highlight headings/titles as they are already colored in red natively. Focus only on the body text.
+                        7. Respond ONLY with a single valid JSON object with exactly two keys: "bg_highlights" and "text_highlights".
 
                         Example response:
                         {
@@ -35373,20 +35389,7 @@
                             const bgItems = Array.isArray(parsed.bg_highlights) ? parsed.bg_highlights : [];
                             const textItems = Array.isArray(parsed.text_highlights) ? parsed.text_highlights : [];
 
-                            let totalApplied = 0;
-
-                            // ── Apply HEADING highlights ──────────────────────────────────────────
-                            // Automatically make all headings red and bold for the app to understand
-                            const headings = contentDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
-                            let headingsApplied = 0;
-                            headings.forEach(h => {
-                                if (!h.classList.contains('text-red')) {
-                                    h.classList.add('text-red');
-                                    h.style.fontWeight = 'bold';
-                                    headingsApplied++;
-                                }
-                            });
-                            totalApplied += headingsApplied;
+                            let totalApplied = headingsApplied;
 
                             // ── Apply BACKGROUND highlights ───────────────────────────────────────
                             if (bgItems.length > 0) {
