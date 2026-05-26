@@ -4218,6 +4218,113 @@
             align-items: center;
         }
 
+        /* Sleek Productivity Hub Header & Switcher */
+        .hub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 24px 8px 24px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid transparent;
+            flex-shrink: 0;
+        }
+        .hub-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+        .hub-layout-toggle {
+            display: flex;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 3px;
+            border-radius: 8px;
+            gap: 2px;
+        }
+        .hub-layout-toggle .layout-btn {
+            background: transparent;
+            border: none;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            padding: 0;
+        }
+        .hub-layout-toggle .layout-btn:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        .hub-layout-toggle .layout-btn.active {
+            background: var(--primary-color);
+            color: var(--text-on-primary);
+            box-shadow: 0 2px 6px rgba(100, 100, 255, 0.15);
+        }
+
+        /* Focus Time display pill styling */
+        .focus-today-pill {
+            background-color: transparent !important;
+            color: var(--text-secondary) !important;
+            border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent) !important;
+            font-weight: 500;
+            font-size: 0.8rem;
+            box-shadow: none !important;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Info shortcuts help button styling */
+        .help-shortcuts-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            flex-shrink: 0;
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        /* Glassmorphic timer card */
+        .pomodoro-display {
+            position: relative;
+            padding: 20px 10px !important;
+            border-radius: 16px !important;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
+            border: 1px solid color-mix(in srgb, var(--border-color) 45%, transparent) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* Glow effects for active timer */
+        .pomodoro-display.active-timer {
+            border-color: color-mix(in srgb, var(--primary-color) 35%, transparent) !important;
+            box-shadow: 0 8px 30px color-mix(in srgb, var(--primary-color) 12%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .pomodoro-time-display {
+            font-family: var(--font-mono, 'SF Mono', Menlo, Monaco, Consolas, monospace) !important;
+            font-size: 3.2rem !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+            letter-spacing: -0.02em !important;
+        }
+
         .hub-mini-timer {
             position: fixed;
             top: 96px;
@@ -43715,7 +43822,8 @@
                     },
                 },
                 audio: {
-                    state: { context: null },
+                    state: { context: null, currentAmbient: 'none', ambientVolume: 0.5 },
+                    ambientPlayer: null,
                     getContext() {
                         if (!App.settings.get('hubSoundEnabled')) return null;
                         if (!this.state.context) {
@@ -43743,8 +43851,43 @@
                         } catch (e) { }
                     },
                     playTaskComplete() {
-                        this.playTone({ frequency: 740, duration: 0.06, gain: 0.05 });
-                        this.playTone({ frequency: 980, duration: 0.08, gain: 0.045, when: 0.05 });
+                        // High-quality synthesizer accomplishment chime (ascending C-Major arpeggio)
+                        this.playTone({ frequency: 523.25, duration: 0.15, type: 'sine', gain: 0.06 }); // C5
+                        this.playTone({ frequency: 659.25, duration: 0.15, type: 'sine', gain: 0.06, when: 0.08 }); // E5
+                        this.playTone({ frequency: 783.99, duration: 0.15, type: 'sine', gain: 0.06, when: 0.16 }); // G5
+                        this.playTone({ frequency: 1046.50, duration: 0.3, type: 'sine', gain: 0.05, when: 0.24 }); // C6
+                    },
+                    playAmbient(type) {
+                        if (this.ambientPlayer) {
+                            this.ambientPlayer.pause();
+                            this.ambientPlayer = null;
+                        }
+                        if (!type || type === 'none') return;
+                        
+                        const urls = {
+                            rain: 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg',
+                            waves: 'https://actions.google.com/sounds/v1/water/waves_crashing_on_rock_beach.ogg',
+                            storm: 'https://actions.google.com/sounds/v1/weather/thunderstorm.ogg',
+                            bubble: 'https://actions.google.com/sounds/v1/water/humidifier_bubble.ogg',
+                            coffee: 'https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg',
+                            fountain: 'https://actions.google.com/sounds/v1/water/fountain_water_bubbling.ogg',
+                            drip: 'https://actions.google.com/sounds/v1/weather/rain_water_dripping_softly.ogg',
+                            barnyard: 'https://actions.google.com/sounds/v1/ambiences/barnyard_with_animals.ogg'
+                        };
+                        
+                        const url = urls[type];
+                        if (url) {
+                            this.ambientPlayer = new Audio(url);
+                            this.ambientPlayer.loop = true;
+                            this.ambientPlayer.volume = 1.0;
+                            this.ambientPlayer.play().catch(e => console.warn("Failed to play ambient sound:", e));
+                        }
+                    },
+                    setAmbientVolume(vol) {
+                        this.state.ambientVolume = vol;
+                        if (this.ambientPlayer) {
+                            this.ambientPlayer.volume = vol;
+                        }
                     },
                     playTimerStart() {
                         this.playTone({ frequency: 620, duration: 0.06, gain: 0.04 });
@@ -43770,9 +43913,49 @@
                     resetComposer() { const defaultCategoryName = (App.settings.get('userCategories').find(c => c.isDefault) || { name: 'General' }).name; this.state.composer = { title: '', category: defaultCategoryName, priority: 'low', due: App.hub.util.getTodayISO(), pomodoroGoal: 0 }; },
 
                     async add() {
-                        const { title, category, priority, due, pomodoroGoal } = this.state.composer;
+                        let { title, category, priority, due, pomodoroGoal } = this.state.composer;
                         if (!title.trim()) return;
-                        App.hub.state.tasks.push({ id: 'task_' + crypto.randomUUID(), title: title.trim(), category, priority, status: 'pending', due: due || App.hub.util.getTodayISO(), createdAt: new Date().toISOString(), completedAt: null, pomodoroGoal, pomodoros: 0 });
+
+                        // NLP Parsing - Priority
+                        const priorityMatch = title.match(/@(high|medium|low)\b/i);
+                        if (priorityMatch) {
+                            priority = priorityMatch[1].toLowerCase();
+                            title = title.replace(/@(high|medium|low)\b/i, '');
+                        }
+
+                        // NLP Parsing - Category
+                        const categoryMatch = title.match(/#([a-zA-Z0-9_-]+)\b/);
+                        if (categoryMatch) {
+                            const parsedCatName = categoryMatch[1];
+                            const userCats = App.settings.get('userCategories') || [];
+                            const matchedCat = userCats.find(c => c.name.toLowerCase() === parsedCatName.toLowerCase());
+                            if (matchedCat) {
+                                category = matchedCat.name;
+                                title = title.replace(/#([a-zA-Z0-9_-]+)\b/, '');
+                            }
+                        }
+
+                        // NLP Parsing - Due Date
+                        const dateMatch = title.match(/!([a-zA-Z0-9\/.-]+)\b/);
+                        if (dateMatch) {
+                            const dateKeyword = dateMatch[1].toLowerCase();
+                            let parsedDate = null;
+                            if (dateKeyword === 'today') {
+                                parsedDate = App.hub.util.getTodayISO();
+                            } else if (dateKeyword === 'tomorrow') {
+                                parsedDate = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+                            } else {
+                                parsedDate = App.hub.util.parseSimpleDate(dateKeyword);
+                            }
+                            if (parsedDate) {
+                                due = parsedDate;
+                                title = title.replace(/!([a-zA-Z0-9\/.-]+)\b/, '');
+                            }
+                        }
+
+                        title = title.trim().replace(/\s+/g, ' ');
+
+                        App.hub.state.tasks.push({ id: 'task_' + crypto.randomUUID(), title, category, priority, status: 'pending', due: due || App.hub.util.getTodayISO(), createdAt: new Date().toISOString(), completedAt: null, pomodoroGoal, pomodoros: 0 });
                         await App.hub.data.saveTasks(); this.resetComposer(); App.hub.ui.renderTaskComposer(); App.hub.ui.renderTaskList(); App.hub.ui.updateTodoBadge();
                         document.getElementById('composer-title-input')?.focus();
                     },
@@ -43938,12 +44121,18 @@
                         this.state.isRunning = true;
                         this.state.worker?.postMessage({ command: 'start', newTimeLeft: this.state.timeLeft });
                         App.hub.audio.playTimerStart();
+                        if (App.hub.audio.state.currentAmbient && App.hub.audio.state.currentAmbient !== 'none') {
+                            App.hub.audio.playAmbient(App.hub.audio.state.currentAmbient);
+                        }
                         App.hub.ui.updatePomodoroDisplay();
                     },
                     pause() {
                         if (!this.state.isRunning) return;
                         this.state.isRunning = false;
                         this.state.worker?.postMessage({ command: 'pause' });
+                        if (App.hub.audio.ambientPlayer) {
+                            App.hub.audio.ambientPlayer.pause();
+                        }
                         App.hub.ui.updatePomodoroDisplay();
                     },
                     async stopAndReset() {
@@ -43954,6 +44143,10 @@
                         this.resetState(true);
                         App.hub.ui.hideMiniTimer();
                         localStorage.removeItem('pomodoroSession');
+                        if (App.hub.audio.ambientPlayer) {
+                            App.hub.audio.ambientPlayer.pause();
+                            App.hub.audio.ambientPlayer = null;
+                        }
                     },
                     async savePartialProgress() { await this.saveProgress(this.state.totalDuration - this.state.timeLeft); },
                     async saveProgress(elapsedSeconds) {
@@ -44108,28 +44301,44 @@
                         this.hideMiniTimer();
 
                         App.hub.state.elementThatOpenedHub = document.activeElement;
-                        // Default to split if undefined, or keep existing session state
                         if (!App.hub.state.hubViewMode) App.hub.state.hubViewMode = 'split';
                         const currentMode = App.hub.state.hubViewMode;
 
                         modalContainer.innerHTML = `<div class="modal-backdrop" id="modal-backdrop">
                         <div id="productivity-modal" class="modal-content ui-card productivity-modal mode-${currentMode}">
+                            <div class="hub-header">
+                                <span class="hub-title">Productivity Hub</span>
+                                <div class="hub-layout-toggle">
+                                    <button class="layout-btn ${currentMode === 'tasks' ? 'active' : ''}" data-view="tasks" title="Tasks Only">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                                    </button>
+                                    <button class="layout-btn ${currentMode === 'split' ? 'active' : ''}" data-view="split" title="Split View">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                                    </button>
+                                    <button class="layout-btn ${currentMode === 'pomo' ? 'active' : ''}" data-view="pomo" title="Focus Timer Only">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    </button>
+                                </div>
+                            </div>
                             <div class="task-filters"></div>
                             <div class="task-area">
                                 <div id="task-composer-container"></div>
                                 <div id="task-list-container"></div>
                             </div>
                             
-                            <!-- NEW DYNAMIC SEPARATOR -->
-                            <div class="hub-separator" id="hub-separator-btn" title="Click to cycle views">
-                                <!-- Minimalist: No inner handle -->
-                            </div>
-
                             <div class="pomodoro-section"></div>
                         </div>
                     </div>`;
                         document.addEventListener('keydown', App.events.handleProductivityHubKeyDown, true);
                         document.getElementById('modal-backdrop').addEventListener('click', (e) => this.closeModal(e));
+                        
+                        document.querySelectorAll('.hub-layout-toggle .layout-btn').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const targetMode = e.currentTarget.dataset.view;
+                                App.hub.ui.setHubViewMode(targetMode);
+                            });
+                        });
+
                         document.getElementById('productivity-modal').addEventListener('click', (e) => {
                             const startPomoButton = e.target.closest('[data-action="start-pomodoro"]');
                             const deleteTaskButton = e.target.closest('[data-action="delete-task"]');
@@ -44137,16 +44346,25 @@
                             else if (deleteTaskButton) { const taskId = deleteTaskButton.dataset.taskId; App.hub.tasks.deleteTask(taskId); }
                         });
 
-                        // Separator Interaction
-                        document.getElementById('hub-separator-btn').addEventListener('click', () => {
-                            this.toggleHubViewMode();
-                        });
-
                         this.renderTaskComposer(); this.renderTaskFilters(); this.renderTaskList(); this.updatePomodoroDisplay();
 
-                        // Focus logic depending on mode
                         if (currentMode !== 'pomo') {
                             document.getElementById('composer-title-input')?.focus();
+                        }
+                    },
+
+                    setHubViewMode(targetMode) {
+                        App.hub.state.hubViewMode = targetMode;
+                        const modal = document.getElementById('productivity-modal');
+                        if (modal) {
+                            modal.classList.remove('mode-split', 'mode-tasks', 'mode-pomo');
+                            modal.classList.add(`mode-${targetMode}`);
+                            modal.querySelectorAll('.hub-layout-toggle .layout-btn').forEach(btn => {
+                                btn.classList.toggle('active', btn.dataset.view === targetMode);
+                            });
+                            if (targetMode !== 'pomo') {
+                                setTimeout(() => document.getElementById('composer-title-input')?.focus(), 50);
+                            }
                         }
                     },
 
@@ -44154,23 +44372,58 @@
                         const states = ['split', 'tasks', 'pomo'];
                         const currentState = App.hub.state.hubViewMode || 'split';
                         const nextState = states[(states.indexOf(currentState) + 1) % states.length];
-
-                        App.hub.state.hubViewMode = nextState;
-                        const modal = document.getElementById('productivity-modal');
-                        if (modal) {
-                            modal.classList.remove('mode-split', 'mode-tasks', 'mode-pomo');
-                            modal.classList.add(`mode-${nextState}`);
-
-                            // Re-render components if needed or adjust focus
-                            if (nextState === 'pomo') {
-                                // Maybe focus something in pomo?
-                            } else {
-                                setTimeout(() => document.getElementById('composer-title-input')?.focus(), 50);
-                            }
-                        }
-                        // Optional: Save this preference if we wanted to persist across reloads, 
-                        // but user request implies just session based or "return to current view"
+                        this.setHubViewMode(nextState);
                     },
+
+                    showHelpShortcutsModal() {
+                        if (document.getElementById('hub-help-modal')) return;
+                        const modal = document.createElement('div');
+                        modal.id = 'hub-help-modal';
+                        modal.innerHTML = `
+                        <div class="modal-backdrop" id="help-backdrop" style="z-index: 200000;">
+                            <div id="hub-help-popup" class="ui-card" style="max-width: 450px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; position: relative; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
+                                <h3 style="margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; color: var(--text-primary); font-family: inherit;">
+                                    <span>💡</span> Keyboard Controls & NLP Guide
+                                </h3>
+                                
+                                <div style="font-size: 0.85rem; line-height: 1.45; color: var(--text-secondary); max-height: 400px; overflow-y: auto;">
+                                    <h4 style="margin: 8px 0 4px 0; color: var(--text-primary); font-size: 0.95rem;">Natural Language Task Creation</h4>
+                                    <p style="margin: 0 0 8px 0;">Type these inline shortcuts while entering your task title to automatically set priorities, categories, and due dates:</p>
+                                    <ul style="padding-left: 20px; margin: 0 0 12px 0; display: flex; flex-direction: column; gap: 4px;">
+                                        <li><strong>Priority:</strong> Add <code>@high</code>, <code>@medium</code>, or <code>@low</code></li>
+                                        <li><strong>Category:</strong> Add <code>#category-name</code> (case-insensitive, matching existing tags like <code>#Work</code>)</li>
+                                        <li><strong>Due Date:</strong> Add <code>!tomorrow</code>, <code>!today</code>, or <code>!dd-mm-yy</code> (e.g. <code>!25-05-26</code>)</li>
+                                    </ul>
+                                    <p style="margin: 0 0 12px 0; font-style: italic; background: var(--bg-secondary); padding: 8px; border-radius: 6px; border-left: 3px solid var(--primary-color);">
+                                        Example: <strong>"Finish slide deck @high #Work !tomorrow"</strong>
+                                    </p>
+
+                                    <h4 style="margin: 12px 0 4px 0; color: var(--text-primary); font-size: 0.95rem;">Keyboard Shortcuts (Outside text inputs)</h4>
+                                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-family: monospace; background: var(--bg-tertiary); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                        <span>[s]</span> <span>Play / Pause Focus Timer</span>
+                                        <span>[a]</span> <span>Stop & Reset Timer</span>
+                                        <span>[z]</span> <span>Toggle Fullscreen Zen Mode</span>
+                                        <span>[t]</span> <span>Open Timer Settings</span>
+                                        <span>[d]</span> <span>Focus Date Input</span>
+                                        <span>[g]</span> <span>Focus Category Selector</span>
+                                        <span>[f]</span> <span>Cycle Task Priority</span>
+                                        <span>[c]</span> <span>Increment Pomo Goal</span>
+                                        <span>[x]</span> <span>Reset Pomo Goal</span>
+                                        <span>[q, w, e, r]</span> <span>Start Pomo on Task 1, 2, 3, 4</span>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                                    <button class="btn btn-primary" id="help-close-btn" style="padding: 6px 16px; border-radius: 6px;">Got it</button>
+                                </div>
+                            </div>
+                        </div>`;
+                        document.getElementById('modal-container').appendChild(modal);
+                        document.getElementById('help-backdrop').addEventListener('click', (e) => { if (e.target === e.currentTarget) modal.remove(); });
+                        document.getElementById('help-close-btn').addEventListener('click', () => modal.remove());
+                    },
+
+
 
 
                     renderTaskComposer() {
@@ -44190,6 +44443,7 @@
                         <div class="task-composer">
                             <div class="composer-input-row">
                                 <input type="text" id="composer-title-input" class="text-input" placeholder="Add a new task..." value="${App.util.escapeHtml(title)}">
+                                <button class="btn btn-secondary help-shortcuts-btn" id="help-shortcuts-btn" title="How to use NLP & Keyboard Shortcuts">ⓘ</button>
                                 <button class="btn btn-primary" id="add-task-btn" title="Add Task">+</button>
                             </div>
                             <div class="composer-actions-row">
@@ -44208,6 +44462,9 @@
                         // Re-attach all event listeners to ensure functionality
                         document.getElementById('composer-title-input').addEventListener('input', e => {
                             App.hub.tasks.state.composer.title = e.target.value;
+                        });
+                        document.getElementById('help-shortcuts-btn').addEventListener('click', () => {
+                            this.showHelpShortcutsModal();
                         });
                         document.getElementById('add-task-btn').addEventListener('click', () => App.hub.tasks.add());
                         document.getElementById('composer-date-input').addEventListener('change', e => {
@@ -44282,17 +44539,29 @@
                             const bg = App.util.getCategoryColor(categoryObj.colorIndex);
                             const pillHTML = mode === 'break' ? `<div class="break-pill">Break</div>` : (sessionCount > 0 ? `<div class="cycle-pill" data-cycle="${sessionCount}">${sessionCount} / 4</div>` : '');
                             const catPillHTML = `<div class="category-pill" style="background-color: ${bg};">${App.util.getCategoryDisplayName(currentCategory)}</div>`;
+                            
+                            // Format today's focus time
+                            const todaySeconds = App.hub.util.getDashboardStats().pomodoro.today;
+                            const hrs = Math.floor(todaySeconds / 3600);
+                            const mins = Math.floor((todaySeconds % 3600) / 60);
+                            const focusStr = todaySeconds > 0 ? (hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`) : '0m';
+                            const focusTodayPillHTML = `<div class="category-pill focus-today-pill" title="Time focused today">🍅 ${focusStr} focused</div>`;
 
                             if (!section.querySelector('.pomodoro-display')) {
                                 section.innerHTML = `<div class="pomodoro-display"><div class="pomodoro-progress-frame"><div class="progress-segment progress-top"></div><div class="progress-segment progress-right"></div><div class="progress-segment progress-bottom"></div><div class="progress-segment progress-left"></div></div><div class="pomodoro-time-display"></div><div class="pomodoro-task-title"></div><div class="pomodoro-meta"></div></div><div class="pomodoro-controls"><button class="btn-icon" onclick="App.hub.pomodoro.stopAndReset()" title="Stop & Reset">${App.util.icons.stop}</button><button class="btn-icon" id="hub-pomodoro-play-btn" style="transform: scale(1.4);" onclick="App.hub.pomodoro.togglePlayPause()"></button><button class="btn-icon" onclick="App.hub.ui.showPomodoroSettings()" title="Settings">${App.util.icons.settings}</button><button class="btn-icon" onclick="App.hub.pomodoro.toggleZenMode()" title="Zen Mode">${App.util.icons.zen}</button></div>`;
+                            }
+
+                            const displayEl = section.querySelector('.pomodoro-display');
+                            if (displayEl) {
+                                displayEl.classList.toggle('active-timer', isRunning);
                             }
 
                             const timeStr = App.hub.util.formatTime(Math.floor(timeLeft));
                             section.querySelector('.pomodoro-time-display').textContent = timeStr;
                             const titleEl = section.querySelector('.pomodoro-task-title');
                             titleEl.textContent = task?.title || 'Focus Session';
-                            titleEl.style.color = colorValue;
-                            section.querySelector('.pomodoro-meta').innerHTML = pillHTML + catPillHTML;
+                            titleEl.style.color = 'var(--text-primary)';
+                            section.querySelector('.pomodoro-meta').innerHTML = pillHTML + catPillHTML + focusTodayPillHTML;
 
                             const p = (App.hub.pomodoro.getProgressInfo().percentage || 0) * 4;
                             section.querySelector('.progress-top').style.width = `${Math.min(1, p) * 100}%`;
@@ -44313,11 +44582,20 @@
                         this.updateMiniTimerWidget();
                     },
                     showPomodoroSettings() {
-                        const modal = document.createElement('div'); modal.id = 'pomodoro-settings-modal'; modal.innerHTML = `<div class="modal-backdrop" id="settings-backdrop"><div id="pomodoro-settings-popup" class="ui-card"><h3>Timer Settings</h3><label>Work Duration (minutes)</label><input type="number" id="pomo-work" class="text-input" value="${App.settings.get('pomodoroWork')}"><label>Break Duration (minutes)</label><input type="number" id="pomo-break" class="text-input" value="${App.settings.get('pomodoroBreak')}"><label style="display:flex;align-items:center;gap:8px;font-weight:500;"><input type="checkbox" id="hub-sound-enabled" style="width:16px;height:16px;accent-color:var(--primary-color);" ${App.settings.get('hubSoundEnabled') ? 'checked' : ''}> Productivity sounds</label><div style="display:flex; justify-content:flex-end; gap:8px; margin-top:1rem;"><button class="btn btn-secondary" id="settings-cancel">Cancel</button><button class="btn btn-primary" id="settings-save">Save</button></div></div></div>`;
+                        const modal = document.createElement('div'); modal.id = 'pomodoro-settings-modal'; modal.innerHTML = `<div class="modal-backdrop" id="settings-backdrop"><div id="pomodoro-settings-popup" class="ui-card"><h3>Timer Settings</h3><label>Work Duration (minutes)</label><input type="number" id="pomo-work" class="text-input" value="${App.settings.get('pomodoroWork')}"><label>Break Duration (minutes)</label><input type="number" id="pomo-break" class="text-input" value="${App.settings.get('pomodoroBreak')}"><label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-top:0.5rem;"><input type="checkbox" id="hub-sound-enabled" style="width:16px;height:16px;accent-color:var(--primary-color);" ${App.settings.get('hubSoundEnabled') ? 'checked' : ''}> Productivity sounds</label><label style="margin-top:0.75rem;display:block;font-size:0.9rem;font-weight:500;">Background Soundscape</label><select id="hub-ambient-select" class="text-input" style="width:100%;margin-top:4px;"><option value="none" ${App.hub.audio.state.currentAmbient === 'none' ? 'selected' : ''}>None (Silence)</option><option value="rain" ${App.hub.audio.state.currentAmbient === 'rain' ? 'selected' : ''}>🌧️ Heavy Rain</option><option value="drip" ${App.hub.audio.state.currentAmbient === 'drip' ? 'selected' : ''}>💧 Light Drip</option><option value="fountain" ${App.hub.audio.state.currentAmbient === 'fountain' ? 'selected' : ''}>⛲ Fountain</option><option value="waves" ${App.hub.audio.state.currentAmbient === 'waves' ? 'selected' : ''}>🌊 Sea Waves</option><option value="storm" ${App.hub.audio.state.currentAmbient === 'storm' ? 'selected' : ''}>⛈️ Thunderstorm</option><option value="bubble" ${App.hub.audio.state.currentAmbient === 'bubble' ? 'selected' : ''}>🫧 Bubbling</option><option value="coffee" ${App.hub.audio.state.currentAmbient === 'coffee' ? 'selected' : ''}>☕ Coffee Shop</option><option value="barnyard" ${App.hub.audio.state.currentAmbient === 'barnyard' ? 'selected' : ''}>🐓 Barnyard</option></select><div style="display:flex; justify-content:flex-end; gap:8px; margin-top:1.25rem;"><button class="btn btn-secondary" id="settings-cancel">Cancel</button><button class="btn btn-primary" id="settings-save">Save</button></div></div></div>`;
                         document.getElementById('modal-container').appendChild(modal);
                         document.getElementById('settings-backdrop').addEventListener('click', (e) => { if (e.target === e.currentTarget) modal.remove() });
                         document.getElementById('settings-cancel').addEventListener('click', () => modal.remove());
                         document.getElementById('hub-sound-enabled').addEventListener('change', (e) => App.settings.set('hubSoundEnabled', !!e.target.checked));
+                        
+                        const ambientSelect = document.getElementById('hub-ambient-select');
+                        ambientSelect.addEventListener('change', (e) => {
+                            App.hub.audio.state.currentAmbient = e.target.value;
+                            if (App.hub.pomodoro.state.isRunning) {
+                                App.hub.audio.playAmbient(e.target.value);
+                            }
+                        });
+
                         document.getElementById('settings-save').addEventListener('click', () => App.hub.pomodoro.changeTime(document.getElementById('pomo-work').value, document.getElementById('pomo-break').value));
                     },
                     getMiniTimerWidget() {
