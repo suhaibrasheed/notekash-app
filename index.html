@@ -100,6 +100,12 @@
         onerror="this.style.display='none'; console.warn('Offline: html-to-image disabled');"></script>
     <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js" defer
         onerror="this.style.display='none'; console.warn('Offline: Fuse.js disabled');"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css"
+        onerror="this.href='data:text/css;base64,'">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: KaTeX disabled');"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js" defer
+        onerror="this.style.display='none'; console.warn('Offline: KaTeX auto-render disabled');"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
         rel="stylesheet" onerror="this.href='data:text/css;base64,'">
@@ -2263,6 +2269,21 @@
             margin: 2em 0;
         }
 
+        #article-content .katex-display {
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0.35em 0;
+        }
+
+        #article-content .katex {
+            font-size: 1.02em;
+        }
+
+        .focus-mode-body .katex-display {
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
         /* Inline icons inserted from command palette (behave like text) */
         .nk-inline-icon {
             display: inline-flex;
@@ -4268,17 +4289,17 @@
 
         /* Focus Time display pill styling */
         .focus-today-pill {
-            background-color: transparent !important;
+            background-color: color-mix(in srgb, var(--bg-secondary) 78%, transparent) !important;
             color: var(--text-secondary) !important;
-            border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent) !important;
+            border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent) !important;
             font-weight: 500;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             box-shadow: none !important;
-            padding: 4px 8px;
-            border-radius: 12px;
+            padding: 4px 9px;
+            border-radius: 999px;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
         }
 
         /* Info shortcuts help button styling */
@@ -4322,7 +4343,239 @@
             font-weight: 700 !important;
             line-height: 1 !important;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-            letter-spacing: -0.02em !important;
+            letter-spacing: 0 !important;
+        }
+
+        .productivity-modal.mode-split .pomodoro-section {
+            min-height: 104px;
+            padding: 0.85rem 1.25rem;
+            display: block;
+            background: color-mix(in srgb, var(--bg-tertiary) 86%, var(--bg-primary));
+        }
+
+        .productivity-modal.mode-split .pomodoro-display {
+            min-width: 0;
+            min-height: 92px;
+            padding: 16px 22px !important;
+            width: 100%;
+            display: grid;
+            grid-template-columns: max-content minmax(0, max-content);
+            grid-template-rows: auto auto auto;
+            align-items: center;
+            justify-content: center;
+            column-gap: 1.35rem;
+            row-gap: 0.35rem;
+            border-radius: 14px !important;
+        }
+
+        .productivity-modal.mode-split .pomodoro-time-display {
+            grid-row: 1 / 4;
+            font-size: clamp(2.65rem, 7vw, 4.2rem) !important;
+            color: var(--text-primary);
+            align-self: center;
+        }
+
+        .productivity-modal.mode-split .pomodoro-task-title {
+            max-width: none;
+            margin: 0;
+            text-align: left;
+            align-self: end;
+            min-width: 0;
+            font-size: 0.95rem;
+            font-weight: 650;
+            line-height: 1.15;
+        }
+
+        .productivity-modal.mode-split .pomodoro-meta {
+            justify-content: flex-start;
+            margin-top: 0;
+            min-width: 0;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-self: start;
+        }
+
+        .productivity-modal.mode-split .pomodoro-controls {
+            grid-column: 2;
+            grid-row: 3;
+            width: max-content;
+            justify-content: center;
+            gap: 0.25rem;
+            padding: 3px;
+            border: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--bg-primary) 70%, transparent);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        .productivity-modal.mode-split .pomodoro-controls .btn-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            color: var(--text-secondary);
+        }
+
+        .productivity-modal.mode-split .pomodoro-controls .btn-icon:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .productivity-modal.mode-split #hub-pomodoro-play-btn {
+            width: 34px;
+            height: 34px;
+            color: var(--text-on-primary);
+            background: var(--primary-color);
+            box-shadow: 0 5px 14px color-mix(in srgb, var(--primary-color) 22%, transparent);
+        }
+
+        .productivity-modal.mode-split .pomodoro-progress-frame {
+            border-radius: inherit;
+            overflow: hidden;
+        }
+
+        .productivity-modal.mode-split .progress-top,
+        .productivity-modal.mode-split .progress-bottom {
+            height: 3px;
+        }
+
+        .productivity-modal.mode-split .progress-right,
+        .productivity-modal.mode-split .progress-left {
+            width: 3px;
+        }
+
+        .productivity-modal.mode-split .category-pill,
+        .productivity-modal.mode-split .break-pill,
+        .productivity-modal.mode-split .cycle-pill {
+            min-height: 24px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            line-height: 1;
+            max-width: 190px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 760px) {
+            .productivity-modal.mode-split .pomodoro-section {
+                padding: 0.75rem 1rem;
+            }
+
+            .productivity-modal.mode-split .pomodoro-display {
+                min-height: 0;
+                padding: 14px 16px !important;
+                grid-template-columns: max-content minmax(0, 1fr);
+                grid-template-rows: auto auto auto;
+                justify-content: stretch;
+                column-gap: 0.9rem;
+                row-gap: 0.3rem;
+                border-radius: 14px !important;
+            }
+
+            .productivity-modal.mode-split .pomodoro-time-display {
+                grid-row: 1 / 4;
+                font-size: clamp(2.4rem, 10vw, 3.35rem) !important;
+            }
+
+            .productivity-modal.mode-split .pomodoro-task-title {
+                font-size: 0.88rem;
+                max-width: 100%;
+            }
+
+            .productivity-modal.mode-split .pomodoro-meta {
+                gap: 5px;
+                max-height: 28px;
+                overflow: hidden;
+            }
+
+            .productivity-modal.mode-split .category-pill,
+            .productivity-modal.mode-split .break-pill,
+            .productivity-modal.mode-split .cycle-pill {
+                min-height: 22px;
+                max-width: 118px;
+                padding: 3px 8px;
+                font-size: 0.72rem;
+            }
+
+            .productivity-modal.mode-split .focus-today-pill {
+                max-width: 132px;
+            }
+
+            .productivity-modal.mode-split .pomodoro-controls {
+                grid-column: 2;
+                grid-row: 3;
+                width: max-content;
+                margin-top: 2px;
+                padding: 3px;
+                gap: 0.2rem;
+                border: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);
+                border-radius: 999px;
+                background: color-mix(in srgb, var(--bg-primary) 70%, transparent);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            }
+
+            .productivity-modal.mode-split .pomodoro-controls .btn-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+            .productivity-modal.mode-split #hub-pomodoro-play-btn {
+                width: 34px;
+                height: 34px;
+            }
+        }
+
+        @media (max-width: 460px) {
+            .productivity-modal.mode-split .pomodoro-section {
+                padding-inline: 0.7rem;
+            }
+
+            .productivity-modal.mode-split .pomodoro-display {
+                grid-template-columns: 1fr;
+                row-gap: 0.45rem;
+                text-align: center;
+            }
+
+            .productivity-modal.mode-split .pomodoro-time-display {
+                grid-row: auto;
+                justify-self: center;
+            }
+
+            .productivity-modal.mode-split .pomodoro-task-title,
+            .productivity-modal.mode-split .pomodoro-meta {
+                justify-content: center;
+                text-align: center;
+            }
+
+            .productivity-modal.mode-split .pomodoro-controls {
+                grid-column: 1;
+                justify-self: center;
+            }
+        }
+
+        .productivity-modal.mode-pomo .pomodoro-section {
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+
+        .productivity-modal.mode-pomo .pomodoro-display {
+            width: min(560px, 82vw);
+            padding: 2.25rem 2rem !important;
+        }
+
+        .productivity-modal.mode-pomo .pomodoro-time-display {
+            font-size: clamp(4.5rem, 10vw, 7rem) !important;
+        }
+
+        .productivity-modal.mode-pomo .pomodoro-task-title {
+            max-width: 420px;
+            font-size: 1.2rem;
+        }
+
+        .productivity-modal.mode-pomo .pomodoro-controls {
+            width: min(560px, 82vw);
+            justify-content: center;
         }
 
         .hub-mini-timer {
@@ -24245,6 +24498,7 @@
 
                         App.audio.initializePlayersIn(contentDiv);
                         App.util.initPlyr(contentDiv);
+                        App.util.renderMathInElement(contentDiv);
                     }
 
                     const categoryObj = App.settings.get('userCategories').find(c => c.name === article.category) || { name: article.category, colorIndex: 0 };
@@ -25511,6 +25765,7 @@
                     overlay.querySelectorAll('canvas[data-chart-config]').forEach(canvas => {
                         App.ui.renderChartOnCanvas(canvas);
                     });
+                    App.util.renderMathInElement(overlay.querySelector('.focus-mode-body'));
 
                     // Pro Presenter: Refresh listeners/re-bind scroll if active
                     if (session.isProPresenterActive && App.events.presentation?._initProPresenter) {
@@ -32495,6 +32750,11 @@
                         const contentDiv = document.getElementById('article-content');
                         if (!titleInput && !articleInMemory.title) {
                             if (!isAutosave) App.ui.showToast("Save failed. Editor not found.", { type: 'error' });
+                            return;
+                        }
+                        if (isWriteMode && App.util.hasRenderedMath(contentDiv)) {
+                            if (!isAutosave) App.ui.showToast("Save blocked to protect note source. Reopen the note and try again.", { type: 'error' });
+                            console.warn('Save blocked: rendered KaTeX markup was found in write-mode content.');
                             return;
                         }
 
@@ -39496,9 +39756,10 @@
                     },
 
 
-                    _getHtmlExportTemplate(title, bodyContent, themeName = 'light', brandName = '', brandLink = '') {
+                    _getHtmlExportTemplate(title, bodyContent, themeName = 'light', brandName = '', brandLink = '', options = {}) {
                         const styles = getComputedStyle(document.documentElement);
                         const articleFontFamily = styles.getPropertyValue('--article-font-family');
+                        const includeMathCss = !!options.includeMathCss;
                         const cssVars = [
                             '--bg-primary', '--bg-secondary', '--bg-tertiary', '--text-primary', '--text-secondary',
                             '--border-color', '--primary-color', '--hl-text', '--category-pill-text',
@@ -39558,6 +39819,7 @@
                             .exported-pills-container { margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
                             .exported-pill.category { font-size: 13px; padding: 9px 18px; }
                             .article-metadata { margin-bottom: 2rem; color: var(--text-secondary); font-size: 0.9rem; font-family: var(--article-font-family); display: flex; gap: 16px; align-items: center; opacity: 0.8; }
+                            .exported-pill[href] { cursor: pointer; }
                         `;
 
                             switch (theme) {
@@ -39655,6 +39917,36 @@
                             .nk-mcq-option { display: flex; align-items: center; gap: 0.75rem; padding: 8px; border-radius: 6px; border: 1px solid transparent; }
                             .nk-mcq-option-radio { width: 18px; height: 18px; border: 2px solid var(--text-secondary); border-radius: 50%; display: grid; place-items: center; }
                             .nk-mcq-option[data-is-correct="true"] .nk-mcq-option-radio { border-color: var(--success-color); background-color: var(--success-color); }
+
+                            /* Flashcards + Tags */
+                            .cloze-flashcard {
+                                display: inline-block;
+                                padding: 0.08em 0.45em;
+                                margin: 0 0.08em;
+                                border-radius: 8px;
+                                color: #7c2d12;
+                                background: linear-gradient(135deg, #fff7ed, #ffedd5);
+                                border: 1px solid #fed7aa;
+                                box-shadow: inset 0 -1px 0 rgba(124, 45, 18, 0.12);
+                                font-weight: 700;
+                            }
+                            .rendered-tag {
+                                display: inline-block;
+                                padding: 0.08em 0.52em;
+                                margin: 0 0.08em;
+                                border-radius: 999px;
+                                color: #3730a3;
+                                background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+                                border: 1px solid #c7d2fe;
+                                text-decoration: none;
+                                font-weight: 700;
+                                box-shadow: inset 0 -1px 0 rgba(55, 48, 163, 0.12);
+                            }
+                            .rendered-tag::before { content: "#"; opacity: 0.65; margin-right: 0.08em; }
+                            .rendered-tag:target {
+                                outline: 3px solid color-mix(in srgb, var(--primary-color) 55%, transparent);
+                                outline-offset: 3px;
+                            }
 
                             /* Textile (single) + Textile Deck */
                             .nk-text-tile {
@@ -39755,6 +40047,7 @@
                                     <link rel="preconnect" href="https://fonts.googleapis.com">
                                     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                                     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Montserrat:wght@400;700&family=Satisfy&family=Pacifico&family=Lobster&family=Patrick+Hand&family=Shadows+Into+Light&family=Great+Vibes&family=Dancing+Script&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+                                    ${includeMathCss ? '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">' : ''}
                                     <style>
                                         ${rootCss}
                                         body { 
@@ -39776,6 +40069,7 @@
                                             } 
                                         }
                                         img { max-width: 100%; height: auto; border-radius: 8px; }
+                                        ${includeMathCss ? '.katex-display { overflow-x: auto; overflow-y: hidden; padding: 0.35em 0; } .katex { font-size: 1.02em; }' : ''}
                                         [class^="highlight-"] { padding: 0.1em 0.3em; margin: 0 -0.1em; border-radius: 4px; color: var(--hl-text); border-bottom: 2px solid; }
                                         .highlight-1 { background-color: var(--hl-1-bg); border-color: var(--hl-1-border); }
                                         .highlight-2 { background-color: var(--hl-2-bg); border-color: var(--hl-2-border); }
@@ -39806,7 +40100,6 @@
                         }
                         const categoryObj = App.settings.get('userCategories').find(c => c.name === article.category) || { name: article.category, colorIndex: 0 };
                         const categoryPill = `<div class="exported-pill category" style="background-color: ${App.util.getCategoryColor(categoryObj.colorIndex)}; color: var(--category-pill-text);">${App.util.getCategoryDisplayName(categoryObj.name)}</div>`;
-                        const tagsPills = (article.tags || []).map(tag => `<div class="exported-pill">${App.state.tags[tag]?.displayName || tag}</div>`).join('');
 
                         // Metadata Calculation
                         const tempDiv = document.createElement('div'); tempDiv.innerHTML = article.content;
@@ -39814,14 +40107,27 @@
                         const dateStr = new Date(article.updatedAt || Date.now()).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
                         const metadataHTML = `<div class="article-metadata"><span>${wordCount} words</span> &bull; <span>${dateStr}</span></div>`;
 
-                        const pillsHTML = `<div class="exported-pills-container">${categoryPill}${tagsPills}</div>`;
+                        let pillsHTML = '';
 
                         // Native Accordion Replacement: Convert div structure to details/summary
-                        let processedContent = App.util.parseShortcuts(article.content);
+                        let processedContent = App.util.renderClozeForDisplay(App.util.parseShortcuts(article.content));
 
                         // Transform structural div accordions into semantic details/summary using DOMParser
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(processedContent, 'text/html');
+                        const firstTagTargets = {};
+                        doc.querySelectorAll('.rendered-tag[data-tag]').forEach((tag, index) => {
+                            const tagSlug = tag.dataset.tag || App.contentTools.slugify(tag.textContent || `tag-${index + 1}`);
+                            const id = tag.id || `tag-${tagSlug}-${index + 1}`;
+                            const anchor = doc.createElement('a');
+                            anchor.className = tag.className;
+                            anchor.dataset.tag = tagSlug;
+                            anchor.id = id;
+                            anchor.href = `#${id}`;
+                            anchor.textContent = tag.textContent;
+                            tag.replaceWith(anchor);
+                            firstTagTargets[tagSlug] ||= id;
+                        });
                         doc.querySelectorAll('.nk-accordion').forEach(acc => {
                             const details = doc.createElement('details');
                             details.className = acc.className;
@@ -39863,10 +40169,25 @@
                             }
                         });
                         processedContent = doc.body.innerHTML;
+                        const tagsPills = (article.tags || []).map(tag => {
+                            const label = App.state.tags[tag]?.displayName || tag;
+                            const target = firstTagTargets[tag] || firstTagTargets[App.contentTools.slugify(label)];
+                            return target
+                                ? `<a class="exported-pill" href="#${App.util.escapeHtml(target)}">${App.util.escapeHtml(label)}</a>`
+                                : `<div class="exported-pill">${App.util.escapeHtml(label)}</div>`;
+                        }).join('');
+                        pillsHTML = `<div class="exported-pills-container">${categoryPill}${tagsPills}</div>`;
 
+                        const hasMath = App.util.hasMathSyntax(processedContent);
+                        if (hasMath) {
+                            const mathDiv = document.createElement('div');
+                            mathDiv.innerHTML = processedContent;
+                            App.util.renderMathInElement(mathDiv);
+                            processedContent = mathDiv.innerHTML;
+                        }
 
                         const bodyContent = `${pillsHTML}<h1>${article.title}</h1>${metadataHTML}<hr>${processedContent}`;
-                        const fullHtml = this._getHtmlExportTemplate(article.title, bodyContent, App.settings.get('theme'), brandName, brandLink);
+                        const fullHtml = this._getHtmlExportTemplate(article.title, bodyContent, App.settings.get('theme'), brandName, brandLink, { includeMathCss: hasMath });
                         App.util.downloadBlob(new Blob([fullHtml], { type: 'text/html' }), `${App.util.slugify(article.title)}.html`);
                     },
 
@@ -39949,11 +40270,19 @@
 
                         if (articlesWithHighlights.length === 0) { App.ui.showToast("No highlights in this category to export."); return; }
 
-                        const bodyContent = `<h1>Category: ${App.util.getCategoryDisplayName(category)}</h1>` + articlesWithHighlights.map(article =>
+                        let bodyContent = `<h1>Category: ${App.util.getCategoryDisplayName(category)}</h1>` + articlesWithHighlights.map(article =>
                             `<h2><b>${article.title}</b></h2>${article.snippets.map(s => `<p>${s.html}</p>`).join('')}`
                         ).join('<hr>');
 
-                        const fullHtml = this._getHtmlExportTemplate(`${App.util.getCategoryDisplayName(category)} Highlights`, bodyContent, App.settings.get('theme'));
+                        const hasMath = App.util.hasMathSyntax(bodyContent);
+                        if (hasMath) {
+                            const mathDiv = document.createElement('div');
+                            mathDiv.innerHTML = bodyContent;
+                            App.util.renderMathInElement(mathDiv);
+                            bodyContent = mathDiv.innerHTML;
+                        }
+
+                        const fullHtml = this._getHtmlExportTemplate(`${App.util.getCategoryDisplayName(category)} Highlights`, bodyContent, App.settings.get('theme'), '', '', { includeMathCss: hasMath });
                         App.util.downloadBlob(new Blob([fullHtml], { type: 'text/html' }), `${App.util.slugify(category)}-highlights.html`);
                     },
 
@@ -40069,7 +40398,70 @@
                             // CONTENT PARSER - Convert HTML to pdfmake format
                             const parseHtmlToPdfContent = (html) => {
                                 const div = document.createElement('div');
-                                div.innerHTML = App.util.sanitizeHTML(App.util.parseShortcuts(html));
+                                div.innerHTML = App.util.sanitizeHTML(App.util.renderClozeForDisplay(App.util.parseShortcuts(html)));
+                                const hasMath = App.util.hasMathSyntax(html);
+                                const hasPdfMathSyntax = hasMath
+                                    || /\\(?:sum|Delta|delta|frac|sqrt|times|cdot|leq?|geq?|neq|approx)\b/.test(html)
+                                    || /[A-Z](?:[_^](?:\{[^{}]+\}|[A-Za-z0-9]))\s*[=+\-*/]/.test(html);
+
+                                const preparePdfMathText = (container) => {
+                                    if (!hasPdfMathSyntax) return;
+                                    const skipTags = new Set(['SCRIPT', 'NOSCRIPT', 'STYLE', 'TEXTAREA', 'PRE', 'CODE', 'OPTION']);
+                                    const bareLatexRe = /\\(?:frac\s*\{[^{}]*\}\s*\{[^{}]*\}|sqrt\s*\{[^{}]*\}|sum|Delta|delta|times|cdot|leq?|geq?|neq|approx)(?:\s*[A-Za-z0-9_{}^+\-=().,\\]+)*|[A-Z](?:[_^](?:\{[^{}]+\}|[A-Za-z0-9]))(?:\s*[=+\-*/]\s*-?[A-Z]?(?:[_^](?:\{[^{}]+\}|[A-Za-z0-9]))?)+/g;
+                                    const appendMathSpan = (fragment, token, display = false) => {
+                                        const math = display ? App.util.parseMathToken(token) : { latex: token, display: false };
+                                        const span = document.createElement('span');
+                                        span.className = math.display ? 'nk-pdf-math-block' : 'nk-pdf-math-inline';
+                                        span.dataset.latex = math.latex;
+                                        span.textContent = math.latex;
+                                        fragment.appendChild(span);
+                                    };
+                                    const appendBareLatex = (fragment, value) => {
+                                        let last = 0;
+                                        bareLatexRe.lastIndex = 0;
+                                        let match;
+                                        while ((match = bareLatexRe.exec(value)) !== null) {
+                                            if (match.index > last) fragment.appendChild(document.createTextNode(value.slice(last, match.index)));
+                                            appendMathSpan(fragment, match[0], false);
+                                            last = match.index + match[0].length;
+                                        }
+                                        if (last < value.length) fragment.appendChild(document.createTextNode(value.slice(last)));
+                                    };
+                                    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+                                        acceptNode: node => {
+                                            const parent = node.parentElement;
+                                            if (!parent || skipTags.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
+                                            if (parent.closest('.katex, .nk-code-block, .rendered-tag, .tag-suggestion, .nk-mcq-toolbar, .resize-handle, .pdf-attachment-name')) {
+                                                return NodeFilter.FILTER_REJECT;
+                                            }
+                                            bareLatexRe.lastIndex = 0;
+                                            return (App.util.hasMathSyntax(node.nodeValue) || bareLatexRe.test(node.nodeValue)) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+                                        }
+                                    });
+
+                                    const nodes = [];
+                                    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+                                    for (const node of nodes) {
+                                        const { text, tokens } = App.util.protectMathSegments(node.nodeValue);
+                                        bareLatexRe.lastIndex = 0;
+                                        if (!tokens.length && !bareLatexRe.test(text)) continue;
+
+                                        const fragment = document.createDocumentFragment();
+                                        let cursor = 0;
+                                        text.replace(/\uE100MATH(\d+)\uE100/g, (match, index, offset) => {
+                                            if (offset > cursor) appendBareLatex(fragment, text.slice(cursor, offset));
+                                            const token = tokens[Number.parseInt(index, 10)] || match;
+                                            appendMathSpan(fragment, token, true);
+                                            cursor = offset + match.length;
+                                            return match;
+                                        });
+                                        if (cursor < text.length) appendBareLatex(fragment, text.slice(cursor));
+                                        node.replaceWith(fragment);
+                                    }
+                                };
+
+                                preparePdfMathText(div);
 
                                 // ─── COLOR MAPS ─────────────────────────────────────────────────────
                                 const highlightUnderlineMap = {
@@ -40112,6 +40504,79 @@
                                         ? { image: renderEmoji(p), width: 13, height: 13, margin: [0, 1, 0, -2] }
                                         : { text: p, ...styles });
                                 };
+
+                                const latexToReadableText = (latex = '') => {
+                                    let value = String(latex).trim();
+                                    const fracRe = /\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g;
+                                    while (fracRe.test(value)) {
+                                        value = value.replace(fracRe, '($1)/($2)');
+                                        fracRe.lastIndex = 0;
+                                    }
+                                    return value
+                                        .replace(/\\left|\\right/g, '')
+                                        .replace(/\\sum\b/g, 'Σ')
+                                        .replace(/\\Delta\b/g, 'Δ')
+                                        .replace(/\\delta\b/g, 'δ')
+                                        .replace(/\\times\b/g, '×')
+                                        .replace(/\\cdot\b/g, '·')
+                                        .replace(/\\div\b/g, '÷')
+                                        .replace(/\\pm\b/g, '±')
+                                        .replace(/\\leq?\b/g, '≤')
+                                        .replace(/\\geq?\b/g, '≥')
+                                        .replace(/\\neq\b/g, '≠')
+                                        .replace(/\\approx\b/g, '≈')
+                                        .replace(/\\sqrt\s*\{([^{}]*)\}/g, '√($1)')
+                                        .replace(/\\([a-zA-Z]+)\b/g, '$1')
+                                        .replace(/[{}]/g, '')
+                                        .replace(/\s+/g, ' ')
+                                        .trim();
+                                };
+
+                                const formulaRuns = (latex, styles = {}) => {
+                                    const value = latexToReadableText(latex);
+                                    const baseSize = Math.min(styles.fontSize || 10.5, 10.5);
+                                    const base = { fontSize: baseSize, color: '#334155', italics: true, characterSpacing: 0.35 };
+                                    const runs = [{ text: ' ', ...base }];
+                                    const re = /([_^])(?:\{([^{}]+)\}|([A-Za-z0-9+\-=()]))/g;
+                                    let cursor = 0;
+                                    let match;
+                                    while ((match = re.exec(value)) !== null) {
+                                        if (match.index > cursor) runs.push({ text: value.slice(cursor, match.index), ...base });
+                                        const marker = match[1];
+                                        const body = match[2] || match[3] || '';
+                                        runs.push({
+                                            text: body,
+                                            ...base,
+                                            fontSize: Math.max(6.5, baseSize - 2.5),
+                                            sub: marker === '_',
+                                            sup: marker === '^'
+                                        });
+                                        cursor = match.index + match[0].length;
+                                    }
+                                    if (cursor < value.length) runs.push({ text: value.slice(cursor), ...base });
+                                    runs.push({ text: ' ', ...base });
+                                    return runs;
+                                };
+
+                                const formulaRun = (latex, styles = {}) => formulaRuns(latex, styles);
+                                const clozeRun = (text, styles = {}) => ({
+                                    text: text || '',
+                                    fontSize: styles.fontSize || 11,
+                                    bold: true,
+                                    color: '#9A3412',
+                                    decoration: 'underline',
+                                    decorationStyle: 'double',
+                                    decorationColor: '#EA580C'
+                                });
+                                const tagRun = (text, styles = {}) => ({
+                                    text: `#${text || ''}`,
+                                    fontSize: Math.min(styles.fontSize || 10.5, 10.5),
+                                    bold: true,
+                                    color: '#3730A3',
+                                    decoration: 'underline',
+                                    decorationStyle: 'double',
+                                    decorationColor: '#6366F1'
+                                });
 
                                 // ─── STYLE EXTRACTOR ────────────────────────────────────────────────────
                                 // Returns pdfmake styles contributed by ONE element (not children).
@@ -40156,7 +40621,8 @@
                                         cl.contains('nk-accordion') || cl.contains('image-container') ||
                                         cl.contains('video-container') || cl.contains('se-video-container') ||
                                         cl.contains('nk-map-embed') || cl.contains('nk-video-embed') ||
-                                        cl.contains('whiteboard-block') || cl.contains('nk-web-link-container'));
+                                        cl.contains('whiteboard-block') || cl.contains('nk-web-link-container') ||
+                                        cl.contains('nk-pdf-math-block'));
                                 };
 
                                 // ─── INLINE COLLECTOR ────────────────────────────────────────────────────
@@ -40178,6 +40644,18 @@
                                         if (n.nodeType !== Node.ELEMENT_NODE) return;
                                         if (n.classList && (n.classList.contains('favicon-placeholder') || n.classList.contains('ql-ui'))) return;
                                         const tag = n.tagName.toLowerCase();
+                                        if (n.classList?.contains('nk-pdf-math-inline')) {
+                                            runs.push(...formulaRun(n.dataset.latex || n.textContent, s));
+                                            return;
+                                        }
+                                        if (n.classList?.contains('cloze-flashcard')) {
+                                            runs.push(clozeRun(n.textContent, s));
+                                            return;
+                                        }
+                                        if (n.classList?.contains('rendered-tag')) {
+                                            runs.push(tagRun(n.textContent, s));
+                                            return;
+                                        }
                                         if (tag === 'br') { runs.push({ text: '\n' }); return; }
                                         if (tag === 'a') {
                                             const href = n.getAttribute('href');
@@ -40241,6 +40719,34 @@
                                     // YouTube, Video and Map embeds
                                     if (tag === 'iframe' || cl?.contains('video-container') || cl?.contains('se-video-container') || cl?.contains('nk-map-embed') || cl?.contains('nk-video-embed')) {
                                         return null; // Completely ignore in PDF export
+                                    }
+
+                                    if (cl?.contains('nk-pdf-math-block')) {
+                                        const latex = node.dataset.latex || node.textContent || '';
+                                        return {
+                                            table: {
+                                                widths: ['*'],
+                                                body: [[{
+                                                    text: formulaRuns(latex, { fontSize: 11.5 }),
+                                                    fontSize: 11,
+                                                    color: '#334155',
+                                                    characterSpacing: 0.3,
+                                                    fillColor: '#F8FAFC',
+                                                    margin: [10, 7, 10, 7]
+                                                }]]
+                                            },
+                                            layout: {
+                                                hLineWidth: () => 0.8,
+                                                vLineWidth: () => 0.8,
+                                                hLineColor: () => '#CBD5E1',
+                                                vLineColor: () => '#CBD5E1',
+                                                paddingLeft: () => 0,
+                                                paddingRight: () => 0,
+                                                paddingTop: () => 0,
+                                                paddingBottom: () => 0
+                                            },
+                                            margin: [0, 6, 0, 8]
+                                        };
                                     }
 
                                     // Web link cards
@@ -40739,8 +41245,7 @@
                                 return {
                                     text: tagDisplay,
                                     fontSize: 9,
-                                    color: colors.accent,
-                                    background: colors.paper,
+                                    color: '#3730A3',
                                     margin: [0, 0, 6, 0]
                                 };
                             });
@@ -40902,10 +41407,13 @@
                                     // Tags (if any) - Elegant hashtag styling
                                     tagPills.length > 0 ? {
                                         text: tagPills.map((tag, i) => ({
-                                            text: (i > 0 ? '   ' : '') + '#' + tag.text,
+                                            text: (i > 0 ? '   ' : '') + ' #' + tag.text + ' ',
                                             fontSize: 9,
-                                            color: '#6366F1',
-                                            bold: false
+                                            color: tag.color,
+                                            bold: true,
+                                            decoration: 'underline',
+                                            decorationStyle: 'double',
+                                            decorationColor: '#6366F1'
                                         })),
                                         margin: [0, 0, 0, 14]
                                     } : {},
@@ -41820,11 +42328,40 @@
                         App.ui.showExportBrandModal(async (brandName, brandLink) => {
                             const categoryObj = App.settings.get('userCategories').find(c => c.name === article.category) || { name: article.category, colorIndex: 0 };
                             const categoryPill = `<div class="exported-pill category" style="background-color: ${App.util.getCategoryColor(categoryObj.colorIndex)}; color: var(--category-pill-text);">${App.util.getCategoryDisplayName(categoryObj.name)}</div>`;
-                            const tagsPills = (article.tags || []).map(tag => `<div class="exported-pill">${App.state.tags[tag]?.displayName || tag}</div>`).join('');
-                            const pillsHTML = `<div class="exported-pills-container">${categoryPill}${tagsPills}</div>`;
 
-                            const bodyContent = `${pillsHTML}<h1>${article.title}</h1><hr>${App.util.parseShortcuts(article.content)}`;
-                            const fullHtml = App.services.export._getHtmlExportTemplate(article.title, bodyContent, App.settings.get('theme'), brandName, brandLink);
+                            let processedContent = App.util.renderClozeForDisplay(App.util.parseShortcuts(article.content));
+                            const shareDoc = new DOMParser().parseFromString(processedContent, 'text/html');
+                            const firstTagTargets = {};
+                            shareDoc.querySelectorAll('.rendered-tag[data-tag]').forEach((tag, index) => {
+                                const tagSlug = tag.dataset.tag || App.contentTools.slugify(tag.textContent || `tag-${index + 1}`);
+                                const id = tag.id || `tag-${tagSlug}-${index + 1}`;
+                                const anchor = shareDoc.createElement('a');
+                                anchor.className = tag.className;
+                                anchor.dataset.tag = tagSlug;
+                                anchor.id = id;
+                                anchor.href = `#${id}`;
+                                anchor.textContent = tag.textContent;
+                                tag.replaceWith(anchor);
+                                firstTagTargets[tagSlug] ||= id;
+                            });
+                            processedContent = shareDoc.body.innerHTML;
+                            const hasMath = App.util.hasMathSyntax(processedContent);
+                            if (hasMath) {
+                                const mathDiv = document.createElement('div');
+                                mathDiv.innerHTML = processedContent;
+                                App.util.renderMathInElement(mathDiv);
+                                processedContent = mathDiv.innerHTML;
+                            }
+                            const tagsPills = (article.tags || []).map(tag => {
+                                const label = App.state.tags[tag]?.displayName || tag;
+                                const target = firstTagTargets[tag] || firstTagTargets[App.contentTools.slugify(label)];
+                                return target
+                                    ? `<a class="exported-pill" href="#${App.util.escapeHtml(target)}">${App.util.escapeHtml(label)}</a>`
+                                    : `<div class="exported-pill">${App.util.escapeHtml(label)}</div>`;
+                            }).join('');
+                            const pillsHTML = `<div class="exported-pills-container">${categoryPill}${tagsPills}</div>`;
+                            const bodyContent = `${pillsHTML}<h1>${article.title}</h1><hr>${processedContent}`;
+                            const fullHtml = App.services.export._getHtmlExportTemplate(article.title, bodyContent, App.settings.get('theme'), brandName, brandLink, { includeMathCss: hasMath });
 
                             const blob = new Blob([fullHtml], { type: 'text/html' });
                             const file = new File([blob], `${App.util.slugify(article.title)}.html`, { type: 'text/html' });
@@ -42019,6 +42556,121 @@
                         clearTimeout(timeout);
                         timeout = setTimeout(() => func.apply(context, args), wait);
                     };
+                },
+
+                protectMathSegments(text) {
+                    const tokens = [];
+                    if (!text || typeof text !== 'string') return { text: text || '', tokens };
+
+                    let protectedText = text.replace(/(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\))/g, (match) => {
+                        const index = tokens.push(match) - 1;
+                        return `\uE100MATH${index}\uE100`;
+                    });
+
+                    protectedText = protectedText.replace(/(^|[^\\$])\$([^$\n]{1,300})\$/g, (match, prefix, body) => {
+                        if (!App.util.isLikelySingleDollarMath(body)) return match;
+                        const index = tokens.push(`$${body}$`) - 1;
+                        return `${prefix}\uE100MATH${index}\uE100`;
+                    });
+
+                    return { text: protectedText, tokens };
+                },
+
+                restoreMathSegments(text, tokens = []) {
+                    if (!text || !tokens.length) return text || '';
+                    return text.replace(/\uE100MATH(\d+)\uE100/g, (match, index) => tokens[Number.parseInt(index, 10)] ?? match);
+                },
+
+                hasMathSyntax(text) {
+                    if (!text || typeof text !== 'string') return false;
+                    return App.util.protectMathSegments(text).tokens.length > 0;
+                },
+
+                parseMathToken(token) {
+                    const value = (token || '').trim();
+                    if (value.startsWith('$$') && value.endsWith('$$')) {
+                        return { latex: value.slice(2, -2), display: true };
+                    }
+                    if (value.startsWith('\\[') && value.endsWith('\\]')) {
+                        return { latex: value.slice(2, -2), display: true };
+                    }
+                    if (value.startsWith('\\(') && value.endsWith('\\)')) {
+                        return { latex: value.slice(2, -2), display: false };
+                    }
+                    if (value.startsWith('$') && value.endsWith('$')) {
+                        return { latex: value.slice(1, -1), display: false };
+                    }
+                    return { latex: value, display: false };
+                },
+
+                isLikelySingleDollarMath(body) {
+                    const value = (body || '').trim();
+                    if (!value || value.length > 300) return false;
+                    if (/^\d+(?:[.,]\d+)?(?:\s+\w+)*$/.test(value)) return false;
+                    return /\\[a-zA-Z]+/.test(value)
+                        || /[=^_{}<>±×÷∑∆Δ∫√≈≤≥≠→←]/.test(value)
+                        || /[A-Za-z0-9)]\s*[+\-*/]\s*[A-Za-z0-9(]/.test(value)
+                        || /^[A-Za-z](?:[_^][A-Za-z0-9{}]+)?$/.test(value);
+                },
+
+                convertSingleDollarMathText(text) {
+                    if (!text || typeof text !== 'string') return text || '';
+                    return text.replace(/(^|[^\\$])\$([^$\n]{1,300})\$/g, (match, prefix, body) => {
+                        return App.util.isLikelySingleDollarMath(body) ? `${prefix}\\(${body}\\)` : match;
+                    });
+                },
+
+                prepareSingleDollarMath(container) {
+                    if (!container) return;
+                    const skipTags = new Set(['SCRIPT', 'NOSCRIPT', 'STYLE', 'TEXTAREA', 'PRE', 'CODE', 'OPTION']);
+                    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+                        acceptNode: node => {
+                            const parent = node.parentElement;
+                            if (!parent || skipTags.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
+                            if (parent.closest('.katex, .nk-code-block, .rendered-tag, .tag-suggestion, .nk-mcq-toolbar, .resize-handle, .pdf-attachment-name')) {
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                    });
+                    const nodes = [];
+                    while (walker.nextNode()) nodes.push(walker.currentNode);
+                    nodes.forEach(node => {
+                        node.nodeValue = App.util.convertSingleDollarMathText(node.nodeValue);
+                    });
+                },
+
+                renderMathInElement(container) {
+                    if (!container || typeof renderMathInElement !== 'function') return;
+                    try {
+                        App.util.prepareSingleDollarMath(container);
+                        renderMathInElement(container, {
+                            delimiters: [
+                                { left: '$$', right: '$$', display: true },
+                                { left: '\\[', right: '\\]', display: true },
+                                { left: '\\(', right: '\\)', display: false }
+                            ],
+                            ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'],
+                            ignoredClasses: [
+                                'katex',
+                                'nk-code-block',
+                                'rendered-tag',
+                                'tag-suggestion',
+                                'nk-mcq-toolbar',
+                                'resize-handle',
+                                'pdf-attachment-name'
+                            ],
+                            throwOnError: false,
+                            strict: 'warn',
+                            trust: false
+                        });
+                    } catch (error) {
+                        console.warn('KaTeX render skipped:', error);
+                    }
+                },
+
+                hasRenderedMath(container) {
+                    return !!container?.querySelector?.('.katex, .katex-display');
                 },
 
                 // Surgical & consistent Word Count logic
@@ -42751,10 +43403,14 @@
                 // --- FIX: Safe Regex with Negative Lookahead to prevent runaway matching ---
                 renderClozeForDisplay(text) {
                     if (!text) return '';
+                    const protectedMath = App.util.protectMathSegments(text);
                     // First restore Mind Map nodes so they are preserved
-                    let processed = text.replace(/\{\{m(\d+)::(.*?)\}\}/g, (match, level, content) => { return `<span class="mindmap-node" data-level="${level}" id="snip-${App.util.cyrb53(level + content)}">${content}</span>`; });
+                    let processed = protectedMath.text.replace(/\{\{m(\d+)::(.*?)\}\}/g, (match, level, content) => { return `<span class="mindmap-node" data-level="${level}" id="snip-${App.util.cyrb53(level + content)}">${content}</span>`; });
+                    // Accept the occasional extra-brace variant users paste/type around cloze cards.
+                    processed = processed.replace(/\{\{\{c\d+::((?:(?!\{\{\{?c\d+::)[\s\S])*?)\}\}\}/g, '<span class="cloze-flashcard">$1</span>');
                     // Then parse Cloze (Matches {{c1::...}} but stops if it sees another {{c inside)
-                    return processed.replace(/{{c\d+::((?:(?!{{c\d+::)[\s\S])*?)}}/g, '<span class="cloze-flashcard">$1</span>');
+                    processed = processed.replace(/{{c\d+::((?:(?!{{c\d+::)[\s\S])*?)}}/g, '<span class="cloze-flashcard">$1</span>');
+                    return App.util.restoreMathSegments(processed, protectedMath.tokens);
                 },
 
                 normalizeRenderedClozeToTokens(text) {
@@ -42783,9 +43439,10 @@
                         tokens.push(match);
                         return `\uE000${tokens.length - 1}\uE000`;
                     });
+                    const protectedMath = App.util.protectMathSegments(maskedText);
 
                     const createSnippetId = () => `snip-${crypto.randomUUID().slice(0, 12)}`;
-                    let processedHtml = maskedText
+                    let processedHtml = protectedMath.text
                         .replace(/^\s*>\s*(.*)/gm, '<blockquote>$1</blockquote>')
                         .replace(/^\s*---\s*$/gm, '<hr>')
                         .replace(/\*\*(.*?)\*\*/g, '<i>$1</i>').replace(/\*([^*]+)\*/g, '<b>$1</b>')
@@ -42797,6 +43454,7 @@
                         .replace(/::(.*?)_r::/g, `<span class="text-red" id="${createSnippetId()}">$1</span>`).replace(/::(.*?)_g::/g, `<span class="text-green" id="${createSnippetId()}">$1</span>`)
                         .replace(/::(.*?)_b::/g, `<span class="text-blue" id="${createSnippetId()}">$1</span>`).replace(/::(.*?)_m::/g, `<span class="text-magenta" id="${createSnippetId()}">$1</span>`);
 
+                    processedHtml = App.util.restoreMathSegments(processedHtml, protectedMath.tokens);
                     // Restore tags
                     processedHtml = processedHtml.replace(/\uE000(\d+)\uE000/g, (match, index) => tokens[parseInt(index)] || match);
 
@@ -44548,7 +45206,7 @@
                             const focusTodayPillHTML = `<div class="category-pill focus-today-pill" title="Time focused today">🍅 ${focusStr} focused</div>`;
 
                             if (!section.querySelector('.pomodoro-display')) {
-                                section.innerHTML = `<div class="pomodoro-display"><div class="pomodoro-progress-frame"><div class="progress-segment progress-top"></div><div class="progress-segment progress-right"></div><div class="progress-segment progress-bottom"></div><div class="progress-segment progress-left"></div></div><div class="pomodoro-time-display"></div><div class="pomodoro-task-title"></div><div class="pomodoro-meta"></div></div><div class="pomodoro-controls"><button class="btn-icon" onclick="App.hub.pomodoro.stopAndReset()" title="Stop & Reset">${App.util.icons.stop}</button><button class="btn-icon" id="hub-pomodoro-play-btn" style="transform: scale(1.4);" onclick="App.hub.pomodoro.togglePlayPause()"></button><button class="btn-icon" onclick="App.hub.ui.showPomodoroSettings()" title="Settings">${App.util.icons.settings}</button><button class="btn-icon" onclick="App.hub.pomodoro.toggleZenMode()" title="Zen Mode">${App.util.icons.zen}</button></div>`;
+                                section.innerHTML = `<div class="pomodoro-display"><div class="pomodoro-progress-frame"><div class="progress-segment progress-top"></div><div class="progress-segment progress-right"></div><div class="progress-segment progress-bottom"></div><div class="progress-segment progress-left"></div></div><div class="pomodoro-time-display"></div><div class="pomodoro-task-title"></div><div class="pomodoro-meta"></div><div class="pomodoro-controls"><button class="btn-icon" onclick="App.hub.pomodoro.stopAndReset()" title="Stop & Reset">${App.util.icons.stop}</button><button class="btn-icon" id="hub-pomodoro-play-btn" onclick="App.hub.pomodoro.togglePlayPause()"></button><button class="btn-icon" onclick="App.hub.ui.showPomodoroSettings()" title="Settings">${App.util.icons.settings}</button><button class="btn-icon" onclick="App.hub.pomodoro.toggleZenMode()" title="Zen Mode">${App.util.icons.zen}</button></div></div>`;
                             }
 
                             const displayEl = section.querySelector('.pomodoro-display');
@@ -47621,20 +48279,21 @@
                         const node = walker.currentNode;
                         // Skip if inside protected elements
                         if (node.parentElement.closest('code, pre, .nk-code-block, .rendered-tag')) continue;
-                        if (tagRegex.test(node.nodeValue)) {
+                        const protectedMath = App.util.protectMathSegments(node.nodeValue);
+                        tagRegex.lastIndex = 0;
+                        if (tagRegex.test(protectedMath.text)) {
                             tagRegex.lastIndex = 0; // Reset regex
-                            nodesToProcess.push(node);
+                            nodesToProcess.push({ node, text: protectedMath.text, mathTokens: protectedMath.tokens });
                         }
                     }
-                    nodesToProcess.forEach(textNode => {
-                        const text = textNode.nodeValue;
+                    nodesToProcess.forEach(({ node: textNode, text, mathTokens }) => {
                         const fragment = document.createDocumentFragment();
                         let lastIndex = 0;
                         let match;
                         tagRegex.lastIndex = 0;
                         while ((match = tagRegex.exec(text)) !== null) {
                             if (match.index > lastIndex) {
-                                fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+                                fragment.appendChild(document.createTextNode(App.util.restoreMathSegments(text.substring(lastIndex, match.index), mathTokens)));
                             }
                             const content = match[1];
                             const slug = this.slugify(content);
@@ -47650,7 +48309,7 @@
                             lastIndex = match.index + match[0].length;
                         }
                         if (lastIndex < text.length) {
-                            fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+                            fragment.appendChild(document.createTextNode(App.util.restoreMathSegments(text.substring(lastIndex), mathTokens)));
                         }
                         textNode.parentNode.replaceChild(fragment, textNode);
                     });
