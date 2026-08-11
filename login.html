@@ -1015,7 +1015,7 @@
         });
 
         // Unified Redirect handler
-        function handleRedirect() {
+        async function handleRedirect() {
             const urlParams = new URLSearchParams(window.location.search);
             let redirectTo = urlParams.get('redirect_to');
             let targetApp = urlParams.get('app');
@@ -1027,16 +1027,26 @@
                 } catch (e) {}
             }
 
-            // Clean up temporary sessionStorage markers
-            try {
-                sessionStorage.removeItem('notekash_auth_redirect_to');
-                sessionStorage.removeItem('notekash_auth_target_app');
-            } catch (e) {}
+            // Ensure active session is loaded
+            if (!loggedInSession) {
+                try {
+                    const { data } = await supabaseClient.auth.getSession();
+                    if (data && data.session) {
+                        loggedInSession = data.session;
+                    }
+                } catch (e) {
+                    console.warn("Could not retrieve active session for redirect:", e);
+                }
+            }
 
             if (redirectTo) {
                 try {
                     // Safe relative redirect
                     if (redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
+                        try {
+                            sessionStorage.removeItem('notekash_auth_redirect_to');
+                            sessionStorage.removeItem('notekash_auth_target_app');
+                        } catch (e) {}
                         showSplash("Launching NoteKash...", "Redirecting to your personal workspace...");
                         setTimeout(() => { window.location.href = redirectTo; }, 600);
                         return;
@@ -1044,10 +1054,15 @@
 
                     const parsedUrl = new URL(redirectTo, window.location.origin);
                     const isLocal = parsedUrl.hostname === 'localhost' || parsedUrl.hostname === '127.0.0.1';
-                    const isNoteKashDomain = parsedUrl.hostname === 'notekash.com' || parsedUrl.hostname.endsWith('.notekash.com');
+                    const isNoteKashDomain = parsedUrl.hostname === 'notekash.com' || parsedUrl.hostname.endsWith('.notekash.com') || parsedUrl.hostname.endsWith('.pages.dev') || parsedUrl.hostname.endsWith('.vercel.app');
                     const isSameOrigin = parsedUrl.origin === window.location.origin;
 
                     if (isSameOrigin || isLocal || isNoteKashDomain) {
+                        try {
+                            sessionStorage.removeItem('notekash_auth_redirect_to');
+                            sessionStorage.removeItem('notekash_auth_target_app');
+                        } catch (e) {}
+
                         let appName = 'Focus Hub';
                         if (targetApp === 'focus_hub' || parsedUrl.hostname.includes('focus') || parsedUrl.pathname.includes('focus')) {
                             appName = 'Focus Hub';
@@ -1079,6 +1094,11 @@
                     console.warn("Invalid redirect_to parameter:", e);
                 }
             }
+
+            try {
+                sessionStorage.removeItem('notekash_auth_redirect_to');
+                sessionStorage.removeItem('notekash_auth_target_app');
+            } catch (e) {}
 
             showSplash("Launching NoteKash...", "Redirecting to your personal workspace...");
             setTimeout(() => {

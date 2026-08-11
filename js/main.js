@@ -290,7 +290,10 @@ const App = {
     const hash = window.location.hash.slice(1);
     const urlParams = new URLSearchParams(window.location.search);
     if (hash === 'login' || hash === 'signup' || urlParams.has('redirect_to')) {
-      App.router.navigateTo(hash === 'signup' ? 'signup' : 'login');
+      const targetSearch = window.location.search;
+      const targetHash = hash ? `#${hash}` : '';
+      window.location.href = `./login.html${targetSearch}${targetHash}`;
+      return;
     } else {
       App.router.navigateTo(defaultView, defaultData);
       if (hash === 'pricing') {
