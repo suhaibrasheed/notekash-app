@@ -1,0 +1,1568 @@
+        /* --- NEW: MCQ Block Styles (Feature #2) - POLISHED --- */
+        .nk-mcq-block {
+            position: relative;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.5em 0;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05),
+                0 1px 3px rgba(0, 0, 0, 0.03);
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        /* Subtle hover effect in read mode */
+        body.read-mode .nk-mcq-block:not([data-answered="true"]):hover,
+        .focus-mode-overlay .nk-mcq-block:not([data-answered="true"]):hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08),
+                0 2px 8px rgba(0, 0, 0, 0.04);
+            border-left-width: 5px;
+        }
+
+        /* Answered state - elegant with subtle glow */
+        .nk-mcq-block[data-answered="true"] {
+            border-left-color: var(--success-color);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05),
+                -2px 0 12px color-mix(in srgb, var(--success-color) 15%, transparent);
+        }
+
+        .nk-mcq-block[data-answered="true"][data-user-incorrect="true"] {
+            border-left-color: var(--danger-color);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05),
+                -2px 0 12px color-mix(in srgb, var(--danger-color) 15%, transparent);
+        }
+
+        /* Question text - refined typography */
+        .nk-mcq-question {
+            font-weight: 600;
+            font-size: 1.05em;
+            margin-bottom: 1.25rem;
+            margin-right: 40px;
+            outline: none;
+            line-height: 1.6;
+            letter-spacing: 0.01em;
+            color: var(--text-primary);
+            font-family: inherit;
+        }
+
+        .nk-mcq-question:empty::before {
+            content: attr(data-placeholder);
+            color: var(--text-secondary);
+            font-weight: normal;
+            opacity: 0.6;
+        }
+
+        /* MCQ Toolbar (write mode) - appears on hover */
+        .nk-mcq-toolbar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 10;
+        }
+
+        body.write-mode .nk-mcq-block:hover .nk-mcq-toolbar {
+            opacity: 1;
+        }
+
+        .nk-mcq-toolbar button {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nk-mcq-toolbar button:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--primary-color);
+        }
+
+        .nk-mcq-toolbar .nk-mcq-delete-block:hover {
+            color: var(--danger-color);
+            border-color: var(--danger-color);
+            background: color-mix(in srgb, var(--danger-color) 10%, var(--bg-secondary));
+        }
+
+        .nk-mcq-toolbar .nk-mcq-copy-block:hover {
+            color: var(--success-color);
+            border-color: var(--success-color);
+            background: color-mix(in srgb, var(--success-color) 10%, var(--bg-secondary));
+        }
+
+        /* Hide toolbar in read mode and focus mode */
+        body.read-mode .nk-mcq-toolbar,
+        .focus-mode-overlay .nk-mcq-toolbar,
+        .study-card-content-box .nk-mcq-toolbar {
+            display: none;
+        }
+
+
+        .nk-mcq-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .nk-mcq-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nk-mcq-option-radio {
+            width: 24px;
+            height: 24px;
+            border: 2.5px solid var(--border-color);
+            border-radius: 50%;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            background: var(--bg-secondary);
+        }
+
+        .nk-mcq-option-radio:hover {
+            border-color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .nk-mcq-option-text {
+            flex-grow: 1;
+            outline: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            background: var(--bg-tertiary);
+            min-height: 22px;
+            /* Inherit font from MCQ block */
+            font-family: inherit;
+            font-size: 0.95em;
+            line-height: 1.5;
+            letter-spacing: 0.01em;
+        }
+
+        .nk-mcq-option-text:focus-within {
+            border-color: var(--primary-color);
+            background-color: var(--bg-secondary);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 12%, transparent);
+        }
+
+        .nk-mcq-option-text:empty::before {
+            content: attr(data-placeholder);
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        /* --- Rich Media Options: Image Support --- */
+        .nk-mcq-option-text img {
+            max-height: 100px;
+            max-width: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin: 4px 0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+
+        .nk-mcq-option-text img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Larger images in presentation/focus mode */
+        .focus-mode-overlay .nk-mcq-option-text img {
+            max-height: 150px;
+        }
+
+        /* --- Image Layout in MCQ --- */
+        .nk-mcq-option-text:has(img) {
+            flex-grow: 0;
+            width: fit-content;
+            padding: 4px;
+            margin-right: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
+            min-height: auto;
+        }
+
+        /* Remove margins from the image itself when in this compact mode */
+        .nk-mcq-option-text:has(img) img {
+            margin: 0;
+            display: block;
+        }
+
+        .nk-mcq-delete-option {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s ease;
+            font-size: 1.25rem;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nk-mcq-option:hover .nk-mcq-delete-option {
+            opacity: 0.5;
+        }
+
+        .nk-mcq-delete-option:hover {
+            opacity: 1;
+            color: var(--danger-color);
+            background: color-mix(in srgb, var(--danger-color) 10%, transparent);
+        }
+
+
+        /* --- Write Mode Specific Styles --- */
+        body.write-mode .nk-mcq-option[data-is-correct="true"] .nk-mcq-option-radio {
+            background: linear-gradient(135deg, var(--success-color), color-mix(in srgb, var(--success-color), #000 10%));
+            border-color: var(--success-color);
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--success-color) 40%, transparent);
+        }
+
+        body.write-mode .nk-mcq-option[data-is-correct="true"] .nk-mcq-option-radio::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 0.75rem;
+            color: white;
+            font-weight: bold;
+            transform: translate(-50%, -50%);
+        }
+
+
+        /* --- Read Mode Specific Styles - POLISHED --- */
+        body.read-mode .nk-mcq-add-option,
+        body.read-mode .nk-mcq-delete-option,
+        body.read-mode .nk-mcq-option-radio,
+        .focus-mode-overlay .nk-mcq-add-option {
+            display: none;
+        }
+
+        body.read-mode .nk-mcq-option {
+            padding: 14px 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--bg-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Refined radio indicator */
+        body.read-mode .nk-mcq-option::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid var(--border-color);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        body.read-mode .nk-mcq-option .nk-mcq-option-text {
+            padding-left: 34px;
+            background: transparent;
+            border: none;
+        }
+
+        /* Hover state - show inner dot */
+        body.read-mode .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover {
+            border-color: var(--primary-color);
+            background: color-mix(in srgb, var(--primary-color) 4%, var(--bg-secondary));
+            transform: translateX(4px) scale(1.01);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        body.read-mode .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before {
+            border-color: var(--primary-color);
+            background: var(--bg-secondary);
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 10%, transparent);
+        }
+
+
+
+        body.read-mode .nk-mcq-block[data-answered="true"] .nk-mcq-option {
+            cursor: default;
+        }
+
+        /* Premium Correct Answer Style - POLISHED */
+        body.read-mode .nk-mcq-option.correct {
+            border: 2.5px solid var(--success-color);
+            color: var(--text-primary);
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--success-color) 14%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--success-color) 7%, var(--bg-secondary)));
+            box-shadow: 0 2px 12px color-mix(in srgb, var(--success-color) 20%, transparent);
+            animation: mcqCorrectPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        body.read-mode .nk-mcq-option.correct::before {
+            content: '✓';
+            border-color: var(--success-color);
+            background: linear-gradient(135deg, var(--success-color), color-mix(in srgb, var(--success-color), #000 10%));
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px color-mix(in srgb, var(--success-color) 35%, transparent),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+
+
+
+        /* Premium Incorrect Answer Style - POLISHED */
+        body.read-mode .nk-mcq-option.incorrect {
+            border: 2.5px solid var(--danger-color);
+            color: var(--text-primary);
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--danger-color) 12%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--danger-color) 5%, var(--bg-secondary)));
+            box-shadow: 0 2px 12px color-mix(in srgb, var(--danger-color) 20%, transparent);
+            animation: mcqIncorrectShake 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        body.read-mode .nk-mcq-option.incorrect::before {
+            content: '×';
+            border-color: var(--danger-color);
+            background: linear-gradient(135deg, var(--danger-color), color-mix(in srgb, var(--danger-color), #000 10%));
+            color: white;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px color-mix(in srgb, var(--danger-color) 35%, transparent),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes mcqCorrectPulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 0 20px color-mix(in srgb, var(--success-color) 40%, transparent);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes mcqIncorrectShake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-6px);
+            }
+
+            40% {
+                transform: translateX(6px);
+            }
+
+            60% {
+                transform: translateX(-4px);
+            }
+
+            80% {
+                transform: translateX(4px);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* --- MCQ Study Card Font Size Fix --- */
+        .study-card-content-box.mcq-type {
+            font-size: var(--study-card-font-size, 1.5rem);
+            line-height: 1.6;
+        }
+
+        /* FOCUS/PRESENTATION MODE MCQ STYLING - POLISHED */
+
+        /* Hide radios and delete buttons in presentation mode */
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option-radio,
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-delete-option {
+            display: none;
+        }
+
+        /* Remove inner background from option text - let the option container handle it */
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option-text {
+            padding: 0;
+            padding-left: 40px;
+            background: transparent;
+            border: none;
+        }
+
+        /* Option container - clean card style */
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option {
+            padding: 18px 24px;
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--bg-secondary);
+            position: relative;
+        }
+
+        /* Refined radio indicator */
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 18px;
+            width: 22px;
+            height: 22px;
+            border: 2.5px solid var(--border-color);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Removed inner dot - user preference */
+
+        /* Hover state before answering */
+        .focus-mode-overlay .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover {
+            border-color: var(--primary-color);
+            background: color-mix(in srgb, var(--primary-color) 6%, var(--bg-secondary));
+            transform: translateX(6px) scale(1.01);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .focus-mode-overlay .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before {
+            border-color: var(--primary-color);
+            background: var(--bg-secondary);
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 12%, transparent);
+        }
+
+
+
+        /* Disable pointer after answering */
+        .focus-mode-overlay .nk-mcq-block[data-answered="true"] .nk-mcq-option {
+            cursor: default;
+        }
+
+        /* Correct answer styling - POLISHED */
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct {
+            border: 2.5px solid var(--success-color);
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--success-color) 14%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--success-color) 7%, var(--bg-secondary)));
+            box-shadow: 0 3px 16px color-mix(in srgb, var(--success-color) 25%, transparent);
+            animation: mcqCorrectPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct::before {
+            content: '✓';
+            border-color: var(--success-color);
+            background: linear-gradient(135deg, var(--success-color), color-mix(in srgb, var(--success-color), #000 10%));
+            color: white;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--success-color) 40%, transparent),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+
+
+
+        /* Incorrect answer styling - POLISHED */
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect {
+            border: 2.5px solid var(--danger-color);
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--danger-color) 12%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--danger-color) 5%, var(--bg-secondary)));
+            box-shadow: 0 3px 16px color-mix(in srgb, var(--danger-color) 25%, transparent);
+            animation: mcqIncorrectShake 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect::before {
+            content: '×';
+            border-color: var(--danger-color);
+            background: linear-gradient(135deg, var(--danger-color), color-mix(in srgb, var(--danger-color), #000 10%));
+            color: white;
+            font-size: 1.05rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--danger-color) 40%, transparent),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+
+        /* STUDY FLASHCARD MODE MCQ STYLING */
+
+        /* Hide radios, delete buttons, and toolbar in study card mode */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option-radio,
+        .study-card-content-box .nk-mcq-block .nk-mcq-delete-option,
+        .study-card-content-box .nk-mcq-block .nk-mcq-toolbar {
+            display: none;
+        }
+
+        /* Study card MCQ block - Premium container with beautiful curved left border */
+        .study-card-content-box .nk-mcq-block {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            padding: 1.5rem 0 1.5rem 1.5rem;
+            margin: 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Curved, polished left border using pseudo-element */
+        .study-card-content-box .nk-mcq-block::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: linear-gradient(180deg,
+                    var(--primary-color) 0%,
+                    color-mix(in srgb, var(--primary-color), #000 15%) 100%);
+            border-radius: 12px;
+            box-shadow: 2px 0 8px color-mix(in srgb, var(--primary-color) 20%, transparent),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Answered state - Green curved border with glow */
+        .study-card-content-box .nk-mcq-block[data-answered="true"]::before {
+            width: 6px;
+            background: linear-gradient(180deg,
+                    var(--success-color) 0%,
+                    color-mix(in srgb, var(--success-color), #000 20%) 100%);
+            box-shadow: 2px 0 12px color-mix(in srgb, var(--success-color) 35%, transparent),
+                inset 0 1px 2px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Incorrect answer - Red curved border with glow */
+        .study-card-content-box .nk-mcq-block[data-answered="true"][data-user-incorrect="true"]::before {
+            width: 6px;
+            background: linear-gradient(180deg,
+                    var(--danger-color) 0%,
+                    color-mix(in srgb, var(--danger-color), #000 20%) 100%);
+            box-shadow: 2px 0 12px color-mix(in srgb, var(--danger-color) 35%, transparent),
+                inset 0 1px 2px rgba(255, 255, 255, 0.4);
+        }
+
+        /* MCQ Question - More prominent and beautiful, inherits font size */
+        .study-card-content-box .nk-mcq-block .nk-mcq-question {
+            font-weight: 700;
+            font-size: calc(var(--study-card-font-size, 1.6rem) * 1.05);
+            line-height: 1.5;
+            margin-bottom: 1.75rem;
+            color: var(--text-primary);
+            padding-bottom: 1rem;
+            position: relative;
+        }
+
+        /* Elegant gradient underline for the question */
+        .study-card-content-box .nk-mcq-block .nk-mcq-question::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), transparent);
+            border-radius: 2px;
+        }
+
+        /* Options container - Better spacing */
+        .study-card-content-box .nk-mcq-block .nk-mcq-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Remove inner background from option text in study cards, inherits font size */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option-text {
+            padding: 0;
+            padding-left: 32px;
+            background: transparent;
+            border: none;
+            font-size: var(--study-card-font-size, 1.6rem);
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        /* Option container - Modern card style with premium feel */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option {
+            padding: 18px 24px;
+            border: 2.5px solid var(--border-color);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: linear-gradient(135deg,
+                    var(--bg-secondary) 0%,
+                    color-mix(in srgb, var(--bg-tertiary) 30%, var(--bg-secondary)) 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Radio pseudo-element for study cards - Larger and more prominent */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option::before {
+            content: '';
+            flex-shrink: 0;
+            position: relative;
+            top: auto;
+            left: auto;
+            width: 22px;
+            height: 22px;
+            border: 2.5px solid var(--border-color);
+            border-radius: 50%;
+            transform: none;
+            background: var(--bg-secondary);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Premium hover state for study cards */
+        .study-card-content-box .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--primary-color) 8%, var(--bg-secondary)) 0%,
+                    color-mix(in srgb, var(--primary-color) 4%, var(--bg-secondary)) 100%);
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08),
+                0 0 0 3px color-mix(in srgb, var(--primary-color) 12%, transparent);
+        }
+
+        .study-card-content-box .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before {
+            border-color: var(--primary-color);
+            background: color-mix(in srgb, var(--primary-color) 20%, var(--bg-secondary));
+            transform: scale(1.15);
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 15%, transparent);
+        }
+
+        /* Disable pointer after answering in study cards */
+        .study-card-content-box .nk-mcq-block[data-answered="true"] .nk-mcq-option {
+            cursor: default;
+        }
+
+        /* Correct answer for study cards - Premium success state */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option.correct {
+            border: 2.5px solid var(--success-color);
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--success-color) 15%, var(--bg-secondary)) 0%,
+                    color-mix(in srgb, var(--success-color) 8%, var(--bg-secondary)) 100%);
+            box-shadow: 0 4px 16px color-mix(in srgb, var(--success-color) 25%, transparent);
+            animation: mcqCorrectPulse 0.6s ease;
+        }
+
+        .study-card-content-box .nk-mcq-block .nk-mcq-option.correct::before {
+            content: '✓';
+            border-color: var(--success-color);
+            background: var(--success-color);
+            color: white;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--success-color) 40%, transparent);
+        }
+
+
+
+        /* Incorrect answer for study cards - Clear but not harsh */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect {
+            border: 2.5px solid var(--danger-color);
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--danger-color) 12%, var(--bg-secondary)) 0%,
+                    color-mix(in srgb, var(--danger-color) 6%, var(--bg-secondary)) 100%);
+            box-shadow: 0 4px 16px color-mix(in srgb, var(--danger-color) 20%, transparent);
+            animation: mcqIncorrectShake 0.5s ease;
+        }
+
+        .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect::before {
+            content: '×';
+            border-color: var(--danger-color);
+            background: var(--danger-color);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--danger-color) 40%, transparent);
+        }
+
+        /* Hide add option in study cards */
+        .study-card-content-box .nk-mcq-block .nk-mcq-add-option {
+            display: none;
+        }
+
+        /* ACCORDION STYLING IN STUDY FLASHCARDS */
+        /* Accordion title in study cards - inherits font size */
+        .study-card-content-box .nk-accordion-title {
+            font-size: calc(var(--study-card-font-size, 1.6rem) * 1.05);
+            line-height: 1.5;
+        }
+
+        /* Accordion content in study cards - inherits font size */
+        .study-card-content-box .nk-accordion-content {
+            font-size: var(--study-card-font-size, 1.6rem);
+            line-height: 1.6;
+        }
+
+
+        /* Enhanced explanation reveal in study cards */
+        .study-card-content-box .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
+            margin-top: 1.5rem;
+            padding: 1.25rem 1.5rem;
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--primary-color) 8%, var(--bg-tertiary)) 0%,
+                    color-mix(in srgb, var(--primary-color) 4%, var(--bg-tertiary)) 100%);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 12px;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+
+        /*PREMIUM "INSIGHT CARD" EXPLANATION - Glassmorphic Reveal Effect*/
+        .nk-mcq-explanation {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transform: translateY(-12px);
+            transition:
+                max-height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 0.4s ease,
+                transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                padding 0.3s ease,
+                margin 0.3s ease;
+
+            /* Visual styling */
+            outline: none;
+            margin-top: 0;
+            padding: 0 16px;
+            border-radius: 8px;
+            font-size: 0.93em;
+            color: inherit;
+            line-height: 1.6;
+            font-family: inherit;
+
+            /* Subtle background */
+            background: color-mix(in srgb, var(--bg-tertiary) 50%, transparent);
+            border-left: 2px solid color-mix(in srgb, var(--primary-color) 40%, transparent);
+        }
+
+        /* Write mode: Always show explanation for editing */
+        body.write-mode .nk-mcq-explanation {
+            max-height: none;
+            opacity: 1;
+            transform: translateY(0);
+            margin-top: 1rem;
+            padding: 12px 16px;
+        }
+
+        /* Placeholder that disappears when typing */
+        .nk-mcq-explanation:empty::before {
+            content: attr(data-placeholder);
+            color: var(--text-secondary);
+            opacity: 0.5;
+            font-style: italic;
+        }
+
+        /* Hide placeholder when focused */
+        .nk-mcq-explanation:focus:empty::before {
+            opacity: 0.3;
+        }
+
+        /* Read Mode - The Reveal State - Clean and simple */
+        body.read-mode .nk-mcq-block[data-answered="true"] .nk-mcq-explanation,
+        .focus-mode-overlay .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
+            max-height: 600px;
+            opacity: 1;
+            transform: translateY(0);
+            margin-top: 1rem;
+            padding: 14px 16px;
+            background: color-mix(in srgb, var(--bg-tertiary) 70%, transparent);
+            border-left: 2px solid var(--primary-color);
+        }
+
+        body.read-mode .nk-mcq-block[data-answered="true"] .nk-mcq-explanation,
+        .focus-mode-overlay .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
+            position: relative;
+        }
+
+        /* Hide empty explanations even after answering */
+        .nk-mcq-block[data-answered="true"] .nk-mcq-explanation:empty {
+            display: none !important;
+            max-height: 0 !important;
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+
+
+        /* --- NEW: Text Tile (Feature #3 - "/textile" command) --- */
+        .nk-text-tile {
+            display: flex;
+            /* Flex layout for proper height/width handling */
+            align-items: center;
+            gap: 0.5rem;
+            vertical-align: middle;
+            background-color: transparent;
+            border: 2px solid;
+            border-radius: 12px;
+            padding: 0.65rem 1.25rem;
+            /* Center the textile and give it breathing room */
+            margin: 0.5rem auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08),
+                0 2px 4px rgba(0, 0, 0, 0.04);
+            position: relative;
+            /* FIXED: Always take 95% of available width to prevent any scrollbars */
+            width: 95%;
+            max-width: 95% !important;
+            box-sizing: border-box;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* Hover effect for premium feel */
+        body.write-mode .nk-text-tile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12),
+                0 4px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .nk-text-tile-icon {
+            font-size: 0.95em;
+            opacity: 0.85;
+        }
+
+        /*  Textile Color Styles */
+        .nk-text-tile.color-1 {
+            background: var(--textile-bg-1);
+            border: 2px solid var(--textile-border-1);
+            color: var(--textile-text-1);
+        }
+
+        .nk-text-tile.color-2 {
+            background: var(--textile-bg-2);
+            border: 2px solid var(--textile-border-2);
+            color: var(--textile-text-2);
+        }
+
+        .nk-text-tile.color-3 {
+            background: var(--textile-bg-3);
+            border: 2px solid var(--textile-border-3);
+            color: var(--textile-text-3);
+        }
+
+        .nk-text-tile.color-4 {
+            background: var(--textile-bg-4);
+            border: 2px solid var(--textile-border-4);
+            color: var(--textile-text-4);
+        }
+
+        .nk-text-tile.color-5 {
+            background: var(--textile-bg-5);
+            border: 2px solid var(--textile-border-5);
+            color: var(--textile-text-5);
+        }
+
+        .nk-text-tile.color-6 {
+            background: var(--textile-bg-6);
+            border: 2px solid var(--textile-border-6);
+            color: var(--textile-text-6);
+        }
+
+        .nk-text-tile.color-7 {
+            background: var(--textile-bg-7);
+            border: 2px solid var(--textile-border-7);
+            color: var(--textile-text-7);
+        }
+
+        .nk-text-tile.color-8 {
+            background: var(--textile-bg-8);
+            border: 2px solid var(--textile-border-8);
+            color: var(--textile-text-8);
+        }
+
+        .nk-text-tile.color-9 {
+            background: var(--textile-bg-9);
+            border: 2px solid var(--textile-border-9);
+            color: var(--textile-text-9);
+        }
+
+        /* Ensure content inherits correct colors */
+        .nk-text-tile.color-1 .nk-text-tile-content,
+        .nk-text-tile.color-2 .nk-text-tile-content,
+        .nk-text-tile.color-3 .nk-text-tile-content,
+        .nk-text-tile.color-4 .nk-text-tile-content,
+        .nk-text-tile.color-5 .nk-text-tile-content,
+        .nk-text-tile.color-6 .nk-text-tile-content,
+        .nk-text-tile.color-7 .nk-text-tile-content,
+        .nk-text-tile.color-8 .nk-text-tile-content,
+        .nk-text-tile.color-9 .nk-text-tile-content {
+            color: inherit;
+        }
+
+        /* Default fallback style */
+        .nk-text-tile.color-default {
+            background-color: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        /* Content styling - outline:none ensures no "box inside box" */
+        .nk-text-tile-content {
+            outline: none;
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            font-weight: 500;
+            line-height: 1.6;
+            color: inherit;
+            min-width: 40px;
+            letter-spacing: 0.01em;
+            width: 100%;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .nk-text-tile-content:empty::before {
+            content: attr(data-placeholder);
+            color: var(--text-secondary);
+            opacity: 0.6;
+            font-style: italic;
+            font-weight: 400;
+            pointer-events: none;
+        }
+
+        /* Premium glossy overlay for all colors */
+        .nk-text-tile.color-1::before,
+        .nk-text-tile.color-2::before,
+        .nk-text-tile.color-3::before,
+        .nk-text-tile.color-4::before,
+        .nk-text-tile.color-5::before,
+        .nk-text-tile.color-6::before,
+        .nk-text-tile.color-7::before,
+        .nk-text-tile.color-8::before,
+        .nk-text-tile.color-9::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.25) 0%,
+                    rgba(255, 255, 255, 0.08) 50%,
+                    rgba(0, 0, 0, 0.02) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Adjusted glossy overlay for dark theme */
+        [data-theme="dark"] .nk-text-tile.color-1::before,
+        [data-theme="dark"] .nk-text-tile.color-2::before,
+        [data-theme="dark"] .nk-text-tile.color-3::before,
+        [data-theme="dark"] .nk-text-tile.color-4::before,
+        [data-theme="dark"] .nk-text-tile.color-5::before,
+        [data-theme="dark"] .nk-text-tile.color-6::before,
+        [data-theme="dark"] .nk-text-tile.color-7::before,
+        [data-theme="dark"] .nk-text-tile.color-8::before,
+        [data-theme="dark"] .nk-text-tile.color-9::before {
+            background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.1) 0%,
+                    rgba(255, 255, 255, 0.03) 50%,
+                    rgba(0, 0, 0, 0.08) 100%);
+        }
+
+        /* Ensure content is above gradient */
+        .nk-text-tile-content,
+        .nk-text-tile-icon,
+        .nk-text-tile-color-cycler {
+            position: relative;
+            z-index: 1;
+        }
+
+        .nk-text-tile-color-cycler {
+            position: absolute;
+            top: -12px;
+            left: auto;
+            right: 0;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.85);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        body.write-mode .nk-text-tile:hover .nk-text-tile-color-cycler {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        body.write-mode .nk-text-tile-color-cycler:hover {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-hover) 100%);
+            color: var(--text-on-primary);
+            border-color: var(--primary-color);
+            transform: scale(1.1) rotate(15deg);
+        }
+
+        /* NEW: Read Mode Fading for Memorization */
+        body.read-mode .nk-text-tile {
+            cursor: pointer;
+        }
+
+        body.read-mode .nk-text-tile.faded {
+            border-style: dashed;
+            box-shadow: none;
+        }
+
+        body.read-mode .nk-text-tile.faded .nk-text-tile-content {
+            color: transparent;
+            user-select: none;
+        }
+
+        /* --- NEW: Text Tile & Decktile System --- */
+        /* Main .nk-text-tile styles defined above */
+
+
+        .search-result-item .nk-text-tile {
+            display: flex;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .search-result-item .nk-text-tile-content {
+            font-size: inherit;
+        }
+
+        /* --- NEW: Decktile Container --- */
+        .nk-textile-deck {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 1rem;
+            border-radius: var(--border-radius-lg);
+            border: 1px dashed var(--border-color);
+            background-color: color-mix(in srgb, var(--border-color) 10%, transparent);
+            margin: 1.5em 0;
+            position: relative;
+        }
+
+        /* A Textile inside a deck loses its margin to fit neatly */
+        .nk-textile-deck .nk-text-tile {
+            margin: 0;
+            flex-grow: 1;
+            min-width: 150px;
+            width: auto;
+            max-width: 100%;
+        }
+
+        /* NEW: Stack layout for Decks */
+        .nk-textile-deck.layout-stack {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .deck-add-tile-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius-lg);
+            min-height: 50px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-grow: 1;
+            min-width: 150px;
+        }
+
+        /* Show Add button ONLY in write mode */
+        body.write-mode .deck-add-tile-btn {
+            display: flex;
+        }
+
+        .deck-add-tile-btn:hover {
+            background-color: var(--primary-color);
+            color: var(--text-on-primary);
+            border-color: var(--primary-color);
+        }
+
+        .deck-layout-toggle {
+            position: absolute;
+            top: -12px;
+            right: 8px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        /* Show layout toggle on hover in BOTH modes */
+        .nk-textile-deck:hover .deck-layout-toggle {
+            display: flex;
+        }
+
+        .deck-layout-toggle:hover {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        /* --- FIX: Make standalone text tiles full-width --- */
+        #article-content>.nk-text-tile {
+            display: flex;
+            width: 100%;
+            max-width: 100%;
+            margin-left: 0;
+            margin-right: 5px;
+        }
+
+        #article-content>.nk-text-tile .nk-text-tile-content {
+            white-space: normal;
+        }
+
+        /* --- NEW: Power Quote Gradient Text (Theme-Sensitive v2) --- */
+        .power-quote-gradient {
+            font-weight: 500;
+            font-style: italic;
+            background-size: 200% auto;
+            color: #000;
+            background-clip: text;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: witty-text-glow 5s linear infinite;
+            cursor: default;
+        }
+
+        [data-theme="light"] .power-quote-gradient {
+            background-image: linear-gradient(90deg, #0d9488, #581c87, #0f766e);
+        }
+
+        [data-theme="dark"] .power-quote-gradient {
+            background-image: linear-gradient(90deg, #E0B453, #34d399, #F7C96D);
+        }
+
+        [data-theme="sepia"] .power-quote-gradient {
+            background-image: linear-gradient(90deg, #8c6d46, #4d7c0f, #73552a);
+        }
+
+
+
+        /* =====================================================
+           AI MAGIC VIEWER PANEL (Sidebar Mode for Presentation/PDF)
+           ===================================================== */
+
+        /* Reusable Animations */
+        @keyframes ai-viewer-slide-in {
+            from {
+                opacity: 0;
+                transform: translateX(100%) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @keyframes ai-viewer-slide-up {
+            from {
+                opacity: 0;
+                transform: translateY(100%) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes subtle-pan {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes message-appear {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes ai-glow {
+            from {
+                box-shadow: 0 0 8px -2px color-mix(in srgb, var(--primary-color) 40%, transparent);
+                border-color: color-mix(in srgb, var(--primary-color) 70%, transparent);
+            }
+
+            to {
+                box-shadow: 0 0 20px 4px color-mix(in srgb, var(--primary-color) 25%, transparent);
+                border-color: var(--primary-color);
+            }
+        }
+
+        @keyframes ai-border-glow {
+            0% {
+                border-color: color-mix(in srgb, var(--primary-color) 30%, var(--border-color));
+                box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            }
+
+            50% {
+                border-color: var(--primary-color);
+                box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.35), 0 0 25px 4px color-mix(in srgb, var(--primary-color) 25%, transparent);
+            }
+
+            100% {
+                border-color: color-mix(in srgb, var(--primary-color) 30%, var(--border-color));
+                box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        @keyframes title-shimmer {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary-color) 30%, transparent);
+            }
+
+            50% {
+                box-shadow: 0 0 15px 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
+            }
+        }
+
+        @keyframes thinking-bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0.6);
+                opacity: 0.5;
+            }
+
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* AI Magic Toggle Button */
+        #ai-magic-toggle {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 25005;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,
+                    rgba(var(--bg-secondary-rgb), 0.95),
+                    rgba(var(--bg-primary-rgb), 0.85));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid color-mix(in srgb, var(--primary-color) 40%, var(--border-color));
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+        }
+
+        #ai-magic-toggle:hover {
+            transform: scale(1.1) rotate(5deg);
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 20px -4px color-mix(in srgb, var(--primary-color) 50%, transparent);
+            background: var(--bg-secondary);
+        }
+
+        #ai-magic-toggle:active {
+            transform: scale(0.95);
+        }
+
+        #ai-magic-toggle svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        #ai-magic-toggle:hover svg {
+            transform: rotate(-10deg);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           MCQ METADATA — DIFFICULTY, TAGS, PYQ
+           ══════════════════════════════════════════════════════════════ */
+        /* Difficulty-based left border color on the MCQ block */
+        .nk-mcq-block:has(.nk-mcq-explanation[data-difficulty="easy"])   { border-left-color: var(--text-green)  !important; }
+        .nk-mcq-block:has(.nk-mcq-explanation[data-difficulty="medium"]) { border-left-color: var(--text-orange) !important; }
+        .nk-mcq-block:has(.nk-mcq-explanation[data-difficulty="hard"])   { border-left-color: var(--text-red)    !important; }
+        
+        /* ── Meta bar container ──────────────────────────────────────── */
+        .nk-mcq-meta-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-top: 18px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            pointer-events: none;  /* non-interactive decorations */
+            user-select: none;
+            -webkit-user-select: none;
+            line-height: 1.2;
+        }
+        /* ── Shared capsule base style ───────────────────────────────── */
+        .nk-mcq-tag-capsule,
+        .nk-mcq-pyq-capsule {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+            font-size: 0.72rem !important;
+            font-weight: 500 !important; /* Elegant medium weight */
+            letter-spacing: 0.02em !important;
+            padding: 4px 12px !important;
+            border-radius: 999px !important;
+            box-sizing: border-box !important;
+            line-height: 1 !important;
+            border-style: solid !important;
+            border-width: 1.5px !important; /* Slight thickness */
+        }
+
+        /* ── Difficulty circular capsule (emoji only) ───────────────── */
+        .nk-mcq-difficulty-capsule {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 50% !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
+            line-height: 1 !important;
+            vertical-align: middle;
+        }
+
+        .nk-mcq-difficulty-capsule .nk-capsule-icon {
+            font-size: 1rem !important;
+            line-height: 1 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.5px; /* Subpixel baseline alignment */
+        }
+
+        .nk-capsule-icon {
+            font-size: 0.72rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* ── Difficulty capsules with 3D dots and colored borders ───────────────── */
+        .nk-mcq-difficulty-capsule.nk-diff-easy {
+            background: rgba(60, 226, 158, 0.12) !important;
+            color: #3ce29e !important;
+            border: 2.5px solid rgba(60, 226, 158, 0.75) !important;
+            box-shadow: 0 0 8px rgba(60, 226, 158, 0.4) !important;
+        }
+        .nk-mcq-difficulty-capsule.nk-diff-medium {
+            background: rgba(255, 159, 67, 0.12) !important;
+            color: #ff9f43 !important;
+            border: 2.5px solid rgba(255, 159, 67, 0.75) !important;
+            box-shadow: 0 0 8px rgba(255, 159, 67, 0.4) !important;
+        }
+        .nk-mcq-difficulty-capsule.nk-diff-hard {
+            background: rgba(255, 82, 82, 0.12) !important;
+            color: #ff5252 !important;
+            border: 2.5px solid rgba(255, 82, 82, 0.75) !important;
+            box-shadow: 0 0 8px rgba(255, 82, 82, 0.4) !important;
+        }
+        
+        /* ── Default / Light Theme Colors ────────────────────────────── */
+        .nk-mcq-tag-capsule {
+            background: rgba(0, 0, 0, 0.02) !important;
+            color: #475569 !important;
+            border-color: rgba(0, 0, 0, 0.08) !important;
+        }
+        .nk-mcq-pyq-capsule {
+            background: rgba(180, 83, 9, 0.04) !important;
+            color: #b45309 !important;
+            border-color: rgba(180, 83, 9, 0.2) !important;
+        }
+
+        /* ── Dark Theme Colors ───────────────────────────────────────── */
+        [data-theme="dark"] .nk-mcq-tag-capsule {
+            background: rgba(255, 255, 255, 0.02) !important;
+            color: #94a3b8 !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        [data-theme="dark"] .nk-mcq-pyq-capsule {
+            background: rgba(251, 211, 141, 0.03) !important;
+            color: #fbd38d !important;
+            border-color: rgba(251, 211, 141, 0.2) !important;
+        }
+
+        /* ── Sepia Theme Colors ──────────────────────────────────────── */
+        [data-theme="sepia"] .nk-mcq-tag-capsule {
+            background: rgba(92, 64, 51, 0.04) !important;
+            color: #5c4033 !important;
+            border-color: rgba(92, 64, 51, 0.15) !important;
+        }
+        [data-theme="sepia"] .nk-mcq-pyq-capsule {
+            background: rgba(160, 82, 45, 0.05) !important;
+            color: #a0522d !important;
+            border-color: rgba(160, 82, 45, 0.25) !important;
+        }
+        
+        /* ── Hide meta bar in write mode (never show in editor) ──────── */
+        body.write-mode .nk-mcq-meta-bar { display: none !important; }
+
+        /* ── Add Option button styling inside the editor ── */
+        .nk-mcq-block .nk-mcq-add-option {
+            margin-top: 10px;
+            margin-left: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: color-mix(in srgb, var(--primary-color) 8%, var(--bg-secondary));
+            color: var(--primary-color) !important;
+            border: 1px dashed color-mix(in srgb, var(--primary-color) 30%, transparent);
+            outline: none;
+            box-shadow: none;
+        }
+        .nk-mcq-block .nk-mcq-add-option:hover {
+            background: color-mix(in srgb, var(--primary-color) 15%, var(--bg-secondary));
+            border-style: solid;
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+        .nk-mcq-block .nk-mcq-add-option:active {
+            transform: translateY(0);
+        }
+        /* ── Study card mode ─────────────────────────────────────────── */
+        .study-card-content-box .nk-mcq-meta-bar {
+            pointer-events: none;
+            margin-top: 8px;
+            padding-top: 8px;
+        }
+        /* ── Focus/Presentation mode ─────────────────────────────────── */
+        .focus-mode-overlay .nk-mcq-meta-bar {
+            pointer-events: none;
+        }
+        /* ── Teleprompter sidebar ────────────────────────────────────── */
+        #teleprompter-sidebar .nk-mcq-meta-bar {
+            display: none; /* Hide in teleprompter for cleanliness */
+        }

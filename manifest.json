@@ -1,12 +1,22 @@
 {
-  "name": "NoteKash v2",
+  "id": "./?source=pwa",
+  "name": "NoteKash - Smart AI Notes & Flashcards",
   "short_name": "NoteKash",
-  "description": "Your Second Brain for thinking, learning, and creating.",
-  "start_url": "/index.html",
+  "description": "Master any subject with NoteKash. Your second brain for thinking, learning, and creating with offline AI note-taking & flashcards.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f4ecd8",
-  "theme_color": "#704214",
   "orientation": "any",
+  "background_color": "#121110",
+  "theme_color": "#704214",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": [
+    "education",
+    "productivity",
+    "utilities"
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icons/favicon-32x32.png",
@@ -21,6 +31,12 @@
       "purpose": "any"
     },
     {
+      "src": "icons/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
       "src": "icons/icon-512x512.png",
       "type": "image/png",
       "sizes": "512x512",
@@ -33,8 +49,62 @@
       "purpose": "maskable"
     }
   ],
+  "screenshots": [
+    {
+      "src": "icons/screenshot-mobile.png",
+      "sizes": "626x1024",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "NoteKash Mobile Library with Spaced Repetition Tags"
+    },
+    {
+      "src": "icons/screenshot-desktop.png",
+      "sizes": "1024x692",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "NoteKash Desktop Knowledge Graph & Note Management Suite"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Note",
+      "short_name": "New Note",
+      "description": "Create a new study note",
+      "url": "./#editor",
+      "icons": [
+        {
+          "src": "icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Flashcards",
+      "short_name": "Study",
+      "description": "Practice active recall flashcards",
+      "url": "./#flashcards",
+      "icons": [
+        {
+          "src": "icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Mind Map",
+      "short_name": "Mind Map",
+      "description": "Explore visual knowledge maps",
+      "url": "./#mindmap",
+      "icons": [
+        {
+          "src": "icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
   "share_target": {
-    "action": "/index.html",
+    "action": "./index.html",
     "method": "POST",
     "enctype": "multipart/form-data",
     "params": {

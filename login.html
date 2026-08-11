@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteKash Authentication & Onboarding</title>
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-color: #ff4500;
+            --primary-color-hover: #e03d00;
+            --bg-color: #f7f9fa;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-color: #1a202c;
+            --text-secondary: #718096;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --input-bg: rgba(255, 255, 255, 0.6);
+            --btn-google-bg: #ffffff;
+            --btn-google-text: #1a202c;
+            --btn-google-border: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark mode preference */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #ff4500;
+                --primary-color-hover: #ff5714;
+                --bg-color: #0d1117;
+                --card-bg: rgba(22, 27, 34, 0.9);
+                --text-color: #f0f6fc;
+                --text-secondary: #8b949e;
+                --border-color: rgba(240, 246, 252, 0.1);
+                --input-bg: rgba(13, 17, 23, 0.5);
+                --btn-google-bg: #21262d;
+                --btn-google-text: #c9d1d9;
+                --btn-google-border: rgba(240, 246, 252, 0.1);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Ambient glow spots */
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 69, 0, 0.12) 0%, rgba(255, 69, 0, 0) 70%);
+            top: -200px;
+            right: -200px;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .ambient-glow-2 {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 140, 0, 0.08) 0%, rgba(255, 140, 0, 0) 70%);
+            bottom: -150px;
+            left: -150px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 460px;
+            position: relative;
+            z-index: 10;
+            margin: 2rem 0;
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .auth-header {
+            text-align: center;
+        }
+
+        .auth-logo {
+            font-size: 2.6rem;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, var(--primary-color), #ff8c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        /* Google button styles */
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--btn-google-bg);
+            color: var(--btn-google-text);
+            border: 1px solid var(--btn-google-border);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            width: 100%;
+        }
+
+        .google-btn:hover {
+            background: var(--bg-color);
+            transform: translateY(-1px);
+        }
+
+        .google-icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0.5rem 0;
+        }
+
+        .auth-divider::before, .auth-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .auth-divider:not(:empty)::before {
+            margin-right: .5em;
+        }
+
+        .auth-divider:not(:empty)::after {
+            margin-left: .5em;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .input-group label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .input-group input, .input-group textarea {
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(255, 69, 0, 0.15);
+        }
+
+        .auth-btn {
+            background: linear-gradient(135deg, var(--primary-color), #ff8c00);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-size: 1rem;
+            box-shadow: 0 4px 14px rgba(255, 69, 0, 0.2);
+            width: 100%;
+        }
+
+        .auth-btn:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(255, 69, 0, 0.3);
+        }
+
+        .auth-footer {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .auth-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Onboarding styles */
+        .onboarding-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--primary-color), #ff8c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .gender-selector {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .gender-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .gender-btn.selected {
+            background: rgba(255, 69, 0, 0.1);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            background: rgba(var(--border-color), 0.02);
+        }
+
+        .avatar-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        .avatar-grid::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .avatar-grid::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 10px;
+        }
+
+        .avatar-option {
+            border-radius: 50%;
+            cursor: pointer;
+            aspect-ratio: 1;
+            border: 3px solid transparent;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            padding: 2px;
+        }
+
+        .avatar-option svg {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .avatar-option.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 12px color-mix(in srgb, var(--primary-color) 40%, transparent);
+            transform: scale(1.05);
+        }
+
+        .avatar-option.filtered-out {
+            display: none !important;
+        }
+
+        /* Custom toast styling */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1a202c;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ── COSMIC INTERMEDIATE WAITING SPLASH OVERLAY ──────────────── */
+        .auth-splash-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: radial-gradient(circle at 50% 40%, rgba(18, 24, 42, 0.96) 0%, rgba(8, 11, 20, 0.98) 100%);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .auth-splash-overlay.is-active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .auth-splash-card {
+            background: rgba(22, 28, 48, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 50px rgba(255, 69, 0, 0.18);
+            border-radius: 28px;
+            padding: 3rem 2.5rem;
+            max-width: 420px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            transform: scale(0.92);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .auth-splash-overlay.is-active .auth-splash-card {
+            transform: scale(1);
+        }
+
+        .splash-cosmic-orb {
+            position: relative;
+            width: 96px;
+            height: 96px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .splash-orb-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+        }
+
+        .splash-orb-ring.ring-1 {
+            border: 2px dashed rgba(255, 69, 0, 0.85);
+            animation: splashSpinClockwise 5s linear infinite;
+        }
+
+        .splash-orb-ring.ring-2 {
+            inset: 6px;
+            border: 2px solid transparent;
+            border-top-color: #06b6d4;
+            border-bottom-color: #a855f7;
+            animation: splashSpinCounter 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        .splash-orb-center {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff4500, #ff8c00);
+            box-shadow: 0 0 30px rgba(255, 69, 0, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            animation: splashPulse 2.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes splashSpinClockwise {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes splashSpinCounter {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+        }
+
+        @keyframes splashPulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 20px rgba(255, 69, 0, 0.4); }
+            100% { transform: scale(1.08); box-shadow: 0 0 40px rgba(255, 69, 0, 0.85); }
+        }
+
+        .splash-title {
+            font-size: 1.28rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .splash-subtitle {
+            font-size: 0.88rem;
+            color: #94a3b8;
+            line-height: 1.45;
+            margin-bottom: 1.75rem;
+            max-width: 320px;
+        }
+
+        .splash-progress-bar {
+            width: 100%;
+            height: 4px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .splash-progress-indeterminate {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: -50%;
+            width: 50%;
+            background: linear-gradient(90deg, #ff4500, #fbbf24, #06b6d4);
+            border-radius: 99px;
+            animation: splashIndeterminate 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes splashIndeterminate {
+            0% { left: -50%; width: 50%; }
+            50% { left: 25%; width: 60%; }
+            100% { left: 100%; width: 40%; }
+        }
+
+        /* Contextual App Target Badge */
+        .auth-app-target {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(255, 69, 0, 0.08);
+            border: 1px solid rgba(255, 69, 0, 0.2);
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.6rem;
+            letter-spacing: 0.2px;
+            animation: fadeInTarget 0.3s ease-out;
+        }
+
+        @keyframes fadeInTarget {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cosmic Intermediate Waiting Splash Modal Overlay -->
+    <div id="auth-splash-overlay" class="auth-splash-overlay">
+        <div class="auth-splash-card">
+            <div class="splash-cosmic-orb">
+                <div class="splash-orb-ring ring-1"></div>
+                <div class="splash-orb-ring ring-2"></div>
+                <div class="splash-orb-center">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <h3 id="splash-title" class="splash-title">Synchronizing Workspace</h3>
+            <p id="splash-subtitle" class="splash-subtitle">Authenticating your Google Cloud SSO credentials...</p>
+            <div class="splash-progress-bar">
+                <div class="splash-progress-indeterminate"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+
+    <div class="auth-container">
+        <!-- Auth Card -->
+        <div id="auth-card" class="auth-card">
+            <div class="auth-header">
+                <div id="auth-app-target" class="auth-app-target" style="display: none;">
+                    <span id="app-target-icon">🎯</span>
+                    <span>Continuing to <strong id="app-target-name">Focus Hub</strong></span>
+                </div>
+                <div class="auth-logo">NoteKash</div>
+                <p class="auth-subtitle" id="form-subtitle">Connect your single account to access NoteKash & Focus Hub</p>
+            </div>
+
+            <!-- Google OAuth Trigger -->
+            <button type="button" class="google-btn" id="google-login-btn">
+                <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Continue with Google
+            </button>
+
+            <div class="auth-divider">or</div>
+            
+            <form id="auth-form" class="auth-form">
+                <div class="input-group">
+                    <label for="auth-email">Email Address</label>
+                    <input type="email" id="auth-email" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="input-group">
+                    <label for="auth-password">Password</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="auth-btn" id="submit-btn">Log In</button>
+            </form>
+
+            <div class="auth-footer">
+                <span id="footer-text">Don't have an account?</span>
+                <a href="#" id="toggle-form-link">Sign Up</a>
+            </div>
+        </div>
+
+        <!-- Compulsory Onboarding Card (Swapped dynamically) -->
+        <div id="onboarding-card" class="auth-card" style="display: none;">
+            <div class="auth-header">
+                <h1 class="onboarding-title">Create Profile</h1>
+                <p class="auth-subtitle">Set up your avatar, name, and bio to finalize your NoteKash Suite account.</p>
+            </div>
+
+            <form id="onboarding-form" class="auth-form">
+                <div class="input-group">
+                    <label for="onboard-name">Full Name *</label>
+                    <input type="text" id="onboard-name" placeholder="e.g. Alex Morgan" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Gender *</label>
+                    <div class="gender-selector">
+                        <button type="button" class="gender-btn" id="gender-male" onclick="setGender('Male')">Male</button>
+                        <button type="button" class="gender-btn" id="gender-female" onclick="setGender('Female')">Female</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Select Avatar *</label>
+                    <div id="avatar-container" class="avatar-grid">
+                        <!-- Dynamic SVG avatars populated by JS -->
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="onboard-bio">Bio / Study Goals</label>
+                    <textarea id="onboard-bio" rows="2" placeholder="e.g. Preparing for medical exams..."></textarea>
+                </div>
+
+                <button type="submit" class="auth-btn" id="onboard-submit-btn">Complete Setup</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Supabase Initialization
+        let supabaseUrl = 'https://axzwfwjgndqjajabvscd.supabase.co';
+        let supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4endmd2pnbmRxamFqYWJ2c2NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyOTAzNDksImV4cCI6MjA5OTg2NjM0OX0.6N2mFFDcQW9rwrbNHZyXpoldbZNX-0RripH5Web3y-U';
+
+        const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+        const isNoteKashDomain = hostname.endsWith('notekash.com');
+
+        const authConfig = {
+            persistSession: true,
+            storageKey: 'notekash-auth-token',
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+        };
+
+        if (isNoteKashDomain) {
+            authConfig.cookieOptions = {
+                domain: '.notekash.com',
+                secure: typeof window !== 'undefined' && window.location.protocol === 'https:',
+                sameSite: 'Lax'
+            };
+        }
+
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey, {
+            auth: authConfig
+        });
+
+        // 12 Premium Inline SVG Avatars (6 Male, 6 Female)
+        const avatars = [
+            // MALE AVATARS (Index 1-6)
+            { id: 1, type: 'Male', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#e0f2fe"/><circle cx="50" cy="54" r="22" fill="#fed7aa"/><path d="M50 32c-12 0-16 6-16 14v4h32v-4c0-8-4-14-16-14z" fill="#1e293b"/><circle cx="43" cy="54" r="5" fill="none" stroke="#0f172a" stroke-width="2"/><circle cx="57" cy="54" r="5" fill="none" stroke="#0f172a" stroke-width="2"/><path d="M48 54h4" stroke="#0f172a" stroke-width="2"/><circle cx="43" cy="54" r="1.5" fill="#0f172a"/><circle cx="57" cy="54" r="1.5" fill="#0f172a"/><path d="M47 64q3 2 6 0" stroke="#0f172a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M30 88c2-12 10-18 20-18s18 6 20 18z" fill="#3b82f6"/></svg>` },
+            { id: 2, type: 'Male', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ffedd5"/><circle cx="50" cy="54" r="22" fill="#c2410c"/><path d="M34 42c0-8 6-12 16-12s16 4 16 12l2 4c0 4-4 4-4 4s-4-6-14-6-14 6-14 6-4 0-4-4z" fill="#1e293b"/><circle cx="42" cy="52" r="2" fill="#0f172a"/><circle cx="58" cy="52" r="2" fill="#0f172a"/><path d="M46 62q4 3 8 0" stroke="#0f172a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M28 88c2-12 10-18 20-18s18 6 20 18z" fill="#f97316"/></svg>` },
+            { id: 3, type: 'Male', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#dcfce7"/><circle cx="50" cy="54" r="22" fill="#fdba74"/><path d="M32 38c6-8 16-8 22-8 10 0 14 6 14 12v4H32z" fill="#475569"/><circle cx="42" cy="52" r="2" fill="#0f172a"/><circle cx="58" cy="52" r="2" fill="#0f172a"/><path d="M46 62q4 3 8 0" stroke="#0f172a" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M28 88c2-12 10-18 20-18s18 6 20 18z" fill="#10b981"/></svg>` },
+            { id: 4, type: 'Male', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#f3e8ff"/><circle cx="50" cy="52" r="22" fill="#fed7aa"/><path d="M32 38c4-8 12-10 18-10s18 4 18 12v2H32z" fill="#0f172a"/><circle cx="42" cy="50" r="2" fill="#0f172a"/><circle cx="58" cy="50" r="2" fill="#0f172a"/><path d="M42 60c2 4 14 4 16 0" stroke="#0f172a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M28 88c2-12 10-18 20-18s18 6 20 18z" fill="#8b5cf6"/></svg>` },
+            { id: 5, type: 'Male', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#fef9c3"/><circle cx="50" cy="54" r="22" fill="#ffedd5"/><path d="M30 40l6-10 8 4 6-10 6 10 8-4 6 10v6H30z" fill="#334155"/><circle cx="42" cy="52" r="2" fill="#0f172a"/><circle cx="58" cy="52" r="2" fill="#0f172a"/><path d="M46 62q4 3 8 0" stroke="#0f172a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M28 88c2-12 10-18 20-18s18 6 20 18z" fill="#eab308"/></svg>` },
+            { id: 6, type: 'Male', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#fee2e2"/><circle cx="50" cy="56" r="22" fill="#fed7aa"/><path d="M32 44c0-10 6-14 18-14s18 4 18 14z" fill="#ef4444"/><rect x="30" y="42" width="40" height="6" rx="3" fill="#dc2626"/><circle cx="42" cy="54" r="2" fill="#0f172a"/><circle cx="58" cy="54" r="2" fill="#0f172a"/><path d="M46 64q4 2 8 0" stroke="#0f172a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M28 88c2-12 10-18 20-18s18 6 20 18z" fill="#4b5563"/></svg>` },
+            
+            // FEMALE AVATARS (Index 7-12)
+            { id: 7, type: 'Female', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#fce7f3"/><path d="M28 32c6-10 24-8 32 0 8 10 12 28 12 36s-8 6-12 0c-4-6-10-14-10-14s-10 16-16 12S24 40 28 32z" fill="#db2777"/><circle cx="50" cy="54" r="21" fill="#ffe4e6"/><circle cx="42" cy="52" r="2" fill="#0f172a"/><circle cx="58" cy="52" r="2" fill="#0f172a"/><path d="M46 62q4 3 8 0" stroke="#0f172a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M28 88c2-12 10-18 20-18s18 6 20 18z" fill="#ec4899"/></svg>` },
+            { id: 8, type: 'Female', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ecfeff"/><path d="M26 38c4-12 20-12 30-10s22 4 22 18v16c0 6-6 6-6 6s-6-14-16-14S30 60 26 38z" fill="#0f172a"/><circle cx="50" cy="54" r="22" fill="#fed7aa"/><circle cx="42" cy="52" r="5" fill="none" stroke="#0f172a" stroke-width="2"/><circle cx="58" cy="52" r="5" fill="none" stroke="#0f172a" stroke-width="2"/><path d="M47 52h6" stroke="#0f172a" stroke-width="2"/><circle cx="42" cy="52" r="1.5" fill="#0f172a"/><circle cx="58" cy="52" r="1.5" fill="#0f172a"/><path d="M46 63q4 3 8 0" stroke="#0f172a" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M28 88c2-12 10-18 20-18s18 6 20 18z" fill="#06b6d4"/></svg>` },
+            { id: 9, type: 'Female', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#ffedd5"/><circle cx="70" cy="36" r="12" fill="#ea580c"/><circle cx="50" cy="54" r="22" fill="#fdba74"/><path d="M28 34c4-8 16-10 26-10 12 0 18 10 18 18v8H28z" fill="#ea580c"/><circle cx="42" cy="52" r="2" fill="#0f172a"/><circle cx="58" cy="52" r="2" fill="#0f172a"/><path d="M46 62q4 3 8 0" stroke="#0f172a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M28 88c2-12 10-18 20-18s18 6 20 18z" fill="#f97316"/></svg>` },
+            { id: 10, type: 'Female', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#fef9c3"/><circle cx="36" cy="38" r="12" fill="#1e293b"/><circle cx="64" cy="38" r="12" fill="#1e293b"/><circle cx="50" cy="32" r="14" fill="#1e293b"/><circle cx="50" cy="54" r="22" fill="#7c2d12"/><circle cx="42" cy="52" r="2" fill="#0f172a"/><circle cx="58" cy="52" r="2" fill="#0f172a"/><path d="M46 62q4 3 8 0" stroke="#0f172a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M28 88c2-12 10-18 20-18s18 6 20 18z" fill="#eab308"/></svg>` },
+            { id: 11, type: 'Female', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#f0fdfa"/><circle cx="26" cy="56" r="8" fill="#0d9488"/><circle cx="74" cy="56" r="8" fill="#0d9488"/><circle cx="50" cy="54" r="22" fill="#fed7aa"/><path d="M30 36c4-10 16-10 24-10s18 6 18 14H28z" fill="#0d9488"/><circle cx="42" cy="52" r="2" fill="#0f172a"/><circle cx="58" cy="52" r="2" fill="#0f172a"/><path d="M46 62q4 3 8 0" stroke="#0f172a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M28 88c2-12 10-18 20-18s18 6 20 18z" fill="#14b8a6"/></svg>` },
+            { id: 12, type: 'Female', svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#eff6ff"/><path d="M24 36c2-12 16-14 26-14s24 4 24 16v32c0 6-4 6-4 6s-6-18-20-18S24 72 24 64V36z" fill="#1e293b"/><circle cx="36" cy="28" r="5" fill="#f43f5e"/><circle cx="50" cy="54" r="22" fill="#ffedd5"/><circle cx="42" cy="52" r="2" fill="#0f172a"/><circle cx="58" cy="52" r="2" fill="#0f172a"/><path d="M46 62q4 3 8 0" stroke="#0f172a" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M28 88c2-12 10-18 20-18s18 6 20 18z" fill="#3b82f6"/></svg>` }
+        ];
+
+        // Onboarding form state
+        let selectedGender = null;
+        let selectedAvatarId = 1;
+        let loggedInSession = null;
+
+        // Form elements
+        let isSignUp = false;
+        const formSubtitle = document.getElementById('form-subtitle');
+        const submitBtn = document.getElementById('submit-btn');
+        const footerText = document.getElementById('footer-text');
+        const toggleFormLink = document.getElementById('toggle-form-link');
+        const authForm = document.getElementById('auth-form');
+        const googleLoginBtn = document.getElementById('google-login-btn');
+
+        // Check incoming SSO parameters with fallback to sessionStorage
+        const initialUrlParams = new URLSearchParams(window.location.search);
+        let targetRedirectUrl = initialUrlParams.get('redirect_to');
+        let targetApp = initialUrlParams.get('app');
+
+        if (!targetRedirectUrl) {
+            try {
+                targetRedirectUrl = sessionStorage.getItem('notekash_auth_redirect_to');
+                targetApp = sessionStorage.getItem('notekash_auth_target_app');
+            } catch (e) {}
+        } else {
+            try {
+                sessionStorage.setItem('notekash_auth_redirect_to', targetRedirectUrl);
+                if (targetApp) sessionStorage.setItem('notekash_auth_target_app', targetApp);
+            } catch (e) {}
+        }
+
+        // Contextual UI presentation for Suite apps
+        if (targetRedirectUrl) {
+            const appTargetBadge = document.getElementById('auth-app-target');
+            const appTargetName = document.getElementById('app-target-name');
+            const appTargetIcon = document.getElementById('app-target-icon');
+
+            let friendlyName = 'Focus Hub';
+            let icon = '🎯';
+            if (targetApp === 'focus_hub' || targetRedirectUrl.includes('focus')) {
+                friendlyName = 'Focus Hub';
+                icon = '🎯';
+            } else if (targetApp === 'notepad' || targetRedirectUrl.includes('notepad')) {
+                friendlyName = 'Notepad Writer';
+                icon = '📝';
+            } else if (targetApp === 'mcq' || targetRedirectUrl.includes('mcq')) {
+                friendlyName = 'MCQ Arena';
+                icon = '⚡';
+            }
+
+            if (appTargetBadge && appTargetName) {
+                appTargetName.textContent = friendlyName;
+                if (appTargetIcon) appTargetIcon.textContent = icon;
+                appTargetBadge.style.display = 'inline-flex';
+            }
+            if (formSubtitle && !isSignUp) {
+                formSubtitle.textContent = `Sign in with your NoteKash account to continue to ${friendlyName}.`;
+            }
+        }
+
+        // Check hash
+        if (window.location.hash === '#signup') {
+            switchToSignUp();
+        }
+
+        toggleFormLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (isSignUp) switchToLogIn();
+            else switchToSignUp();
+        });
+
+        function switchToSignUp() {
+            isSignUp = true;
+            window.location.hash = 'signup';
+            formSubtitle.textContent = "Create an account to synchronize your NoteKash workspace.";
+            submitBtn.textContent = "Sign Up";
+            footerText.textContent = "Already have an account?";
+            toggleFormLink.textContent = "Log In";
+        }
+
+        function switchToLogIn() {
+            isSignUp = false;
+            window.location.hash = 'login';
+            if (targetRedirectUrl) {
+                let friendlyName = targetApp === 'notepad' ? 'Notepad Writer' : 'Focus Hub';
+                formSubtitle.textContent = `Sign in with your NoteKash account to continue to ${friendlyName}.`;
+            } else {
+                formSubtitle.textContent = "Connect your single account to access NoteKash & Focus Hub";
+            }
+            submitBtn.textContent = "Log In";
+            footerText.textContent = "Don't have an account?";
+            toggleFormLink.textContent = "Sign Up";
+        }
+
+        // ── SPLASH MODAL CONTROLLERS ─────────────────────────
+        function showSplash(title = "Synchronizing Workspace", subtitle = "Connecting to NoteKash Cloud...") {
+            const overlay = document.getElementById('auth-splash-overlay');
+            if (title) document.getElementById('splash-title').textContent = title;
+            if (subtitle) document.getElementById('splash-subtitle').textContent = subtitle;
+            overlay.classList.add('is-active');
+        }
+
+        function hideSplash() {
+            const overlay = document.getElementById('auth-splash-overlay');
+            overlay.classList.remove('is-active');
+        }
+
+        // Auto-detect OAuth redirect callback on page load
+        if (window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
+            showSplash("Verifying Google Session...", "Authenticating your cloud credentials with NoteKash...");
+        }
+
+        // Toast notifications
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Google Login Trigger (Preserves query string and target redirect)
+        googleLoginBtn.addEventListener('click', async () => {
+            try {
+                showSplash("Connecting to Google...", "Redirecting to Google Cloud SSO...");
+                
+                // Preserve the exact current URL including ?redirect_to=... and ?app=...
+                const currentRedirectUrl = window.location.origin + window.location.pathname + window.location.search;
+
+                const { error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: currentRedirectUrl
+                    }
+                });
+                if (error) throw error;
+            } catch (err) {
+                hideSplash();
+                console.error(err);
+                showToast(err.message, "error");
+            }
+        });
+
+        // Email & Password Submit
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Processing...";
+            showSplash(isSignUp ? "Creating Account..." : "Signing In...", "Securing your NoteKash workspace session...");
+
+            try {
+                if (isSignUp) {
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email,
+                        password
+                    });
+                    if (error) throw error;
+                    showToast('Account created! Logging in...', 'success');
+                    
+                    // Automatically log in newly created user
+                    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+                    if (signInError) throw signInError;
+                } else {
+                    const { error } = await supabaseClient.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+                    if (error) throw error;
+                }
+            } catch(err) {
+                hideSplash();
+                console.error(err);
+                showToast(err.message || 'Authentication failed.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = isSignUp ? "Sign Up" : "Log In";
+            }
+        });
+
+        // Monitor Auth state changes to redirect or show onboarding
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            if (session) {
+                loggedInSession = session;
+                showSplash("Synchronizing Workspace...", "Preparing your personal NoteKash environment...");
+                try {
+                    // Check if profile exists and has completed onboarding
+                    const { data: profile, error } = await supabaseClient
+                        .from('profiles')
+                        .select('has_onboarded, full_name')
+                        .eq('id', session.user.id)
+                        .maybeSingle();
+
+                    if (profile && profile.has_onboarded) {
+                        // Already onboarded, proceed to redirect
+                        handleRedirect();
+                    } else {
+                        // Launch Onboarding panel
+                        hideSplash();
+                        document.getElementById('auth-card').style.display = 'none';
+                        document.getElementById('onboarding-card').style.display = 'flex';
+                        
+                        // Populate name input if available
+                        const nameField = document.getElementById('onboard-name');
+                        if (!nameField.value && profile && profile.full_name) {
+                            nameField.value = profile.full_name;
+                        } else if (!nameField.value && session.user.user_metadata?.full_name) {
+                            nameField.value = session.user.user_metadata.full_name;
+                        }
+                        
+                        renderAvatars();
+                    }
+                } catch (e) {
+                    console.error("Profile check error:", e);
+                    handleRedirect();
+                }
+            } else {
+                hideSplash();
+                document.getElementById('auth-card').style.display = 'flex';
+                document.getElementById('onboarding-card').style.display = 'none';
+            }
+        });
+
+        // Render avatar options
+        function renderAvatars() {
+            const container = document.getElementById('avatar-container');
+            container.innerHTML = avatars.map(av => {
+                const isSelected = av.id === selectedAvatarId;
+                const isFiltered = selectedGender && av.type !== selectedGender;
+                return `
+                    <div class="avatar-option ${isSelected ? 'selected' : ''} ${isFiltered ? 'filtered-out' : ''}" 
+                         data-id="${av.id}" data-type="${av.type}" onclick="selectAvatar(${av.id})">
+                        ${av.svg}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setGender(gender) {
+            selectedGender = gender;
+            document.getElementById('gender-male').className = `gender-btn ${gender === 'Male' ? 'selected' : ''}`;
+            document.getElementById('gender-female').className = `gender-btn ${gender === 'Female' ? 'selected' : ''}`;
+            
+            // Auto-select first avatar of matching gender
+            const match = avatars.find(av => av.type === gender);
+            if (match) selectAvatar(match.id);
+            else renderAvatars();
+        }
+
+        function selectAvatar(id) {
+            selectedAvatarId = id;
+            
+            // Auto-align gender buttons if user changes avatar directly
+            const av = avatars.find(a => a.id === id);
+            if (av && av.type !== selectedGender) {
+                selectedGender = av.type;
+                document.getElementById('gender-male').className = `gender-btn ${selectedGender === 'Male' ? 'selected' : ''}`;
+                document.getElementById('gender-female').className = `gender-btn ${selectedGender === 'Female' ? 'selected' : ''}`;
+            }
+
+            renderAvatars();
+        }
+
+        // Onboarding Form Submit & Device Harvesting
+        document.getElementById('onboarding-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!loggedInSession) return;
+
+            const name = document.getElementById('onboard-name').value.trim();
+            const bio = document.getElementById('onboard-bio').value.trim();
+            const submitOnboardBtn = document.getElementById('onboard-submit-btn');
+
+            if (!selectedGender) {
+                showToast("Please select your gender.", "error");
+                return;
+            }
+
+            submitOnboardBtn.disabled = true;
+            submitOnboardBtn.textContent = "Saving...";
+            showSplash("Finalizing Setup...", "Saving your profile preferences and launching workspace...");
+
+            // Extract detailed device information
+            const deviceInfo = {
+                platform: navigator.platform || "Unknown",
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                screenWidth: window.screen.width,
+                screenHeight: window.screen.height,
+                pixelRatio: window.devicePixelRatio,
+                darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
+                screenOrientation: window.screen.orientation ? window.screen.orientation.type : "Unknown",
+                signupTimestamp: new Date().toISOString()
+            };
+
+            try {
+                // Update profile record in Supabase database
+                const { error } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        full_name: name,
+                        gender: selectedGender,
+                        bio: bio,
+                        avatar_id: selectedAvatarId,
+                        has_onboarded: true,
+                        device_info: deviceInfo
+                    })
+                    .eq('id', loggedInSession.user.id);
+
+                if (error) throw error;
+
+                showToast("Welcome aboard! Loading workspace...", "success");
+                setTimeout(() => handleRedirect(), 1000);
+            } catch (err) {
+                hideSplash();
+                console.error(err);
+                showToast(err.message || "Failed to save profile details.", "error");
+                submitOnboardBtn.disabled = false;
+                submitOnboardBtn.textContent = "Complete Setup";
+            }
+        });
+
+        // Unified Redirect handler
+        function handleRedirect() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let redirectTo = urlParams.get('redirect_to');
+            let targetApp = urlParams.get('app');
+
+            if (!redirectTo) {
+                try {
+                    redirectTo = sessionStorage.getItem('notekash_auth_redirect_to');
+                    targetApp = sessionStorage.getItem('notekash_auth_target_app');
+                } catch (e) {}
+            }
+
+            // Clean up temporary sessionStorage markers
+            try {
+                sessionStorage.removeItem('notekash_auth_redirect_to');
+                sessionStorage.removeItem('notekash_auth_target_app');
+            } catch (e) {}
+
+            if (redirectTo) {
+                try {
+                    // Safe relative redirect
+                    if (redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
+                        showSplash("Launching NoteKash...", "Redirecting to your personal workspace...");
+                        setTimeout(() => { window.location.href = redirectTo; }, 600);
+                        return;
+                    }
+
+                    const parsedUrl = new URL(redirectTo, window.location.origin);
+                    const isLocal = parsedUrl.hostname === 'localhost' || parsedUrl.hostname === '127.0.0.1';
+                    const isNoteKashDomain = parsedUrl.hostname === 'notekash.com' || parsedUrl.hostname.endsWith('.notekash.com');
+                    const isSameOrigin = parsedUrl.origin === window.location.origin;
+
+                    if (isSameOrigin || isLocal || isNoteKashDomain) {
+                        let appName = 'Focus Hub';
+                        if (targetApp === 'focus_hub' || parsedUrl.hostname.includes('focus') || parsedUrl.pathname.includes('focus')) {
+                            appName = 'Focus Hub';
+                        } else if (targetApp === 'notepad' || parsedUrl.hostname.includes('notepad') || parsedUrl.pathname.includes('notepad')) {
+                            appName = 'Notepad Writer';
+                        } else if (isSameOrigin && !parsedUrl.pathname.includes('golden')) {
+                            appName = 'NoteKash';
+                        }
+
+                        // If redirecting to an external origin/subdomain or different path app with an active session,
+                        // attach the auth session hash for immediate client-side token ingestion
+                        if (loggedInSession && loggedInSession.access_token && (parsedUrl.origin !== window.location.origin || parsedUrl.pathname.includes('/golden/'))) {
+                            const authHashParams = new URLSearchParams();
+                            authHashParams.set('access_token', loggedInSession.access_token);
+                            authHashParams.set('refresh_token', loggedInSession.refresh_token || '');
+                            authHashParams.set('expires_in', String(loggedInSession.expires_in || 3600));
+                            authHashParams.set('token_type', 'bearer');
+                            authHashParams.set('type', 'sso_handoff');
+                            parsedUrl.hash = authHashParams.toString();
+                        }
+
+                        showSplash(`Returning to ${appName}...`, "Preparing your personalized workspace...");
+                        setTimeout(() => {
+                            window.location.href = parsedUrl.href;
+                        }, 600);
+                        return;
+                    }
+                } catch (e) {
+                    console.warn("Invalid redirect_to parameter:", e);
+                }
+            }
+
+            showSplash("Launching NoteKash...", "Redirecting to your personal workspace...");
+            setTimeout(() => {
+                window.location.href = './index.html';
+            }, 600);
+        }
+    </script>
+</body>
+</html>

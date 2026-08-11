@@ -1,0 +1,477 @@
+        /* --- NEW: PDF Attachment & Viewer Styles --- */
+        .pdf-attachment-pill {
+            display: inline-flex;
+            align-items: stretch;
+            vertical-align: middle;
+            position: relative;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            margin: 0.2em 0.25em;
+            max-width: calc(100% - 0.5em);
+            overflow: hidden;
+            transition: all 0.2s ease-in-out;
+            background-color: var(--bg-tertiary) !important;
+            background-image: none !important;
+        }
+
+        .pdf-attachment-pill::before {
+            content: 'PDF';
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background-color: var(--danger-color);
+            color: var(--text-on-primary);
+            border-right: 1px solid var(--border-color);
+        }
+
+        .pdf-attachment-name {
+            display: block;
+            padding: 6px 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            outline: none;
+            min-width: 100px;
+            font-family: inherit;
+            font-weight: 600;
+            background-image: none !important;
+        }
+
+        body.read-mode .pdf-attachment-pill {
+            cursor: pointer;
+        }
+
+        body.read-mode .pdf-attachment-pill:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow);
+            transform: translateY(-1px);
+        }
+
+        body.write-mode .pdf-attachment-name {
+            cursor: text;
+            transition: background-color 0.2s ease;
+        }
+
+        body.write-mode .pdf-attachment-pill:hover .pdf-attachment-name {
+            background-color: color-mix(in srgb, var(--primary-color) 8%, var(--bg-tertiary));
+        }
+
+        body.write-mode .pdf-attachment-name:focus {
+            background-color: var(--bg-secondary);
+            box-shadow: inset 0 0 0 2px var(--primary-color);
+            white-space: normal;
+            overflow: visible;
+        }
+
+        /* --- PDF Viewer Styles (v2 Professional Redesign) --- */
+        #pdf-viewer-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 25000;
+            background-color: var(--bg-primary);
+            display: none;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease;
+        }
+
+        #pdf-viewer-container.visible {
+            display: flex;
+        }
+
+        .pdf-viewer-header {
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(var(--bg-secondary-rgb), 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 30;
+        }
+
+        .pdf-viewer-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .pdf-viewer-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            flex-grow: 1;
+            flex-shrink: 1;
+            min-width: 0;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin: 0 1rem;
+        }
+
+        .pdf-page-indicator {
+            font-variant-numeric: tabular-nums;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+        }
+
+        #pdf-page-num {
+            width: 45px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            padding: 4px;
+            margin: 0 6px;
+            font-size: 0.9rem;
+            font-family: var(--font-body);
+        }
+
+        #pdf-page-num:focus {
+            outline: 2px solid var(--primary-color);
+        }
+
+        #pdf-page-num::-webkit-outer-spin-button,
+        #pdf-page-num::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        #pdf-page-num[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .pdf-viewer-main {
+            flex-grow: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #pdf-thumbnails-bar {
+            width: 150px;
+            background-color: var(--bg-tertiary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            z-index: 20;
+        }
+
+        .pdf-thumbnail {
+            cursor: pointer;
+            border: 3px solid transparent;
+            border-radius: var(--border-radius);
+            padding: 3px;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .pdf-thumbnail canvas {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .pdf-thumbnail:hover {
+            border-color: var(--primary-color-hover);
+            background-color: var(--bg-secondary);
+        }
+
+        .pdf-thumbnail.active {
+            border-color: var(--primary-color);
+            background-color: var(--bg-secondary);
+        }
+
+        .pdf-thumbnail span {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            display: block;
+        }
+
+        .pdf-viewer-canvas-wrapper {
+            flex-grow: 1;
+            overflow: auto;
+            display: grid;
+            place-items: center;
+            padding: 0.25rem;
+            padding-top: 0px;
+        }
+
+        .pdf-viewer-main.thumbnails-active #pdf-thumbnails-bar {
+            display: flex;
+        }
+
+        .pdf-viewer-main.thumbnails-active .pdf-viewer-canvas-wrapper {
+            margin-left: 10px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        /* --- THE CORE OF THE ALIGNMENT FIX --- */
+        .pdf-page-container {
+            position: relative;
+            margin: 0 auto;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            line-height: 0;
+        }
+
+        #pdf-viewer-canvas {
+            display: block;
+
+        }
+
+        #pdf-viewer-container.text-view-active #pdf-annotate-toggle,
+        #pdf-viewer-container.text-view-active #pdf-annotation-toolbar {
+            display: none !important;
+        }
+
+        /* --- DECOUPLED TEXT VIEW STYLES (v2) --- */
+        #pdf-text-view-content {
+            display: none;
+            width: 100%;
+            padding: 2rem 1rem;
+            /* Restored correct padding */
+            font-family: var(--article-font-family);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        #pdf-text-view-content p {
+            margin-block-start: 0;
+            margin-block-end: 0.5em;
+        }
+
+        #pdf-text-view-content pre {
+            font-family: inherit;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: inherit;
+            text-align: left;
+            margin: 0 auto;
+            max-width: 80ch;
+            line-height: 1.7;
+        }
+
+        /* --- END OF TEXT VIEW STYLES --- */
+
+        #pdf-viewer-container .btn-icon.active {
+            background-color: var(--bg-tertiary);
+            color: var(--primary-color);
+        }
+
+        body.pdf-viewer-active>header {
+            display: none;
+        }
+
+        .pdf-more-menu-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .pdf-more-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            z-index: 26000;
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            padding: 4px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            width: 180px;
+        }
+
+        .pdf-more-menu.visible {
+            display: flex;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .pdf-more-menu .btn {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        /* --- VIEW TOGGLING LOGIC --- */
+        #pdf-viewer-container.text-view-active .pdf-page-container {
+            display: none;
+        }
+
+        #pdf-viewer-container.text-view-active #pdf-text-view-content {
+            display: block;
+        }
+
+        /* --- NEW: Control Visibility Logic --- */
+        .text-view-only-btn {
+            display: none;
+        }
+
+        /* Show them only when text view is active */
+        #pdf-viewer-container.text-view-active .text-view-only-btn {
+            display: inline-flex;
+        }
+
+        /* Hide standard zoom controls when in text view */
+        #pdf-viewer-container.text-view-active #pdf-zoom-out,
+        #pdf-viewer-container.text-view-active #pdf-zoom-percent,
+        #pdf-viewer-container.text-view-active #pdf-zoom-in {
+            display: none;
+        }
+
+        #pdf-viewer-container.pdf-fullscreen-active .pdf-viewer-header {
+            display: none;
+        }
+
+        /* --- NEW: PDF Annotation Styles --- */
+        .pdf-page-container {
+            position: relative;
+        }
+
+        #annotation-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #pdf-viewer-container.annotation-active #annotation-layer {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+
+        #pdf-annotation-toolbar .btn-icon.active {
+            background-color: var(--bg-tertiary);
+            color: var(--primary-color);
+        }
+
+        /* PDF PAN MODE */
+        #pdf-viewer-container.pan-active .pdf-viewer-canvas-wrapper,
+        #pdf-viewer-container.grab-mode .pdf-viewer-canvas-wrapper {
+            cursor: grab;
+            user-select: none;
+        }
+
+        #pdf-viewer-container.pan-active.is-dragging .pdf-viewer-canvas-wrapper,
+        #pdf-viewer-container.grab-mode.is-dragging .pdf-viewer-canvas-wrapper {
+            cursor: grabbing;
+        }
+
+        .pdf-color-palette {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 4px;
+        }
+
+        .pdf-color-pick {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .pdf-color-pick:hover {
+            transform: scale(1.15);
+        }
+
+        .pdf-color-pick.active {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 60%, transparent);
+            transform: scale(1.1);
+        }
+
+        #pdf-thickness-cycler svg {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        /* This rule standardizes all icons in both toolbars for a consistent look */
+        #annotation-toolbar .btn-icon svg,
+        #pdf-annotation-toolbar .btn-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* NEW: A smaller inner circle for the color cycler button for visual balance */
+        .color-cycler-inner {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+        }
+
+        /* --- NEW: PDF Viewer Mobile Responsiveness --- */
+        body.mobile-view #pdf-viewer-header {
+            flex-wrap: wrap;
+            padding: 0.4rem 0.25rem;
+            gap: 0.25rem;
+        }
+
+        body.mobile-view .pdf-viewer-title {
+            order: -1;
+            width: 100%;
+            text-align: center;
+            padding-bottom: 0.5rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border-color);
+            display: none;
+        }
+
+        body.mobile-view .pdf-viewer-main.thumbnails-active {
+            flex-direction: column;
+        }
+
+        body.mobile-view #pdf-thumbnails-bar {
+            width: 100%;
+            height: 120px;
+            flex-direction: row;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border-right: none;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        body.mobile-view .pdf-thumbnail {
+            min-width: 80px;
+        }
+
+        /* Hide less critical buttons on mobile main bar */
+        body.mobile-view #pdf-thumbnails-toggle,
+        body.mobile-view #pdf-fullscreen-toggle,
+        body.mobile-view #pdf-viewer-header .control-divider {
+            display: none;
+        }
+
+        .pdf-more-menu .mobile-only-btn {
+            display: none;
+        }
+
+        body.mobile-view .pdf-more-menu .mobile-only-btn {
+            display: flex;
+        }
+
+        .tutorial-btn {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }

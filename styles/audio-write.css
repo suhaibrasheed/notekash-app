@@ -1,0 +1,305 @@
+        /* --- NEW: Audio Player Block --- */
+        .nk-audio-player {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-left: 5px solid var(--primary-color);
+            border-radius: var(--border-radius-lg);
+            padding: 0.75rem 1rem;
+            margin: 0.25em;
+            box-shadow: var(--shadow-sm);
+            user-select: none;
+        }
+
+        .audio-play-pause-btn {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background-color: var(--primary-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .audio-play-pause-btn:hover {
+            transform: scale(1.05);
+            background-color: var(--primary-color-hover);
+        }
+
+        /* --- NEW: Refined Write Mode Toolbar (Modern Clean Design - Seamless) --- */
+        .controls-wrapper.write-mode-controls {
+            display: none;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0 2px;
+            margin-right: -0.25rem;
+        }
+
+        .read-mode .controls-wrapper.write-mode-controls {
+            display: none !important;
+        }
+
+        .write-mode .controls-wrapper.write-mode-controls {
+            display: flex;
+        }
+
+        /* Hide elements that shouldn't appear in Write Mode */
+        .write-mode #unified-heart-btn,
+        .write-mode [data-action="switchToWrite"] {
+            display: none !important;
+        }
+
+        /* Surgical Button Styling for Write Toolbar */
+        .write-mode-controls .btn-icon {
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            opacity: 0.8;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 36px;
+            /* MATCH READ MODE: Larger influence zone */
+            height: 36px;
+            /* MATCH READ MODE */
+            border-radius: 8px;
+            /* Softer squares */
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .write-mode-controls .btn-icon:hover {
+            opacity: 1;
+            color: var(--primary-color);
+            background-color: var(--bg-secondary);
+            transform: translateY(-1px);
+        }
+
+        /* Masterpiece Save Button */
+        .btn-icon.btn-save-circle {
+            background-color: #8D6E63;
+            color: white !important;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(141, 110, 99, 0.3);
+            /* Softer, richer shadow */
+            margin: 0 4px;
+            /* Minimal margin */
+            border: 2px solid white;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .btn-icon.btn-save-circle:hover {
+            background-color: #795548;
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(141, 110, 99, 0.4);
+            border-color: #fff;
+        }
+
+        .btn-icon.btn-save-circle svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* Play icon (triangle) */
+        .audio-play-pause-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 55%;
+            transform: translate(-50%, -50%);
+            border-style: solid;
+            border-width: 8px 0 8px 14px;
+            border-color: transparent transparent transparent var(--text-on-primary);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        /* Pause icon (bars) */
+        .audio-play-pause-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 43%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 16px;
+            background-color: var(--text-on-primary);
+            box-shadow: 6px 0 0 0 var(--text-on-primary);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .audio-play-pause-btn.playing::before {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.5);
+        }
+
+        .audio-play-pause-btn.playing::after {
+            opacity: 1;
+        }
+
+        .audio-progress-bar-container {
+            flex-grow: 1;
+        }
+
+        .audio-progress-bar {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .audio-time-display {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+            min-width: 85px;
+            text-align: center;
+        }
+
+        .nk-audio-player audio {
+            display: none;
+        }
+
+        /* Style for the recording indicator */
+        .recording-visualizer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            box-shadow: 0 6px 8px -1px rgba(141, 110, 99, 0.5);
+        }
+
+        /* Category Pill Select */
+        .category-select-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        select.category-pill-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: var(--bg-secondary);
+            border: none;
+            border-radius: 12px;
+            padding: 0.3rem 1.8rem 0.3rem 0.7rem;
+            /* Compact padding */
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.2s;
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.6rem center;
+        }
+
+        select.category-pill-select:hover {
+            background-color: var(--bg-hover);
+        }
+
+        /* Vertical Divider - REMOVED for consistency */
+        .control-divider {
+            display: none;
+        }
+
+        /* --- NEW: Reusable Gradient Text Style --- */
+        .btn-gradient-text {
+            background-size: 200% auto;
+            background-clip: text;
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: witty-text-glow 8s linear infinite;
+        }
+
+        [data-theme="light"] .btn-gradient-text {
+            background-image: linear-gradient(90deg, #0d9488, #581c87, #be185d, #0d9488);
+        }
+
+        [data-theme="dark"] .btn-gradient-text {
+            background-image: linear-gradient(90deg, #fde047, #6ee7b7, #f472b6, #fde047);
+        }
+
+        [data-theme="sepia"] .btn-gradient-text {
+            background-image: linear-gradient(90deg, #b45309, #55a630, #92400e, #b45309);
+        }
+
+
+        /* --- REFINED: Transcribe Button Aesthetics --- */
+        .nk-transcribe-container .btn.btn-secondary {
+            font-weight: 600;
+            /* Bolder for emphasis */
+            border: 2.5px solid var(--primary-color);
+            border-radius: 50% 20% / 10% 40%;
+            padding: 0.6rem 1.2rem;
+            background-color: var(--bg-tertiary);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .nk-transcribe-container .btn.btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+            border-color: var(--primary-color);
+        }
+
+        /* --- NEW: Toast Wave Animation --- */
+        .toast-wave-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast-wave-visualizer {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 20px;
+        }
+
+        .toast-wave-visualizer .wave-bar {
+            width: 4px;
+            height: 100%;
+            background-color: currentColor;
+            border-radius: 2px;
+            animation: toast-wave-dance 1.2s ease-in-out infinite;
+        }
+
+        .toast-wave-visualizer .wave-bar:nth-child(2) {
+            animation-delay: -1.0s;
+        }
+
+        .toast-wave-visualizer .wave-bar:nth-child(3) {
+            animation-delay: -0.8s;
+        }
+
+        .toast-wave-visualizer .wave-bar:nth-child(4) {
+            animation-delay: -0.6s;
+        }
+
+        @keyframes toast-wave-dance {
+
+            0%,
+            100% {
+                transform: scaleY(0.2);
+            }
+
+            50% {
+                transform: scaleY(1.0);
+            }
+        }

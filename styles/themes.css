@@ -1,0 +1,695 @@
+/* Extracted from NoteKash v8.248c.html */
+.seo-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+
+        ::selection {
+            background-color: var(--primary-color);
+            color: var(--bg-primary);
+            text-shadow: 0 0 1px var(--bg-primary), 0 0 2px var(--primary-color);
+        }
+
+        ::-moz-selection {
+            background-color: var(--primary-color);
+            color: var(--bg-primary);
+            text-shadow: 0 0 1px var(--bg-primary), 0 0 2px var(--primary-color);
+        }
+
+        /* --- Custom Searching Toast --- */
+        .toast.searching-process {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+            color: white !important;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* --- AI Magic Format Chips --- */
+        .ai-format-chips-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            scrollbar-width: none;
+            /* Hide scrollbar Firefox */
+            -ms-overflow-style: none;
+            /* Hide scrollbar IE/Edge */
+        }
+
+        .ai-format-chips-container::-webkit-scrollbar {
+            display: none;
+            /* Hide scrollbar Chrome/Safari */
+        }
+
+        .ai-format-chip {
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background-color: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .ai-format-chip:hover {
+            background-color: var(--bg-secondary);
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+        }
+
+        .ai-format-chip.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* 1. STYLES & THEMING (v2 SUPERTAGS UPDATE) */
+        :root {
+            /* --- Base & Layout --- */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e9ecef;
+            --bg-primary-rgb: 248, 249, 250;
+            --bg-secondary-rgb: 255, 255, 255;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --text-tertiary: #adb5bd;
+            --text-on-primary: #ffffff;
+            --border-color: #dee2e6;
+            --primary-color: #0d9488;
+            --primary-color-hover: #0f766e;
+            --primary-color-rgb: 74, 85, 104;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --danger-color: #dc3545;
+            --danger-color-hover: #b02a37;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --text-warning: #000;
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            --font-serif: Georgia, 'Times New Roman', Times, serif;
+            --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --spacing-unit: 8px;
+            --border-radius: 8px;
+            --border-radius-lg: 16px;
+            --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --article-font-family: Georgia, serif;
+            --article-font-size: 1.15rem;
+            --article-line-height: 1.7;
+            --ui-opacity: 1.0;
+            --blur-intensity: 8px;
+
+            /* --- Light Theme Colors --- */
+            --hl-1-bg: #fef08a;
+            --hl-1-border: #facc15;
+            --hl-2-bg: #dcfce7;
+            --hl-2-border: #4ade80;
+            --hl-3-bg: #dceffc;
+            --hl-3-border: #38bdf8;
+            --hl-4-bg: #ffd6d6;
+            --hl-4-border: #f87171;
+            --hl-5-bg: #fae8ff;
+            --hl-5-border: #e879f9;
+            --hl-6-bg: #dcdcff;
+            --hl-6-border: #828ffe;
+            --hl-7-bg: #fae8ff;
+            --hl-7-border: #c026d3;
+            /* SuperTag Rendered */
+            --hl-text: #1f2937;
+            --text-red: #D32F2F;
+            --text-green: #26902c;
+            --text-blue: #0f72d5;
+            --text-magenta: #c026d3;
+            --text-orange: #f97316;
+            --text-teal: #1eb4dd;
+            --text-slate: #c5a019;
+            /* --- Category, SM2 & Hub Colors --- */
+            /* --- A. Unified Text Color (Light Theme) --- */
+            --category-pill-text: #1f2937;
+            /* --- B. Indexed Background Palette (Light Theme) --- */
+            --cat-color-0-bg: #f3f4f6;
+            --cat-color-1-bg: #a7f3d0;
+            --cat-color-2-bg: #fed7aa;
+            --cat-color-3-bg: #c7d2fe;
+            --cat-color-4-bg: #bfdbfe;
+            --cat-color-5-bg: #fecaca;
+            --cat-color-6-bg: #bae6fd;
+            --cat-color-7-bg: #d9f99d;
+            --cat-color-8-bg: #fef08a;
+            --cat-color-9-bg: #e9d5ff;
+            --cat-color-10-bg: #fbcfe8;
+            --cat-color-11-bg: #e2e8f0;
+            --cat-color-12-bg: #d1d5db;
+            --cat-color-13-bg: #fda4af;
+            --cat-color-14-bg: #86efac;
+            --cat-color-15-bg: #fbbf24;
+            --cat-color-16-bg: #a5b4fc;
+            --cat-color-17-bg: #f472b6;
+            --cat-color-18-bg: #99f6e4;
+            --cat-color-19-bg: #fde68a;
+            --action-button-gradient: linear-gradient(135deg, #14b8a6, #0d9488);
+
+
+
+            --sm2-red: #a3002e;
+            --sm2-orange: #f87355;
+            --sm2-purple: #a855f7;
+            --sm2-skyblue: #43c1f8;
+            --sm2-green: #22c55e;
+            --sm2-unrated: #adb5bd;
+            --text-on-sm2: #ffffff;
+            --priority-high: #dc3545;
+            --priority-medium: #0d6efd;
+            --priority-low: #198754;
+            --pomo-color-1: #ef4444;
+            --pomo-color-2: #f97316;
+            --pomo-color-3: #f59e0b;
+            --pomo-color-4: #eab308;
+            --pomo-color-5: #84cc16;
+            --pomo-color-6: #22c55e;
+            --pomo-color-7: #10b981;
+            --pomo-color-8: #14b8a6;
+            --pomo-color-9: #06b6d4;
+            --cycle-color-1: #3b82f6;
+            --cycle-color-2: #16a34a;
+            --cycle-color-3: #f97316;
+            --cycle-color-4: #8b5cf6;
+            --break-color: #0891b2;
+            --heat-0: #f1f3f5;
+            --heat-1: #dee2e6;
+            --heat-2: #ff6b6b;
+            --heat-3: #fcc419;
+            --heat-4: #339af0;
+            --heat-5: #845ef7;
+            --heat-6: #f06595;
+            --heat-7: #51cf66;
+
+            /* --- Flashcard Base --- */
+            --cloze-bg: rgba(187, 247, 208, 0.5);
+            --cloze-border: #28a745;
+            --cloze-revealed-text: #388E3C;
+            --cloze-hidden-text: #D32F2F;
+
+            /* --- Visual Map Base --- */
+            --node-text-color: #343a40;
+            --node-category: #fd7e14;
+            --node-tag: #0d6efd;
+            --node-article: #198754;
+            --node-orphan: #6c757d;
+            --node-article-duplicate: #20c997;
+            --search-highlight-bg: #f59e0b;
+            --mindmap-snippet-bg: #fef08a;
+            --mindmap-snippet-border: #facc15;
+            /* --- Read Counter Progression --- */
+            --rc-0-gray: #adb5bd;
+            --rc-1-red: #d90429;
+            --rc-2-orange: #f46d43;
+            --rc-3-pink: #ec4899;
+            --rc-4-purple: #a855f7;
+            --rc-5-indigo: #6366f1;
+            --rc-6-teal: #14b8a6;
+            --rc-7-green-light: #a3e635;
+            --rc-8-green-med: #22c55e;
+            --rc-9-green-bright: #15803d;
+            --rc-10-green-best: #059669;
+
+
+            /* --- Sticky Notes Light --- */
+            --sticky-light-default-bg: #ffffff;
+            --sticky-light-default-text: #212529;
+            --sticky-light-crimson-bg: #fee2e2;
+            --sticky-light-crimson-text: #7f1d1d;
+            --sticky-light-tangerine-bg: #ffedd5;
+            --sticky-light-tangerine-text: #7c2d12;
+            --sticky-light-sunflower-bg: #fef9c3;
+            --sticky-light-sunflower-text: #713f12;
+            --sticky-light-lime-bg: #ecfccb;
+            --sticky-light-lime-text: #365314;
+            --sticky-light-forest-bg: #dcfce7;
+            --sticky-light-forest-text: #14532d;
+            --sticky-light-azure-bg: #e0f2fe;
+            --sticky-light-azure-text: #0c4a6e;
+            --sticky-light-indigo-bg: #e0e7ff;
+            --sticky-light-indigo-text: #312e81;
+            --sticky-light-amethyst-bg: #f5d0fe;
+            --sticky-light-amethyst-text: #6b21a8;
+            --sticky-light-lavender-bg: #f3e8ff;
+            --sticky-light-lavender-text: #581c87;
+            --sticky-light-fuchsia-bg: #fce7f3;
+            --sticky-light-fuchsia-text: #831843;
+            --sticky-light-blush-bg: #fff1f2;
+            --sticky-light-blush-text: #9f1239;
+            --sticky-light-terracotta-bg: #fae8ff;
+            --sticky-light-terracotta-text: #701a75;
+            --sticky-light-teal-bg: #d6feec;
+            --sticky-light-teal-text: #115e59;
+            --sticky-light-slate-bg: #f1f5f9;
+            --sticky-light-slate-text: #1e293b;
+            --sticky-light-olive-bg: #f7fee7;
+            --sticky-light-olive-text: #3f6212;
+
+
+            /* Textile Color Styles (Light Theme) */
+            --textile-bg-1: rgba(243, 232, 255, 0.85);
+            --textile-border-1: #a855f7;
+            --textile-text-1: #7c3aed;
+            --textile-bg-2: rgba(220, 252, 231, 0.85);
+            --textile-border-2: #22c55e;
+            --textile-text-2: #16a34a;
+            --textile-bg-3: rgba(254, 249, 195, 0.85);
+            --textile-border-3: #eab308;
+            --textile-text-3: #a16207;
+            --textile-bg-4: rgba(254, 226, 226, 0.85);
+            --textile-border-4: #f87171;
+            --textile-text-4: #dc2626;
+            --textile-bg-5: rgba(224, 242, 254, 0.85);
+            --textile-border-5: #38bdf8;
+            --textile-text-5: #0284c7;
+            --textile-bg-6: rgba(255, 237, 213, 0.85);
+            --textile-border-6: #fb923c;
+            --textile-text-6: #ea580c;
+            --textile-bg-7: rgba(243, 244, 246, 0.85);
+            --textile-border-7: #9ca3af;
+            --textile-text-7: #4b5563;
+            --textile-bg-8: rgba(254, 202, 202, 0.85);
+            --textile-border-8: #ef4444;
+            --textile-text-8: #b91c1c;
+            --textile-bg-9: rgba(199, 210, 254, 0.85);
+            --textile-border-9: #6366f1;
+            --textile-text-9: #4f46e5;
+
+
+            /* --- NEW: Unified Article Font System --- */
+            :is(.library-title, .card-title, .article-title-input, .focus-mode-title,
+                .snippet, .flashcard-tile-content, .study-card-content-box,
+                .focus-mode-body, .result-text, .sticky-note-content,
+                .mindmap-node .node-html-content,
+                .nk-text-tile-content, .nk-accordion-title, .nk-accordion-content,
+                .nk-timeline-title, .nk-timeline-date, .nk-mcq-question, .nk-mcq-option-text,
+                .article-metadata-bar, .card-footer, [placeholder],
+                .category-chip, .flashcard-view-header .btn, .tag-item,
+                .node-text,
+                .sticky-note-header h5,
+                .upsell-content, .upsell-cta, .premium-cta-text,
+                .tag-modal h3,
+                .tag-modal-article-title,
+                .task-title, .pomodoro-task-title, .notification-header, .notification-message,
+                .ascension-modal .witty-gradient-text) {
+                font-family: var(--article-font-family);
+            }
+
+            :is(#library-view,
+                #flashcard-view,
+                #tags-view,
+                #category-view,
+                .pomodoro-meta,
+                .ascension-modal) :is(.btn, .category-chip, .tag-item, .ascension-card) {
+                font-family: var(--article-font-family);
+            }
+
+            /*  UI Font Override System */
+            :is(.btn, .text-input, select,
+                .modal-content h3, .ascension-card-name,
+                .ascension-card-duration, .ascension-features,
+                .license-form-grid label,
+                header, .article-controls, .stage-mode-controls) {
+                font-family: var(--font-body);
+            }
+
+            flashcard-tile-content {
+                font-size: calc(var(--article-font-size) * 0.9);
+            }
+
+            .node-text {
+                font-size: calc(var(--article-font-size) * 0.6);
+            }
+
+            .snippet {
+                font-size: calc(var(--article-font-size) * 0.95);
+            }
+
+            .sticky-note-content {
+                font-size: calc(var(--article-font-size) * 0.65);
+            }
+
+
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0D1117;
+            --bg-secondary: #161B22;
+            --bg-tertiary: #21262D;
+            --bg-primary-rgb: 13, 17, 23;
+            --bg-secondary-rgb: 22, 27, 34;
+            --text-primary: #e7e5cf;
+            --text-secondary: #8B949E;
+            --text-tertiary: #6E7681;
+            --border-color: #30363D;
+            --primary-color: #E0B453;
+            --primary-color-hover: #F7C96D;
+            --primary-color-rgb: 88, 166, 255;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            --danger-color: #f87171;
+            --danger-color-hover: #ef4444;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --hl-text: #f9fafb;
+            --hl-1-bg: #503C11;
+            --hl-1-border: #daa724;
+            --hl-2-bg: #1c492e;
+            --hl-2-border: #1ebb58;
+            --hl-3-bg: #161c93;
+            --hl-3-border: #307df7;
+            --hl-4-bg: #7f1d1d;
+            --hl-4-border: #cc3737;
+            --hl-5-bg: #581c87;
+            --hl-5-border: #9347da;
+            --hl-6-bg: #0c5876;
+            --hl-6-border: #0b8fcd;
+            --hl-7-bg: #701a75;
+            --hl-7-border: #d946ef;
+            --text-red: #ff4830;
+            --text-green: #2cfb3e;
+            --text-blue: #906eff;
+            --text-magenta: #e84fff;
+            --text-orange: #ff9934;
+            --text-teal: #0effef;
+            --text-slate: #fcf006;
+            --cat-tags: #f8f9fa;
+            --cat-science: #22d3ee;
+            --cat-society: #a78bfa;
+            --cat-history: #fb923c;
+            --cat-geography: #34d399;
+            --cat-opinion: #1c65aa;
+            --cat-misc: #90a4ae;
+            --cloze-bg: rgba(22, 101, 52, 0.4);
+            --cloze-border: #28a745;
+            --cloze-revealed-text: #6ee7b7;
+            --cloze-hidden-text: #fca5a5;
+            --sm2-unrated: #6b7280;
+            --priority-high: #f87171;
+            --priority-medium: #60a5fa;
+            --priority-low: #34d399;
+            --cycle-color-1: #60a5fa;
+            --cycle-color-2: #34d399;
+            --cycle-color-3: #fb923c;
+            --cycle-color-4: #a78bfa;
+            --break-color: #22d3ee;
+            --heat-0: #21262d;
+            --heat-1: #484f58;
+            --heat-2: #f85149;
+            --heat-3: #d29922;
+            --heat-4: #58a6ff;
+            --heat-5: #bc8cff;
+            --heat-6: #f680b5;
+            --heat-7: #3fb950;
+            --pomo-color-1: #ff4b60;
+            --pomo-color-2: #ff9d00;
+            --pomo-color-3: #ffea00;
+            --pomo-color-4: #00f59b;
+            --pomo-color-5: #00e5ff;
+            --pomo-color-6: #00bfff;
+            --pomo-color-7: #5e5eff;
+            --pomo-color-8: #b34bff;
+            --pomo-color-9: #ff4bff;
+            /* --- A. Unified Text Color (Dark Theme) --- */
+            --category-pill-text: #f0f6fc;
+            /* --- B. Indexed Background Palette (Dark Theme) --- */
+            --cat-color-0-bg: #4b5563;
+            --cat-color-1-bg: #059669;
+            --cat-color-2-bg: #b45309;
+            --cat-color-3-bg: #6d28d9;
+            --cat-color-4-bg: #2563eb;
+            --cat-color-5-bg: #be123c;
+            --cat-color-6-bg: #0e7490;
+            --cat-color-7-bg: #4d7c0f;
+            --cat-color-8-bg: #d97706;
+            --cat-color-9-bg: #a21caf;
+            --cat-color-10-bg: #7e22ce;
+            --cat-color-11-bg: #1e40af;
+            --cat-color-12-bg: #374151;
+            --cat-color-13-bg: #991b1b;
+            --cat-color-14-bg: #166534;
+            --cat-color-15-bg: #9a3412;
+            --cat-color-16-bg: #4338ca;
+            --cat-color-17-bg: #9d174d;
+            --cat-color-18-bg: #0f766e;
+            --cat-color-19-bg: #b45309;
+            --action-button-gradient: linear-gradient(45deg, #E0B453, #E6845E, #C159A1);
+
+
+            /* --- Visual Map Dark --- */
+            --node-text-color: #c9d1d9;
+            --node-category: #f59e0b;
+            --node-tag: #58a6ff;
+            --node-article: #2ea043;
+            --node-orphan: #8B949E;
+            --node-article-duplicate: #39d353;
+            --mindmap-snippet-bg: #4d441d;
+            --mindmap-snippet-border: #a16207;
+
+            /* --- Read Counter Progression --- */
+            --rc-0-gray: #6b7280;
+            --rc-1-red: #f87171;
+            --rc-2-orange: #fb923c;
+            --rc-3-pink: #f472b6;
+            --rc-4-purple: #c084fc;
+            --rc-5-indigo: #818cf8;
+            --rc-6-teal: #2dd4bf;
+            --rc-7-green-light: #bef264;
+            --rc-8-green-med: #4ade80;
+            --rc-9-green-bright: #22c55e;
+            --rc-10-green-best: #34d399;
+
+
+            /* --- Sticky Notes Dark --- */
+            --sticky-dark-default-bg: #1D2229;
+            --sticky-dark-default-text: #f0f6fc;
+            --sticky-dark-crimson-bg: #450a0a;
+            --sticky-dark-crimson-text: #fecaca;
+            --sticky-dark-tangerine-bg: #431407;
+            --sticky-dark-tangerine-text: #ffedd5;
+            --sticky-dark-sunflower-bg: #422006;
+            --sticky-dark-sunflower-text: #fef08a;
+            --sticky-dark-lime-bg: #1a2e05;
+            --sticky-dark-lime-text: #d9f99d;
+            --sticky-dark-forest-bg: #062813;
+            --sticky-dark-forest-text: #dcfce7;
+            --sticky-dark-azure-bg: #082f49;
+            --sticky-dark-azure-text: #e0f2fe;
+            --sticky-dark-indigo-bg: #1e1b4b;
+            --sticky-dark-indigo-text: #c7d2fe;
+            --sticky-dark-amethyst-bg: #2e1046;
+            --sticky-dark-amethyst-text: #f5d0fe;
+            --sticky-dark-lavender-bg: #3b0764;
+            --sticky-dark-lavender-text: #f3e8ff;
+            --sticky-dark-fuchsia-bg: #500724;
+            --sticky-dark-fuchsia-text: #fbcfe8;
+            --sticky-dark-blush-bg: #581c22;
+            --sticky-dark-blush-text: #fff1f2;
+            --sticky-dark-terracotta-bg: #4a044e;
+            --sticky-dark-terracotta-text: #fae8ff;
+            --sticky-dark-teal-bg: #042f2e;
+            --sticky-dark-teal-text: #ccfbf1;
+            --sticky-dark-slate-bg: #334155;
+            --sticky-dark-slate-text: #f1f5f9;
+            --sticky-dark-olive-bg: #1c3202;
+            --sticky-dark-olive-text: #e7f5d0;
+
+
+
+
+
+            /*  Textile Color Styles (Dark Theme) */
+            --textile-bg-1: rgba(46, 16, 70, 0.75);
+            --textile-border-1: #c084fc;
+            --textile-text-1: #d8b4fe;
+            --textile-bg-2: rgba(22, 51, 34, 0.75);
+            --textile-border-2: #4ade80;
+            --textile-text-2: #86efac;
+            --textile-bg-3: rgba(66, 32, 6, 0.75);
+            --textile-border-3: #facc15;
+            --textile-text-3: #fde047;
+            --textile-bg-4: rgba(69, 10, 10, 0.75);
+            --textile-border-4: #f87171;
+            --textile-text-4: #fca5a5;
+            --textile-bg-5: rgba(30, 41, 59, 0.75);
+            --textile-border-5: #38bdf8;
+            --textile-text-5: #7dd3fc;
+            --textile-bg-6: rgba(67, 20, 7, 0.75);
+            --textile-border-6: #f97316;
+            --textile-text-6: #fdba74;
+            --textile-bg-7: rgba(55, 65, 81, 0.75);
+            --textile-border-7: #9ca3af;
+            --textile-text-7: #d1d5db;
+            --textile-bg-8: rgba(69, 10, 10, 0.75);
+            --textile-border-8: #ef4444;
+            --textile-text-8: #fca5a5;
+            --textile-bg-9: rgba(30, 27, 75, 0.75);
+            --textile-border-9: #818cf8;
+            --textile-text-9: #a5b4fc;
+
+
+        }
+
+        [data-theme="sepia"] {
+            --bg-primary: #f4e9d8;
+            --bg-secondary: #fbf0d9;
+            --bg-tertiary: #e9dbbf;
+            --bg-primary-rgb: 244, 233, 216;
+            --bg-secondary-rgb: 251, 240, 217;
+            --text-primary: #5b4636;
+            --text-secondary: #7a6a57;
+            --border-color: #dcd0b3;
+            --primary-color: #8c6d46;
+            --primary-color-hover: #73552a;
+            --primary-color-rgb: 140, 109, 70;
+            --shadow: 0 2px 8px rgba(91, 70, 54, 0.1);
+            --danger-color: #c76a6a;
+            --danger-color-hover: #a14949;
+            --hl-text: #2c2a1a;
+            --hl-1-bg: #fde68a;
+            --hl-1-border: #eab308;
+            --hl-2-bg: #bbf7d0;
+            --hl-2-border: #15803d;
+            --hl-3-bg: #c4ddfc;
+            --hl-3-border: #1d4ed8;
+            --hl-4-bg: #fecaca;
+            --hl-4-border: #ef4444;
+            --hl-5-bg: #e9d5ff;
+            --hl-5-border: #8b27e3;
+            --hl-6-bg: #a3eff9;
+            --hl-6-border: #07bada;
+            --hl-7-bg: #f3e8ff;
+            --hl-7-border: #a855f7;
+            --text-red: #ab0404;
+            --text-green: #15803d;
+            --text-blue: #2563eb;
+            --text-magenta: #9333ea;
+            --text-orange: #dc7208;
+            --text-teal: #0693be;
+            --text-slate: #c59b1e;
+            --cloze-bg: rgba(204, 238, 204, 0.5);
+            --cloze-border: #28a745;
+            --cloze-revealed-text: #166534;
+            --cloze-hidden-text: #c2410c;
+            --sm2-unrated: #101010;
+            --sticky-sepia-default: #fbf0d9;
+            --pomo-color-1: #a65d5d;
+            --pomo-color-2: #bc7a3d;
+            --pomo-color-3: #b89b4a;
+            --pomo-color-4: #8a9b4a;
+            --pomo-color-5: #5d8c6b;
+            --pomo-color-6: #4a7b8c;
+            --pomo-color-7: #5d5d8c;
+            --pomo-color-8: #8c5d7b;
+            --pomo-color-9: #8c6d5d;
+            --heat-0: #f4e9d8;
+            --heat-1: #dcd0b3;
+            --heat-2: #a65d5d;
+            --heat-3: #bc7a3d;
+            --heat-4: #4a7b8c;
+            --heat-5: #5d5d8c;
+            --heat-6: #8c5d7b;
+            --heat-7: #5d8c6b;
+            /* --- A. Unified Text Color (Sepia Theme) --- */
+            --category-pill-text: #442d1e;
+            --cat-color-0-bg: #d7ccc8;
+            --cat-color-1-bg: #a5d6a7;
+            --cat-color-2-bg: #ffcc80;
+            --cat-color-3-bg: #b39ddb;
+            --cat-color-4-bg: #90caf9;
+            --cat-color-5-bg: #ef9a9a;
+            --cat-color-6-bg: #80deea;
+            --cat-color-7-bg: #c5e1a5;
+            --cat-color-8-bg: #ffe082;
+            --cat-color-9-bg: #ce93d8;
+            --cat-color-10-bg: #f48fb1;
+            --cat-color-11-bg: #b0bec5;
+            --cat-color-12-bg: #a1887f;
+            --cat-color-13-bg: #ef5350;
+            --cat-color-14-bg: #66bb6a;
+            --cat-color-15-bg: #ffa726;
+            --cat-color-16-bg: #7986cb;
+            --cat-color-17-bg: #ec407a;
+            --cat-color-18-bg: #26a69a;
+            --cat-color-19-bg: #ffca28;
+            --action-button-gradient: linear-gradient(45deg, #8c6d46, #704214);
+
+            /* Textile Color Styles (Sepia Theme) */
+            --textile-bg-1: rgba(235, 220, 205, 0.9);
+            --textile-border-1: #a855f7;
+            --textile-text-1: #6b21a8;
+            --textile-bg-2: rgba(220, 240, 220, 0.9);
+            --textile-border-2: #16a34a;
+            --textile-text-2: #15803d;
+            --textile-bg-3: rgba(254, 243, 199, 0.9);
+            --textile-border-3: #d97706;
+            --textile-text-3: #92400e;
+            --textile-bg-4: rgba(252, 220, 220, 0.9);
+            --textile-border-4: #dc2626;
+            --textile-text-4: #b91c1c;
+            --textile-bg-5: rgba(219, 234, 254, 0.9);
+            --textile-border-5: #2563eb;
+            --textile-text-5: #1d4ed8;
+            --textile-bg-6: rgba(254, 230, 200, 0.9);
+            --textile-border-6: #ea580c;
+            --textile-text-6: #c2410c;
+            --textile-bg-7: rgba(231, 229, 228, 0.9);
+            --textile-border-7: #78716c;
+            --textile-text-7: #44403c;
+            --textile-bg-8: rgba(254, 210, 210, 0.9);
+            --textile-border-8: #dc2626;
+            --textile-text-8: #991b1b;
+            --textile-bg-9: rgba(224, 220, 252, 0.9);
+            --textile-border-9: #4f46e5;
+            --textile-text-9: #3730a3;
+
+        }
+
+        [data-theme="sepia"] .sticky-note-tile.color-default {
+            background-color: var(--sticky-sepia-default);
+        }
+
+        /* Hover effect over icons */
+        [data-theme="light"] header .btn-icon {
+            color: #6c757d;
+            transition: color 0.2s ease-in-out;
+        }
+
+        [data-theme="light"] header .btn-icon:hover {
+            color: var(--primary-color);
+        }
+
+        [data-theme="dark"] header .btn-icon {
+            color: #9ca3af;
+            transition: color 0.2s ease-in-out;
+        }
+
+        [data-theme="dark"] header .btn-icon:hover {
+            color: var(--primary-color);
+        }
+
+        [data-theme="sepia"] header .btn-icon {
+            color: #9a6729;
+            transition: color 0.2s ease-in-out;
+        }
+
+        [data-theme="sepia"] header .btn-icon:hover {
+            color: #af6000;
+        }
+

@@ -1,0 +1,1000 @@
+        /* --- Pro Presenter Mode --- */
+        .pro-presenter-wave-overlay {
+            position: fixed;
+            inset: 6px;
+            /* Distinct gap from window edge */
+            pointer-events: none;
+            z-index: 999998;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 20px;
+            /* Modern rounded app feel */
+            box-shadow: inset 0 0 120px color-mix(in srgb, var(--primary-color) 8%, transparent);
+        }
+
+        body.is-pro-presenter-active .pro-presenter-wave-overlay {
+            opacity: 1;
+        }
+
+        /* Hide the old SVG waves from the DOM */
+        .pro-wave {
+            display: none !important;
+        }
+
+        .pro-presenter-wave-overlay::before,
+        .pro-presenter-wave-overlay::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+
+        /*  PRO PRESENTER — LIVING CELL (Mode 1)  */
+        /* Enhanced Organic Double Membrane Effect */
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay {
+            box-shadow: inset 0 0 100px color-mix(in srgb, var(--primary-color) 5%, transparent);
+            background: radial-gradient(circle at 50% 50%,
+                    transparent 75%,
+                    color-mix(in srgb, var(--primary-color) 2%, transparent) 90%,
+                    color-mix(in srgb, var(--primary-color) 4%, transparent) 100%);
+        }
+
+        /* Organelle Blobs */
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::before,
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::after {
+            z-index: -1;
+        }
+
+        /* Note: Using pseudo elements on the wave overlay itself for performance */
+
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::before,
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::after {
+            content: '';
+            position: absolute;
+            pointer-events: none;
+            border-radius: inherit;
+            mix-blend-mode: screen;
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Outer Membrane (Eczo-membrane) — Positioned to hug the progress bar area */
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::before {
+            inset: -2px;
+            /* Hug closer to edges */
+            border: 4px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
+            box-shadow:
+                0 0 40px color-mix(in srgb, var(--primary-color) 15%, transparent),
+                inset 0 0 60px color-mix(in srgb, var(--primary-color) 15%, transparent);
+            animation: livingCellOuterWarp 20s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+            opacity: 0.8;
+            filter: blur(0.5px) saturate(1.4);
+            z-index: 1;
+        }
+
+        /* Inner Membrane (Endo-membrane) — Dynamic Collision Layer */
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::after {
+            inset: 12px;
+            border: 1.5px solid color-mix(in srgb, var(--primary-color) 40%, transparent);
+            box-shadow:
+                0 0 20px color-mix(in srgb, var(--primary-color) 20%, transparent),
+                inset 0 0 30px color-mix(in srgb, var(--primary-color) 20%, transparent);
+            animation: livingCellInnerWarp 15s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+            opacity: 0.6;
+            filter: blur(0.3px) brightness(1.2) saturate(1.6);
+            z-index: 2;
+        }
+
+        [data-theme="light"] [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::before,
+        [data-theme="light"] [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay::after {
+            mix-blend-mode: multiply;
+            opacity: 0.45;
+        }
+
+        /* SYNCED MEMBRANE WARP — Creates GLOW when they meet */
+        @keyframes livingCellOuterWarp {
+
+            0%,
+            100% {
+                border-radius: 20px 24px 22px 26px;
+                transform: scale(1);
+                opacity: 0.8;
+                filter: blur(0.5px) brightness(1);
+            }
+
+            50% {
+                border-radius: 28px 22px 28px 22px;
+                transform: scale(1.015);
+                /* Expand slightly */
+                opacity: 1;
+                /* Peak brightness */
+                filter: blur(0.8px) brightness(1.4);
+                border-color: var(--primary-color);
+            }
+        }
+
+        @keyframes livingCellInnerWarp {
+
+            0%,
+            100% {
+                border-radius: 14px 18px 16px 20px;
+                transform: scale(1);
+                inset: 12px;
+                opacity: 0.6;
+                filter: blur(0.3px) brightness(1.2);
+            }
+
+            50% {
+                border-radius: 22px 28px 22px 28px;
+                /* Meet the outer membrane's shape */
+                transform: scale(1.025);
+                /* Collision point */
+                inset: 4px;
+                /* Move VERY close to outer membrane */
+                opacity: 0.95;
+                filter: blur(1px) brightness(2) contrast(1.2);
+                /* THE BRIGHT GLOW EFFECT */
+                border-color: #ffffff;
+                box-shadow: 0 0 40px #ffffff, inset 0 0 40px #ffffff;
+            }
+        }
+
+        /* Reactivity */
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay.is-clicking::before {
+            transform: scale(1.02) !important;
+            border-color: #ffffff !important;
+            /* Brilliant white flash on the membrane */
+            box-shadow:
+                0 0 30px #ffffff,
+                0 0 60px var(--primary-color),
+                inset 0 0 10px rgba(255, 255, 255, 0.5) !important;
+            /* Minimal inset to avoid covering content */
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.1s ease !important;
+        }
+
+        [data-pro-presenter-mode="living-cell"] .pro-presenter-wave-overlay.is-clicking::after {
+            transform: scale(1.01) !important;
+            inset: 2px !important;
+            /* Moves OUT toward the outer membrane instead of IN toward content */
+            border-color: #ffffff !important;
+            opacity: 1 !important;
+            filter: brightness(2) blur(3px) !important;
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), inset 0.15s ease-out !important;
+        }
+
+        /*  PRO PRESENTER — LIQUID GLOW */
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none;
+            overflow: hidden;
+            inset: 3px !important;
+            top: 5px !important;
+            border-radius: 30px !important;
+        }
+
+        /* The Shimmer - The Bright Comet Head */
+        /* Increased thickness and brightness for a more substantial "liquid" feel */
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay::before {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            padding: 3.5px;
+            /* Thicker for premium prominence */
+            background: conic-gradient(from var(--liquid-angle, 0deg),
+                    transparent 0deg,
+                    color-mix(in srgb, var(--primary-color) 60%, transparent) 4deg,
+                    #ffffff 14deg,
+                    color-mix(in srgb, var(--primary-color) 60%, transparent) 26deg,
+                    transparent 45deg,
+                    transparent 180deg,
+                    color-mix(in srgb, var(--primary-color) 60%, transparent) 184deg,
+                    #ffffff 194deg,
+                    color-mix(in srgb, var(--primary-color) 60%, transparent) 206deg,
+                    transparent 225deg);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            animation: liquidModeBorderOrbit 24s linear infinite;
+            filter: drop-shadow(0 0 8px var(--primary-color)) brightness(1.6);
+            z-index: 2;
+        }
+
+        /* The Comet Atmosphere - Pulsating Glow */
+        /* Nicely designed glow that pulsates (breathes) while following the shimmer */
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            padding: 15px;
+            background: conic-gradient(from var(--liquid-angle, 0deg),
+                    transparent 0deg,
+                    color-mix(in srgb, var(--primary-color) 80%, white) 14deg,
+                    color-mix(in srgb, var(--primary-color) 40%, transparent) 70deg,
+                    transparent 110deg,
+                    transparent 180deg,
+                    color-mix(in srgb, var(--primary-color) 80%, white) 194deg,
+                    color-mix(in srgb, var(--primary-color) 40%, transparent) 250deg,
+                    transparent 290deg);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            filter: blur(45px);
+            opacity: 0.2;
+            animation:
+                liquidModeBorderOrbit 24s linear infinite,
+                liquidCometPulse 4s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes liquidCometPulse {
+
+            0%,
+            100% {
+                opacity: 0.15;
+                filter: blur(45px) brightness(1);
+            }
+
+            50% {
+                opacity: 0.45;
+                filter: blur(60px) brightness(1.3);
+            }
+        }
+
+        @property --liquid-angle {
+            syntax: "<angle>";
+            inherits: false;
+            initial-value: 0deg;
+        }
+
+        @keyframes liquidModeBorderOrbit {
+            from {
+                --liquid-angle: 0deg;
+            }
+
+            to {
+                --liquid-angle: 360deg;
+            }
+        }
+
+        /* Reactivity for Liquid Glow - Atmospheric expansion on click */
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay.is-clicking::before {
+            padding: 8px;
+            filter: drop-shadow(0 0 30px var(--primary-color)) brightness(1.5);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        [data-pro-presenter-mode="liquid-glow"] .pro-presenter-wave-overlay.is-clicking::after {
+            opacity: 0.55;
+            padding: 40px;
+            filter: blur(70px) brightness(1.5);
+            transition: all 0.3s ease;
+        }
+
+
+        /*  PRO PRESENTER — BREATHING BORDER (Mode 3)                 */
+
+
+        [data-pro-presenter-mode="breathing-border"] .pro-presenter-wave-overlay {
+            overflow: visible;
+        }
+
+        [data-pro-presenter-mode="breathing-border"] .pro-presenter-wave-overlay::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: transparent;
+            /* 14s Meditative Cycle: Restored to a premium, subtle elegance */
+            animation: breatheExpand 14s cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite;
+            pointer-events: none;
+            will-change: transform, box-shadow, opacity;
+            z-index: 10;
+        }
+
+        @keyframes breatheExpand {
+
+            0%,
+            100% {
+                /* Barely-there resting state - nearly invisible for maximum focus */
+                border: 1px solid color-mix(in srgb, var(--primary-color) 15%, transparent);
+                box-shadow:
+                    0 0 8px color-mix(in srgb, var(--primary-color) 4%, transparent),
+                    inset 0 0 5px color-mix(in srgb, var(--primary-color) 2%, transparent);
+                opacity: 0.25;
+                transform: scale(1);
+            }
+
+            /* Peak Expansion - Refined & Subtle */
+            50% {
+                /* Dialed back to 5.5px for a high-end "ambient" rather than "active" feel */
+                border: 5.5px solid color-mix(in srgb, var(--primary-color) 92%, white);
+                box-shadow:
+                    0 0 45px color-mix(in srgb, var(--primary-color) 35%, transparent),
+                    /* Ambient Bloom */
+                    0 0 20px color-mix(in srgb, var(--primary-color) 25%, transparent),
+                    /* Core Halo */
+                    0 0 5px color-mix(in srgb, var(--primary-color) 12%, transparent),
+                    inset 0 0 15px color-mix(in srgb, var(--primary-color) 18%, transparent);
+                opacity: 0.8;
+                filter: brightness(1.14) blur(0.4px);
+                /* Premium soft-light finish */
+                transform: scale(1.004);
+            }
+        }
+
+
+        /*  PRO PRESENTER — PHANTOM FLUX (Mode 4)                                   */
+
+        [data-pro-presenter-mode="electric-flow"] .pro-presenter-wave-overlay {
+            overflow: hidden;
+            inset: 3px !important;
+            top: 5px !important;
+            border-radius: 30px !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none;
+        }
+
+        /* ── Layer 1: Silky Light Ribbon ────────────────────────────────────────── */
+        /* A wide, soft-edged light sweep that flows slowly around the frame.        */
+        [data-pro-presenter-mode="electric-flow"] .pro-presenter-wave-overlay::before {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            padding: 3.5px;
+            /* Wide, elegant velvet-like gradients — no sharp edges */
+            background: repeating-linear-gradient(-45deg,
+                    transparent 0px,
+                    transparent 100px,
+                    color-mix(in srgb, var(--primary-color) 20%, transparent) 150px,
+                    color-mix(in srgb, var(--primary-color) 85%, white) 200px,
+                    color-mix(in srgb, var(--primary-color) 20%, transparent) 250px,
+                    transparent 300px,
+                    transparent 600px);
+            background-size: 1200px 1200px;
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            /* Drastically slowed down for presentation focus */
+            animation: pfFlux 11.5s linear infinite;
+            filter: drop-shadow(0 0 8px var(--primary-color)) brightness(1.2);
+            z-index: 12;
+            opacity: 0.9;
+        }
+
+        /* ── Layer 2: Deep Atmospheric Bloom ────────────────────────────────────── */
+        /* A slow breathing opacity pulse that adds weight and depth to the border.  */
+        [data-pro-presenter-mode="electric-flow"] .pro-presenter-wave-overlay::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            padding: 15px;
+            background: linear-gradient(90deg,
+                    transparent,
+                    color-mix(in srgb, var(--primary-color) 45%, transparent),
+                    transparent);
+            background-size: 200% 100%;
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            filter: blur(14px);
+            animation:
+                pfFlux 18s linear infinite,
+                pfBreath 8s ease-in-out infinite;
+            z-index: 11;
+        }
+
+        /* Smooth, non-distracting movement keyframes */
+        @keyframes pfFlux {
+            from {
+                background-position: 0px 0px;
+            }
+
+            to {
+                background-position: 1200px 1200px;
+            }
+        }
+
+        @keyframes pfBreath {
+
+            0%,
+            100% {
+                opacity: 0.15;
+                filter: blur(14px) brightness(1);
+            }
+
+            50% {
+                opacity: 0.55;
+                filter: blur(22px) brightness(1.3);
+            }
+        }
+
+
+        /*  PRO PRESENTER — SONIC SPIKE (Mode 5)   */
+        /* A music-visualizer-inspired border  */
+
+        @property --spike-angle {
+            syntax: "<angle>";
+            inherits: false;
+            initial-value: 0deg;
+        }
+
+        @keyframes sonicSpikeRotate {
+            to {
+                --spike-angle: 360deg;
+            }
+        }
+
+        @keyframes sonicSpikePulse {
+            0% {
+                opacity: 0.55;
+                filter: blur(0px) brightness(1.0);
+            }
+
+            25% {
+                opacity: 1;
+                filter: blur(0.5px) brightness(1.6);
+            }
+
+            50% {
+                opacity: 0.65;
+                filter: blur(0px) brightness(1.1);
+            }
+
+            75% {
+                opacity: 1;
+                filter: blur(1px) brightness(1.8);
+            }
+
+            100% {
+                opacity: 0.55;
+                filter: blur(0px) brightness(1.0);
+            }
+        }
+
+        @keyframes sonicSpikeInner {
+            0% {
+                clip-path: polygon(0% 2%, 100% 0%, 100% 98%, 0% 100%);
+                opacity: 0.5;
+            }
+
+            20% {
+                clip-path: polygon(0% 0%, 100% 3%, 100% 100%, 0% 97%);
+                opacity: 0.9;
+            }
+
+            40% {
+                clip-path: polygon(0% 3%, 100% 0%, 100% 97%, 0% 100%);
+                opacity: 0.6;
+            }
+
+            60% {
+                clip-path: polygon(0% 0%, 100% 2%, 100% 100%, 0% 98%);
+                opacity: 1.0;
+            }
+
+            80% {
+                clip-path: polygon(0% 2%, 100% 1%, 100% 99%, 0% 98%);
+                opacity: 0.7;
+            }
+
+            100% {
+                clip-path: polygon(0% 2%, 100% 0%, 100% 98%, 0% 100%);
+                opacity: 0.5;
+            }
+        }
+
+        [data-pro-presenter-mode="sleek-trace"] .pro-presenter-wave-overlay {
+            overflow: visible;
+            /* Baseline ambient atmosphere */
+            box-shadow:
+                inset 0 0 60px color-mix(in srgb, var(--primary-color) 6%, transparent),
+                0 0 0 1px color-mix(in srgb, var(--primary-color) 18%, transparent);
+        }
+
+        /* ── Outer spike ring: conic with many fine teeth ── */
+        [data-pro-presenter-mode="sleek-trace"] .pro-presenter-wave-overlay::before {
+            content: "";
+            position: absolute;
+            inset: -6px;
+            border-radius: 26px;
+            /* 24 spike teeth around the ring */
+            background: conic-gradient(from var(--spike-angle),
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 0deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 6deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 15deg,
+                    color-mix(in srgb, var(--primary-color) 70%, transparent) 21deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 30deg,
+                    color-mix(in srgb, var(--primary-color) 85%, transparent) 36deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 45deg,
+                    color-mix(in srgb, var(--primary-color) 95%, transparent) 51deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 60deg,
+                    color-mix(in srgb, var(--primary-color) 75%, transparent) 66deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 75deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 81deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 90deg,
+                    color-mix(in srgb, var(--primary-color) 80%, transparent) 96deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 105deg,
+                    color-mix(in srgb, var(--primary-color) 95%, transparent) 111deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 120deg,
+                    color-mix(in srgb, var(--primary-color) 70%, transparent) 126deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 135deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 141deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 150deg,
+                    color-mix(in srgb, var(--primary-color) 85%, transparent) 156deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 165deg,
+                    color-mix(in srgb, var(--primary-color) 95%, transparent) 171deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 180deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 186deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 195deg,
+                    color-mix(in srgb, var(--primary-color) 75%, transparent) 201deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 210deg,
+                    color-mix(in srgb, var(--primary-color) 85%, transparent) 216deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 225deg,
+                    color-mix(in srgb, var(--primary-color) 95%, transparent) 231deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 240deg,
+                    color-mix(in srgb, var(--primary-color) 80%, transparent) 246deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 255deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 261deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 270deg,
+                    color-mix(in srgb, var(--primary-color) 85%, transparent) 276deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 285deg,
+                    color-mix(in srgb, var(--primary-color) 95%, transparent) 291deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 300deg,
+                    color-mix(in srgb, var(--primary-color) 70%, transparent) 306deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 315deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 321deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 330deg,
+                    color-mix(in srgb, var(--primary-color) 80%, transparent) 336deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 345deg,
+                    color-mix(in srgb, var(--primary-color) 90%, transparent) 351deg,
+                    color-mix(in srgb, var(--primary-color) 0%, transparent) 360deg);
+            /* Cut out the interior — spikes only on the border strip */
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            padding: 6px;
+            animation: sonicSpikeRotate 38s linear infinite,
+                sonicSpikePulse 6s ease-in-out infinite;
+            filter: drop-shadow(0 0 5px var(--primary-color)) drop-shadow(0 0 12px color-mix(in srgb, var(--primary-color) 60%, transparent));
+        }
+
+        /* ── Inner fine-line ambient ring that shimmers independently ── */
+        [data-pro-presenter-mode="sleek-trace"] .pro-presenter-wave-overlay::after {
+            content: "";
+            position: absolute;
+            inset: 4px;
+            border-radius: 16px;
+            border: 1.5px solid color-mix(in srgb, var(--primary-color) 30%, transparent);
+            box-shadow:
+                inset 0 0 30px color-mix(in srgb, var(--primary-color) 12%, transparent),
+                0 0 20px color-mix(in srgb, var(--primary-color) 15%, transparent);
+            animation: sonicSpikeInner 8s ease-in-out infinite;
+        }
+
+        /* ── Sleek Trace: cursor spotlight layer ── */
+        .sleek-trace-spotlight {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999998;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle,
+                    color-mix(in srgb, var(--text-primary) 12%, transparent) 0%,
+                    color-mix(in srgb, var(--primary-color) 8%, transparent) 30%,
+                    transparent 70%);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            will-change: transform, left, top;
+        }
+
+        body.is-pro-presenter-active[data-pro-presenter-mode="sleek-trace"] .sleek-trace-spotlight {
+            opacity: 1;
+        }
+
+        /* ── Pro Cursor ── */
+        .pro-presenter-cursor-glow {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            /* Premium multicolor cursor using both essence and accent colors from the ambiance */
+            background: color-mix(in srgb, var(--text-primary) 12%, transparent) !important;
+            border: 2px solid var(--text-primary) !important;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999999;
+            transform: translate(-50%, -50%);
+            box-shadow:
+                0 0 20px color-mix(in srgb, var(--text-primary) 50%, transparent),
+                0 0 40px color-mix(in srgb, var(--primary-color) 40%, transparent),
+                0 0 0 3px color-mix(in srgb, var(--text-primary) 10%, transparent);
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                opacity 0.35s ease,
+                border-color 0.4s ease;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            opacity: 0;
+            will-change: transform, left, top;
+            animation: proCursorBreathing 2.4s ease-in-out infinite;
+        }
+
+        /* Trail particle removed as per user request */
+        .pro-presenter-trail-particle {
+            display: none !important;
+        }
+
+        @keyframes proCursorBreathing {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 0 15px color-mix(in srgb, var(--primary-color) 50%, transparent),
+                    0 0 0 2px color-mix(in srgb, var(--text-primary) 15%, transparent);
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                box-shadow:
+                    0 0 30px color-mix(in srgb, var(--text-primary) 70%, transparent),
+                    0 0 0 5px color-mix(in srgb, var(--primary-color) 25%, transparent);
+                transform: translate(-50%, -50%) scale(1.18);
+                background: color-mix(in srgb, var(--text-primary) 10%, var(--primary-color) 10%) !important;
+                border-color: var(--text-primary) !important;
+            }
+        }
+
+        /* Click burst */
+        .pro-presenter-cursor-glow.is-clicking {
+            transform: translate(-50%, -50%) scale(0.7) !important;
+            background: #ffffff !important;
+            border-color: #ffffff !important;
+            box-shadow:
+                0 0 30px 10px color-mix(in srgb, var(--primary-color) 85%, transparent),
+                0 0 0 15px color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.1s ease !important;
+        }
+
+        body.is-pro-presenter-active,
+        body.is-pro-presenter-active * {
+            cursor: none !important;
+        }
+
+
+
+        body.is-pro-presenter-active .pro-presenter-cursor-glow {
+            opacity: 0.88;
+            visibility: visible;
+        }
+
+        /* Ensure default cursor returns immediately on exit */
+        body:not(.is-pro-presenter-active) {
+            cursor: auto !important;
+        }
+
+        body:not(.is-pro-presenter-active) .pro-presenter-cursor-glow {
+            display: none !important;
+        }
+
+        /* Pro Presenter Mode - Zoom effect on hover */
+        body.is-pro-presenter-active .focus-mode-body .snippet,
+        body.is-pro-presenter-active .focus-mode-body .nk-text-tile,
+        body.is-pro-presenter-active .focus-mode-body table,
+        body.is-pro-presenter-active .focus-mode-body .nk-mcq-block,
+        body.is-pro-presenter-active .focus-mode-body .nk-accordion {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                filter 0.4s ease;
+            will-change: transform;
+        }
+
+
+        body.is-pro-presenter-active .focus-mode-body .snippet:hover,
+        body.is-pro-presenter-active .focus-mode-body .nk-text-tile:hover,
+        body.is-pro-presenter-active .focus-mode-body table:hover,
+        body.is-pro-presenter-active .focus-mode-body .nk-mcq-block:hover,
+        body.is-pro-presenter-active .focus-mode-body .nk-accordion:hover {
+            transform: scale(1.005);
+            /* Subtler non-directional lift */
+            z-index: 100;
+            position: relative;
+            box-shadow: 0 0 25px color-mix(in srgb, var(--primary-color) 15%, transparent);
+            filter: brightness(1.05);
+            outline: 1.5px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
+            outline-offset: 4px;
+        }
+
+        .pro-presenter-ripple {
+            position: fixed;
+            border-radius: 50%;
+            border: 2.5px solid var(--text-primary);
+            transform: scale(0.4);
+            animation: proRippleAnim 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+            pointer-events: none;
+            z-index: 9999999;
+            box-shadow:
+                0 0 20px color-mix(in srgb, var(--text-primary) 60%, transparent),
+                0 0 40px color-mix(in srgb, var(--primary-color) 40%, transparent);
+            background: color-mix(in srgb, var(--primary-color) 15%, transparent);
+        }
+
+        @keyframes proRippleAnim {
+            0% {
+                transform: scale(0.4);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(2.0);
+                opacity: 0;
+            }
+        }
+
+        .pro-presenter-progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(10, 8, 6, 0.45);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            z-index: 9999999;
+            opacity: 0;
+            transition: opacity 1.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            overflow: hidden;
+            box-shadow:
+                0 2px 15px rgba(0, 0, 0, 0.4),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+            transform: translateY(-100%);
+        }
+
+        body.is-pro-presenter-active .pro-presenter-progress-container {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .pro-presenter-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    color-mix(in srgb, var(--primary-color) 15%, transparent) 10%,
+                    var(--primary-color) 50%,
+                    color-mix(in srgb, var(--primary-color) 15%, transparent) 90%,
+                    transparent 100%);
+            background-size: 200% 100%;
+            animation: proProgressFluid 12s linear infinite;
+            width: 0%;
+            box-shadow:
+                0 0 20px color-mix(in srgb, var(--primary-color) 40%, transparent),
+                0 0 40px color-mix(in srgb, var(--primary-color) 10%, transparent),
+                inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            transition: width 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+            position: relative;
+            border-radius: 0 4px 4px 0;
+            overflow: visible;
+        }
+
+        /* Shimmering liquid overlay */
+        .pro-presenter-progress-bar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(255, 255, 255, 0) 30%,
+                    rgba(255, 255, 255, 0.15) 50%,
+                    rgba(255, 255, 255, 0) 70%,
+                    transparent 100%);
+            background-size: 200% 100%;
+            animation: proProgressShimmer 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+            mix-blend-mode: overlay;
+            filter: blur(2px);
+            opacity: 0.5;
+        }
+
+        /* The Comet Tip */
+        .pro-presenter-progress-bar::after {
+            content: "";
+            position: absolute;
+            right: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow:
+                0 0 15px 2px #ffffff,
+                0 0 30px 6px var(--primary-color),
+                0 0 60px 12px color-mix(in srgb, var(--primary-color) 20%, transparent);
+            filter: blur(0.5px);
+            z-index: 2;
+            animation: proProgressTipPulse 6s ease-in-out infinite;
+        }
+
+        @keyframes proProgressTipPulse {
+
+            0%,
+            100% {
+                transform: translateY(-50%) scale(1);
+                filter: brightness(1.1);
+                opacity: 0.9;
+            }
+
+            50% {
+                transform: translateY(-50%) scale(1.15);
+                filter: brightness(1.3);
+                opacity: 1;
+            }
+        }
+
+        @keyframes proProgressFluid {
+            0% {
+                background-position: 200% 0%;
+            }
+
+            100% {
+                background-position: -200% 0%;
+            }
+        }
+
+        @keyframes proProgressShimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .pro-presenter-watermark {
+            position: fixed;
+            top: 24px;
+            right: 32px;
+            z-index: 999999;
+            font-family: 'Inter', var(--font-body), sans-serif;
+            font-size: 0.80rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            opacity: 0;
+            letter-spacing: 0.1em;
+            pointer-events: none;
+            text-transform: uppercase;
+            transform: translateY(-10px);
+            transition: opacity 1.2s ease, transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.5s ease;
+            background: color-mix(in srgb, var(--bg-secondary) 25%, transparent);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 6px;
+            border: 1px solid color-mix(in srgb, var(--border-color) 20%, transparent);
+        }
+
+        body.is-pro-presenter-active .pro-presenter-watermark {
+            opacity: 0.6;
+            transform: translateY(0);
+            animation: proWatermarkBreathe 4s ease-in-out infinite;
+        }
+
+        @keyframes proWatermarkBreathe {
+
+            0%,
+            100% {
+                text-shadow: 0 1px 2px color-mix(in srgb, var(--bg-primary) 80%, transparent);
+                box-shadow: 0 1px 3px color-mix(in srgb, var(--primary-color) 20%, transparent),
+                    inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent);
+                border-color: color-mix(in srgb, var(--border-color) 20%, transparent);
+            }
+
+            50% {
+                text-shadow: 0 0 8px color-mix(in srgb, var(--primary-color) 80%, transparent);
+                box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color) 40%, transparent),
+                    inset 0 1px 0 color-mix(in srgb, #ffffff 20%, transparent);
+                border-color: color-mix(in srgb, var(--primary-color) 40%, transparent);
+            }
+        }
+
+/* Extracted from NoteKash v8.248c.html */
+@keyframes migration-card-glow {
+                            from { box-shadow: 0 0 8px -4px var(--primary-color); border-color: var(--primary-color); }
+                            to { box-shadow: 0 0 20px 2px color-mix(in srgb, var(--primary-color) 40%, transparent); border-color: color-mix(in srgb, var(--primary-color) 70%, transparent); }
+                        }
+                        @keyframes gradient-pan {
+                            0% { background-position: 0% 50%; }
+                            50% { background-position: 100% 50%; }
+                            100% { background-position: 0% 50%; }
+                        }
+                        .migration-card-glowing {
+                            border: 1.5px solid var(--primary-color);
+                            animation: migration-card-glow 2.5s infinite alternate ease-in-out;
+                        }
+                        .migration-title-gradient {
+                            background: linear-gradient(45deg, #FF8C42, #FFD05A, #00A896, #A2E869, #05A387);
+                            background-size: 250% 250%;
+                            background-clip: text;
+                            -webkit-background-clip: text;
+                            background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            animation: gradient-pan 10s ease infinite;
+                        }
+                        .migration-cancel-btn-styled {
+                            background-color: transparent;
+                            border: 1px solid var(--border-color);
+                            color: var(--text-secondary);
+                            transition: all 0.2s ease-in-out;
+                        }
+                        .migration-cancel-btn-styled:hover {
+                            background-color: color-mix(in srgb, var(--danger-color) 10%, transparent);
+                            border-color: var(--danger-color);
+                            color: var(--danger-color);
+                            transform: translateY(-1px);
+                        }
+                        .migration-progress-gradient {
+                            background: linear-gradient(90deg, var(--pomo-color-1), var(--pomo-color-3), var(--pomo-color-5), var(--pomo-color-7), var(--pomo-color-9));
+                        }
+
+/* Extracted from NoteKash v8.248c.html */
+.template-hub-card {
+                        background-color: var(--bg-secondary);
+                        padding: 1rem;
+                        border: 1px solid var(--border-color);
+                        border-radius: var(--border-radius-lg);
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 1rem;
+                        cursor: pointer;
+                        transition: all 0.2s ease-in-out;
+                    }
+                    .template-hub-card:hover {
+                        transform: translateY(-4px);
+                        border-color: var(--primary-color);
+                        box-shadow: 0 0 15px 2px color-mix(in srgb, var(--primary-color) 20%, transparent);
+                    }
+                    .template-card-icon {
+                        width: 40px;
+                        height: 40px;
+                        flex-shrink: 0;
+                        background-color: var(--bg-tertiary);
+                        border-radius: 10px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.5rem;
+                        color: var(--text-primary);
+                    }
+                    .template-card-text { flex-grow: 1; }
+                    .template-card-title {
+                        font-size: 1rem;
+                        font-weight: 600;
+                        margin: 0 0 0.25rem 0;
+                        color: var(--text-primary);
+                    }
+                    .template-card-desc {
+                        font-size: 0.85rem;
+                        color: var(--text-secondary);
+                        line-height: 1.4;
+                        margin: 0;
+                    }
+

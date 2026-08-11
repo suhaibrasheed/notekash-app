@@ -1,0 +1,1030 @@
+        /* TEXT BOX STYLES - 4 DISTINCT & BEAUTIFUL VARIATIONS */
+
+
+
+        .wb-text-box[data-box-style="filled"] {
+            background: var(--primary-color);
+            border: none;
+            padding: 15px 18px;
+            box-shadow:
+                0 3px 12px rgba(0, 0, 0, 0.18),
+                0 6px 24px rgba(0, 0, 0, 0.12),
+                0 -2px 6px rgba(255, 255, 255, 0.2) inset,
+                0 3px 8px rgba(0, 0, 0, 0.25) inset;
+        }
+
+        .wb-text-box[data-box-style="filled"] .wb-text-content {
+            color: #ffffff !important;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+        }
+
+        .wb-text-box[data-box-style="filled"]:hover {
+            box-shadow:
+                0 5px 18px rgba(0, 0, 0, 0.22),
+                0 10px 36px rgba(0, 0, 0, 0.18),
+                0 -2px 6px rgba(255, 255, 255, 0.25) inset,
+                0 3px 8px rgba(0, 0, 0, 0.3) inset;
+            transform: translateY(-3px);
+        }
+
+        .wb-text-box[data-box-style="glass"] {
+            background: rgba(var(--primary-color-rgb, 100, 100, 255), 0.15);
+            backdrop-filter: blur(28px) saturate(200%);
+            -webkit-backdrop-filter: blur(28px) saturate(200%);
+            border: 2px solid rgba(var(--primary-color-rgb, 100, 100, 255), 0.4);
+            padding: 14px 18px;
+            box-shadow:
+                0 3px 18px rgba(var(--primary-color-rgb, 100, 100, 255), 0.1),
+                0 6px 36px rgba(0, 0, 0, 0.08),
+                0 0 0 1.5px rgba(255, 255, 255, 0.2) inset;
+        }
+
+        .wb-text-box[data-box-style="glass"]:hover {
+            background: rgba(var(--primary-color-rgb, 100, 100, 255), 0.22);
+            border-color: rgba(var(--primary-color-rgb, 100, 100, 255), 0.6);
+            box-shadow:
+                0 5px 24px rgba(var(--primary-color-rgb, 100, 100, 255), 0.15),
+                0 10px 48px rgba(0, 0, 0, 0.1),
+                0 0 0 1.5px rgba(255, 255, 255, 0.3) inset;
+            transform: translateY(-2px);
+        }
+
+        .wb-text-box[data-box-style="minimal"] {
+            background: transparent;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: none;
+            padding: 12px 16px;
+            box-shadow:
+                0 1px 10px rgba(0, 0, 0, 0.08),
+                0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .wb-text-box[data-box-style="minimal"]::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            background: linear-gradient(145deg,
+                    var(--wb-text-default-bg) 0%,
+                    var(--wb-text-default-bg-2) 100%);
+            opacity: 0.15;
+            z-index: -1;
+        }
+
+        .wb-text-box[data-box-style="minimal"]:hover {
+            box-shadow:
+                0 2px 14px rgba(0, 0, 0, 0.1),
+                0 4px 10px rgba(0, 0, 0, 0.07);
+            transform: translateY(-1px);
+        }
+
+        .wb-text-box[data-box-style="minimal"]:hover::before {
+            opacity: 0.28;
+        }
+
+        .wb-text-box[data-box-style="minimal"] .wb-text-content {
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
+        }
+
+        .wb-text-box.connecting {
+            animation: wbPulseGlow 1.2s ease-in-out infinite;
+        }
+
+        @keyframes wbPulseGlow {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 4px 20px rgba(0, 0, 0, 0.1),
+                    0 0 0 0 rgba(var(--primary-color-rgb, 100, 100, 255), 0.5);
+            }
+
+            50% {
+                box-shadow:
+                    0 4px 20px rgba(0, 0, 0, 0.1),
+                    0 0 0 12px rgba(var(--primary-color-rgb, 100, 100, 255), 0);
+            }
+        }
+
+        .wb-text-box .wb-text-content {
+            outline: none;
+            min-width: 80px;
+            width: 100%;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.4;
+            overflow: visible;
+            padding: 0;
+            margin: 0;
+            min-height: 1.4em;
+            display: block;
+            text-align: center;
+        }
+
+        /* Text box controls bar - Premium floating toolbar */
+        .wb-text-controls {
+            position: absolute;
+            top: -44px;
+            left: 50%;
+            transform: translateX(-50%) translateY(8px);
+            display: flex;
+            gap: 4px;
+            background: linear-gradient(135deg,
+                    rgba(var(--bg-tertiary-rgb, 40, 40, 50), 0.95) 0%,
+                    rgba(var(--bg-tertiary-rgb, 40, 40, 50), 0.85) 100%);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 12px;
+            padding: 5px 6px;
+            opacity: 0;
+            visibility: hidden;
+            transition:
+                opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0.2s,
+                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 8px 24px rgba(0, 0, 0, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+        }
+
+        .wb-text-box.active .wb-text-controls {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .wb-text-controls button {
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.15s;
+        }
+
+        .wb-text-controls button:hover {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .wb-text-controls button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .wb-text-controls button.danger:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .wb-text-controls .wb-ctrl-divider {
+            width: 1px;
+            background: var(--border-color);
+            margin: 4px 2px;
+        }
+
+        /* Resize handle */
+        .wb-text-box .wb-text-resize {
+            position: absolute;
+            bottom: -6px;
+            right: -6px;
+            width: 16px;
+            height: 16px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            cursor: se-resize;
+            opacity: 0;
+            transition: opacity 0.15s;
+            border: 2px solid var(--bg-secondary);
+        }
+
+        .wb-text-box:hover .wb-text-resize,
+        .wb-text-box.active .wb-text-resize {
+            opacity: 1;
+        }
+
+        /* Connector dot - single larger dot for elegant connections */
+        .wb-connector-dot {
+            position: absolute;
+            right: -9px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            background: var(--primary-color);
+            border: 2px solid var(--bg-secondary);
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease, background 0.15s ease;
+            z-index: 15;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .wb-text-box:hover .wb-connector-dot,
+        .wb-text-box.active .wb-connector-dot {
+            opacity: 1;
+        }
+
+        .wb-connector-dot:hover {
+            transform: translateY(-50%) scale(1.15);
+            background: var(--text-green);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Active connector state - shows line preview */
+        .wb-connector-preview {
+            stroke: var(--primary-color);
+            stroke-width: 2;
+            stroke-dasharray: 6, 4;
+            fill: none;
+            pointer-events: none;
+        }
+
+        /* Spawn animation for text boxes */
+        @keyframes wbSpawnCard {
+            from {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .wb-text-box.wb-spawn {
+            animation: wbSpawnCard 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Dragging state - Premium tactile feedback */
+        .wb-text-box.dragging {
+            cursor: grabbing !important;
+            opacity: 0.92;
+            transform: scale(1.02) rotate(0.5deg);
+            box-shadow:
+                0 20px 50px -10px rgba(0, 0, 0, 0.25),
+                0 8px 20px rgba(0, 0, 0, 0.1),
+                0 0 0 2px rgba(var(--primary-color-rgb, 100, 100, 255), 0.3);
+            z-index: 1000;
+            transition: none;
+        }
+
+
+        /* TOP TOOLBAR - ALL CONTROLS */
+        #whiteboard-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 0.6rem 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1000;
+            width: 100%;
+            box-sizing: border-box;
+            order: -1;
+            /* glassmorphism top bar feel */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px 20px 0 0;
+        }
+
+        #whiteboard-toolbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* --- Shapes Flyout --- */
+        .wb-shapes-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .wb-shapes-flyout {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 6px;
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.22s cubic-bezier(0.165, 0.84, 0.44, 1);
+            z-index: 9999;
+            white-space: nowrap;
+        }
+
+        .wb-shapes-container.open .wb-shapes-flyout {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Little caret pointing up */
+        .wb-shapes-flyout::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent var(--border-color) transparent;
+            margin-bottom: -1px;
+        }
+
+        .wb-shapes-flyout::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent var(--bg-secondary) transparent;
+        }
+
+        /* Subtle badge on shapes btn showing current shape */
+        .wb-shapes-btn-wrap {
+            position: relative;
+        }
+
+        .wb-shapes-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: none;
+            border: 1.5px solid var(--bg-secondary);
+        }
+
+        .wb-shapes-container.shape-active .wb-shapes-badge {
+            display: block;
+        }
+
+        /* Cancel button (left) - Uniform size */
+        .wb-action-cancel {
+            position: relative;
+            width: 38px;
+            height: 38px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 20;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .wb-action-cancel:hover {
+            background: var(--danger-color);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Add button (right) - Uniform size */
+        .wb-action-add {
+            position: relative;
+            width: 38px;
+            height: 38px;
+            border: none;
+            background: var(--primary-color);
+            border-radius: 12px;
+            cursor: pointer;
+            color: white;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(var(--primary-color-rgb, 100, 100, 255), 0.4);
+            z-index: 20;
+        }
+
+        .wb-action-add:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(var(--primary-color-rgb, 100, 100, 255), 0.4);
+        }
+
+        /* Save & New button */
+        .wb-action-new {
+            position: relative;
+            width: 38px;
+            height: 38px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            border: 1.5px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .wb-action-new:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: scale(1.03);
+        }
+
+        /* Add dropdown container */
+        .wb-add-dropdown {
+            position: relative;
+        }
+
+        .wb-add-dropdown .wb-action-add {
+            position: relative;
+            right: auto;
+        }
+
+        /* Add dropdown menu - NOW OPENS DOWNWARD since toolbar is at top */
+        .wb-add-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: linear-gradient(135deg,
+                    rgba(var(--bg-tertiary-rgb, 40, 40, 50), 0.95) 0%,
+                    rgba(var(--bg-tertiary-rgb, 40, 40, 50), 0.88) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 14px;
+            padding: 6px;
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px) scale(0.95);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 12px 40px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+            z-index: 1001;
+        }
+
+        .wb-add-dropdown.open .wb-add-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .wb-add-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-primary);
+            text-align: left;
+            transition: all 0.15s;
+        }
+
+        .wb-add-option:hover {
+            background: rgba(var(--primary-color-rgb, 100, 100, 255), 0.15);
+        }
+
+        .wb-add-option svg {
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        .wb-add-option span {
+            font-size: 14px;
+            font-weight: 500;
+            display: block;
+        }
+
+        .wb-add-option small {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            display: block;
+            margin-top: 1px;
+        }
+
+        /* LIVE WHITEBOARD BLOCK */
+        .whiteboard-block {
+            position: relative;
+            margin: 1rem 0;
+            padding: 0;
+            border-radius: var(--border-radius-lg, 12px);
+            border: 2px solid var(--border-color);
+            background: var(--bg-secondary);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .whiteboard-block:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 20px rgba(var(--primary-color-rgb, 100, 100, 255), 0.15);
+        }
+
+        .whiteboard-block-canvas {
+            width: 100%;
+            display: block;
+            background: var(--bg-primary);
+        }
+
+        .whiteboard-block-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0);
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .whiteboard-block:hover .whiteboard-block-overlay {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .whiteboard-block-edit {
+            padding: 12px 20px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .whiteboard-block-edit:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .whiteboard-block-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 4px 10px;
+            background: rgba(var(--primary-color-rgb, 100, 100, 255), 0.9);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            backdrop-filter: blur(8px);
+        }
+
+        /* Tool groups - centered */
+        .wb-tool-group {
+            display: flex;
+            align-items: center;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 4px;
+            gap: 2px;
+        }
+
+        .wb-tool-btn {
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wb-tool-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .wb-tool-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .wb-tool-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* More Menu Container */
+        .wb-more-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        /* More Menu Dropdown -  */
+        .wb-more-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: -20px;
+            left: auto;
+            transform: translateY(-8px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.22s cubic-bezier(0.165, 0.84, 0.44, 1);
+            z-index: 9999;
+            width: max-content;
+            min-width: 160px;
+        }
+
+        .wb-more-menu .wb-menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: var(--font-body);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s;
+        }
+
+        .wb-more-menu .wb-menu-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .wb-more-menu .wb-menu-item svg {
+            flex-shrink: 0;
+            color: var(--text-secondary);
+            width: 16px;
+            height: 16px;
+        }
+
+        .wb-more-menu .wb-menu-item.danger-hover:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--text-red);
+        }
+
+        .wb-more-menu .wb-menu-item.danger-hover:hover svg {
+            color: var(--text-red);
+        }
+
+        /* Only .active class opens the menu - NO hover */
+        .wb-more-container.active .wb-more-menu {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+            transform: translateY(0);
+        }
+
+        /* Triangle pointer - points UP */
+        .wb-more-menu::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            right: 25px;
+            left: auto;
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent var(--border-color) transparent;
+            margin-bottom: -1px;
+        }
+
+        .wb-more-menu::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            right: 26px;
+            left: auto;
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent var(--bg-secondary) transparent;
+        }
+
+        /* Lasso Tool Selection Overlay */
+        #wb-lasso-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Lasso Selection Action Bar */
+        #wb-lasso-actionbar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 6px 10px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            z-index: 9998;
+        }
+
+        #wb-lasso-actionbar.visible {
+            display: flex;
+        }
+
+        #wb-lasso-actionbar .wb-tool-btn {
+            width: 34px;
+            height: 34px;
+        }
+
+        #wb-lasso-actionbar .lasso-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border-color);
+            opacity: 0.5;
+        }
+
+        /* Color swatches */
+        .wb-color-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 8px;
+        }
+
+        .wb-color-swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .wb-color-swatch:hover {
+            transform: scale(1.2);
+        }
+
+        .wb-color-swatch.active {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 3px var(--bg-tertiary), 0 0 0 5px currentColor;
+        }
+
+        /* Divider */
+        .wb-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border-color);
+            margin: 0 6px;
+            opacity: 0.4;
+        }
+
+        /* Zoom controls */
+        .wb-zoom-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 4px 10px;
+        }
+
+        .wb-zoom-group input[type="range"] {
+            width: 70px;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--border-color);
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .wb-zoom-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .wb-zoom-display {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            min-width: 32px;
+            text-align: center;
+        }
+
+
+        /* OCCLUSION TAPE BOX */
+
+        .wb-tape-box {
+            position: absolute;
+            min-width: 40px;
+            min-height: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg,
+                    rgba(251, 191, 36, 0.92) 0%,
+                    rgba(245, 158, 11, 0.92) 100%);
+            box-shadow:
+                0 4px 12px rgba(245, 158, 11, 0.3),
+                0 2px 4px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(217, 119, 6, 0.4);
+            cursor: pointer;
+            transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.2s;
+            z-index: 50;
+            user-select: none;
+        }
+
+        .wb-tape-box:hover {
+            box-shadow:
+                0 6px 16px rgba(245, 158, 11, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Revealed state - faded to show content underneath */
+        .wb-tape-box.revealed {
+            opacity: 0.25;
+            pointer-events: auto;
+            box-shadow:
+                0 2px 6px rgba(245, 158, 11, 0.15),
+                0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .wb-tape-box.revealed:hover {
+            opacity: 0.4;
+        }
+
+        /* Active/Selected state */
+        .wb-tape-box.active {
+            box-shadow:
+                0 0 0 2px var(--primary-color),
+                0 6px 16px rgba(245, 158, 11, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+        }
+
+        /* Dragging state */
+        .wb-tape-box.dragging {
+            opacity: 0.95;
+            transform: scale(1.02);
+            box-shadow:
+                0 10px 30px rgba(245, 158, 11, 0.45),
+                0 6px 12px rgba(0, 0, 0, 0.2);
+            cursor: grabbing;
+            z-index: 200;
+        }
+
+        /* Tape delete button - subtle, small */
+        .wb-tape-delete {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 18px;
+            height: 18px;
+            background: rgba(0, 0, 0, 0.55);
+            color: white;
+            border: 1.5px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.15s;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+        }
+
+        .wb-tape-box:hover .wb-tape-delete,
+        .wb-tape-box.active .wb-tape-delete {
+            opacity: 0.85;
+            transform: scale(1);
+        }
+
+        .wb-tape-delete:hover {
+            opacity: 1;
+            background: rgba(220, 38, 38, 0.9);
+            transform: scale(1.1);
+        }
+
+        /* Tape resize handle */
+        .wb-tape-resize {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 16px;
+            height: 16px;
+            cursor: nwse-resize;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .wb-tape-resize::before {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid rgba(255, 255, 255, 0.7);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .wb-tape-box:hover .wb-tape-resize,
+        .wb-tape-box.active .wb-tape-resize {
+            opacity: 1;
+        }
+
+        /* Spawn animation */
+        .wb-tape-box.wb-spawn {
+            animation: tapeSpawn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes tapeSpawn {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Drawing preview (temporary) */
+        .wb-tape-preview {
+            position: absolute;
+            border: 2px dashed rgba(245, 158, 11, 0.8);
+            background: rgba(251, 191, 36, 0.2);
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 1000;
+        }
