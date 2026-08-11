@@ -214,7 +214,14 @@ export const util = {
                 },
 
                 // Initialize Plyr players
-                initPlyr(container) {
+                async initPlyr(container) {
+                    if (typeof Plyr === 'undefined' && window.App?.loadLibrary) {
+                        try {
+                            await Promise.all([App.loadLibrary('plyr'), App.loadLibrary('plyrCss')]);
+                        } catch (e) {
+                            console.warn('Could not lazy-load Plyr:', e);
+                        }
+                    }
                     if (typeof Plyr === 'undefined') {
                         if (container) {
                             container.querySelectorAll('.js-plyr-video').forEach(el => {

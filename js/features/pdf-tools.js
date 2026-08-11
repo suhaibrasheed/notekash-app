@@ -688,6 +688,13 @@ export const pdf = {
 
                     // --- DOC/DOCX IMPORT (via Mammoth) ---
                     if (file.name.toLowerCase().endsWith('.doc') || file.name.toLowerCase().endsWith('.docx')) {
+                        if (typeof mammoth === 'undefined' && window.App?.loadLibrary) {
+                            try {
+                                await App.loadLibrary('mammoth');
+                            } catch (e) {
+                                console.warn('Could not load Mammoth:', e);
+                            }
+                        }
                         if (typeof mammoth === 'undefined') {
                             App.ui.showToast('DOCX conversion library not loaded. Please check internet connection.', 'error');
                             event.target.value = null;
@@ -1156,6 +1163,13 @@ export const pdf = {
 
                         const pdfData = atob(attachment.data.substring(attachment.data.indexOf(',') + 1));
 
+                        if (typeof pdfjsLib === 'undefined' && window.App?.loadLibrary) {
+                            try {
+                                await App.loadLibrary('pdfjs');
+                            } catch (e) {
+                                console.warn('Could not load PDF.js:', e);
+                            }
+                        }
                         if (typeof pdfjsLib === 'undefined') {
                             App.ui.showToast('PDF Viewer not available offline.', { type: 'error' });
                             return;

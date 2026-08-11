@@ -57,6 +57,9 @@ export const contentTools = {
                         App.ui.updateToast(toastId, 'Advanced clipping failed. Trying fallback...');
 
                         try {
+                            if (typeof Readability === 'undefined' && window.App?.loadLibrary) {
+                                await App.loadLibrary('readability');
+                            }
                             if (typeof Readability === 'undefined') {
                                 throw new Error("Readability library is not loaded.");
                             }

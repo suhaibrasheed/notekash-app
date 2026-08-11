@@ -1,11 +1,11 @@
-const CACHE_VERSION = 'notekash-modular-v2.1.0';
-const APP_SHELL = [
+const CACHE_VERSION = 'notekash-v2.2.0';
+
+const CORE_APP_SHELL = [
   './',
   './index.html',
   './login.html',
   './manifest.json',
   './favicon.ico',
-  './styles/main.css',
   './styles/themes.css',
   './styles/base.css',
   './styles/editor.css',
@@ -29,7 +29,6 @@ const APP_SHELL = [
   './js/core/license.js',
   './js/core/offline.js',
   './js/core/supabase.js',
-  './js/features/cursor-splash.js',
   './js/core/db.js',
   './js/core/fs.js',
   './js/core/settings.js',
@@ -49,85 +48,33 @@ const APP_SHELL = [
   './js/features/graph-maps.js',
   './js/features/pdf-tools.js',
   './js/features/audio-engine.js',
-  './vendor/fuse.min.js',
-  './vendor/katex.min.js',
-  './vendor/auto-render.min.js',
-  './vendor/pdf.min.js',
-  './vendor/mammoth.browser.min.js',
-  './vendor/Readability.min.js',
-  './vendor/tesseract.min.js',
-  './vendor/plyr.polyfilled.js',
-  './vendor/plyr.css',
-  './vendor/katex.min.css',
-  './vendor/html-to-image.min.js',
-  './vendor/d3.v7.min.js',
-  './vendor/chart.umd.min.js',
-  './vendor/jszip.min.js',
-  './vendor/jspdf.umd.min.js',
-  './vendor/pdfmake.min.js',
-  './vendor/vfs_fonts.min.js',
-  './vendor/html2canvas.min.js',
-  './vendor/fonts/KaTeX_AMS-Regular.woff2',
-  './vendor/fonts/KaTeX_Caligraphic-Bold.woff2',
-  './vendor/fonts/KaTeX_Caligraphic-Regular.woff2',
-  './vendor/fonts/KaTeX_Fraktur-Bold.woff2',
-  './vendor/fonts/KaTeX_Fraktur-Regular.woff2',
-  './vendor/fonts/KaTeX_Main-Bold.woff2',
-  './vendor/fonts/KaTeX_Main-BoldItalic.woff2',
-  './vendor/fonts/KaTeX_Main-Italic.woff2',
-  './vendor/fonts/KaTeX_Main-Regular.woff2',
-  './vendor/fonts/KaTeX_Math-BoldItalic.woff2',
-  './vendor/fonts/KaTeX_Math-Italic.woff2',
-  './vendor/fonts/KaTeX_SansSerif-Bold.woff2',
-  './vendor/fonts/KaTeX_SansSerif-Italic.woff2',
-  './vendor/fonts/KaTeX_SansSerif-Regular.woff2',
-  './vendor/fonts/KaTeX_Script-Regular.woff2',
-  './vendor/fonts/KaTeX_Size1-Regular.woff2',
-  './vendor/fonts/KaTeX_Size2-Regular.woff2',
-  './vendor/fonts/KaTeX_Size3-Regular.woff2',
-  './vendor/fonts/KaTeX_Size4-Regular.woff2',
-  './vendor/fonts/KaTeX_Typewriter-Regular.woff2',
+  './js/features/cursor-splash.js',
   './icons/icon-192x192.png',
   './icons/icon-512x512.png',
-  './icons/apple-touch-icon.png',
   './icons/favicon-32x32.png',
-  './icons/favicon-16x16.png',
-  './icons/screenshot-mobile.png',
-  './icons/screenshot-desktop.png'
+  './icons/favicon-16x16.png'
 ];
 
+// Install: Cache essential core shell atomically
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_VERSION).then(async (cache) => {
-      await Promise.allSettled(
-        APP_SHELL.map(async (url) => {
-          try {
-            const response = await fetch(url, { cache: 'no-cache' });
-            if (response.ok) {
-              await cache.put(url, response);
-            } else {
-              console.warn(`SW Install: Skipped ${url} — HTTP ${response.status}`);
-            }
-          } catch (err) {
-            console.warn(`SW Install: Failed to cache ${url} —`, err.message);
-          }
-        })
-      );
+    caches.open(CACHE_VERSION).then((cache) => {
+      return cache.addAll(CORE_APP_SHELL);
+    }).catch((err) => {
+      console.warn('[SW Install] Pre-cache warning:', err);
     })
   );
 });
 
+// Activate: Eradicate all obsolete/legacy caches and claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((names) => Promise.all(
         names
           .filter((name) => name !== CACHE_VERSION)
-          .map((name) => {
-            console.log(`[SW] Deleting legacy cache: ${name}`);
-            return caches.delete(name);
-          })
+          .map((name) => caches.delete(name))
       ))
       .then(() => self.clients.claim())
   );
@@ -142,12 +89,12 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Resilient Network-First strategy with automatic cache fallback on failure/5xx
+// Stale-While-Revalidate strategy for instantaneous 0ms asset serving + background fresh sync
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
 
-  // Ignore non-http schemes (e.g. chrome-extension://, data:)
+  // Ignore non-http requests (e.g. extensions, data URLs)
   if (!request.url.startsWith('http://') && !request.url.startsWith('https://')) return;
 
   const url = new URL(request.url);
@@ -155,50 +102,41 @@ self.addEventListener('fetch', (event) => {
 
   if (isSameOrigin) {
     event.respondWith(
-      fetch(request)
-        .then(async (networkResponse) => {
-          // If server returned 5xx Bad Gateway/Server Error, attempt to serve cached copy
-          if (!networkResponse.ok && networkResponse.status >= 500) {
-            const cached = await caches.match(request, { ignoreSearch: true });
-            if (cached) return cached;
-            if (request.mode === 'navigate') {
-              const navCached = await caches.match('./index.html');
-              if (navCached) return navCached;
+      caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
+        // Background network revalidation
+        const networkFetch = fetch(request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.ok) {
+              const copy = networkResponse.clone();
+              caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
             }
-          }
-
-          // Cache fresh static assets
-          if (networkResponse.ok) {
-            const copy = networkResponse.clone();
-            caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
-          }
-
-          return networkResponse;
-        })
-        .catch(async () => {
-          // Network failure / Offline fallback
-          const cached = await caches.match(request, { ignoreSearch: true });
-          if (cached) return cached;
-
-          if (request.mode === 'navigate') {
-            const navFallback = await caches.match('./index.html') || await caches.match('./');
-            if (navFallback) return navFallback;
-          }
-
-          return new Response('Asset unavailable offline', {
-            status: 503,
-            statusText: 'Service Unavailable',
-            headers: { 'Content-Type': 'text/plain' }
+            return networkResponse;
+          })
+          .catch(() => {
+            if (request.mode === 'navigate') {
+              return caches.match('./index.html') || caches.match('./');
+            }
+            return cachedResponse || new Response('Offline', { status: 503 });
           });
-        })
+
+        // Instant return from cache if present; otherwise wait for network
+        return cachedResponse || networkFetch;
+      })
     );
   } else {
-    // Cross-origin request (CDNs, analytics, external fonts)
+    // Cross-origin assets (Google Fonts, CDN libraries)
     event.respondWith(
-      fetch(request).catch(async () => {
-        const cached = await caches.match(request);
+      caches.match(request).then((cached) => {
         if (cached) return cached;
-        return new Response('', { status: 408, statusText: 'Request Timeout / Offline' });
+        return fetch(request)
+          .then((response) => {
+            if (response && response.ok && (request.url.includes('fonts.gstatic.com') || request.url.includes('cdnjs.cloudflare.com'))) {
+              const copy = response.clone();
+              caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+            }
+            return response;
+          })
+          .catch(() => new Response('', { status: 408 }));
       })
     );
   }
