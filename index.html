@@ -77,17 +77,211 @@
     }
     </script>
 
-    <!-- Full decorative font set loaded after critical splash fonts above -->
+    <!-- CRITICAL SPLASH SCREEN STYLES (0ms First Paint — Eliminates Blank Screen) -->
+    <style>
+        #nk-shell-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Montserrat', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: opacity;
+            overflow: hidden;
+            background: #181411;
+        }
+        .nk-loader-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 420px;
+            padding: 48px 40px 40px;
+            border-radius: 28px;
+            background: rgba(212, 163, 115, 0.03);
+            border: 1px solid rgba(212, 163, 115, 0.12);
+            box-shadow: 0 0 0 1px rgba(212, 163, 115, 0.03), 0 32px 64px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(250, 237, 205, 0.08);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            animation: nk-card-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        @keyframes nk-card-in {
+            0% { opacity: 0; transform: translateY(16px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .nk-loader-book {
+            width: 64px;
+            height: 46px;
+            position: relative;
+            margin-bottom: 32px;
+            perspective: 600px;
+            transform-style: preserve-3d;
+            animation: nk-book-float 3.5s ease-in-out 3.1s infinite;
+            filter: drop-shadow(0 4px 18px rgba(156, 102, 68, 0.35));
+        }
+        .nk-loader-book::before, .nk-loader-book::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            border-radius: 2px;
+            box-shadow: inset 2px 0 0 rgba(255, 255, 255, 0.15), 0 10px 20px rgba(0, 0, 0, 0.4);
+            box-sizing: border-box;
+        }
+        .nk-loader-book::before {
+            left: 0;
+            border-radius: 4px 0 0 4px;
+            transform-origin: right;
+            background: linear-gradient(135deg, #b07d62 0%, #d4a373 100%);
+            border: 1px solid rgba(176, 125, 98, 0.6);
+            animation: nk-book-open-left 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .nk-loader-book::after {
+            right: 0;
+            border-radius: 0 4px 4px 0;
+            transform-origin: left;
+            background: linear-gradient(-135deg, #9c6644 0%, #b07d62 100%);
+            border: 1px solid rgba(156, 102, 68, 0.6);
+            animation: nk-book-open-right 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .nk-loader-pages {
+            position: absolute;
+            top: 3px;
+            bottom: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 94%;
+            z-index: 2;
+            perspective: 600px;
+            display: flex;
+            justify-content: center;
+        }
+        .nk-loader-pages::before, .nk-loader-pages::after {
+            content: '';
+            width: 48%;
+            height: 100%;
+            background: linear-gradient(180deg, #fefae0 0%, #faedcd 100%);
+            box-sizing: border-box;
+            border: 1px solid rgba(212, 163, 115, 0.4);
+        }
+        .nk-loader-pages::before {
+            border-radius: 2px 0 0 2px;
+            transform-origin: right;
+            animation: nk-pages-left 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            box-shadow: inset -1px 0 3px rgba(156, 102, 68, 0.2);
+        }
+        .nk-loader-pages::after {
+            border-radius: 0 2px 2px 0;
+            transform-origin: left;
+            animation: nk-pages-right 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            box-shadow: inset 1px 0 3px rgba(156, 102, 68, 0.2);
+        }
+        @keyframes nk-book-open-left { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(-25deg); } }
+        @keyframes nk-book-open-right { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(25deg); } }
+        @keyframes nk-pages-left { 0% { transform: rotateY(0deg) scaleX(0.1); opacity: 0; } 100% { transform: rotateY(-20deg) scaleX(1); opacity: 1; } }
+        @keyframes nk-pages-right { 0% { transform: rotateY(0deg) scaleX(0.1); opacity: 0; } 100% { transform: rotateY(20deg) scaleX(1); opacity: 1; } }
+        @keyframes nk-book-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+        #nk-shell-loader h1 {
+            font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif;
+            font-size: min(2.2rem, 8vw);
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            margin: 0;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #fefae0 30%, #e9ceb3 70%, #d4a373 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            transform: translateY(8px);
+            animation: nk-title-reveal 1.0s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.2s;
+        }
+        #nk-shell-loader .nk-loader-sub {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-weight: 400;
+            font-size: min(0.78rem, 3.5vw);
+            letter-spacing: 0.26em;
+            text-transform: uppercase;
+            color: rgba(212, 163, 115, 0.75);
+            margin-top: 6px;
+            opacity: 0;
+            animation: nk-sub-reveal 1.0s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.4s;
+        }
+        @keyframes nk-title-reveal { to { opacity: 1; transform: translateY(0); letter-spacing: 0.28em; } }
+        @keyframes nk-sub-reveal { to { opacity: 1; } }
+
+        .nk-loader-divider {
+            width: 48px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212, 163, 115, 0.5), transparent);
+            margin: 24px auto 20px;
+            opacity: 0;
+            animation: nk-sub-reveal 0.8s ease forwards 0.6s;
+        }
+        .nk-loader-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            opacity: 0;
+            animation: nk-sub-reveal 0.8s ease forwards 0.7s;
+        }
+        .nk-loader-status-label {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 0.78rem;
+            font-weight: 400;
+            letter-spacing: 0.06em;
+            color: rgba(235, 215, 195, 0.6);
+            white-space: nowrap;
+        }
+        .nk-travel-dots {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .nk-travel-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #d4a373;
+            opacity: 0.3;
+            transform: scale(0.75) translateZ(0);
+            will-change: transform, opacity;
+            animation: nk-travel 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+        }
+        .nk-travel-dots span:nth-child(1) { animation-delay: 0.0s; }
+        .nk-travel-dots span:nth-child(2) { animation-delay: 0.18s; }
+        .nk-travel-dots span:nth-child(3) { animation-delay: 0.36s; }
+        .nk-travel-dots span:nth-child(4) { animation-delay: 0.54s; }
+        .nk-travel-dots span:nth-child(5) { animation-delay: 0.72s; }
+        @keyframes nk-travel {
+            0%, 100% { opacity: 0.22; transform: scale(0.7) translateZ(0); }
+            35% { opacity: 1; transform: scale(1.35) translateZ(0); }
+            65% { opacity: 0.35; transform: scale(0.85) translateZ(0); }
+        }
+    </style>
+
+    <!-- Decorative secondary fonts loaded non-blockingly -->
     <link crossorigin="anonymous"
-        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Satisfy&family=Pacifico&family=Lobster&family=Patrick+Hand&family=Shadows+Into+Light&family=Great+Vibes&family=Dancing+Script&family=Caveat:wght@400;700&display=swap"
-        rel="stylesheet" onerror="this.href='data:text/css;base64,'">
-    <link rel="stylesheet" href="vendor/katex.min.css"
+        href="https://fonts.googleapis.com/css2?family=Satisfy&family=Pacifico&family=Lobster&family=Patrick+Hand&family=Shadows+Into+Light&family=Great+Vibes&family=Dancing+Script&family=Caveat:wght@400;700&display=swap"
+        rel="stylesheet" media="print" onload="this.media='all'" onerror="this.href='data:text/css;base64,'">
+    <link rel="stylesheet" href="vendor/katex.min.css" media="print" onload="this.media='all'"
         onerror="this.href='data:text/css;base64,'">
     <link crossorigin="anonymous"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
-        rel="stylesheet" onerror="this.href='data:text/css;base64,'">
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet" media="print" onload="this.media='all'" onerror="this.href='data:text/css;base64,'">
     <link rel="stylesheet" crossorigin="anonymous" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        onerror="this.href='data:text/css;base64,'">
+        media="print" onload="this.media='all'" onerror="this.href='data:text/css;base64,'">
     <script src="vendor/fuse.min.js" defer></script>
     <script src="vendor/katex.min.js" defer></script>
     <script src="vendor/auto-render.min.js" defer></script>
@@ -97,7 +291,7 @@
     <script src="vendor/mammoth.browser.min.js" defer></script>
     <script src="vendor/Readability.min.js" defer></script>
     <script src="vendor/tesseract.min.js" defer></script>
-    <link rel="stylesheet" href="vendor/plyr.css" onerror="this.href='data:text/css;base64,'" />
+    <link rel="stylesheet" href="vendor/plyr.css" media="print" onload="this.media='all'" onerror="this.href='data:text/css;base64,'" />
     <script src="vendor/plyr.polyfilled.js" defer></script>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-KGXNNGWKEX"></script>
@@ -107,8 +301,6 @@
         gtag('js', new Date());
         gtag('config', 'G-KGXNNGWKEX');
     </script>
-
-    
 
     <link rel="stylesheet" href="styles/themes.css">
     <link rel="stylesheet" href="styles/base.css">
