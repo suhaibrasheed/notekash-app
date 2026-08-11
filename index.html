@@ -152,8 +152,6 @@
     <script>
         (function () {
             window.nukeAndReloadNoteKash = function () {
-                var btn = document.getElementById('nk-reload-btn');
-                if (btn) btn.textContent = 'Clearing & Reloading...';
                 var p = [];
                 if ('serviceWorker' in navigator) {
                     p.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
@@ -167,8 +165,8 @@
                 }
                 Promise.all(p).finally(function () {
                     setTimeout(function () {
-                        window.location.href = window.location.origin + window.location.pathname + '?v=' + Date.now();
-                    }, 350);
+                        window.location.href = window.location.origin + window.location.pathname;
+                    }, 200);
                 });
             };
 
@@ -178,6 +176,7 @@
 
                 var showTime = Date.now();
                 var dismissed = false;
+                var TARGET_SPLASH_TIME = 1650; // Smooth 1.65s ambient display
 
                 // Dismiss helper - silky GPU fade-out
                 var dismiss = function (waitMs) {
@@ -189,37 +188,24 @@
                             o.style.pointerEvents = 'none';
                             setTimeout(function () {
                                 if (o && o.parentNode) o.remove();
-                            }, 850);
+                            }, 700);
                         });
-                    }, waitMs || 0);
+                    }, Math.max(0, waitMs || 0));
                 };
 
-                // Error boundary listener before App is ready
-                var bootErrorHandler = function (e) {
-                    if (dismissed) return;
-                    console.warn('[NoteKash Boot Watcher] Detected error before App ready:', e);
-                    var statusEl = document.querySelector('.nk-loader-status');
-                    if (statusEl) {
-                        statusEl.innerHTML = '<div style="margin-top:10px;text-align:center;"><div style="color:#ff9e7a;font-size:13px;margin-bottom:10px;">New version detected or cache conflict.</div><button id="nk-reload-btn" onclick="window.nukeAndReloadNoteKash()" style="padding:8px 20px;background:#ff6b35;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;font-family:inherit;box-shadow:0 4px 14px rgba(255,107,53,0.4);">Clean Update & Reload</button></div>';
-                    }
-                };
-                window.addEventListener('error', bootErrorHandler, { once: false });
+                // As soon as App signals ready, ensure clean 1.65s presentation window
+                document.addEventListener('nk:ready', function () {
+                    var elapsed = Date.now() - showTime;
+                    var remaining = Math.max(0, TARGET_SPLASH_TIME - elapsed);
+                    dismiss(remaining);
+                }, { once: true });
 
-                // Failsafe recovery timer: if not ready in 6.5s, offer manual clean reload
-                var safetyTimer = setTimeout(function () {
+                // Failsafe safety fallback (6.5s cap)
+                setTimeout(function () {
                     if (!dismissed) {
-                        bootErrorHandler('Boot timeout');
+                        dismiss(0);
                     }
                 }, 6500);
-
-                document.addEventListener('nk:ready', function (e) {
-                    clearTimeout(safetyTimer);
-                    window.removeEventListener('error', bootErrorHandler);
-                    var isSkip = e.detail && e.detail.skip;
-                    var elapsed = Date.now() - showTime;
-                    var targetWait = isSkip ? 2200 : 2600;
-                    dismiss(Math.max(0, targetWait - elapsed));
-                }, { once: true });
 
             } catch (e) {
                 console.error('Loader error', e);

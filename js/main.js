@@ -909,7 +909,7 @@ App.quiz = quizStub;
 // ==========================================================================
 // INITIALIZE ON DOM LOAD
 // ==========================================================================
-window.addEventListener('DOMContentLoaded', () => {
+const bootApp = () => {
   const handleResize = () => {
     const isMobile = window.innerWidth <= 612; // Optimized for maximum density before switching
     document.body.classList.toggle('mobile-view', isMobile);
@@ -941,4 +941,11 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
-});
+};
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', bootApp);
+} else {
+  bootApp();
+}
+
