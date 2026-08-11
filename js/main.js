@@ -343,45 +343,57 @@ const App = {
     if (mobileImportInput) mobileImportInput.addEventListener('change', (e) => App.storage.handleMobileImport(e));
 
     try {
-      const savedHandle = await this.indexedDB.getHandle('directory');
+      let savedHandle = null;
+      try {
+        savedHandle = await this.indexedDB.getHandle('directory');
+      } catch (dbErr) {
+        console.warn('[NoteKash] IndexedDB getHandle non-fatal error:', dbErr);
+      }
 
       if (savedHandle) {
         App.state.directoryHandle = savedHandle;
         App.state.storageMode = 'fileSystem';
 
-        const permissionStatus = await savedHandle.queryPermission({ mode: 'readwrite' });
+        let permissionStatus = 'none';
+        try {
+          if (typeof savedHandle.queryPermission === 'function') {
+            permissionStatus = await savedHandle.queryPermission({ mode: 'readwrite' });
+          }
+        } catch (permErr) {
+          console.warn('[NoteKash] Permission query not supported or failed on device:', permErr);
+        }
 
         if (permissionStatus === 'granted') {
-          if (!App.isSplitIframeMode) {
-            document.dispatchEvent(new CustomEvent('nk:ready'));
-          }
           const tempToken = App.state.dropboxToken;
           await this._startFileSystemSession();
           if (tempToken) {
             App.state.dropboxToken = tempToken;
             await App.settings.set('dropboxToken', tempToken);
           }
+          if (!App.isSplitIframeMode) {
+            document.dispatchEvent(new CustomEvent('nk:ready'));
+          }
         } else if (!App.isSplitIframeMode) {
           this.ui.applyTheme(App.settings.get('theme') || 'sepia', true);
           this.ui.applyFontSettings();
-          document.dispatchEvent(new CustomEvent('nk:ready', { detail: { skip: true } }));
           this.checkAndNavigate('welcome', { permissionState: permissionStatus });
+          document.dispatchEvent(new CustomEvent('nk:ready', { detail: { skip: true } }));
         }
       } else {
         this.ui.applyTheme(App.settings.get('theme') || 'sepia', true);
         this.ui.applyFontSettings();
 
         if (App.settings.get('lastStorageMode') === 'browser') {
-          if (!App.isSplitIframeMode) {
-            document.dispatchEvent(new CustomEvent('nk:ready'));
-          }
           App.state.storageMode = 'browser';
           await App.settings.load();
           await this.loadInitialData();
           this.checkAndNavigate('library');
+          if (!App.isSplitIframeMode) {
+            document.dispatchEvent(new CustomEvent('nk:ready'));
+          }
         } else if (!App.isSplitIframeMode) {
-          document.dispatchEvent(new CustomEvent('nk:ready', { detail: { skip: true } }));
           this.checkAndNavigate('welcome', { permissionState: 'none' });
+          document.dispatchEvent(new CustomEvent('nk:ready', { detail: { skip: true } }));
         }
       }
     } catch (error) {
@@ -389,8 +401,8 @@ const App = {
       this.ui.applyTheme(App.settings.get('theme') || 'sepia', true);
       this.ui.applyFontSettings();
       if (!App.isSplitIframeMode) {
-        document.dispatchEvent(new CustomEvent('nk:ready', { detail: { skip: true } }));
         this.checkAndNavigate('welcome', { permissionState: 'none' });
+        document.dispatchEvent(new CustomEvent('nk:ready', { detail: { skip: true } }));
       } else {
         document.dispatchEvent(new CustomEvent('nk:ready'));
       }
@@ -502,10 +514,18 @@ const whiteboardStub = {
   state: { isOpen: false },
   init() {},
   async _loadReal() {
-    const { default: realWhiteboard } = await import('./features/whiteboard.js');
-    window.App.whiteboard = realWhiteboard;
-    realWhiteboard.init();
-    return realWhiteboard;
+    try {
+      const { default: realWhiteboard } = await import('./features/whiteboard.js');
+      window.App.whiteboard = realWhiteboard;
+      realWhiteboard.init();
+      return realWhiteboard;
+    } catch (err) {
+      console.error('[NoteKash] Failed to dynamically load whiteboard:', err);
+      if (window.App?.ui?.showToast) {
+        window.App.ui.showToast('Whiteboard module could not be loaded.', { type: 'warning' });
+      }
+      throw err;
+    }
   },
   async open(insertMode, articleId) {
     const real = await this._loadReal();
@@ -536,11 +556,20 @@ const mindMapStub = {
   currentSnapshotIndex: -1, currentMindmapSearchResults: [], currentMindmapSearchIndex: -1,
   _loaded: false,
   async _loadReal() {
-    if (this._loaded) return window.App.mindMap;
-    this._loaded = true;
-    const { mindMap: realMindMap } = await import('./features/graph-maps.js');
-    window.App.mindMap = realMindMap;
-    return realMindMap;
+    if (this._loaded && window.App.mindMap && window.App.mindMap !== this) return window.App.mindMap;
+    try {
+      const { mindMap: realMindMap } = await import('./features/graph-maps.js');
+      window.App.mindMap = realMindMap;
+      this._loaded = true;
+      return realMindMap;
+    } catch (err) {
+      console.error('[NoteKash] Failed to dynamically load MindMap:', err);
+      this._loaded = false;
+      if (window.App?.ui?.showToast) {
+        window.App.ui.showToast('Mind Map could not be loaded. Please check network.', { type: 'warning' });
+      }
+      throw err;
+    }
   },
   async init() {
     const real = await this._loadReal();
@@ -569,11 +598,20 @@ const visualMapStub = {
   currentSearchResults: [], currentSearchIndex: -1,
   _loaded: false,
   async _loadReal() {
-    if (this._loaded) return window.App.visualMap;
-    this._loaded = true;
-    const { visualMap: realVisualMap } = await import('./features/graph-maps.js');
-    window.App.visualMap = realVisualMap;
-    return realVisualMap;
+    if (this._loaded && window.App.visualMap && window.App.visualMap !== this) return window.App.visualMap;
+    try {
+      const { visualMap: realVisualMap } = await import('./features/graph-maps.js');
+      window.App.visualMap = realVisualMap;
+      this._loaded = true;
+      return realVisualMap;
+    } catch (err) {
+      console.error('[NoteKash] Failed to dynamically load VisualMap:', err);
+      this._loaded = false;
+      if (window.App?.ui?.showToast) {
+        window.App.ui.showToast('Visual Map could not be loaded. Please check network.', { type: 'warning' });
+      }
+      throw err;
+    }
   },
   async init() {
     const real = await this._loadReal();
@@ -611,13 +649,22 @@ const audioStub = {
   cleanup() {},
 
   async _loadReal() {
-    if (this._loaded) return window.App.audio;
-    this._loaded = true;
-    const { audio: realAudio } = await import('./features/audio-engine.js');
-    realAudio.isRecording = window.App.audio.isRecording;
-    realAudio.activePlayer = window.App.audio.activePlayer;
-    window.App.audio = realAudio;
-    return realAudio;
+    if (this._loaded && window.App.audio && window.App.audio !== this) return window.App.audio;
+    try {
+      const { audio: realAudio } = await import('./features/audio-engine.js');
+      realAudio.isRecording = window.App.audio.isRecording;
+      realAudio.activePlayer = window.App.audio.activePlayer;
+      window.App.audio = realAudio;
+      this._loaded = true;
+      return realAudio;
+    } catch (err) {
+      console.error('[NoteKash] Failed to dynamically load Audio Engine:', err);
+      this._loaded = false;
+      if (window.App?.ui?.showToast) {
+        window.App.ui.showToast('Audio Engine could not be loaded.', { type: 'warning' });
+      }
+      throw err;
+    }
   },
 
   initializePlayersIn(container) {
@@ -711,19 +758,19 @@ const annotationEngineStub = {
     pdfStub._loadReal().then(({ annotationEngine: real }) => {
       window.App.annotationEngine = real;
       real.toggle(context);
-    });
+    }).catch(err => console.warn(err));
   },
   undo() {
     pdfStub._loadReal().then(({ annotationEngine: real }) => {
       window.App.annotationEngine = real;
       real.undo();
-    });
+    }).catch(err => console.warn(err));
   },
   clear() {
     pdfStub._loadReal().then(({ annotationEngine: real }) => {
       window.App.annotationEngine = real;
       real.clear();
-    });
+    }).catch(err => console.warn(err));
   }
 };
 
@@ -809,14 +856,23 @@ const pdfStub = {
   },
   _loaded: false,
   async _loadReal() {
-    if (this._loaded) return { pdf: window.App.pdf, annotationEngine: window.App.annotationEngine };
-    this._loaded = true;
-    const { pdf: realPdf, annotationEngine: realAnnotationEngine } = await import('./features/pdf-tools.js');
-    realPdf.state = { ...pdfStub.state, ...realPdf.state };
-    realAnnotationEngine.state = { ...annotationEngineStub.state, ...realAnnotationEngine.state };
-    window.App.pdf = realPdf;
-    window.App.annotationEngine = realAnnotationEngine;
-    return { pdf: realPdf, annotationEngine: realAnnotationEngine };
+    if (this._loaded && window.App.pdf && window.App.pdf !== this) return { pdf: window.App.pdf, annotationEngine: window.App.annotationEngine };
+    try {
+      const { pdf: realPdf, annotationEngine: realAnnotationEngine } = await import('./features/pdf-tools.js');
+      realPdf.state = { ...pdfStub.state, ...realPdf.state };
+      realAnnotationEngine.state = { ...annotationEngineStub.state, ...realAnnotationEngine.state };
+      window.App.pdf = realPdf;
+      window.App.annotationEngine = realAnnotationEngine;
+      this._loaded = true;
+      return { pdf: realPdf, annotationEngine: realAnnotationEngine };
+    } catch (err) {
+      console.error('[NoteKash] Failed to dynamically load PDF tools:', err);
+      this._loaded = false;
+      if (window.App?.ui?.showToast) {
+        window.App.ui.showToast('PDF tools could not be loaded. Check network or reload.', { type: 'warning' });
+      }
+      throw err;
+    }
   },
   init() {
     return this._loadReal().then(({ pdf: real }) => real.init());
@@ -835,11 +891,17 @@ const dropboxStub = {
   },
   _loaded: false,
   async _loadReal() {
-    if (this._loaded) return window.App.dropbox;
-    this._loaded = true;
-    const { dropbox: realDropbox } = await import('./features/dropbox.js');
-    window.App.dropbox = realDropbox;
-    return realDropbox;
+    if (this._loaded && window.App.dropbox && window.App.dropbox !== this) return window.App.dropbox;
+    try {
+      const { dropbox: realDropbox } = await import('./features/dropbox.js');
+      window.App.dropbox = realDropbox;
+      this._loaded = true;
+      return realDropbox;
+    } catch (err) {
+      console.error('[NoteKash] Failed to dynamically load Dropbox:', err);
+      this._loaded = false;
+      throw err;
+    }
   },
   init() {
     return this._loadReal().then(real => real.init());
@@ -863,13 +925,19 @@ const quizStub = {
   session: {},
   _loaded: false,
   async _loadReal() {
-    if (this._loaded) return window.App.quiz;
-    this._loaded = true;
-    const { quiz: realQuiz } = await import('./features/quiz.js');
-    realQuiz.stats = this.stats;
-    realQuiz.session = this.session;
-    window.App.quiz = realQuiz;
-    return realQuiz;
+    if (this._loaded && window.App.quiz && window.App.quiz !== this) return window.App.quiz;
+    try {
+      const { quiz: realQuiz } = await import('./features/quiz.js');
+      realQuiz.stats = this.stats;
+      realQuiz.session = this.session;
+      window.App.quiz = realQuiz;
+      this._loaded = true;
+      return realQuiz;
+    } catch (err) {
+      console.error('[NoteKash] Failed to dynamically load Quiz module:', err);
+      this._loaded = false;
+      throw err;
+    }
   },
   loadStats() {
     return this._loadReal().then(real => real.loadStats());

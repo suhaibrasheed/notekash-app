@@ -1,4 +1,4 @@
-const APP_VERSION = 'plain-modular-2026-06-21-10';
+const APP_VERSION = 'plain-modular-2026-06-21-11';
 
 export function registerPWA() {
   if (!('serviceWorker' in navigator)) return;
@@ -7,27 +7,35 @@ export function registerPWA() {
     try {
       const registration = await navigator.serviceWorker.register('./service-worker.js');
 
-      registration.addEventListener('updatefound', () => {
-        const worker = registration.installing;
-        if (!worker) return;
+      // Check for updates periodically
+      if (registration) {
+        registration.addEventListener('updatefound', () => {
+          const worker = registration.installing;
+          if (!worker) return;
 
-        worker.addEventListener('statechange', () => {
-          if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-            window.dispatchEvent(new CustomEvent('notekash:update-available', {
-              detail: {
-                version: APP_VERSION,
-                apply: () => worker.postMessage({ type: 'SKIP_WAITING' })
-              }
-            }));
-          }
+          worker.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+              window.dispatchEvent(new CustomEvent('notekash:update-available', {
+                detail: {
+                  version: APP_VERSION,
+                  apply: () => {
+                    window.__NOTEKASH_UPDATE_ACCEPTED__ = true;
+                    worker.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                }
+              }));
+            }
+          });
         });
-      });
+      }
 
       let reloading = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (reloading) return;
-        reloading = true;
-        window.location.reload();
+        if (window.__NOTEKASH_UPDATE_ACCEPTED__) {
+          reloading = true;
+          window.location.reload();
+        }
       });
     } catch (error) {
       console.warn('[NoteKash] Service worker registration failed:', error);
@@ -41,18 +49,24 @@ export function installUpdatePromptBridge() {
     const app = window.App;
 
     if (app?.ui?.showToast) {
-      app.ui.showToast('A new NoteKash version is available.', {
+      app.ui.showToast('🚀 A new NoteKash version is ready!', {
         type: 'info',
-        duration: 15000,
+        duration: 20000,
         action: {
-          label: 'Update',
-          callback: () => apply?.()
+          label: 'Update Now',
+          callback: () => {
+            if (typeof apply === 'function') {
+              apply();
+            } else {
+              window.location.reload();
+            }
+          }
         }
       });
       return;
     }
 
-    if (window.confirm('A new NoteKash version is available. Reload now?')) {
+    if (window.confirm('A new NoteKash version is available. Reload now to update?')) {
       apply?.();
     }
   });

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'notekash-v2.2.0';
+const CACHE_VERSION = 'notekash-v2.3.0';
 
 const CORE_APP_SHELL = [
   './',
@@ -55,19 +55,27 @@ const CORE_APP_SHELL = [
   './icons/favicon-16x16.png'
 ];
 
-// Install: Cache essential core shell atomically
+// Install: Cache essential core shell with individual item fault-tolerance
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => {
-      return cache.addAll(CORE_APP_SHELL);
-    }).catch((err) => {
-      console.warn('[SW Install] Pre-cache warning:', err);
+    caches.open(CACHE_VERSION).then(async (cache) => {
+      // Robust pre-caching: never let a single missing asset reject the whole install
+      const cachePromises = CORE_APP_SHELL.map(async (url) => {
+        try {
+          const res = await fetch(url, { cache: 'no-cache' });
+          if (res && res.ok) {
+            await cache.put(url, res);
+          }
+        } catch (err) {
+          console.warn('[SW Install] Pre-cache item failed:', url, err);
+        }
+      });
+      await Promise.all(cachePromises);
     })
   );
 });
 
-// Activate: Eradicate all obsolete/legacy caches and claim clients immediately
+// Activate: Eradicate all obsolete/legacy caches and claim clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
@@ -89,7 +97,10 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Stale-While-Revalidate strategy for instantaneous 0ms asset serving + background fresh sync
+// Resilient Fetch Strategy:
+// 1. Navigation requests (HTML): Network-First (with 1.5s timeout) -> Fallback to Cache.
+//    Ensures online users immediately get the newest version without cache lag, while offline users load instantly.
+// 2. Static Assets: Stale-While-Revalidate with background cache refresh.
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
@@ -99,6 +110,44 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   const isSameOrigin = url.origin === self.location.origin;
+
+  if (request.mode === 'navigate') {
+    // Navigation: Network first with fast 1.5s timeout fallback to cached shell
+    event.respondWith(
+      new Promise((resolve) => {
+        let hasResolved = false;
+        const timer = setTimeout(async () => {
+          if (!hasResolved) {
+            hasResolved = true;
+            const cached = (await caches.match('./index.html')) || (await caches.match('./'));
+            if (cached) resolve(cached);
+          }
+        }, 1500);
+
+        fetch(request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.ok) {
+              const copy = networkResponse.clone();
+              caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+            }
+            if (!hasResolved) {
+              hasResolved = true;
+              clearTimeout(timer);
+              resolve(networkResponse);
+            }
+          })
+          .catch(async () => {
+            if (!hasResolved) {
+              hasResolved = true;
+              clearTimeout(timer);
+              const cached = (await caches.match('./index.html')) || (await caches.match('./'));
+              resolve(cached || new Response('Offline', { status: 503 }));
+            }
+          });
+      })
+    );
+    return;
+  }
 
   if (isSameOrigin) {
     event.respondWith(
@@ -113,9 +162,6 @@ self.addEventListener('fetch', (event) => {
             return networkResponse;
           })
           .catch(() => {
-            if (request.mode === 'navigate') {
-              return caches.match('./index.html') || caches.match('./');
-            }
             return cachedResponse || new Response('Offline', { status: 503 });
           });
 

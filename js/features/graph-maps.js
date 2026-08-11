@@ -579,7 +579,8 @@ export const mindMap = {
                         App.ui.showToast(`Loading map... ${Math.min(100, progressPercent)}%`, { type: 'info', duration: 2000 });
                     }
                     if (this._renderState.renderIndex < allRootNodes.length) {
-                        this._renderState.renderHandle = requestIdleCallback(() => this._renderNextMindMapBatch());
+                        const schedule = typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback : (cb) => setTimeout(cb, 16);
+                        this._renderState.renderHandle = schedule(() => this._renderNextMindMapBatch());
                     } else {
                         this._renderState.isRendering = false;
                         if (this.isInitialLoad) App.ui.showToast('Map ready!', { type: 'success' });
@@ -591,7 +592,11 @@ export const mindMap = {
                     const { shouldZoomToFit = true, isInteraction = false } = typeof options === 'boolean' ? { shouldZoomToFit: options } : options;
 
                     if (this._renderState.isRendering && this._renderState.renderHandle) {
-                        cancelIdleCallback(this._renderState.renderHandle);
+                        if (typeof window.cancelIdleCallback === 'function') {
+                            window.cancelIdleCallback(this._renderState.renderHandle);
+                        } else {
+                            clearTimeout(this._renderState.renderHandle);
+                        }
                     }
 
                     const oldNodePositions = new Map();
@@ -1597,7 +1602,8 @@ export const visualMap = {
                     App.ui.showToast(`Loading graph... ${Math.min(100, progressPercent)}%`, { type: 'info', duration: 2000 });
 
                     if (this._renderState.renderIndex < fullNodes.length) {
-                        this._renderState.renderHandle = requestIdleCallback(() => this._renderNextBatch());
+                        const schedule = typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback : (cb) => setTimeout(cb, 16);
+                        this._renderState.renderHandle = schedule(() => this._renderNextBatch());
                     } else {
                         this._renderState.isRendering = false;
                         App.ui.showToast('Graph loaded!', { type: 'success' });
@@ -1607,7 +1613,11 @@ export const visualMap = {
 
                 updateGraph() {
                     if (this._renderState.isRendering && this._renderState.renderHandle) {
-                        cancelIdleCallback(this._renderState.renderHandle);
+                        if (typeof window.cancelIdleCallback === 'function') {
+                            window.cancelIdleCallback(this._renderState.renderHandle);
+                        } else {
+                            clearTimeout(this._renderState.renderHandle);
+                        }
                     }
 
                     const { nodes, links } = this.prepareGraphData(this.currentFilter);

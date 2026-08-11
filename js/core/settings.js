@@ -107,15 +107,22 @@ export const settings = {
         }
 
         // 3. User categories initialization/migration
-        if (!App.state.settings.userCategories || (Array.isArray(App.state.settings.userCategories) && typeof App.state.settings.userCategories[0] === 'string')) {
-            console.warn("Settings: Migrating userCategories format to objects (one-time).");
-            const categoryNames = App.state.settings.userCategories || App.config.categories; // Use saved names or default
-            const migratedCategories = categoryNames.map((name, index) => ({
-                name: name,
-                displayName: name,
-                colorIndex: index % App.util.getCategoryColorCount(),
-                isDefault: name === 'General' // <-- This is the surgical addition
-            }));
+        if (!App.state.settings.userCategories || !Array.isArray(App.state.settings.userCategories) || App.state.settings.userCategories.length === 0 || typeof App.state.settings.userCategories[0] === 'string' || !App.state.settings.userCategories[0].name) {
+            const defaultCount = (App.util && typeof App.util.getCategoryColorCount === 'function') ? App.util.getCategoryColorCount() : 12;
+            const rawCategories = App.state.settings.userCategories;
+            const categoryList = (Array.isArray(rawCategories) && rawCategories.length > 0)
+                ? rawCategories
+                : (App.config?.categories || ['General', 'Inbox', 'Study', 'Personal', 'Work']);
+            const migratedCategories = categoryList.map((item, index) => {
+                const catName = typeof item === 'string' ? item : (item?.name || `Category ${index + 1}`);
+                const colorIdx = typeof item === 'object' && typeof item?.colorIndex === 'number' ? item.colorIndex : index % defaultCount;
+                return {
+                    name: catName,
+                    displayName: item?.displayName || catName,
+                    colorIndex: colorIdx,
+                    isDefault: catName === 'General'
+                };
+            });
 
             await this.set('userCategories', migratedCategories);
         }

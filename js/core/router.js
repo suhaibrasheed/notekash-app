@@ -92,35 +92,58 @@ export const router = {
         const isMap = viewId === 'visual-map' || viewId === 'mindmap';
         if (isMap) {
             if (typeof d3 === 'undefined') {
-                const toastId = App.ui.showToast('Loading maps visualization engine...', { type: 'info', duration: 0 });
+                const toastId = App.ui?.showToast ? App.ui.showToast('Loading maps visualization engine...', { type: 'info', duration: 0 }) : null;
                 try {
                     await App.loadLibrary('d3');
                 } catch (e) {
                     console.error('Failed to load d3:', e);
-                    App.ui.showToast('Visual Maps failed to load or are not available offline.', { type: 'warning' });
-                    return;
+                    if (App.ui?.showToast) App.ui.showToast('Visual Maps failed to load. Returning to Library.', { type: 'warning' });
+                    if (toastId && App.ui?.hideToast) App.ui.hideToast(toastId);
+                    return this.navigateTo('library');
                 } finally {
-                    App.ui.hideToast(toastId);
+                    if (toastId && App.ui?.hideToast) App.ui.hideToast(toastId);
                 }
             }
             if (typeof d3 === 'undefined') {
-                App.ui.showToast('Visual Maps are not available offline.', { type: 'warning' });
-                return;
+                if (App.ui?.showToast) App.ui.showToast('Visual Maps are not available offline. Returning to Library.', { type: 'warning' });
+                return this.navigateTo('library');
             }
-            mainEl.style.height = '100vh';
-            mainEl.style.overflow = 'hidden';
+            if (mainEl) {
+                mainEl.style.height = '100vh';
+                mainEl.style.overflow = 'hidden';
+            }
             root.style.overflow = 'hidden';
             body.style.overflow = 'hidden';
         } else {
-            mainEl.style.height = '';
-            mainEl.style.overflow = '';
+            if (mainEl) {
+                mainEl.style.height = '';
+                mainEl.style.overflow = '';
+            }
             root.style.overflow = '';
             body.style.overflow = '';
         }
 
-        if (view) {
-            await App.ui.renderView(viewId, data, view);
-            view.classList.add('active');
+        try {
+            if (view) {
+                await App.ui.renderView(viewId, data, view);
+                view.classList.add('active');
+            } else {
+                console.warn(`View #${viewId}-view not found. Falling back to library.`);
+                const libView = document.getElementById('library-view');
+                if (libView) {
+                    await App.ui.renderView('library', null, libView);
+                    libView.classList.add('active');
+                }
+            }
+        } catch (renderError) {
+            console.error(`[NoteKash] Failed to render view '${viewId}':`, renderError);
+            const fallbackView = document.getElementById('library-view') || document.getElementById('welcome-view');
+            if (fallbackView) {
+                fallbackView.classList.add('active');
+            }
+            if (App.ui?.showToast) {
+                App.ui.showToast('Could not load view. Displaying library.', { type: 'warning' });
+            }
         }
 
         const articleControls = document.getElementById('article-controls');
@@ -128,12 +151,12 @@ export const router = {
             articleControls.style.display = viewId === 'article' ? 'flex' : 'none';
         }
 
-        if (viewId !== 'article') {
+        if (viewId !== 'article' && App.ui?.updateTheLine) {
             App.ui.updateTheLine(1);
         }
 
-        App.ui.updateHeaderState();
-        App.events.mountViewListeners(viewId);
+        if (App.ui?.updateHeaderState) App.ui.updateHeaderState();
+        if (App.events?.mountViewListeners) App.events.mountViewListeners(viewId);
 
         // Smoothly dismiss the transition overlay and progress bar on the next animation frame
         if (window.App && App.ui) {

@@ -271,6 +271,68 @@
         }
     </style>
 
+    <!-- Critical Polyfills & Early Error Trapping (Ensures Safari/iPad & Older Device Compatibility) -->
+    <script>
+        (function() {
+            // Polyfill requestIdleCallback / cancelIdleCallback for Safari < 16.4
+            if (typeof window.requestIdleCallback !== 'function') {
+                window.requestIdleCallback = function(cb, options) {
+                    var start = Date.now();
+                    var timeout = (options && options.timeout) || 1000;
+                    return setTimeout(function() {
+                        cb({
+                            didTimeout: false,
+                            timeRemaining: function() {
+                                return Math.max(0, 50 - (Date.now() - start));
+                            }
+                        });
+                    }, 1);
+                };
+            }
+            if (typeof window.cancelIdleCallback !== 'function') {
+                window.cancelIdleCallback = function(id) {
+                    clearTimeout(id);
+                };
+            }
+
+            // Polyfill crypto.randomUUID for Safari < 15.4 & non-secure contexts
+            if (typeof window.crypto === 'undefined') {
+                window.crypto = {};
+            }
+            if (typeof window.crypto.randomUUID !== 'function') {
+                window.crypto.randomUUID = function() {
+                    if (typeof window.crypto.getRandomValues === 'function') {
+                        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, function(c) {
+                            return (c ^ window.crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+                        });
+                    }
+                    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                        var r = Math.random() * 16 | 0;
+                        var v = c === 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                };
+            }
+
+            // Global early error tracker for self-healing splash screen
+            window.__NK_BOOT_ERRORS__ = [];
+            window.addEventListener('error', function(e) {
+                var errInfo = (e && e.message) ? e.message : String(e);
+                window.__NK_BOOT_ERRORS__.push({ type: 'error', message: errInfo, time: Date.now() });
+                if (typeof window.__nkShowBootRecovery === 'function') {
+                    window.__nkShowBootRecovery(errInfo);
+                }
+            });
+            window.addEventListener('unhandledrejection', function(e) {
+                var reason = (e && e.reason) ? (e.reason.message || String(e.reason)) : 'Unhandled rejection';
+                window.__NK_BOOT_ERRORS__.push({ type: 'rejection', message: reason, time: Date.now() });
+                if (typeof window.__nkShowBootRecovery === 'function') {
+                    window.__nkShowBootRecovery(reason);
+                }
+            });
+        })();
+    </script>
+
     <!-- Decorative secondary fonts loaded non-blockingly -->
     <link crossorigin="anonymous"
         href="https://fonts.googleapis.com/css2?family=Satisfy&family=Pacifico&family=Lobster&family=Patrick+Hand&family=Shadows+Into+Light&family=Great+Vibes&family=Dancing+Script&family=Caveat:wght@400;700&display=swap"
@@ -285,8 +347,6 @@
     <script src="vendor/fuse.min.js" defer></script>
     <script src="vendor/katex.min.js" defer></script>
     <script src="vendor/auto-render.min.js" defer></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"
-        onerror="console.warn('Offline: Transformers disabled');"></script>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-KGXNNGWKEX"></script>
     <script>
@@ -320,17 +380,35 @@
         style="position:fixed;inset:0;z-index:9999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;transition:opacity 0.8s cubic-bezier(0.4,0,0.2,1);will-change:opacity;overflow:hidden;background:#181411;">
         
 
-        <div class="nk-loader-card">
+        <div class="nk-loader-card" id="nk-loader-main-card">
             <div class="nk-loader-book">
                 <div class="nk-loader-pages"></div>
             </div>
             <h1>NoteKash</h1>
             <div class="nk-loader-sub">Turn Notes into Knowledge</div>
             <div class="nk-loader-divider"></div>
-            <div class="nk-loader-status">
+            <div class="nk-loader-status" id="nk-loader-normal-status">
                 <span class="nk-loader-status-label">Loading your Second Brain</span>
                 <div class="nk-travel-dots">
                     <span></span><span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+
+            <!-- Self-Healing Recovery Options (Shown if boot stalls or encounters cache/error issues) -->
+            <div id="nk-loader-recovery" style="display: none; flex-direction: column; align-items: center; gap: 12px; margin-top: 8px; width: 100%; animation: nk-sub-reveal 0.4s ease forwards;">
+                <p id="nk-recovery-msg" style="font-size: 0.84rem; color: #fefae0; margin: 0; line-height: 1.4; opacity: 0.9;">
+                    Taking a moment to load your cached session...
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 280px; margin-top: 4px;">
+                    <button type="button" onclick="window.nukeAndReloadNoteKash()" style="background: linear-gradient(135deg, #d4a373, #b07d62); color: #181411; border: none; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(212, 163, 115, 0.25); transition: transform 0.2s;">
+                        <span>⚡</span> Reset Cache & Reload
+                    </button>
+                    <button type="button" onclick="window.launchInBrowserMode()" style="background: rgba(255, 255, 255, 0.08); color: #faedcd; border: 1px solid rgba(212, 163, 115, 0.3); padding: 8px 14px; border-radius: 12px; font-weight: 600; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; backdrop-filter: blur(10px);">
+                        <span>📂</span> Open in Browser Storage
+                    </button>
+                </div>
+                <div id="nk-diag-wrapper" style="display: none; margin-top: 6px; width: 100%; text-align: left;">
+                    <pre id="nk-diag-text" style="font-size: 0.7rem; color: #ff8c8c; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 8px; overflow-x: auto; max-height: 80px; white-space: pre-wrap; margin: 0;"></pre>
                 </div>
             </div>
         </div>
@@ -339,6 +417,9 @@
         (function () {
             window.nukeAndReloadNoteKash = function () {
                 var p = [];
+                try {
+                    sessionStorage.clear();
+                } catch(e) {}
                 if ('serviceWorker' in navigator) {
                     p.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
                         return Promise.all(regs.map(function (r) { return r.unregister(); }));
@@ -351,9 +432,35 @@
                 }
                 Promise.all(p).finally(function () {
                     setTimeout(function () {
-                        window.location.href = window.location.origin + window.location.pathname;
+                        window.location.href = window.location.origin + window.location.pathname + '?_fresh=' + Date.now();
                     }, 200);
                 });
+            };
+
+            window.launchInBrowserMode = function () {
+                try {
+                    var s = JSON.parse(localStorage.getItem('notekash_settings') || '{}');
+                    s.lastStorageMode = 'browser';
+                    localStorage.setItem('notekash_settings', JSON.stringify(s));
+                } catch (e) {}
+                window.location.reload();
+            };
+
+            window.__nkShowBootRecovery = function (errMsg) {
+                var rec = document.getElementById('nk-loader-recovery');
+                var norm = document.getElementById('nk-loader-normal-status');
+                var msg = document.getElementById('nk-recovery-msg');
+                var diag = document.getElementById('nk-diag-wrapper');
+                var diagText = document.getElementById('nk-diag-text');
+                if (rec) rec.style.display = 'flex';
+                if (norm) norm.style.display = 'none';
+                if (errMsg && msg) {
+                    msg.textContent = 'NoteKash encountered an issue initializing on this device.';
+                    if (diag && diagText) {
+                        diag.style.display = 'block';
+                        diagText.textContent = String(errMsg);
+                    }
+                }
             };
 
             try {
@@ -364,12 +471,29 @@
                 var dismissed = false;
                 var TARGET_SPLASH_TIME = 1650; // Smooth 1.65s ambient display
 
+                // Helper to ensure screen is NEVER left blank
+                var ensureActiveViewFallback = function () {
+                    var active = document.querySelector('.view.active');
+                    if (!active) {
+                        var welcome = document.getElementById('welcome-view');
+                        var library = document.getElementById('library-view');
+                        if (welcome && typeof App !== 'undefined' && App.state && App.state.storageMode !== 'fileSystem' && App.state.storageMode !== 'browser') {
+                            welcome.classList.add('active');
+                            document.body.classList.add('view-welcome');
+                        } else if (library) {
+                            library.classList.add('active');
+                            document.body.classList.add('view-library');
+                        }
+                    }
+                };
+
                 // Dismiss helper - silky GPU fade-out
                 var dismiss = function (waitMs) {
                     if (dismissed) return;
                     dismissed = true;
                     setTimeout(function () {
                         requestAnimationFrame(function () {
+                            ensureActiveViewFallback();
                             o.style.opacity = '0';
                             o.style.pointerEvents = 'none';
                             setTimeout(function () {
@@ -386,12 +510,19 @@
                     dismiss(remaining);
                 }, { once: true });
 
-                // Failsafe safety fallback (6.5s cap)
+                // Proactive recovery trigger at 3.5s if not yet ready
+                setTimeout(function () {
+                    if (!dismissed) {
+                        window.__nkShowBootRecovery();
+                    }
+                }, 3500);
+
+                // Extended failsafe safety fallback (8s cap)
                 setTimeout(function () {
                     if (!dismissed) {
                         dismiss(0);
                     }
-                }, 6500);
+                }, 8000);
 
             } catch (e) {
                 console.error('Loader error', e);

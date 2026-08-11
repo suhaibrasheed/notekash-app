@@ -6340,66 +6340,28 @@ export const ui = {
                 },
 
                 showUpdateConfirmationModal() {
-                    this.showConfirmationModal({
-                        title: '⚠️ Force Update NoteKash',
-                        message: `
-                            <div style="text-align: center;">
-                                <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
-                                <p style="margin-bottom: 1rem;"><b>This will fetch the latest version from the server.</b></p>
-                                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
-                                    This action clears your app cache to ensure you get the newest features. 
-                                    Your notes (stored in the database) are safe, but it is always good practice to backup first as certain Updates might clear Data.
-                                </p>
-                                <div style="background: color-mix(in srgb, var(--danger-color) 10%, transparent); padding: 1rem; border-radius: var(--border-radius); border: 1px solid var(--danger-color); margin-bottom: 1rem;">
-                                    <strong style="color: var(--danger-color);">Are you sure you want to proceed?</strong>
-                                </div>
-                            </div>
-                        `,
-                        confirmText: 'Yes, I am sure',
-                        confirmClass: 'btn-danger',
-                        onConfirm: async () => {
-                            App.ui.closeModal();
-                            // Trigger backup download for safety before nuking
-                            // We don't force it, but we trigger it as a "courtesy" download if possible
-                            // Actually, let's just stick to the plan: buttons in the modal itself?
-                            // showConfirmationModal usually only has one confirm button.
-                            // Let's rely on the user having done backup via the Storage modal just before this.
-                            // BUT, the plan said: Buttons: "Download Backup", "Yes", "Cancel".
-                            // showConfirmationModal is likely limited.
-                            // I should probably create a custom modal HTML here instead of using showConfirmationModal 
-                            // if I want multiple action buttons (Backup AND Update).
-                            // OR, I can just chain them: "Download Backup" button in the message body?
-
-                            // Let's try inserting a button in the message body for backup.
-                            App.Updater.nukeCacheAndReload();
-                        }
-                    });
-                    // Let's overwrite the message to include a backup button if I can't customize buttons easily.
-                    // Actually, I'll write a full custom modal for this since "Danger Zone" deserves it.
                     const modalHTML = `
                     <div class="modal-backdrop" onclick="if(event.target === this) App.ui.closeModal()">
-                        <div class="modal-content ui-card" style="max-width: 450px; text-align: center;" onclick="event.stopPropagation()">
-                            <h3 style="color: var(--danger-color); margin-bottom: 0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> Force Update</h3>
+                        <div class="modal-content ui-card" style="max-width: 450px; text-align: center; border-radius: 20px; padding: 2rem;" onclick="event.stopPropagation()">
+                            <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">🚀</div>
+                            <h3 style="margin-bottom: 0.5rem; font-family: var(--font-display); font-weight: 700;">Check for Updates</h3>
                             
-                            <p style="margin-bottom: 1rem;"><b>Get the latest version of NoteKash.</b></p>
+                            <p style="margin-bottom: 1rem; color: var(--text-primary);"><b>Get the latest version of NoteKash.</b></p>
                             
-                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
-                                This will clear your browser cache and reload the app from the server.
+                            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
+                                This clears your browser's static cache and reloads the latest app build.
                                 <br><br>
-                                <b>Your notes are stored in the database and should be safe.</b><br>
-                                However, we highly recommend downloading a backup first.
+                                <b>Your notes in the database are preserved.</b> If you'd like an extra copy, you can download a backup below.
                             </p>
 
                             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="App.services.backup.exportToZip()">
-                                    <i class="fa-solid fa-file-zipper"></i> Download Full Backup
+                                <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-weight: 700; border-radius: 12px;" onclick="App.Updater.nukeCacheAndReload()">
+                                    ⚡ Clear Cache & Reload Latest Build
                                 </button>
-                                
-                                <button class="btn btn-danger" style="width: 100%; justify-content: center;" onclick="App.Updater.nukeCacheAndReload()">
-                                    Yes, I am sure - Update Now
+                                <button class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 10px; border-radius: 12px;" onclick="App.services.backup.exportToZip()">
+                                    <i class="fa-solid fa-file-zipper" style="margin-right: 6px;"></i> Download Full Backup
                                 </button>
-                                
-                                <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="App.ui.closeModal()">
+                                <button class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 10px; border-radius: 12px;" onclick="App.ui.closeModal()">
                                     Cancel
                                 </button>
                             </div>

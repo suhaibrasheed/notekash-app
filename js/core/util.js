@@ -170,7 +170,11 @@ export const util = {
                 escapeRegex(string) {
                     return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
                 },
-                escapeHtml: (u) => u ? u.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") : '',
+                escapeHtml: (u) => {
+                    if (u === null || u === undefined) return '';
+                    const str = typeof u === 'string' ? u : String(u);
+                    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+                },
 
                 // Enhanced MCQ Parser
 
@@ -1540,7 +1544,11 @@ export const util = {
                 restoreSelection() {
                     if (App.state.savedRange) { const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(App.state.savedRange); }
                 },
-                escapeHtml: (u) => u ? u.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") : '',
+                escapeHtml: (u) => {
+                    if (u === null || u === undefined) return '';
+                    const str = typeof u === 'string' ? u : String(u);
+                    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+                },
                 sm2: {
                     rateCard(card, rating) {
                         const now = new Date();
@@ -1915,7 +1923,7 @@ export const util = {
                 },
 
                 async reconcileCategories(showToast = false) {
-                    console.warn("Util: Reconciling categories — checking for new categories in articles.");
+                    console.log("[NoteKash] Checking and reconciling article categories...");
                     const allArticles = App.state.articles;
                     let userCategories = App.settings.get('userCategories') || [];
                     const existingCategoryNames = new Set(userCategories.map(c => (c.name || '').toLowerCase()));
@@ -1924,7 +1932,7 @@ export const util = {
                     allArticles.forEach(article => {
                         const articleCategory = article.category;
                         if (articleCategory && !existingCategoryNames.has(articleCategory.toLowerCase())) {
-                            console.warn(`Util: Found undeclared category '${articleCategory}' in articles — adding to settings.`);
+                            console.log(`[NoteKash] Found new category '${articleCategory}' in articles — adding to settings.`);
                             const newCategory = {
                                 name: articleCategory,
                                 displayName: articleCategory,
