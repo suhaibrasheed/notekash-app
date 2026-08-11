@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'notekash-modular-v2.0.1';
+const CACHE_VERSION = 'notekash-modular-v2.1.0';
 const APP_SHELL = [
   './',
   './index.html',
@@ -103,7 +103,7 @@ self.addEventListener('install', (event) => {
       await Promise.allSettled(
         APP_SHELL.map(async (url) => {
           try {
-            const response = await fetch(url);
+            const response = await fetch(url, { cache: 'no-cache' });
             if (response.ok) {
               await cache.put(url, response);
             } else {
@@ -124,7 +124,10 @@ self.addEventListener('activate', (event) => {
       .then((names) => Promise.all(
         names
           .filter((name) => name !== CACHE_VERSION)
-          .map((name) => caches.delete(name))
+          .map((name) => {
+            console.log(`[SW] Deleting legacy cache: ${name}`);
+            return caches.delete(name);
+          })
       ))
       .then(() => self.clients.claim())
   );
@@ -134,33 +137,69 @@ self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+  if (event.data?.type === 'NUKE_CACHE') {
+    caches.keys().then((names) => Promise.all(names.map((n) => caches.delete(n))));
+  }
 });
 
-// Network First strategy with Cache Fallback for dynamic updates
+// Resilient Network-First strategy with automatic cache fallback on failure/5xx
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
 
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        const url = new URL(request.url);
-        const requestPath = url.pathname + url.search;
-        const isAppShellAsset = APP_SHELL.some(path => requestPath.endsWith(path.replace('./', '')));
-        if (response.ok && url.origin === self.location.origin && isAppShellAsset) {
-          const copy = response.clone();
-          caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(request).then((cached) => {
-          if (cached) return cached;
-          if (request.mode === 'navigate') {
-            return caches.match('./index.html');
+  // Ignore non-http schemes (e.g. chrome-extension://, data:)
+  if (!request.url.startsWith('http://') && !request.url.startsWith('https://')) return;
+
+  const url = new URL(request.url);
+  const isSameOrigin = url.origin === self.location.origin;
+
+  if (isSameOrigin) {
+    event.respondWith(
+      fetch(request)
+        .then(async (networkResponse) => {
+          // If server returned 5xx Bad Gateway/Server Error, attempt to serve cached copy
+          if (!networkResponse.ok && networkResponse.status >= 500) {
+            const cached = await caches.match(request, { ignoreSearch: true });
+            if (cached) return cached;
+            if (request.mode === 'navigate') {
+              const navCached = await caches.match('./index.html');
+              if (navCached) return navCached;
+            }
           }
-          throw new Error('Offline and asset unavailable.');
-        });
+
+          // Cache fresh static assets
+          if (networkResponse.ok) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+          }
+
+          return networkResponse;
+        })
+        .catch(async () => {
+          // Network failure / Offline fallback
+          const cached = await caches.match(request, { ignoreSearch: true });
+          if (cached) return cached;
+
+          if (request.mode === 'navigate') {
+            const navFallback = await caches.match('./index.html') || await caches.match('./');
+            if (navFallback) return navFallback;
+          }
+
+          return new Response('Asset unavailable offline', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'text/plain' }
+          });
+        })
+    );
+  } else {
+    // Cross-origin request (CDNs, analytics, external fonts)
+    event.respondWith(
+      fetch(request).catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        return new Response('', { status: 408, statusText: 'Request Timeout / Offline' });
       })
-  );
+    );
+  }
 });

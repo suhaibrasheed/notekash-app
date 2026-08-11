@@ -151,6 +151,27 @@
     </div>
     <script>
         (function () {
+            window.nukeAndReloadNoteKash = function () {
+                var btn = document.getElementById('nk-reload-btn');
+                if (btn) btn.textContent = 'Clearing & Reloading...';
+                var p = [];
+                if ('serviceWorker' in navigator) {
+                    p.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
+                        return Promise.all(regs.map(function (r) { return r.unregister(); }));
+                    }));
+                }
+                if ('caches' in window) {
+                    p.push(caches.keys().then(function (names) {
+                        return Promise.all(names.map(function (n) { return caches.delete(n); }));
+                    }));
+                }
+                Promise.all(p).finally(function () {
+                    setTimeout(function () {
+                        window.location.href = window.location.origin + window.location.pathname + '?v=' + Date.now();
+                    }, 350);
+                });
+            };
+
             try {
                 var o = document.getElementById('nk-shell-loader');
                 if (!o) return;
@@ -173,11 +194,27 @@
                     }, waitMs || 0);
                 };
 
-                // Safety cap: never stay longer than 5.5s
-                var safetyTimer = setTimeout(function () { dismiss(0); }, 5500);
+                // Error boundary listener before App is ready
+                var bootErrorHandler = function (e) {
+                    if (dismissed) return;
+                    console.warn('[NoteKash Boot Watcher] Detected error before App ready:', e);
+                    var statusEl = document.querySelector('.nk-loader-status');
+                    if (statusEl) {
+                        statusEl.innerHTML = '<div style="margin-top:10px;text-align:center;"><div style="color:#ff9e7a;font-size:13px;margin-bottom:10px;">New version detected or cache conflict.</div><button id="nk-reload-btn" onclick="window.nukeAndReloadNoteKash()" style="padding:8px 20px;background:#ff6b35;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;font-family:inherit;box-shadow:0 4px 14px rgba(255,107,53,0.4);">Clean Update & Reload</button></div>';
+                    }
+                };
+                window.addEventListener('error', bootErrorHandler, { once: false });
+
+                // Failsafe recovery timer: if not ready in 6.5s, offer manual clean reload
+                var safetyTimer = setTimeout(function () {
+                    if (!dismissed) {
+                        bootErrorHandler('Boot timeout');
+                    }
+                }, 6500);
 
                 document.addEventListener('nk:ready', function (e) {
                     clearTimeout(safetyTimer);
+                    window.removeEventListener('error', bootErrorHandler);
                     var isSkip = e.detail && e.detail.skip;
                     var elapsed = Date.now() - showTime;
                     var targetWait = isSkip ? 2200 : 2600;
