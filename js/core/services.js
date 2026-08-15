@@ -1123,6 +1123,7 @@ export const services = {
                                 return new Promise((resolve) => {
                                     if (!src) return resolve(null);
                                     const img = new Image();
+                                    img.crossOrigin = 'anonymous';
                                     img.onload = () => {
                                         const naturalW = img.naturalWidth || img.width || 0;
                                         const naturalH = img.naturalHeight || img.height || 0;
@@ -1133,28 +1134,34 @@ export const services = {
                                             return resolve({ dataUrl: src, width: naturalW, height: naturalH });
                                         }
 
-                                        const canvas = document.createElement('canvas');
-                                        canvas.width = naturalW;
-                                        canvas.height = naturalH;
-                                        const ctx = canvas.getContext('2d');
-                                        ctx.fillStyle = '#FFFFFF';
-                                        ctx.fillRect(0, 0, canvas.width, canvas.height); // white bg for transparent SVG/WebP
-                                        ctx.drawImage(img, 0, 0);
-                                        resolve({ dataUrl: canvas.toDataURL('image/jpeg', 0.9), width: naturalW, height: naturalH });
+                                        try {
+                                            const canvas = document.createElement('canvas');
+                                            canvas.width = Math.max(1, naturalW);
+                                            canvas.height = Math.max(1, naturalH);
+                                            const ctx = canvas.getContext('2d');
+                                            ctx.fillStyle = '#FFFFFF';
+                                            ctx.fillRect(0, 0, canvas.width, canvas.height); // white bg for transparent SVG/WebP
+                                            ctx.drawImage(img, 0, 0);
+                                            resolve({ dataUrl: canvas.toDataURL('image/jpeg', 0.9), width: naturalW, height: naturalH });
+                                        } catch (e) {
+                                            resolve({ dataUrl: src.startsWith('data:') ? src : null, width: naturalW, height: naturalH });
+                                        }
                                     };
-                                    img.onerror = () => resolve({ dataUrl: src, width: 0, height: 0 }); // fallback
+                                    img.onerror = () => resolve({ dataUrl: src.startsWith('data:') ? src : null, width: 0, height: 0 }); // fallback
                                     img.src = src;
                                 });
                             };
 
                             for (const img of Array.from(allImages)) {
                                 const src = img.getAttribute('src');
-                                if (src && src.startsWith('data:')) {
+                                if (src) {
                                     const safe = await standardizeImage(src);
-                                    if (safe?.dataUrl) imageCache.set(src, safe);
-                                    embeddedCount++;
-                                } else if (src) {
-                                    skippedCount++;
+                                    if (safe?.dataUrl && safe.dataUrl.startsWith('data:image/')) {
+                                        imageCache.set(src, safe);
+                                        embeddedCount++;
+                                    } else {
+                                        skippedCount++;
+                                    }
                                 }
                             }
 
@@ -1474,7 +1481,7 @@ export const services = {
                                     6: { fontSize: 10, margin: [0, 6, 0, 4], color: '#6B7280' }
                                 };
                                 // Returns ONE pdfmake block object for a single DOM block element.
-                                const processBlock = (node) => {
+                                const processBlock = (node, context = {}) => {
                                     if (node.nodeType === Node.TEXT_NODE) {
                                         const t = node.textContent.replace(/[\n\r]+/g, '').trim();
                                         return t ? makePara([{ text: t }]) : null;
@@ -1579,29 +1586,39 @@ export const services = {
                                         if (!img) return null;
 
                                         const src = img.getAttribute('src');
-                                        if (src?.startsWith('data:') && imageCache.has(src)) {
+                                        if (src && imageCache.has(src)) {
                                             const cached = imageCache.get(src);
                                             const dataUrl = cached?.dataUrl || cached;
                                             const iw = cached?.width || 0;
                                             const ih = cached?.height || 0;
 
-                                            let defaultWidth = cl.contains('whiteboard-block') ? 420 : 350;
-                                            let w = parseInt(img.getAttribute('width') || img.style.width) || defaultWidth;
-                                            if (!w || w <= 0) w = defaultWidth;
-                                            const maxW = Math.min(w * 1.5, 420);
+                                            // If inside table cell, scale down strictly to avoid column blowout
+                                            if (context?.inTableCell) {
+                                                const maxCellW = context.maxCellWidth || 95;
+                                                const maxCellH = 85;
+                                                return {
+                                                    image: dataUrl,
+                                                    fit: [maxCellW, maxCellH],
+                                                    margin: [0, 2, 0, 2],
+                                                    alignment: 'center'
+                                                };
+                                            }
 
-                                            // Portrait/tall images can waste lots of page space if we allow huge maxHeight.
-                                            // Reduce maxHeight for portrait ratios to keep PDFs compact.
+                                            let defaultWidth = cl.contains('whiteboard-block') ? 420 : 350;
+                                            let w = parseInt(img.getAttribute('width') || img.style?.width) || defaultWidth;
+                                            if (!w || w <= 0) w = defaultWidth;
+                                            const maxW = Math.min(w * 1.5, 475);
+
                                             const ratio = (iw > 0 && ih > 0) ? (ih / iw) : 1;
                                             const maxH = cl.contains('whiteboard-block')
                                                 ? 550
                                                 : (ratio >= 1.6 ? 320 : (ratio >= 1.15 ? 360 : 520));
 
-                                            return { image: dataUrl, fit: [maxW, maxH], margin: [0, 0, 0, 6], alignment: 'center' };
+                                            return { image: dataUrl, fit: [maxW, maxH], margin: [0, 2, 0, 6], alignment: 'center' };
                                         }
 
                                         if (src) {
-                                            return { text: '[ External image ]', fontSize: 9, italics: true, color: '#9CA3AF', alignment: 'center', margin: [0, 0, 0, 2] };
+                                            return { text: '[ External image ]', fontSize: 8.5, italics: true, color: '#9CA3AF', alignment: 'center', margin: [0, 0, 0, 2] };
                                         }
                                         return null;
                                     }
@@ -1626,7 +1643,7 @@ export const services = {
                                         const ts = TILE[tck] || TILE['default'];
 
                                         const inner = node.querySelector('.nk-text-tile-content') || node;
-                                        const tileBlocks = processChildren(inner, { color: ts.text });
+                                        const tileBlocks = processChildren(inner, { color: ts.text }, context);
                                         const hasHeavy = tileBlocks.some(b => b.stack || b.table || b.ul || b.ol);
 
                                         return {
@@ -1666,8 +1683,8 @@ export const services = {
                                         if (isMCQ) {
                                             const qEl = node.querySelector('.nk-mcq-question');
                                             const eEl = node.querySelector('.nk-mcq-explanation');
-                                            const qBlocks = qEl ? processChildren(qEl, { bold: true }) : [];
-                                            const eBlocks = eEl && eEl.innerText.trim() ? processChildren(eEl, { color: '#36354b' }) : [];
+                                            const qBlocks = qEl ? processChildren(qEl, { bold: true }, context) : [];
+                                            const eBlocks = eEl && eEl.innerText.trim() ? processChildren(eEl, { color: '#36354b' }, context) : [];
 
                                             pdfStack.push({ text: 'Question:', bold: true, fontSize: 12.6, color: '#6366F1', margin: [0, 0, 0, 2] });
                                             pdfStack.push(wr(qBlocks));
@@ -1678,7 +1695,7 @@ export const services = {
                                                     const textEl = opt.querySelector('.nk-mcq-option-text');
                                                     if (textEl) {
                                                         const optChar = String.fromCharCode(65 + idx) + ')';
-                                                        const tBlocks = processChildren(textEl, {});
+                                                        const tBlocks = processChildren(textEl, {}, context);
                                                         pdfStack.push({
                                                             columns: [
                                                                 { text: optChar, width: 25, bold: true, color: '#4F46E5', alignment: 'right', margin: [0, 0, 8, 0] },
@@ -1691,7 +1708,7 @@ export const services = {
                                             }
 
                                             const correctOpt = node.querySelector('.nk-mcq-option[data-is-correct="true"] .nk-mcq-option-text');
-                                            const aBlocks = correctOpt ? processChildren(correctOpt, { color: '#065F46' }) : [];
+                                            const aBlocks = correctOpt ? processChildren(correctOpt, { color: '#065F46' }, context) : [];
                                             if (aBlocks.length) {
                                                 pdfStack.push({ text: 'Answer:', bold: true, fontSize: 12.6, color: '#16A34A', margin: [0, 6, 0, 2] });
                                                 pdfStack.push(wr(aBlocks));
@@ -1704,8 +1721,8 @@ export const services = {
                                         } else {
                                             const qEl = node.querySelector('.nk-accordion-title');
                                             const aEl = node.querySelector('.nk-accordion-content');
-                                            const qBlocks = qEl ? processChildren(qEl, { bold: true }) : [];
-                                            const aBlocks = aEl ? processChildren(aEl, {}) : [];
+                                            const qBlocks = qEl ? processChildren(qEl, { bold: true }, context) : [];
+                                            const aBlocks = aEl ? processChildren(aEl, {}, context) : [];
 
                                             if (!qBlocks.length && !aBlocks.length) return null;
 
@@ -1740,7 +1757,7 @@ export const services = {
                                     // Paragraphs & generic divs
                                     if (tag === 'p' || tag === 'div') {
                                         if (Array.from(node.childNodes).some(isBlockNode)) {
-                                            return { stack: processChildren(node), margin: [0, 0, 0, 4] };
+                                            return { stack: processChildren(node, {}, context), margin: [0, 0, 0, 4] };
                                         }
                                         return makePara(collectInlineRuns(node));
                                     }
@@ -1766,7 +1783,7 @@ export const services = {
 
                                     // Blockquote
                                     if (tag === 'blockquote') {
-                                        const quoteBlocks = processChildren(node, { italics: true, color: '#4B5563' });
+                                        const quoteBlocks = processChildren(node, { italics: true, color: '#4B5563' }, context);
                                         return {
                                             table: {
                                                 widths: [3, '*'],
@@ -1793,7 +1810,7 @@ export const services = {
                                     if (tag === 'ul' || tag === 'ol') {
                                         const items = [];
                                         node.querySelectorAll(':scope > li').forEach(li => {
-                                            const itemBlocks = processChildren(li, { color: '#374151' });
+                                            const itemBlocks = processChildren(li, { color: '#374151' }, context);
                                             items.push({
                                                 stack: itemBlocks.length ? itemBlocks : [{ text: '' }],
                                                 margin: [0, 2, 0, 2]
@@ -1820,30 +1837,42 @@ export const services = {
                                     // BR at block level
                                     if (tag === 'br') return { text: '\n' };
 
-                                    // Standalone images
+                                    // Standalone images or images in blocks/cells
                                     if (tag === 'img') {
                                         const src = node.getAttribute('src');
-                                        if (src?.startsWith('data:') && imageCache.has(src)) {
+                                        if (src && imageCache.has(src)) {
                                             const cached = imageCache.get(src);
                                             const dataUrl = cached?.dataUrl || cached;
                                             const iw = cached?.width || 0;
                                             const ih = cached?.height || 0;
 
-                                            let w = parseInt(node.getAttribute('width') || node.style.width) || 350;
+                                            // If inside table cell, scale down strictly to avoid column blowout
+                                            if (context?.inTableCell) {
+                                                const maxCellW = context.maxCellWidth || 95;
+                                                const maxCellH = 85;
+                                                return {
+                                                    image: dataUrl,
+                                                    fit: [maxCellW, maxCellH],
+                                                    margin: [0, 2, 0, 2],
+                                                    alignment: 'center'
+                                                };
+                                            }
+
+                                            let w = parseInt(node.getAttribute('width') || node.style?.width) || 350;
                                             if (!w || w <= 0) w = 350;
-                                            const maxW = Math.min(w * 1.5, 420);
+                                            const maxW = Math.min(w * 1.5, 475);
                                             const ratio = (iw > 0 && ih > 0) ? (ih / iw) : 1;
                                             const maxH = (ratio >= 1.6 ? 320 : (ratio >= 1.15 ? 360 : 520));
                                             return {
                                                 image: dataUrl,
                                                 fit: [maxW, maxH],
-                                                margin: [0, 0, 0, 6],
+                                                margin: [0, 2, 0, 6],
                                                 alignment: 'center'
                                             };
                                         }
 
                                         if (src) {
-                                            return { text: '[ External image ]', fontSize: 9, italics: true, color: '#9CA3AF', alignment: 'center', margin: [0, 0, 0, 2] };
+                                            return { text: '[ External image ]', fontSize: 8.5, italics: true, color: '#9CA3AF', alignment: 'center', margin: [0, 0, 0, 2] };
                                         }
                                         return null;
                                     }
@@ -1852,6 +1881,23 @@ export const services = {
                                     if (tag === 'table') {
                                         const grid = [];
                                         const trs = Array.from(node.querySelectorAll('tr'));
+
+                                        // Calculate maximum column count considering colspans
+                                        let maxCols = 0;
+                                        trs.forEach(tr => {
+                                            let colsInRow = 0;
+                                            Array.from(tr.cells).forEach(cell => {
+                                                colsInRow += parseInt(cell.getAttribute('colspan') || '1');
+                                            });
+                                            if (colsInRow > maxCols) maxCols = colsInRow;
+                                        });
+
+                                        if (maxCols === 0) return null;
+
+                                        // Available width on A4 page: 595.28 - (40 * 2) = 515.28 pt
+                                        // Calculate safe column width constraint for cell images
+                                        const approxColWidth = Math.max(45, Math.floor((515 - (maxCols * 12)) / maxCols));
+                                        const cellContext = { inTableCell: true, maxCellWidth: Math.min(approxColWidth - 8, 110) };
 
                                         trs.forEach((tr, rowIndex) => {
                                             if (!grid[rowIndex]) grid[rowIndex] = [];
@@ -1863,22 +1909,21 @@ export const services = {
 
                                                 const rowSpan = parseInt(cell.getAttribute('rowspan') || '1');
                                                 const colSpan = parseInt(cell.getAttribute('colspan') || '1');
-                                                const isTH = cell.tagName === 'TH' || cell.closest('thead');
+                                                const isTH = cell.tagName === 'TH' || cell.closest('thead') !== null;
 
-                                                // Use processChildren to support images and blocks inside table cells
-                                                const cellBlocks = processChildren(cell, isTH ? { bold: true } : {});
+                                                // Use processChildren with cellContext to support images and blocks inside table cells safely
+                                                const cellBlocks = processChildren(cell, isTH ? { bold: true, fontSize: 9, color: '#0F172A' } : { fontSize: 8.5, color: '#1E293B' }, cellContext);
 
                                                 const cellDef = {
                                                     stack: cellBlocks.length ? cellBlocks : [{ text: '' }],
-                                                    fillColor: isTH ? '#F8FAFC' : (rowIndex % 2 === 0 ? '#FFFFFF' : '#FAFBFC'),
-                                                    margin: [8, 6, 8, 6],
+                                                    fillColor: isTH ? '#F1F5F9' : (rowIndex % 2 === 0 ? '#FFFFFF' : '#F8FAFC'),
                                                     rowSpan: rowSpan,
                                                     colSpan: colSpan,
                                                     borderColor: ['#CBD5E1', '#CBD5E1', '#CBD5E1', '#CBD5E1']
                                                 };
 
                                                 if (isTH) {
-                                                    cellDef.color = '#334155';
+                                                    cellDef.color = '#0F172A';
                                                     cellDef.bold = true;
                                                 }
 
@@ -1896,25 +1941,26 @@ export const services = {
                                         if (!grid.length) return null;
 
                                         // Normalize grid (ensure all rows have same number of columns)
-                                        const maxCols = Math.max(...grid.map(r => r.length));
                                         grid.forEach(row => {
                                             while (row.length < maxCols) row.push({});
                                         });
 
-                                        // Calculate widths
+                                        // Determine smart column widths
                                         const widths = Array(maxCols).fill('*');
-                                        // Auto-width for first column if it looks like a label column
-                                        if (maxCols > 1) {
-                                            let firstColChars = 0;
-                                            let rowsWithContent = 0;
-                                            for (let i = 0; i < Math.min(5, grid.length); i++) {
+                                        if (maxCols >= 3) {
+                                            // Check if first column is a short code/index/year column (<= 10 chars across rows)
+                                            let isShortCol0 = true;
+                                            for (let i = 0; i < grid.length; i++) {
                                                 const cell = grid[i]?.[0];
-                                                if (cell && cell.stack) {
-                                                    firstColChars += cell.stack.reduce((sum, b) => sum + (typeof b.text === 'string' ? b.text.length : 15), 0);
-                                                    rowsWithContent++;
+                                                if (cell?.stack) {
+                                                    const textLen = cell.stack.reduce((acc, b) => acc + (typeof b.text === 'string' ? b.text.trim().length : 0), 0);
+                                                    if (textLen > 10) {
+                                                        isShortCol0 = false;
+                                                        break;
+                                                    }
                                                 }
                                             }
-                                            if (rowsWithContent > 0 && (firstColChars / rowsWithContent) < 25) {
+                                            if (isShortCol0 && grid.length > 1) {
                                                 widths[0] = 'auto';
                                             }
                                         }
@@ -1922,20 +1968,22 @@ export const services = {
                                         return {
                                             table: {
                                                 headerRows: node.querySelector('thead') ? 1 : 0,
+                                                keepWithHeaderRows: node.querySelector('thead') ? 1 : 0,
+                                                dontBreakRows: true,
                                                 widths,
                                                 body: grid
                                             },
                                             layout: {
-                                                hLineWidth: (i, node) => (i === 0 || i === node.table.body.length) ? 1.5 : 0.6,
-                                                vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length) ? 1.5 : 0.6,
-                                                hLineColor: (i, node) => (i === 0 || i === node.table.body.length) ? '#4F46E5' : '#E2E8F0',
-                                                vLineColor: (i, node) => (i === 0 || i === node.table.widths.length) ? '#4F46E5' : '#E2E8F0',
-                                                paddingLeft: () => 10,
-                                                paddingRight: () => 10,
-                                                paddingTop: () => 8,
-                                                paddingBottom: () => 8
+                                                hLineWidth: (i, node) => (i === 0 || i === node.table.body.length) ? 1.2 : 0.5,
+                                                vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length) ? 1.2 : 0.5,
+                                                hLineColor: (i, node) => (i === 0 || i === node.table.body.length) ? '#4F46E5' : '#CBD5E1',
+                                                vLineColor: (i, node) => (i === 0 || i === node.table.widths.length) ? '#4F46E5' : '#CBD5E1',
+                                                paddingLeft: () => 6,
+                                                paddingRight: () => 6,
+                                                paddingTop: () => 5,
+                                                paddingBottom: () => 5
                                             },
-                                            margin: [0, 15, 0, 15],
+                                            margin: [0, 10, 0, 12],
                                             _isBlock: true
                                         };
                                     }
@@ -1946,7 +1994,7 @@ export const services = {
                                 };
 
                                 // ─── PROCESS CHILDREN (entry point for any container) ────────────────────
-                                const processChildren = (container, inheritedStyles = {}) => {
+                                const processChildren = (container, inheritedStyles = {}, context = {}) => {
                                     const blocks = [];
                                     let pendingRuns = [];
 
@@ -1972,17 +2020,17 @@ export const services = {
 
                                         if (isBlockNode(child)) {
                                             flushInline();
-                                            const b = processBlock(child);
+                                            const b = processBlock(child, context);
                                             if (b) blocks.push(b);
                                         } else if (tag === 'br') {
                                             flushInline(); // line break terminates inline run
                                         } else if (tag === 'img') {
                                             flushInline();
-                                            const b = processBlock(child);
+                                            const b = processBlock(child, context);
                                             if (b) blocks.push(b);
                                         } else if (tag === 'a' && (child.classList?.contains('nk-web-link') || child.classList?.contains('nk-web-link-card'))) {
                                             flushInline();
-                                            const b = processBlock(child);
+                                            const b = processBlock(child, context);
                                             if (b) blocks.push(b);
                                         } else {
                                             // Inline element: gather its runs into the pending accumulator

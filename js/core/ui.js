@@ -1466,6 +1466,7 @@ export const ui = {
                                 </svg>
                             </button>
                             <button class="btn-icon" data-action="exportPdf" title="Export as PDF Document">${App.util.icons.pdfExport}</button>
+                            <button class="btn-icon" data-action="printArticle" title="Print / Save PDF (Browser)" aria-label="Print or Save PDF">${App.util.icons.print}</button>
                             <button class="btn-icon" data-action="deleteArticle" title="Delete Article" aria-label="Delete article"><i class="fa-solid fa-trash-can" style="font-size: 17px; color: #ef4444;"></i></button>
                         </div>
                     </div>

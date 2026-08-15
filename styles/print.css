@@ -1,0 +1,862 @@
+/* ==========================================================================
+   NoteKash - styles/print.css
+   High-Definition, Full-Color Browser Print-to-PDF (@media print) Stylesheet
+   Engineered for Long Articles, Media (Videos/Images/Table Images) & Math
+   ========================================================================== */
+
+/* ── 1. Screen Mode: Hide Print-Only Elements ────────────────────────────── */
+.nk-print-branding-tile,
+.nk-print-notes-pages,
+.nk-print-page-footer {
+    display: none !important;
+}
+
+/* ── 2. Dedicated Print Styles ───────────────────────────────────────────── */
+@media print {
+    /* Page Configuration: Clean 8mm/10mm margins */
+    @page {
+        margin: 8mm 10mm 8mm 10mm;
+        size: auto;
+    }
+
+    /* Print Color Preservation */
+    html,
+    body,
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    /* ── A. Master Color Tokens (Clean White Paper Palette) ──────────────── */
+    :root,
+    [data-theme],
+    [data-theme="dark"],
+    [data-theme="sepia"],
+    [data-theme="light"],
+    body.image-theme-active,
+    html,
+    body {
+        --bg-primary: #ffffff !important;
+        --bg-secondary: #ffffff !important;
+        --bg-tertiary: #f8fafc !important;
+        --bg-primary-rgb: 255, 255, 255 !important;
+        --bg-secondary-rgb: 255, 255, 255 !important;
+        --text-primary: #111827 !important;
+        --text-secondary: #4b5563 !important;
+        --text-tertiary: #6b7280 !important;
+        --border-color: #e2e8f0 !important;
+        --primary-color: #4f46e5 !important;
+        
+        /* High-contrast Print Text Colors */
+        --text-red: #b91c1c !important;
+        --text-green: #15803d !important;
+        --text-blue: #1d4ed8 !important;
+        --text-magenta: #7e22ce !important;
+        --text-orange: #c2410c !important;
+        --text-teal: #0f766e !important;
+        --text-slate: #a16207 !important;
+
+        /* High-contrast Highlights */
+        --hl-1-bg: #fef9c3 !important;
+        --hl-1-border: #facc15 !important;
+        --hl-2-bg: #dcfce7 !important;
+        --hl-2-border: #4ade80 !important;
+        --hl-3-bg: #dbeafe !important;
+        --hl-3-border: #60a5fa !important;
+        --hl-4-bg: #fee2e2 !important;
+        --hl-4-border: #f87171 !important;
+        --hl-5-bg: #f3e8ff !important;
+        --hl-5-border: #c084fc !important;
+        --hl-6-bg: #ccfbf1 !important;
+        --hl-6-border: #2dd4bf !important;
+        --hl-7-bg: #fce7f3 !important;
+        --hl-7-border: #f472b6 !important;
+        --hl-text: #111827 !important;
+
+        /* Cloze Flashcard Styles in Print */
+        --cloze-bg: #dcfce7 !important;
+        --cloze-border: #16a34a !important;
+        --cloze-revealed-text: #15803d !important;
+        --cloze-hidden-text: #b91c1c !important;
+
+        /* Textile & Card Styles in Print */
+        --textile-bg-1: #f3e8ff !important; --textile-border-1: #c084fc !important; --textile-text-1: #6b21a8 !important;
+        --textile-bg-2: #dcfce7 !important; --textile-border-2: #4ade80 !important; --textile-text-2: #166534 !important;
+        --textile-bg-3: #fef9c3 !important; --textile-border-3: #facc15 !important; --textile-text-3: #854d0e !important;
+        --textile-bg-4: #fee2e2 !important; --textile-border-4: #f87171 !important; --textile-text-4: #991b1b !important;
+        --textile-bg-5: #e0f2fe !important; --textile-border-5: #38bdf8 !important; --textile-text-5: #075985 !important;
+        --textile-bg-6: #ffedd5 !important; --textile-border-6: #fb923c !important; --textile-text-6: #9a3412 !important;
+        --textile-bg-7: #f1f5f9 !important; --textile-border-7: #cbd5e1 !important; --textile-text-7: #334155 !important;
+        --textile-bg-8: #fee2e2 !important; --textile-border-8: #f87171 !important; --textile-text-8: #991b1b !important;
+        --textile-bg-9: #e0e7ff !important; --textile-border-9: #818cf8 !important; --textile-text-9: #3730a3 !important;
+    }
+
+    /* ── B. Reset Viewport & Lock to Pure White Paper ────────────────────── */
+    html,
+    body {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        background-color: #ffffff !important;
+        background: #ffffff !important;
+        color: #111827 !important;
+        font-size: 11pt !important;
+        line-height: 1.65 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    main {
+        display: block !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    /* ── C. Hide Non-Printable UI Chrome ────────────────────────────────── */
+    header,
+    #main-header,
+    .app-header,
+    #sidebar,
+    #mobile-nav,
+    #bottom-nav,
+    .mobile-bottom-nav,
+    .floating-nav-container,
+    .floating-nav-trigger,
+    .sidebar-overlay,
+    .drawer,
+    #article-controls,
+    .article-controls,
+    .controls-wrapper,
+    .control-group-popover,
+    .popover-menu,
+    .insert-toolbar-group,
+    .insert-popover,
+    #focus-mode-toggle,
+    #selection-toolbar,
+    #image-toolbar,
+    .bubble-menu,
+    .floating-toolbar,
+    .resize-handle,
+    .nk-mcq-toolbar,
+    #toast-container,
+    .toast,
+    .nk-toast,
+    .toast-message,
+    #nk-shell-loader,
+    #nk-view-transition-overlay,
+    #the-line-container,
+    #text-measurer,
+    #visual-map-controls,
+    #whiteboard-overlay,
+    #whiteboard-card,
+    #nk-ai-palette,
+    .command-k-modal,
+    .modal-backdrop,
+    .nk-modal,
+    .tag-modal,
+    .table-modal,
+    .dialog-backdrop,
+    .export-brand-modal,
+    #nk-find-bar,
+    #nk-find-close,
+    #audio-recorder-bar,
+    .audio-write-toolbar,
+    .audio-panel,
+    .nk-toc-refresh-btn,
+    .nk-timeline-add,
+    .plyr__controls,
+    .plyr__control,
+    .plyr__poster,
+    .plyr__captions,
+    .nk-video-delete-btn,
+    .nk-video-align-btn,
+    .btn-icon,
+    button:not(.nk-keep-print),
+    .view:not(.active),
+    #app-background,
+    .cursor-splash-canvas,
+    #profile-notification-card,
+    #profile-badge,
+    .nk-preview-hint,
+    .article-metadata-bar .word-count-action,
+    .drag-over {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        width: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* ── D. Integrated Branding Tiles (Header & End of Article) ─────────── */
+    .nk-print-branding-tile {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%) !important;
+        background-color: #f8fafc !important;
+        border: 1px solid #c7d2fe !important;
+        border-radius: 6px !important;
+        padding: 5px 14px !important;
+        margin: 10px 0 14px 0 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif !important;
+        font-size: 8pt !important;
+        line-height: 1.4 !important;
+        color: #334155 !important;
+        box-shadow: none !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .nk-print-branding-tile.nk-print-branding-tile-bottom {
+        margin-top: 14px !important;
+        margin-bottom: 0 !important;
+        break-after: avoid !important;
+        page-break-after: avoid !important;
+    }
+
+    .nk-print-branding-tile * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif !important;
+    }
+
+    .nk-print-branding-tile .nk-print-tile-left,
+    .nk-print-branding-tile .nk-print-tile-right {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .nk-print-branding-tile .nk-tile-label {
+        color: #64748b !important;
+        font-size: 7pt !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.6px !important;
+        margin-right: 4px !important;
+    }
+
+    .nk-print-branding-tile .nk-tile-brand {
+        color: #0284c7 !important;
+        font-size: 8.5pt !important;
+        font-weight: 750 !important;
+        text-decoration: none !important;
+        letter-spacing: 0.1px !important;
+    }
+
+    .nk-print-branding-tile .nk-tile-link {
+        text-decoration: none !important;
+        font-size: 8.5pt !important;
+        letter-spacing: 0.1px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    .nk-print-branding-tile .nk-tile-brand-name {
+        color: #4f46e5 !important;
+        font-weight: 800 !important;
+    }
+
+    .nk-print-branding-tile .nk-tile-brand-tld {
+        color: #94a3b8 !important;
+        font-weight: 600 !important;
+    }
+
+    /* ── E. Document Container & Header Layout ──────────────────────────── */
+    #article-view,
+    .article-view-wrapper,
+    .article-container,
+    .article-content-wrapper,
+    .ui-card,
+    .view.active {
+        display: block !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: transparent !important;
+        overflow: visible !important;
+        transform: none !important;
+    }
+
+    /* Category Capsule */
+    .category-pill,
+    #article-view .category-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        background-color: #eef2ff !important;
+        background: #eef2ff !important;
+        color: #4338ca !important;
+        border: 1px solid #c7d2fe !important;
+        border-radius: 9999px !important;
+        padding: 3px 12px !important;
+        font-size: 8pt !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        box-shadow: none !important;
+        margin-right: 6px !important;
+        margin-bottom: 4px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* Article Tags */
+    .tag-item {
+        display: inline-flex !important;
+        align-items: center !important;
+        background-color: #f1f5f9 !important;
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 9999px !important;
+        padding: 2.5px 9px !important;
+        font-size: 8pt !important;
+        font-weight: 600 !important;
+        box-shadow: none !important;
+        margin-right: 4px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .rendered-tag {
+        display: inline-flex !important;
+        align-items: center !important;
+        background: #faf5ff !important;
+        border: 1px solid #e9d5ff !important;
+        color: #7e22ce !important;
+        font-weight: 650 !important;
+        border-radius: 9999px !important;
+        padding: 2px 8px !important;
+        font-size: 8.5pt !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    .article-tags-display {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin-bottom: 12px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* Article Main Title */
+    .article-title-input,
+    #article-title {
+        display: block !important;
+        width: 100% !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 0 10px 0 !important;
+        font-size: 22pt !important;
+        font-weight: 750 !important;
+        line-height: 1.25 !important;
+        color: #0f172a !important;
+        letter-spacing: -0.015em !important;
+        white-space: pre-wrap !important;
+        break-after: avoid !important;
+        page-break-after: avoid !important;
+    }
+
+    /* Metadata Bar */
+    .article-metadata-bar {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        font-size: 8.5pt !important;
+        color: #64748b !important;
+        margin-bottom: 8px !important;
+    }
+
+    .title-divider {
+        display: block !important;
+        border: none !important;
+        border-top: 1px solid #e2e8f0 !important;
+        margin: 10px 0 18px 0 !important;
+    }
+
+    /* ── F. Text Content & High-Contrast Typography ─────────────────────── */
+    #article-content {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        color: #111827 !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    #article-content p,
+    #article-content div:not([class*="text-"]):not([class*="highlight-"]):not(.rendered-tag):not(.category-pill):not(.tag-item):not(.nk-code-block):not(blockquote):not(.nk-text-tile),
+    #article-content span:not([class*="text-"]):not([class*="highlight-"]):not(.rendered-tag):not(.category-pill):not(.tag-item):not([class*="katex"]):not(.nk-inline-icon),
+    #article-content li,
+    #article-content td,
+    #article-content th {
+        color: #111827 !important;
+    }
+
+    #article-content ul,
+    #article-content ol {
+        margin: 8px 0 12px 0 !important;
+        padding-left: 22px !important;
+    }
+
+    #article-content li {
+        margin-bottom: 4px !important;
+        line-height: 1.6 !important;
+    }
+
+    /* Headings Default Styling */
+    h1, h2, h3, h4, h5, h6,
+    #article-content h1,
+    #article-content h2,
+    #article-content h3,
+    #article-content h4,
+    #article-content h5,
+    #article-content h6 {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        break-after: avoid !important;
+        page-break-after: avoid !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* ── G. High-Contrast Text Color Classes ────────────────────────────── */
+    .text-red, [class*="text-red"], #article-content .text-red {
+        color: #b91c1c !important;
+        font-weight: 600 !important;
+    }
+    .text-green, [class*="text-green"], #article-content .text-green {
+        color: #15803d !important;
+        font-weight: 600 !important;
+    }
+    .text-blue, [class*="text-blue"], #article-content .text-blue {
+        color: #1d4ed8 !important;
+        font-weight: 600 !important;
+    }
+    .text-magenta, [class*="text-magenta"], #article-content .text-magenta {
+        color: #7e22ce !important;
+        font-weight: 600 !important;
+    }
+    .text-orange, [class*="text-orange"], #article-content .text-orange {
+        color: #c2410c !important;
+        font-weight: 600 !important;
+    }
+    .text-teal, [class*="text-teal"], #article-content .text-teal {
+        color: #0f766e !important;
+        font-weight: 600 !important;
+    }
+    .text-slate, [class*="text-slate"], #article-content .text-slate {
+        color: #a16207 !important;
+        font-weight: 600 !important;
+    }
+
+    /* ── H. High-Contrast Pastel Highlights ──────────────────────────────── */
+    .highlight-1, [class*="highlight-1"], mark.hl-1, #article-content .highlight-1 {
+        background-color: #fef9c3 !important;
+        color: #111827 !important;
+        border-bottom: 2px solid #eab308 !important;
+    }
+    .highlight-2, [class*="highlight-2"], mark.hl-2, #article-content .highlight-2 {
+        background-color: #dcfce7 !important;
+        color: #111827 !important;
+        border-bottom: 2px solid #22c55e !important;
+    }
+    .highlight-3, [class*="highlight-3"], mark.hl-3, #article-content .highlight-3 {
+        background-color: #dbeafe !important;
+        color: #111827 !important;
+        border-bottom: 2px solid #3b82f6 !important;
+    }
+    .highlight-4, [class*="highlight-4"], mark.hl-4, #article-content .highlight-4 {
+        background-color: #fee2e2 !important;
+        color: #111827 !important;
+        border-bottom: 2px solid #ef4444 !important;
+    }
+    .highlight-5, [class*="highlight-5"], mark.hl-5, #article-content .highlight-5 {
+        background-color: #f3e8ff !important;
+        color: #111827 !important;
+        border-bottom: 2px solid #a855f7 !important;
+    }
+    .highlight-6, [class*="highlight-6"], mark.hl-6, #article-content .highlight-6 {
+        background-color: #ccfbf1 !important;
+        color: #111827 !important;
+        border-bottom: 2px solid #14b8a6 !important;
+    }
+    .highlight-7, [class*="highlight-7"], mark.hl-7, #article-content .highlight-7 {
+        background-color: #fce7f3 !important;
+        color: #111827 !important;
+        border-bottom: 2px solid #ec4899 !important;
+    }
+
+    [class*="highlight-"] .text-red { color: #991b1b !important; }
+    [class*="highlight-"] .text-green { color: #14532d !important; }
+    [class*="highlight-"] .text-blue { color: #1e3a8a !important; }
+    [class*="highlight-"] .text-magenta { color: #581c87 !important; }
+    [class*="highlight-"] .text-orange { color: #7c2d12 !important; }
+    [class*="highlight-"] .text-teal { color: #115e59 !important; }
+    [class*="highlight-"] .text-slate { color: #713f12 !important; }
+
+    /* Cloze Flashcards in Print */
+    .cloze-flashcard, span[data-cloze] {
+        background-color: #dcfce7 !important;
+        color: #15803d !important;
+        border-bottom: 2px solid #16a34a !important;
+        font-weight: 700 !important;
+        padding: 1px 4px !important;
+        border-radius: 3px !important;
+    }
+
+    /* Links in print */
+    a {
+        color: #2563eb !important;
+        text-decoration: underline !important;
+        text-underline-offset: 2px !important;
+    }
+    a[href]::after {
+        content: none !important;
+    }
+
+    /* ── I. Content Tables - Clean Enclosed Box Design ───────────────────── */
+    table {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-collapse: collapse !important;
+        border-spacing: 0 !important;
+        margin: 14px 0 !important;
+        font-size: 9.5pt !important;
+        line-height: 1.5 !important;
+        background-color: #ffffff !important;
+        border: 1.25px solid #cbd5e1 !important;
+        overflow: visible !important;
+        break-inside: auto !important;
+        page-break-inside: auto !important;
+    }
+
+    table thead {
+        display: table-header-group !important;
+        break-inside: avoid !important;
+    }
+
+    table tr {
+        break-inside: auto !important;
+        page-break-inside: auto !important;
+    }
+
+    table th {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        font-size: 8.5pt !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 8px 12px !important;
+        text-align: left !important;
+    }
+
+    table td {
+        border: 1px solid #e2e8f0 !important;
+        padding: 8px 12px !important;
+        color: #1e293b !important;
+        font-size: 9.5pt !important;
+        vertical-align: top !important;
+    }
+
+    table tr:nth-child(even) td {
+        background-color: #fafbfc !important;
+    }
+
+    table td:first-child {
+        font-weight: 600 !important;
+        color: #0f172a !important;
+    }
+
+    /* Table embedded images */
+    table td img,
+    table th img {
+        max-width: 100% !important;
+        max-height: 85mm !important;
+        height: auto !important;
+        object-fit: contain !important;
+        display: block !important;
+        margin: 4px auto !important;
+        border-radius: 4px !important;
+    }
+
+    /* ── J. Images, Media, Video Embeds & Cards ─────────────────────────── */
+    img,
+    picture,
+    figure,
+    .image-container img {
+        max-width: 100% !important;
+        max-height: 160mm !important;
+        height: auto !important;
+        object-fit: contain !important;
+        border-radius: 6px !important;
+        box-shadow: none !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .nk-video-embed {
+        display: block !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 14px auto !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        box-shadow: none !important;
+        background: #f8fafc !important;
+    }
+
+    video,
+    iframe,
+    audio,
+    .video-container,
+    .audio-player-container,
+    .nk-plyr-wrapper {
+        max-width: 100% !important;
+        max-height: 140mm !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* Code blocks - allow safe multi-page breaks for long code snippets */
+    pre,
+    .nk-code-block,
+    .code-block-wrapper,
+    .code-block-container {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 10px 14px !important;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+        font-size: 9.5pt !important;
+        line-height: 1.5 !important;
+        overflow: visible !important;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        break-inside: auto !important;
+        page-break-inside: auto !important;
+    }
+
+    code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+        font-size: 0.9em !important;
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+        padding: 2px 5px !important;
+        border-radius: 4px !important;
+    }
+
+    blockquote,
+    .nk-callout,
+    .nk-quote,
+    .nk-text-tile {
+        border-left: 3.5px solid #4f46e5 !important;
+        background-color: #f8fafc !important;
+        color: #1e293b !important;
+        padding: 10px 16px !important;
+        margin: 14px 0 !important;
+        border-radius: 0 8px 8px 0 !important;
+        font-style: normal !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    details,
+    .accordion-card {
+        display: block !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        margin: 10px 0 !important;
+        padding: 10px 14px !important;
+        background-color: #f8fafc !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    details > summary {
+        font-weight: 700 !important;
+        cursor: default !important;
+        margin-bottom: 8px !important;
+        color: #0f172a !important;
+    }
+
+    details > *:not(summary) {
+        display: block !important;
+    }
+
+    .nk-accordion-content {
+        display: block !important;
+        max-height: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        color: #111827 !important;
+    }
+
+    .tile-cell,
+    .tile-box-table,
+    canvas,
+    svg:not(.icon-only),
+    .sectional-card,
+    .nk-timeline-block,
+    .nk-timeline-entry,
+    .nk-stat-badge,
+    .exported-pill,
+    .rendered-tag,
+    .tag-badge,
+    .pdf-attachment-pill,
+    .mcq-block,
+    .nk-mcq-container,
+    .nk-mcq-block,
+    .nk-toc-block,
+    .flashcard-item,
+    .card {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* ── K. MathJax & KaTeX Equations ───────────────────────────────────── */
+    .katex,
+    .katex-display,
+    .katex-html,
+    mjx-container,
+    .MathJax,
+    .MathJax svg,
+    .katex svg {
+        overflow: visible !important;
+        text-rendering: geometricPrecision !important;
+        shape-rendering: geometricPrecision !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+        max-width: 100% !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .katex-display {
+        display: block !important;
+        margin: 1.2em 0 !important;
+        text-align: center !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        padding: 4px 0 !important;
+    }
+
+    .katex-display > .katex {
+        display: inline-block !important;
+        text-align: initial !important;
+        white-space: nowrap !important;
+        font-size: 1.1em !important;
+    }
+
+    /* ── L. 3 Dedicated Blank "Notes" Pages ─────────────────────────────── */
+    .nk-print-notes-pages {
+        display: block !important;
+    }
+
+    .nk-print-notes-page {
+        display: block !important;
+        break-before: page !important;
+        page-break-before: always !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        min-height: 180mm !important;
+        max-height: 230mm !important;
+        height: auto !important;
+        padding: 10px 0 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    .nk-print-notes-header {
+        border-bottom: 1.5px solid #0f172a !important;
+        padding-bottom: 8px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .nk-print-notes-title {
+        font-size: 15pt !important;
+        font-weight: 700 !important;
+    }
+
+    /* ── Page Footer (Clean, Minimal, Non-Separated Running Footer on Every Page) ── */
+    .nk-print-page-footer {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        pointer-events: none !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif !important;
+        font-size: 7pt !important;
+        line-height: 1 !important;
+        z-index: 9999 !important;
+    }
+
+    .nk-print-footer-left,
+    .nk-print-footer-right {
+        display: inline-flex !important;
+        align-items: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .nk-print-footer-brand {
+        color: #94a3b8 !important;
+        font-size: 7pt !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.2px !important;
+        text-transform: uppercase !important;
+    }
+
+    .nk-print-footer-notekash {
+        font-size: 7pt !important;
+        font-weight: 750 !important;
+        letter-spacing: 0.2px !important;
+        color: #4f46e5 !important;
+    }
+
+    .nk-print-footer-tld {
+        color: #94a3b8 !important;
+        font-weight: 500 !important;
+    }
+}

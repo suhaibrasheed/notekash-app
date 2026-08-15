@@ -2771,13 +2771,129 @@ export const events = {
                             }, { once: true });
                         }
                     }, 50);
-                    await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHistory });
+await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHistory });
                 },
 
                 async resetReadCount() {
                     await App.storage.updateArticle(App.state.activeArticleId, { readCount: 0, readHistory: [] });
                     App.ui.showToast("Article progress reset.");
                     App.ui.renderArticleControls(App.storage.getArticle(App.state.activeArticleId));
+                },
+
+                _isPrintPrepared: false,
+
+                preparePrintDocument() {
+                    if (this._isPrintPrepared) return;
+                    this._isPrintPrepared = true;
+
+                    const article = App.storage ? App.storage.getArticle(App.state?.activeArticleId) : null;
+                    const articleContainer = document.querySelector('.article-container');
+                    const contentEl = document.getElementById('article-content');
+                    
+                    const articleTitle = article?.title || document.getElementById('article-title')?.value || document.title || 'NoteKash Note';
+                    const isPremium = typeof App.license?.isPremium === 'function' ? App.license.isPremium() : false;
+                    const brandName = App.settings?.get ? App.settings.get('brandName') : '';
+                    const brandLink = App.settings?.get ? App.settings.get('brandLink') : '';
+                    
+                    // Render LaTeX / MathJax equations safely if available
+                    if (contentEl && typeof App.util?.renderMathInElement === 'function') {
+                        try {
+                            App.util.renderMathInElement(contentEl);
+                        } catch (e) {
+                            console.warn('KaTeX print render skipped:', e);
+                        }
+                    }
+
+                    // Inject Top & Bottom Branding Tiles and 3 Notes Pages
+                    if (articleContainer && !articleContainer.querySelector('.nk-print-branding-tile-top')) {
+                        const brandLeftHtml = (isPremium && brandName)
+                            ? `<span class="nk-tile-label">Made by:</span> <a href="${brandLink ? App.util.escapeHtml(brandLink) : '#'}" class="nk-tile-brand" target="_blank" rel="noopener noreferrer">${App.util.escapeHtml(brandName)}</a>`
+                            : `<span class="nk-tile-label">Made by:</span> <span class="nk-tile-brand">${App.util.escapeHtml(articleTitle)}</span>`;
+
+                        const brandTileHtml = (isTop = true) => `
+                            <div class="nk-print-branding-tile ${isTop ? 'nk-print-branding-tile-top' : 'nk-print-branding-tile-bottom'}">
+                                <div class="nk-print-tile-left">
+                                    ${brandLeftHtml}
+                                </div>
+                                <div class="nk-print-tile-right">
+                                    <span class="nk-tile-label">Made on:</span>
+                                    <a href="https://notekash.com" target="_blank" rel="noopener noreferrer" class="nk-tile-link">
+                                        <span class="nk-tile-brand-name">notekash</span><span class="nk-tile-brand-tld">.com</span>
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+
+                        const notesPagesHtml = `
+                            <div class="nk-print-notes-pages">
+                                <div class="nk-print-notes-page">
+                                    <div class="nk-print-notes-header">
+                                        <span class="nk-print-notes-title">Notes:</span>
+                                    </div>
+                                </div>
+                                <div class="nk-print-notes-page">
+                                    <div class="nk-print-notes-header">
+                                        <span class="nk-print-notes-title">Notes:</span>
+                                    </div>
+                                </div>
+                                <div class="nk-print-notes-page">
+                                    <div class="nk-print-notes-header">
+                                        <span class="nk-print-notes-title">Notes:</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        // Insert Top Tile before article-content (after title-divider)
+                        const topTileWrapper = document.createElement('div');
+                        topTileWrapper.innerHTML = brandTileHtml(true);
+                        if (contentEl) {
+                            articleContainer.insertBefore(topTileWrapper.firstElementChild, contentEl);
+                        } else {
+                            articleContainer.appendChild(topTileWrapper.firstElementChild);
+                        }
+
+                        // Insert Bottom Tile immediately after article-content
+                        const bottomTileWrapper = document.createElement('div');
+                        bottomTileWrapper.innerHTML = brandTileHtml(false);
+                        articleContainer.appendChild(bottomTileWrapper.firstElementChild);
+
+                        // Insert 3 Blank Notes Pages at end of document
+                        const notesWrapper = document.createElement('div');
+                        notesWrapper.innerHTML = notesPagesHtml;
+                        articleContainer.appendChild(notesWrapper.firstElementChild);
+                    }
+
+                    // Inject repeating minimal running footer on each printed page
+                    let footerEl = document.getElementById('nk-print-page-footer');
+                    if (!footerEl) {
+                        footerEl = document.createElement('div');
+                        footerEl.id = 'nk-print-page-footer';
+                        footerEl.className = 'nk-print-page-footer';
+                        document.body.appendChild(footerEl);
+                    }
+                    const brandDisplay = (isPremium && brandName) ? brandName : (articleTitle || 'NoteKash');
+                    footerEl.innerHTML = `
+                        <div class="nk-print-footer-left">
+                            <span class="nk-print-footer-brand">${App.util.escapeHtml(brandDisplay)}</span>
+                        </div>
+                        <div class="nk-print-footer-right">
+                            <span class="nk-print-footer-notekash">notekash<span class="nk-print-footer-tld">.com</span></span>
+                        </div>
+                    `;
+
+                    // Close any open popovers before printing
+                    document.querySelectorAll('.popover-active').forEach(el => el.classList.remove('popover-active'));
+                },
+
+                cleanupPrintDocument() {
+                    this._isPrintPrepared = false;
+                    document.querySelectorAll('.nk-print-branding-tile, .nk-print-notes-pages, .nk-print-page-footer, #nk-print-page-footer').forEach(el => el.remove());
+                },
+
+                printDocument() {
+                    this.preparePrintDocument();
+                    window.print();
                 },
 
                 deleteArticleWithConfirmation() {
@@ -7713,6 +7829,7 @@ export const events = {
                         case 'shareArticle': App.services.share.article(); break;
                         case 'exportNoteKash': App.ui.showNoteKashExportModal(); break;
                         case 'exportPdf': App.ui.showExportBrandModal((brandName, brandLink) => App.services.export.exportArticleAsPdf(brandName, brandLink), 'PDF'); break;
+                        case 'printArticle': App.events.printDocument(); break;
                         case 'resetReadCount': App.events.resetReadCount(); break;
                         case 'toggleFocusMode': App.events.toggleFocusMode(); break;
                         case 'saveAndRead': App.events.saveArticle({ switchToRead: true }); break;

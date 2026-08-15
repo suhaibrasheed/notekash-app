@@ -373,6 +373,7 @@ export const commandPalette = {
                         { id: 'record', title: 'Start/Stop Recording', desc: 'Record audio, or Transcribe it (if downloaded)', icon: '🎙️', execute: () => App.audio.toggleRecording() },
 
                         { id: 'clip', title: 'Clip Webpage', desc: 'e.g., clip https://example.com', icon: '✂️', isPremium: true },
+                        { id: 'print', title: 'Print / Save PDF', desc: 'Full-color high-definition browser print (Cmd+P)', icon: '🖨️', execute: () => App.events.printDocument() },
                         { id: 'copy', title: 'Copy All Content', desc: 'Copy entire note exactly as it is', icon: '📋', execute: () => App.commandPalette.copyAllContents() },
                         { id: 'pastefast', title: 'Quick Paste', desc: 'Paste content, preserving styles except background', icon: '⚡️', execute: () => App.commandPalette.pasteFast() },
                         { id: 'onenoteimport', title: 'Import from OneNote', desc: 'Clean paste from OneNote', icon: '💜', execute: () => App.commandPalette.importOneNote() },

@@ -1004,6 +1004,20 @@ const bootApp = () => {
   // Initialize cursor splash
   window.cursorSplash = new InteractiveCursorSplash();
 
+  // Ensure print metadata and MathJax/KaTeX math are prepared before print preview
+  window.addEventListener('beforeprint', () => {
+    if (App.events && typeof App.events.preparePrintDocument === 'function') {
+      App.events.preparePrintDocument();
+    }
+  });
+
+  // Restore DOM structure after print dialog closes
+  window.addEventListener('afterprint', () => {
+    if (App.events && typeof App.events.cleanupPrintDocument === 'function') {
+      App.events.cleanupPrintDocument();
+    }
+  });
+
   // Listen to live hash changes to trigger the pricing/ascension modal
   window.addEventListener('hashchange', () => {
     if (window.location.hash === '#pricing') {
