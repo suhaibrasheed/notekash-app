@@ -704,7 +704,7 @@ export const services = {
 
                             /* MCQ */
                             .nk-mcq-block { position: relative; background: var(--bg-secondary); border: 1px solid var(--border-color); border-left: 3px solid var(--primary-color); border-radius: 10px; padding: 1.25rem 1.5rem; margin: 1.5em 0; }
-                            .nk-mcq-question { font-weight: 600; font-size: 1.05em; margin-bottom: 1rem; color: var(--text-primary); }
+                            .nk-mcq-question { font-weight: 500; font-size: 1.05em; margin-bottom: 1rem; color: var(--text-primary); line-height: 1.55; letter-spacing: -0.005em; }
                             .nk-mcq-options { display: flex; flex-direction: column; gap: 0.6rem; }
                             .nk-mcq-option { display: flex; align-items: center; gap: 0.75rem; padding: 8px; border-radius: 6px; border: 1px solid transparent; }
                             .nk-mcq-option-radio { width: 18px; height: 18px; border: 2px solid var(--text-secondary); border-radius: 50%; display: grid; place-items: center; }
@@ -743,15 +743,26 @@ export const services = {
                             /* Textile (single) + Textile Deck */
                             .nk-text-tile {
                                 display: flex;
-                                align-items: center;
-                                gap: 0.5rem;
-                                border: 2px solid var(--border-color);
-                                border-radius: 12px;
-                                padding: 0.65rem 1.25rem;
-                                margin: 0.75rem 0;
+                                align-items: flex-start;
+                                gap: 0.65rem;
+                                vertical-align: middle;
+                                border: 1px solid rgba(0, 0, 0, 0.08);
+                                border-left: 3.5px solid var(--border-color);
+                                border-radius: 9px;
+                                padding: 0.75rem 1.15rem;
+                                margin: 0.45rem 0;
                                 box-sizing: border-box;
-                                background: transparent;
-                                color: var(--text-primary);
+                                width: 100%;
+                            }
+                            .nk-text-tile-icon {
+                                font-size: 1.05em;
+                                opacity: 0.92;
+                                display: inline-flex;
+                                align-items: center;
+                                justify-content: center;
+                                flex-shrink: 0;
+                                line-height: 1;
+                                margin-top: 0.18em;
                             }
                             .nk-text-tile-content {
                                 color: inherit;
@@ -759,31 +770,33 @@ export const services = {
                                 white-space: pre-wrap;
                                 word-break: break-word;
                                 overflow-wrap: anywhere;
-                                line-height: 1.6;
+                                line-height: 1.5;
                             }
-                            .nk-text-tile {
-                                display: flex;
-                                align-items: center;
-                                gap: 0.65rem;
-                                vertical-align: middle;
-                                border: 1px solid var(--border-color);
-                                border-radius: 10px;
-                                padding: 0.75rem 1.25rem;
-                                margin: 0.85rem 0;
-                                box-sizing: border-box;
-                                width: 100%;
+                            .nk-text-tile-content p,
+                            .nk-text-tile-content div {
+                                margin: 0.25em 0;
+                                line-height: inherit;
+                            }
+                            .nk-text-tile-content > *:first-child {
+                                margin-top: 0;
+                            }
+                            .nk-text-tile-content > *:last-child {
+                                margin-bottom: 0;
                             }
                             .nk-textile-deck {
                                 display: flex;
                                 flex-wrap: wrap;
                                 gap: 10px;
-                                padding: 0.85rem;
+                                padding: 0.75rem;
                                 border-radius: 12px;
                                 border: 1px solid var(--border-color);
                                 background-color: color-mix(in srgb, var(--border-color) 10%, transparent);
-                                margin: 1.25em 0;
+                                margin: 0.65rem 0;
                                 position: relative;
                             }
+                            .nk-text-tile + .nk-text-tile { margin-top: 0.35rem; }
+                            .nk-textile-deck + .nk-textile-deck { margin-top: 0.45rem; }
+                            .nk-text-tile + .nk-textile-deck, .nk-textile-deck + .nk-text-tile { margin-top: 0.45rem; }
                             .nk-textile-deck .nk-text-tile {
                                 margin: 0;
                                 flex: 1 1 180px;
@@ -793,22 +806,23 @@ export const services = {
                             .nk-textile-deck.layout-stack {
                                 flex-direction: column;
                                 align-items: stretch;
-                                gap: 8px;
+                                gap: 6px;
                             }
                             .deck-layout-toggle, .deck-add-tile-btn, .nk-text-tile-color-cycler { display: none !important; }
 
-                            .nk-text-tile.color-1 { background: var(--textile-bg-1); border-color: var(--textile-border-1); color: var(--textile-text-1); }
-                            .nk-text-tile.color-2 { background: var(--textile-bg-2); border-color: var(--textile-border-2); color: var(--textile-text-2); }
-                            .nk-text-tile.color-3 { background: var(--textile-bg-3); border-color: var(--textile-border-3); color: var(--textile-text-3); }
-                            .nk-text-tile.color-4 { background: var(--textile-bg-4); border-color: var(--textile-border-4); color: var(--textile-text-4); }
-                            .nk-text-tile.color-5 { background: var(--textile-bg-5); border-color: var(--textile-border-5); color: var(--textile-text-5); }
-                            .nk-text-tile.color-6 { background: var(--textile-bg-6); border-color: var(--textile-border-6); color: var(--textile-text-6); }
-                            .nk-text-tile.color-7 { background: var(--textile-bg-7); border-color: var(--textile-border-7); color: var(--textile-text-7); }
-                            .nk-text-tile.color-8 { background: var(--textile-bg-8); border-color: var(--textile-border-8); color: var(--textile-text-8); }
-                            .nk-text-tile.color-9 { background: var(--textile-bg-9); border-color: var(--textile-border-9); color: var(--textile-text-9); }
+                            .nk-text-tile.color-1 { background: var(--textile-bg-1); border-color: color-mix(in srgb, var(--textile-border-1) 18%, transparent); border-left: 3.5px solid var(--textile-border-1); color: var(--textile-text-1); }
+                            .nk-text-tile.color-2 { background: var(--textile-bg-2); border-color: color-mix(in srgb, var(--textile-border-2) 18%, transparent); border-left: 3.5px solid var(--textile-border-2); color: var(--textile-text-2); }
+                            .nk-text-tile.color-3 { background: var(--textile-bg-3); border-color: color-mix(in srgb, var(--textile-border-3) 18%, transparent); border-left: 3.5px solid var(--textile-border-3); color: var(--textile-text-3); }
+                            .nk-text-tile.color-4 { background: var(--textile-bg-4); border-color: color-mix(in srgb, var(--textile-border-4) 18%, transparent); border-left: 3.5px solid var(--textile-border-4); color: var(--textile-text-4); }
+                            .nk-text-tile.color-5 { background: var(--textile-bg-5); border-color: color-mix(in srgb, var(--textile-border-5) 18%, transparent); border-left: 3.5px solid var(--textile-border-5); color: var(--textile-text-5); }
+                            .nk-text-tile.color-6 { background: var(--textile-bg-6); border-color: color-mix(in srgb, var(--textile-border-6) 18%, transparent); border-left: 3.5px solid var(--textile-border-6); color: var(--textile-text-6); }
+                            .nk-text-tile.color-7 { background: var(--textile-bg-7); border-color: color-mix(in srgb, var(--textile-border-7) 18%, transparent); border-left: 3.5px solid var(--textile-border-7); color: var(--textile-text-7); }
+                            .nk-text-tile.color-8 { background: var(--textile-bg-8); border-color: color-mix(in srgb, var(--textile-border-8) 18%, transparent); border-left: 3.5px solid var(--textile-border-8); color: var(--textile-text-8); }
+                            .nk-text-tile.color-9 { background: var(--textile-bg-9); border-color: color-mix(in srgb, var(--textile-border-9) 18%, transparent); border-left: 3.5px solid var(--textile-border-9); color: var(--textile-text-9); }
                             .nk-text-tile.color-default {
                                 background: color-mix(in srgb, var(--primary-color) 3%, var(--bg-tertiary));
-                                border-color: var(--primary-color);
+                                border-color: color-mix(in srgb, var(--primary-color) 25%, transparent);
+                                border-left: 3.5px solid var(--primary-color);
                             }
                             
                             /* Image Interactions */
