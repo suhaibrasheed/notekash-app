@@ -1604,3 +1604,38 @@
         #teleprompter-sidebar .nk-mcq-meta-bar {
             display: none; /* Hide in teleprompter for cleanliness */
         }
+
+        /* ── Chart Container: Bounded Responsive Height & Scroll Shield ── */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            height: 340px;
+            max-height: 400px;
+            margin: 1.25rem 0;
+            padding: 1.25rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg, 12px);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 2px 8px rgba(0, 0, 0, 0.02);
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100%;
+            display: block;
+        }
+
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 280px;
+                padding: 0.85rem;
+                margin: 0.9rem 0;
+            }
+        }

@@ -7629,38 +7629,78 @@ export const ui = {
                     }
 
                     try {
-                        // 1. Get the theme-agnostic config we saved earlier.
-                        const config = JSON.parse(canvas.dataset.chartConfig);
+                        // 1. Get the raw config string and parse safely (handling possible entity escaping)
+                        let rawConfig = canvas.dataset.chartConfig;
+                        if (typeof rawConfig === 'string' && (rawConfig.includes('&quot;') || rawConfig.includes('&#39;'))) {
+                            const txt = document.createElement('textarea');
+                            txt.innerHTML = rawConfig;
+                            rawConfig = txt.value;
+                        }
+                        let config = typeof rawConfig === 'string' ? JSON.parse(rawConfig) : rawConfig;
 
-                        // 2. Get fresh styling information based on the CURRENT theme.
+                        // 2. Schema normalizer for 3rd-party LLMs or flat configs
+                        if (!config || typeof config !== 'object') return;
+                        if (!config.type) config.type = 'bar';
+
+                        // Support flat format: { labels: [...], values: [...] } or { labels: [...], data: [...] }
+                        if (!config.data) {
+                            config.data = {
+                                labels: config.labels || [],
+                                datasets: [{
+                                    data: config.values || config.dataPoints || []
+                                }]
+                            };
+                        } else if (Array.isArray(config.data)) {
+                            config.data = {
+                                labels: config.labels || [],
+                                datasets: [{ data: config.data }]
+                            };
+                        }
+
+                        if (!Array.isArray(config.data.datasets) || config.data.datasets.length === 0) {
+                            config.data.datasets = [{ data: [] }];
+                        }
+
+                        // Ensure numeric values in all datasets
+                        config.data.datasets.forEach(ds => {
+                            if (Array.isArray(ds.data)) {
+                                ds.data = ds.data.map(v => typeof v === 'number' ? v : (parseFloat(v) || 0));
+                            } else {
+                                ds.data = [];
+                            }
+                        });
+
+                        // 3. Get fresh styling information based on the CURRENT theme.
                         const themeColors = App.util.getChartColors();
-                        const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary');
-                        const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color');
-                        const secondaryBg = getComputedStyle(document.documentElement).getPropertyValue('--bg-secondary');
+                        const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary') || '#333';
+                        const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color') || '#e5e7eb';
+                        const secondaryBg = getComputedStyle(document.documentElement).getPropertyValue('--bg-secondary') || '#ffffff';
 
-                        // 3. Dynamically apply all styling to the config object in memory.
-                        if (config.type === 'line') {
-                            // --- FIX: Add specific styling for Line charts ---
-                            // RATIONALE: Line charts need a colored 'borderColor' for the line itself
-                            // and a semi-transparent 'backgroundColor' for the area fill.
-                            const primaryColor = themeColors[0] || '#0d9488';
+                        // 4. Dynamically apply all styling to datasets in memory.
+                        config.data.datasets.forEach((dataset, idx) => {
+                            const primaryColor = themeColors[idx % themeColors.length] || '#0d9488';
                             const primaryRgb = App.util.colorToRgb(primaryColor);
 
-                            config.data.datasets[0].borderColor = primaryColor;
-                            config.data.datasets[0].backgroundColor = primaryRgb ? `rgba(${primaryRgb.join(',')}, 0.2)` : '#0d948833';
-                            config.data.datasets[0].fill = true; // Creates the modern "area chart" look.
-                            config.data.datasets[0].tension = 0.4; // Adds a nice curve to the line.
-                            config.data.datasets[0].pointBackgroundColor = primaryColor; // Ensure points are visible
-                            config.data.datasets[0].pointBorderColor = secondaryBg; // Give points a nice border
-                            config.data.datasets[0].pointBorderWidth = 2;
-
-                        } else {
-                            // This is the existing logic for Bar and Doughnut charts
-                            config.data.datasets[0].backgroundColor = themeColors;
-                            config.data.datasets[0].borderColor = secondaryBg;
-                            config.data.datasets[0].borderWidth = config.type === 'doughnut' ? 4 : 1;
-                            config.data.datasets[0].borderRadius = config.type === 'bar' ? 6 : 0;
-                        }
+                            if (config.type === 'line') {
+                                dataset.borderColor = dataset.borderColor || primaryColor;
+                                dataset.backgroundColor = dataset.backgroundColor || (primaryRgb ? `rgba(${primaryRgb.join(',')}, 0.2)` : '#0d948833');
+                                dataset.fill = dataset.fill !== undefined ? dataset.fill : true;
+                                dataset.tension = dataset.tension !== undefined ? dataset.tension : 0.4;
+                                dataset.pointBackgroundColor = primaryColor;
+                                dataset.pointBorderColor = secondaryBg;
+                                dataset.pointBorderWidth = 2;
+                            } else if (config.type === 'doughnut' || config.type === 'pie') {
+                                dataset.backgroundColor = dataset.backgroundColor || themeColors;
+                                dataset.borderColor = secondaryBg;
+                                dataset.borderWidth = 3;
+                            } else {
+                                // Bar charts
+                                dataset.backgroundColor = dataset.backgroundColor || (config.data.datasets.length > 1 ? primaryColor : themeColors);
+                                dataset.borderColor = secondaryBg;
+                                dataset.borderWidth = 1;
+                                dataset.borderRadius = 6;
+                            }
+                        });
 
                         config.options = {
                             ...config.options, // Keep structural options like indexAxis
@@ -7668,28 +7708,35 @@ export const ui = {
                             maintainAspectRatio: false,
                             plugins: {
                                 legend: {
-                                    display: config.type === 'doughnut', // Only show legend for doughnut charts
-                                    position: 'right',
-                                    labels: { color: textColor }
-                                }
+                                    display: config.type === 'doughnut' || config.type === 'pie' || config.data.datasets.length > 1,
+                                    position: 'bottom',
+                                    labels: { color: textColor, boxWidth: 12, padding: 12 }
+                                },
+                                ...(config.options?.plugins || {})
                             },
-                            scales: (config.type !== 'doughnut') ? {
+                            scales: (config.type !== 'doughnut' && config.type !== 'pie') ? {
                                 x: { ticks: { color: textColor }, grid: { color: gridColor } },
                                 y: { ticks: { color: textColor }, grid: { color: gridColor } }
                             } : {}
                         };
 
-                        // 4. If a chart instance already exists on this canvas, destroy it first.
+                        // 5. If a chart instance already exists on this canvas, destroy it first.
                         if (typeof Chart !== 'undefined' && Chart.getChart(canvas)) {
                             Chart.getChart(canvas).destroy();
                         }
 
-                        // 5. Create the new Chart.js instance with the freshly styled config.
+                        // 6. Create the new Chart.js instance with the freshly styled config.
                         App.offline.safeChart(canvas.getContext('2d'), config);
 
                     } catch (e) {
                         console.error("Failed to render chart from data attribute:", e);
-                        canvas.parentElement.innerHTML = '<p style="color:var(--danger-color);">[Chart data is corrupted]</p>';
+                        if (canvas && canvas.parentElement && !canvas.parentElement.querySelector('.chart-error-fallback')) {
+                            const errNotice = document.createElement('p');
+                            errNotice.className = 'chart-error-fallback';
+                            errNotice.style.cssText = 'color:var(--text-secondary);font-size:0.9em;font-style:italic;margin:0.5em 0;';
+                            errNotice.textContent = '[Chart format error: could not render]';
+                            canvas.parentElement.appendChild(errNotice);
+                        }
                     }
                 },
 

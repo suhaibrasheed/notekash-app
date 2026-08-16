@@ -824,6 +824,28 @@ export const services = {
                                 border-color: color-mix(in srgb, var(--primary-color) 25%, transparent);
                                 border-left: 3.5px solid var(--primary-color);
                             }
+                            .chart-container {
+                                position: relative;
+                                width: 100%;
+                                max-width: 100%;
+                                height: 340px;
+                                margin: 1.25rem 0;
+                                padding: 1.25rem;
+                                background: var(--bg-secondary);
+                                border: 1px solid var(--border-color);
+                                border-radius: 12px;
+                                box-sizing: border-box;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                overflow: hidden;
+                            }
+                            .chart-container canvas {
+                                width: 100% !important;
+                                height: 100% !important;
+                                max-width: 100%;
+                                display: block;
+                            }
                             
                             /* Image Interactions */
                             img { transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: zoom-in; }

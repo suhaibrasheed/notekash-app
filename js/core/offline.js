@@ -127,46 +127,69 @@ export const offline = {
                     delete canvas._chartObserver;
                 }
 
+                const existingChart = Chart.getChart(canvas);
+                if (existingChart) {
+                    existingChart.destroy();
+                }
+
                 // Add smooth lively animation settings
                 if (!config.options) config.options = {};
                 if (!config.options.animation) {
                     config.options.animation = {
-                        duration: 2000,
+                        duration: 1200,
                         easing: 'easeOutQuart'
                     };
                 }
 
                 let chartInstance = null;
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            // Destroy the chart and recreate it to play the animation every time it comes into view
-                            if (chartInstance) {
-                                chartInstance.destroy();
-                            } else if (Chart.getChart(canvas)) {
-                                Chart.getChart(canvas).destroy();
-                            }
-                            try {
-                                chartInstance = new Chart(ctx, config);
-                            } catch (e) {
-                                console.error("Chart delayed init error:", e);
-                            }
-                        }
-                    });
-                }, { threshold: 0.1 });
 
-                observer.observe(canvas);
-                canvas._chartObserver = observer;
+                // If canvas is already connected and in viewport, initialize immediately
+                if (canvas.isConnected) {
+                    const rect = canvas.getBoundingClientRect();
+                    const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+                    if (isVisible) {
+                        try {
+                            chartInstance = new Chart(ctx, config);
+                        } catch (e) {
+                            console.error("Chart immediate init error:", e);
+                        }
+                    }
+                }
+
+                // If not yet initialized, lazily initialize ONCE when intersecting
+                if (!chartInstance) {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                observer.disconnect();
+                                delete canvas._chartObserver;
+                                if (!Chart.getChart(canvas)) {
+                                    try {
+                                        chartInstance = new Chart(ctx, config);
+                                    } catch (e) {
+                                        console.error("Chart delayed init error:", e);
+                                    }
+                                }
+                            }
+                        });
+                    }, { threshold: 0.05 });
+
+                    observer.observe(canvas);
+                    canvas._chartObserver = observer;
+                }
 
                 // Return a wrapper object with a destroy method to integrate smoothly with existing cleanup logic
                 return {
                     destroy: () => {
-                        observer.disconnect();
-                        delete canvas._chartObserver;
-                        if (chartInstance) {
+                        if (canvas._chartObserver) {
+                            canvas._chartObserver.disconnect();
+                            delete canvas._chartObserver;
+                        }
+                        const current = Chart.getChart(canvas);
+                        if (current) {
+                            current.destroy();
+                        } else if (chartInstance) {
                             chartInstance.destroy();
-                        } else if (Chart.getChart(canvas)) {
-                            Chart.getChart(canvas).destroy();
                         }
                     }
                 };
