@@ -250,6 +250,7 @@ export const license = {
             }
         });
         App.ui.updateHeaderState();
+        if (App.ui?.pulseProfileBadge) App.ui.pulseProfileBadge(5000);
         const activeViewId = App.router.getActiveView();
         if (activeViewId === 'flashcard') App.ui.filterAndRenderFlashcards();
         if (activeViewId === 'library') App.ui.filterAndRenderArticles();

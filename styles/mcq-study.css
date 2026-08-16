@@ -857,95 +857,95 @@
         /* --- NEW: Text Tile (Feature #3 - "/textile" command) --- */
         .nk-text-tile {
             display: flex;
-            /* Flex layout for proper height/width handling */
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.65rem;
             vertical-align: middle;
-            background-color: transparent;
-            border: 2px solid;
-            border-radius: 12px;
-            padding: 0.65rem 1.25rem;
-            /* Center the textile and give it breathing room */
-            margin: 0.5rem auto;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08),
-                0 2px 4px rgba(0, 0, 0, 0.04);
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.75rem 1.25rem;
+            margin: 0.85rem 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 3px 8px rgba(0, 0, 0, 0.03);
             position: relative;
-            /* FIXED: Always take 95% of available width to prevent any scrollbars */
-            width: 95%;
-            max-width: 95% !important;
+            width: 100%;
+            max-width: 100% !important;
             box-sizing: border-box;
             white-space: pre-wrap;
             word-break: break-word;
             overflow-wrap: break-word;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
         }
 
-        /* Hover effect for premium feel */
+        /* Subtle hover elevation in Write Mode */
         body.write-mode .nk-text-tile:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12),
-                0 4px 8px rgba(0, 0, 0, 0.06);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
         }
 
         .nk-text-tile-icon {
-            font-size: 0.95em;
-            opacity: 0.85;
+            font-size: 1.05em;
+            opacity: 0.9;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            line-height: 1;
         }
 
-        /*  Textile Color Styles */
+        /* Textile Color Styles - Refined 1px border with soft ambient fills */
         .nk-text-tile.color-1 {
             background: var(--textile-bg-1);
-            border: 2px solid var(--textile-border-1);
+            border: 1px solid var(--textile-border-1);
             color: var(--textile-text-1);
         }
 
         .nk-text-tile.color-2 {
             background: var(--textile-bg-2);
-            border: 2px solid var(--textile-border-2);
+            border: 1px solid var(--textile-border-2);
             color: var(--textile-text-2);
         }
 
         .nk-text-tile.color-3 {
             background: var(--textile-bg-3);
-            border: 2px solid var(--textile-border-3);
+            border: 1px solid var(--textile-border-3);
             color: var(--textile-text-3);
         }
 
         .nk-text-tile.color-4 {
             background: var(--textile-bg-4);
-            border: 2px solid var(--textile-border-4);
+            border: 1px solid var(--textile-border-4);
             color: var(--textile-text-4);
         }
 
         .nk-text-tile.color-5 {
             background: var(--textile-bg-5);
-            border: 2px solid var(--textile-border-5);
+            border: 1px solid var(--textile-border-5);
             color: var(--textile-text-5);
         }
 
         .nk-text-tile.color-6 {
             background: var(--textile-bg-6);
-            border: 2px solid var(--textile-border-6);
+            border: 1px solid var(--textile-border-6);
             color: var(--textile-text-6);
         }
 
         .nk-text-tile.color-7 {
             background: var(--textile-bg-7);
-            border: 2px solid var(--textile-border-7);
+            border: 1px solid var(--textile-border-7);
             color: var(--textile-text-7);
         }
 
         .nk-text-tile.color-8 {
             background: var(--textile-bg-8);
-            border: 2px solid var(--textile-border-8);
+            border: 1px solid var(--textile-border-8);
             color: var(--textile-text-8);
         }
 
         .nk-text-tile.color-9 {
             background: var(--textile-bg-9);
-            border: 2px solid var(--textile-border-9);
+            border: 1px solid var(--textile-border-9);
             color: var(--textile-text-9);
         }
 
@@ -964,21 +964,21 @@
 
         /* Default fallback style */
         .nk-text-tile.color-default {
-            background-color: transparent;
-            border: 2px solid var(--border-color);
+            background-color: color-mix(in srgb, var(--bg-tertiary) 60%, transparent);
+            border: 1px solid var(--border-color);
             color: var(--text-primary);
         }
 
-        /* Content styling - outline:none ensures no "box inside box" */
+        /* Content styling - Clean, highly legible typography */
         .nk-text-tile-content {
             outline: none;
-            font-family: var(--font-body);
-            font-size: 1.05rem;
+            font-family: inherit;
+            font-size: 1.02rem;
             font-weight: 500;
-            line-height: 1.6;
+            line-height: 1.65;
             color: inherit;
             min-width: 40px;
-            letter-spacing: 0.01em;
+            letter-spacing: -0.01em;
             width: 100%;
             white-space: pre-wrap;
             word-break: break-word;
@@ -988,13 +988,13 @@
         .nk-text-tile-content:empty::before {
             content: attr(data-placeholder);
             color: var(--text-secondary);
-            opacity: 0.6;
+            opacity: 0.55;
             font-style: italic;
             font-weight: 400;
             pointer-events: none;
         }
 
-        /* Premium glossy overlay for all colors */
+        /* Subtle ambient illumination overlay */
         .nk-text-tile.color-1::before,
         .nk-text-tile.color-2::before,
         .nk-text-tile.color-3::before,
@@ -1007,16 +1007,16 @@
             content: '';
             position: absolute;
             inset: 0;
-            border-radius: 10px;
-            background: linear-gradient(135deg,
-                    rgba(255, 255, 255, 0.25) 0%,
-                    rgba(255, 255, 255, 0.08) 50%,
-                    rgba(0, 0, 0, 0.02) 100%);
+            border-radius: 9px;
+            background: linear-gradient(180deg,
+                    rgba(255, 255, 255, 0.12) 0%,
+                    rgba(255, 255, 255, 0.03) 50%,
+                    rgba(0, 0, 0, 0.01) 100%);
             pointer-events: none;
             z-index: 0;
         }
 
-        /* Adjusted glossy overlay for dark theme */
+        /* Adjusted illumination overlay for dark theme */
         [data-theme="dark"] .nk-text-tile.color-1::before,
         [data-theme="dark"] .nk-text-tile.color-2::before,
         [data-theme="dark"] .nk-text-tile.color-3::before,
@@ -1026,10 +1026,10 @@
         [data-theme="dark"] .nk-text-tile.color-7::before,
         [data-theme="dark"] .nk-text-tile.color-8::before,
         [data-theme="dark"] .nk-text-tile.color-9::before {
-            background: linear-gradient(135deg,
-                    rgba(255, 255, 255, 0.1) 0%,
-                    rgba(255, 255, 255, 0.03) 50%,
-                    rgba(0, 0, 0, 0.08) 100%);
+            background: linear-gradient(180deg,
+                    rgba(255, 255, 255, 0.06) 0%,
+                    rgba(255, 255, 255, 0.01) 50%,
+                    rgba(0, 0, 0, 0.04) 100%);
         }
 
         /* Ensure content is above gradient */
@@ -1042,14 +1042,14 @@
 
         .nk-text-tile-color-cycler {
             position: absolute;
-            top: -12px;
+            top: -10px;
             left: auto;
-            right: 0;
-            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-            border: 2px solid var(--border-color);
+            right: 4px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
             border-radius: 50%;
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             color: var(--text-secondary);
             cursor: pointer;
             display: flex;
@@ -1057,8 +1057,8 @@
             justify-content: center;
             opacity: 0;
             transform: scale(0.85);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
         body.write-mode .nk-text-tile:hover .nk-text-tile-color-cycler {
@@ -1067,30 +1067,11 @@
         }
 
         body.write-mode .nk-text-tile-color-cycler:hover {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-hover) 100%);
+            background: var(--primary-color);
             color: var(--text-on-primary);
             border-color: var(--primary-color);
-            transform: scale(1.1) rotate(15deg);
+            transform: scale(1.1);
         }
-
-        /* NEW: Read Mode Fading for Memorization */
-        body.read-mode .nk-text-tile {
-            cursor: pointer;
-        }
-
-        body.read-mode .nk-text-tile.faded {
-            border-style: dashed;
-            box-shadow: none;
-        }
-
-        body.read-mode .nk-text-tile.faded .nk-text-tile-content {
-            color: transparent;
-            user-select: none;
-        }
-
-        /* --- NEW: Text Tile & Decktile System --- */
-        /* Main .nk-text-tile styles defined above */
-
 
         .search-result-item .nk-text-tile {
             display: flex;
@@ -1102,47 +1083,51 @@
             font-size: inherit;
         }
 
-        /* --- NEW: Decktile Container --- */
+        /* --- Decktile Container --- */
         .nk-textile-deck {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            padding: 1rem;
-            border-radius: var(--border-radius-lg);
-            border: 1px dashed var(--border-color);
-            background-color: color-mix(in srgb, var(--border-color) 10%, transparent);
-            margin: 1.5em 0;
+            gap: 10px;
+            padding: 0.85rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background-color: color-mix(in srgb, var(--bg-tertiary) 40%, transparent);
+            margin: 1.25em 0;
             position: relative;
+            box-sizing: border-box;
         }
 
-        /* A Textile inside a deck loses its margin to fit neatly */
+        /* A Textile inside a deck loses standalone margin to fit neatly */
         .nk-textile-deck .nk-text-tile {
             margin: 0;
-            flex-grow: 1;
-            min-width: 150px;
+            flex: 1 1 200px;
+            min-width: 140px;
             width: auto;
             max-width: 100%;
         }
 
-        /* NEW: Stack layout for Decks */
+        /* Stack layout for Decks */
         .nk-textile-deck.layout-stack {
             flex-direction: column;
             align-items: stretch;
+            gap: 8px;
         }
 
         .deck-add-tile-btn {
             display: none;
             align-items: center;
             justify-content: center;
-            border: 2px dashed var(--border-color);
-            border-radius: var(--border-radius-lg);
-            min-height: 50px;
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            min-height: 42px;
             color: var(--text-secondary);
+            font-size: 0.92rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            flex-grow: 1;
-            min-width: 150px;
+            flex: 1 1 140px;
+            min-width: 140px;
+            background: transparent;
         }
 
         /* Show Add button ONLY in write mode */
@@ -1151,20 +1136,21 @@
         }
 
         .deck-add-tile-btn:hover {
-            background-color: var(--primary-color);
-            color: var(--text-on-primary);
+            background-color: color-mix(in srgb, var(--primary-color) 12%, var(--bg-secondary));
+            color: var(--primary-color);
             border-color: var(--primary-color);
         }
 
         .deck-layout-toggle {
             position: absolute;
-            top: -12px;
+            top: -10px;
             right: 8px;
-            background-color: var(--bg-secondary);
+            background-color: var(--bg-primary);
             border: 1px solid var(--border-color);
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            border-radius: 6px;
+            width: 22px;
+            height: 22px;
+            font-size: 0.75rem;
             color: var(--text-secondary);
             cursor: pointer;
             display: none;
@@ -1172,6 +1158,7 @@
             justify-content: center;
             transition: all 0.2s;
             z-index: 10;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
         }
 
         /* Show layout toggle on hover in BOTH modes */

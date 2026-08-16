@@ -3367,6 +3367,19 @@ export const ui = {
                     }
                 },
 
+                pulseProfileBadge(duration = 5000) {
+                    const profileBadge = document.getElementById('profile-badge');
+                    if (!profileBadge) return;
+                    profileBadge.classList.add('is-animating');
+                    if (this._badgeAnimationTimer) {
+                        clearTimeout(this._badgeAnimationTimer);
+                    }
+                    this._badgeAnimationTimer = setTimeout(() => {
+                        profileBadge.classList.remove('is-animating');
+                        this._badgeAnimationTimer = null;
+                    }, duration);
+                },
+
                 applyReaderTheme() {
                     const wrapper = document.querySelector('.article-view-wrapper');
                     if (!wrapper) return;

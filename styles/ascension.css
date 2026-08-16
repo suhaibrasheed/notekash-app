@@ -70,6 +70,23 @@
             box-shadow: 0 0 10px rgba(var(--primary-color-rgb), 0.3);
         }
 
+        /* Battery Optimization: Pause animations on header badge by default when idle.
+           Runs for 5 seconds upon screen navigation/load via .is-animating, or during hover */
+        #profile-badge .astral,
+        #profile-badge .astral .inner-icon,
+        #profile-badge .astral .orbiting-dots {
+            animation-play-state: paused !important;
+        }
+
+        #profile-badge.is-animating .astral,
+        #profile-badge.is-animating .astral .inner-icon,
+        #profile-badge.is-animating .astral .orbiting-dots,
+        #profile-badge:hover .astral,
+        #profile-badge:hover .astral .inner-icon,
+        #profile-badge:hover .astral .orbiting-dots {
+            animation-play-state: running !important;
+        }
+
         /* Hide the welcome text */
         #profile-welcome {
             display: none;

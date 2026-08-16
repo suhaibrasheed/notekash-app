@@ -7,6 +7,7 @@ export class InteractiveCursorSplash {
         this.lastSpawnTime = 0;
         this.threshold = 20;
         this.primaryColor = '#ffffff';
+        this.isRunning = false;
 
         Object.assign(this.canvas.style, {
             position: 'fixed',
@@ -22,8 +23,12 @@ export class InteractiveCursorSplash {
         window.addEventListener('resize', () => this.resize());
         window.addEventListener('mousemove', (e) => this.handleMouseMove(e), { passive: true, capture: true });
         window.addEventListener('mousedown', (e) => this.handleMouseClick(e), { passive: true, capture: true });
+    }
 
-        this.loop();
+    startLoop() {
+        if (this.isRunning) return;
+        this.isRunning = true;
+        requestAnimationFrame(() => this.loop());
     }
 
     resize() {
@@ -64,6 +69,11 @@ export class InteractiveCursorSplash {
     handleMouseMove(e) {
         if (!document.body.classList.contains('is-pro-presenter-active')) {
             this.canvas.style.display = 'none';
+            if (this.particles.length > 0) {
+                this.particles = [];
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            this.isRunning = false;
             return;
         }
         this.canvas.style.display = 'block';
@@ -127,6 +137,7 @@ export class InteractiveCursorSplash {
                     });
                 }
 
+                this.startLoop();
                 // Break after bursting one to avoid bursting overlapping ones
                 break;
             }
@@ -172,11 +183,19 @@ export class InteractiveCursorSplash {
                 floatY: floatY * (isGiant ? 0.4 : 1)
             });
         }
+
+        this.startLoop();
     }
 
     loop() {
-        requestAnimationFrame(() => this.loop());
-        if (this.particles.length === 0) return;
+        if (!this.isRunning) return;
+
+        if (!document.body.classList.contains('is-pro-presenter-active') || this.particles.length === 0) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.particles = [];
+            this.isRunning = false;
+            return;
+        }
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.globalCompositeOperation = 'source-over';
@@ -254,6 +273,13 @@ export class InteractiveCursorSplash {
                 this.ctx.lineWidth = 1;
                 this.ctx.stroke();
             }
+        }
+
+        if (this.particles.length > 0) {
+            requestAnimationFrame(() => this.loop());
+        } else {
+            this.isRunning = false;
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         }
     }
 }

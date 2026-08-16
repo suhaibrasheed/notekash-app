@@ -2168,6 +2168,10 @@ export const events = {
                     }
 
 
+                    if (App.whiteboard?.state?.animationFrameId) {
+                        cancelAnimationFrame(App.whiteboard.state.animationFrameId);
+                        App.whiteboard.state.animationFrameId = null;
+                    }
                     if (App.visualMap && App.visualMap.destroy) App.visualMap.destroy();
                     if (App.mindMap && App.mindMap.destroy) App.mindMap.destroy();
                 },
@@ -3387,10 +3391,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     if (textTile) {
                         if (textTile.textContent.trim() === '') return;
 
-                        if (App.state.currentMode === 'read') {
-                            e.preventDefault();
-                            textTile.classList.toggle('faded');
-                        } else if (isWriteMode) {
+                        if (isWriteMode) {
                             const colorCycler = target.closest('.nk-text-tile-color-cycler');
                             if (colorCycler) {
                                 e.preventDefault();
@@ -3637,12 +3638,10 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             App.ui.aiMagic.show(range);
                         }
 
-                        // Show word-count toast
-                        const isWriteMode = App.state.currentMode === 'write';
-                        const isReadMode = App.state.currentMode === 'read';
-                        const showInReadMode = App.settings.get('showReadModeWordCount');
+                        // Show word-count toast (Respect user setting - default OFF)
+                        const showWordCount = App.settings.get('showReadModeWordCount');
 
-                        if (isWriteMode || (isReadMode && showInReadMode)) {
+                        if (showWordCount) {
                             const wordCount = selection.toString().trim().split(/\s+/).filter(w => w.length > 0).length;
                             const existing = document.getElementById(WC_TOAST_ID);
 

@@ -493,6 +493,7 @@ const App = {
     }
 
     App.ui.updateHeaderState();
+    if (App.ui?.pulseProfileBadge) App.ui.pulseProfileBadge(5000);
     await this.offline.runWhenOnline(() => this.dropbox.init());
     if (!this.offline.isOffline && this.dropbox.isReady() && this.settings.get('enableDropboxSync')) this.dropbox.syncChanges(true);
 

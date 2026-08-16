@@ -295,7 +295,9 @@ export const splitScreen = {
                         const articleId = params.get('id');
 
                         // Wait for app to be fully ready (including settings, hub, quiz AND verified data load)
+                        let attempts = 0;
                         const checkReady = setInterval(() => {
+                            attempts++;
                             // Check for all components needed by different views
                             const isReady = App.state &&
                                 App.state.isDataFullyLoaded && // Wait for our new flag
@@ -304,22 +306,22 @@ export const splitScreen = {
                                 App.router &&
                                 App.quiz;                   // For stats-dashboard
 
-                            if (isReady) {
+                            if (isReady || attempts >= 100) {
                                 clearInterval(checkReady);
 
                                 // For flashcard view, ensure category is set to 'All' so all cards display
                                 if (viewId === 'flashcard') {
-                                    if (!App.state.settings.flashcardCategory) {
+                                    if (!App.state?.settings?.flashcardCategory && App.state?.settings) {
                                         App.state.settings.flashcardCategory = 'All';
                                     }
                                 }
 
                                 if (viewId === 'article' && articleId) {
-                                    App.router.navigateTo('article', { id: articleId });
+                                    App.router?.navigateTo('article', { id: articleId });
                                 } else if (viewId && this.supportedViews.includes(viewId)) {
-                                    App.router.navigateTo(viewId);
+                                    App.router?.navigateTo(viewId);
                                 } else {
-                                    App.router.navigateTo('library');
+                                    App.router?.navigateTo('library');
                                 }
                             }
                         }, 50);

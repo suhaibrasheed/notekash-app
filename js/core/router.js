@@ -156,6 +156,7 @@ export const router = {
         }
 
         if (App.ui?.updateHeaderState) App.ui.updateHeaderState();
+        if (App.ui?.pulseProfileBadge) App.ui.pulseProfileBadge(5000);
         if (App.events?.mountViewListeners) App.events.mountViewListeners(viewId);
 
         // Smoothly dismiss the transition overlay and progress bar on the next animation frame

@@ -1,4 +1,4 @@
-const APP_VERSION = 'plain-modular-2026-06-21-11';
+const APP_VERSION = 'plain-modular-2026-08-15-02';
 
 export function registerPWA() {
   if (!('serviceWorker' in navigator)) return;

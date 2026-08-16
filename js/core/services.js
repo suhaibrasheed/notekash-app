@@ -761,28 +761,41 @@ export const services = {
                                 overflow-wrap: anywhere;
                                 line-height: 1.6;
                             }
+                            .nk-text-tile {
+                                display: flex;
+                                align-items: center;
+                                gap: 0.65rem;
+                                vertical-align: middle;
+                                border: 1px solid var(--border-color);
+                                border-radius: 10px;
+                                padding: 0.75rem 1.25rem;
+                                margin: 0.85rem 0;
+                                box-sizing: border-box;
+                                width: 100%;
+                            }
                             .nk-textile-deck {
                                 display: flex;
                                 flex-wrap: wrap;
-                                gap: 8px;
-                                padding: 1rem;
+                                gap: 10px;
+                                padding: 0.85rem;
                                 border-radius: 12px;
-                                border: 1px dashed var(--border-color);
+                                border: 1px solid var(--border-color);
                                 background-color: color-mix(in srgb, var(--border-color) 10%, transparent);
-                                margin: 1.5em 0;
+                                margin: 1.25em 0;
                                 position: relative;
                             }
                             .nk-textile-deck .nk-text-tile {
                                 margin: 0;
-                                flex-grow: 1;
-                                min-width: 150px;
+                                flex: 1 1 180px;
+                                min-width: 140px;
                                 width: auto;
                             }
                             .nk-textile-deck.layout-stack {
                                 flex-direction: column;
                                 align-items: stretch;
+                                gap: 8px;
                             }
-                            .deck-layout-toggle, .deck-add-tile-btn { display: none !important; }
+                            .deck-layout-toggle, .deck-add-tile-btn, .nk-text-tile-color-cycler { display: none !important; }
 
                             .nk-text-tile.color-1 { background: var(--textile-bg-1); border-color: var(--textile-border-1); color: var(--textile-text-1); }
                             .nk-text-tile.color-2 { background: var(--textile-bg-2); border-color: var(--textile-border-2); color: var(--textile-text-2); }
