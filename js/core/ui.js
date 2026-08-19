@@ -6316,24 +6316,18 @@ export const ui = {
                                 ${cloudSyncHTML}
                             </div>
 
-                            <!-- NEW: App Updater Section -->
-                            <div class="setting-group" style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">App Update</h3>
+                            <!-- App Updater Section -->
+                            <div class="settings-section">
+                                <h4><i class="fa-solid fa-arrows-rotate"></i> App Update</h4>
+                                <div class="settings-item">
+                                    <div class="settings-label">
+                                        <b>Check for Updates</b>
+                                        <small>Upgrade to the latest build with new features and fixes.</small>
+                                    </div>
+                                    <button onclick="App.ui.showUpdateConfirmationModal()" class="btn btn-primary" style="padding: 7px 16px; display: inline-flex; align-items: center; gap: 7px; font-weight: 600; white-space: nowrap; border-radius: 10px;">
+                                        <i class="fa-solid fa-arrows-rotate"></i> Check Now
+                                    </button>
                                 </div>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-                                    If you aren't seeing new features, you might be viewing older version.
-                                </p>
-                                
-                                <button onclick="App.ui.showUpdateConfirmationModal()" class="btn-primary" style="width: 100%; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border: none; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                                        <path d="M3 3v5h5"></path>
-                                        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
-                                        <path d="M16 21h5v-5"></path>
-                                    </svg>
-                                    Check for Updates
-                                </button>
                             </div>
 
                             <div class="modal-buttons">
@@ -6356,28 +6350,28 @@ export const ui = {
                 showUpdateConfirmationModal() {
                     const modalHTML = `
                     <div class="modal-backdrop" onclick="if(event.target === this) App.ui.closeModal()">
-                        <div class="modal-content ui-card" style="max-width: 450px; text-align: center; border-radius: 20px; padding: 2rem;" onclick="event.stopPropagation()">
-                            <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">🚀</div>
-                            <h3 style="margin-bottom: 0.5rem; font-family: var(--font-display); font-weight: 700;">Check for Updates</h3>
+                        <div class="modal-content ui-card" style="max-width: 400px; text-align: center; border-radius: 24px; padding: 2.25rem 2rem; box-shadow: 0 24px 48px rgba(0,0,0,0.25);" onclick="event.stopPropagation()">
+                            <div style="width: 60px; height: 60px; margin: 0 auto 1.25rem; border-radius: 18px; background: linear-gradient(135deg, rgba(255, 69, 0, 0.12), rgba(251, 191, 36, 0.15)); display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 1px solid rgba(255, 69, 0, 0.25);">🚀</div>
+                            <h3 style="margin: 0 0 0.5rem 0; font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; color: var(--text-primary);">Check for Updates</h3>
                             
-                            <p style="margin-bottom: 1rem; color: var(--text-primary);"><b>Get the latest version of NoteKash.</b></p>
-                            
-                            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
-                                This clears your browser's static cache and reloads the latest app build.
-                                <br><br>
-                                <b>Your notes in the database are preserved.</b> If you'd like an extra copy, you can download a backup below.
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0 0 1.5rem 0; line-height: 1.5;">
+                                Get the latest features and improvements.
+                                <br>
+                                <span style="font-size: 0.82rem; opacity: 0.85; color: var(--text-muted);">All notes and data remain safely preserved.</span>
                             </p>
 
-                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-weight: 700; border-radius: 12px;" onclick="App.Updater.nukeCacheAndReload()">
-                                    ⚡ Clear Cache & Reload Latest Build
+                            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+                                <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px 18px; font-weight: 600; border-radius: 14px; font-size: 0.95rem; background: linear-gradient(135deg, #ff4500 0%, #ff8c00 100%); border: none; box-shadow: 0 4px 16px rgba(255, 69, 0, 0.35);" onclick="App.ui.closeModal(); App.Updater.nukeCacheAndReload()">
+                                    ⚡ Update Now
                                 </button>
-                                <button class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 10px; border-radius: 12px;" onclick="App.services.backup.exportToZip()">
-                                    <i class="fa-solid fa-file-zipper" style="margin-right: 6px;"></i> Download Full Backup
-                                </button>
-                                <button class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 10px; border-radius: 12px;" onclick="App.ui.closeModal()">
-                                    Cancel
-                                </button>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem;">
+                                    <button class="btn btn-secondary" style="justify-content: center; padding: 10px 14px; border-radius: 12px; font-size: 0.85rem; font-weight: 500;" onclick="App.services.backup.exportToZip()" title="Export all notes before updating">
+                                        <i class="fa-solid fa-download" style="margin-right: 6px;"></i> Backup
+                                    </button>
+                                    <button class="btn btn-secondary" style="justify-content: center; padding: 10px 14px; border-radius: 12px; font-size: 0.85rem; font-weight: 500;" onclick="App.ui.closeModal()">
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>`;

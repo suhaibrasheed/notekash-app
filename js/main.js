@@ -90,39 +90,139 @@ const App = {
 
   Updater: {
     async nukeCacheAndReload() {
-      const overlay = document.createElement('div');
-      overlay.style.position = 'fixed';
-      overlay.style.top = '0'; overlay.style.left = '0';
-      overlay.style.width = '100vw'; overlay.style.height = '100vh';
-      overlay.style.background = 'rgba(0,0,0,0.85)';
-      overlay.style.zIndex = '9999';
-      overlay.style.display = 'flex'; overlay.style.flexDirection = 'column';
-      overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center';
-      overlay.style.color = 'white';
-      overlay.innerHTML = '<div style="font-size: 2rem; margin-bottom: 1rem;">🚀</div><h2>Updating NoteKash...</h2><p>The app will reload in a moment.</p>';
-      document.body.appendChild(overlay);
+      let overlay = document.getElementById('update-splash-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'update-splash-overlay';
+        overlay.className = 'update-splash-overlay';
+        overlay.innerHTML = `
+          <div class="update-splash-card">
+            <div class="splash-cosmic-orb">
+              <div class="splash-orb-ring ring-1"></div>
+              <div class="splash-orb-ring ring-2"></div>
+              <div class="splash-orb-center">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                  <polyline points="2 17 12 22 22 17"></polyline>
+                  <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+              </div>
+            </div>
+            <h3 id="update-splash-title" class="splash-title">Updating NoteKash</h3>
+            <p id="update-splash-subtitle" class="splash-subtitle">Connecting to NoteKash Cloud...</p>
+            <div class="splash-progress-bar">
+              <div class="splash-progress-indeterminate"></div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+      }
+
+      requestAnimationFrame(() => overlay.classList.add('is-active'));
+
+      const titleEl = document.getElementById('update-splash-title');
+      const subtitleEl = document.getElementById('update-splash-subtitle');
 
       const isOnline = navigator.onLine;
       if (!isOnline) {
-        overlay.innerHTML = '<div style="font-size: 2rem; margin-bottom: 1rem;">Offline update deferred</div><h2>Connect to the internet to apply updates safely.</h2><p>Please try again when you’re online.</p>';
-        setTimeout(() => overlay.remove(), 3500);
+        if (titleEl) titleEl.textContent = 'Connection Required';
+        if (subtitleEl) subtitleEl.textContent = 'Please connect to the internet to check for updates.';
+        setTimeout(() => {
+          overlay.classList.remove('is-active');
+          setTimeout(() => overlay.remove(), 400);
+        }, 3000);
         return;
       }
 
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-          await registration.unregister();
+      // Step 1: Connecting & Checking (~900ms)
+      if (subtitleEl) subtitleEl.textContent = 'Checking for latest release...';
+      await new Promise(r => setTimeout(r, 900));
+
+      // Step 2: Downloading packages (~1100ms)
+      if (subtitleEl) subtitleEl.textContent = 'Downloading latest packages & components...';
+      await new Promise(r => setTimeout(r, 1100));
+
+      // Step 3: Unregistering old workers and clearing asset cache (~1000ms)
+      if (subtitleEl) subtitleEl.textContent = 'Applying updates & optimizing workspace...';
+      try {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+          }
         }
+      } catch (e) {
+        console.warn('SW unregister error:', e);
       }
 
-      if ('caches' in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map(key => caches.delete(key)));
+      try {
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(key => caches.delete(key)));
+        }
+      } catch (e) {
+        console.warn('Asset refresh error:', e);
       }
+      await new Promise(r => setTimeout(r, 1000));
 
-      setTimeout(() => window.location.reload(), 1000);
+      // Step 4: Finalizing & restart (~800ms)
+      if (subtitleEl) subtitleEl.textContent = 'Finalizing update & restarting...';
+      sessionStorage.setItem('nk_just_updated', 'true');
+      await new Promise(r => setTimeout(r, 800));
+
+      window.location.reload();
     }
+  },
+
+  _showPostUpdateSplash() {
+    let overlay = document.getElementById('update-splash-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'update-splash-overlay';
+      overlay.className = 'update-splash-overlay';
+      overlay.innerHTML = `
+        <div class="update-splash-card">
+          <div class="splash-cosmic-orb">
+            <div class="splash-orb-ring ring-1"></div>
+            <div class="splash-orb-ring ring-2"></div>
+            <div class="splash-orb-center">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+              </svg>
+            </div>
+          </div>
+          <h3 id="post-update-title" class="splash-title">NoteKash Updated</h3>
+          <p id="post-update-subtitle" class="splash-subtitle">Setting up updated workspace & features...</p>
+          <div class="splash-progress-bar">
+            <div class="splash-progress-indeterminate"></div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+    requestAnimationFrame(() => overlay.classList.add('is-active'));
+
+    const subtitleEl = document.getElementById('post-update-subtitle');
+
+    setTimeout(() => {
+      if (subtitleEl) subtitleEl.textContent = 'Finalizing configurations...';
+    }, 1000);
+
+    setTimeout(() => {
+      if (subtitleEl) subtitleEl.textContent = 'Ready! Launching NoteKash...';
+    }, 1900);
+
+    setTimeout(() => {
+      overlay.classList.remove('is-active');
+      setTimeout(() => {
+        overlay.remove();
+        if (window.App?.ui?.showToast) {
+          window.App.ui.showToast('✨ NoteKash updated to the latest version!', { type: 'success', duration: 4500 });
+        }
+      }, 400);
+    }, 2400);
   },
 
   pwa: {
@@ -308,6 +408,16 @@ const App = {
 
   async init() {
     this.offline.init();
+
+    // Check if returning from an update restart
+    try {
+      if (sessionStorage.getItem('nk_just_updated')) {
+        sessionStorage.removeItem('nk_just_updated');
+        this._showPostUpdateSplash();
+      }
+    } catch (e) {
+      console.warn('Session check error:', e);
+    }
 
     if ('launchQueue' in window && typeof LaunchParams !== 'undefined' && 'files' in LaunchParams.prototype) {
       window.launchQueue.setConsumer(async (launchParams) => {

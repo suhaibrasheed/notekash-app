@@ -909,6 +909,13 @@ export const pdf = {
                             }
                         } else {
                             // IMAGE VIEW: Capture with engraved watermark
+                            if (typeof htmlToImage === 'undefined' && window.App?.loadLibrary) {
+                                try {
+                                    await App.loadLibrary('htmlToImage');
+                                } catch (e) {
+                                    console.warn('Could not load htmlToImage:', e);
+                                }
+                            }
                             if (typeof htmlToImage === 'undefined') { App.ui.showToast("Capture library is not available.", "error"); return; }
 
                             const pageContainer = document.querySelector('.pdf-page-container');
@@ -975,7 +982,7 @@ export const pdf = {
                         }
                     },
 
-                    open(attachmentId) {
+                    async open(attachmentId) {
                         App.pdf.init(); // Ensure worker is loaded
                         const aiToggle = document.getElementById('ai-magic-toggle');
                         if (aiToggle) aiToggle.style.display = 'flex';
@@ -1107,7 +1114,6 @@ export const pdf = {
                         document.getElementById('pdf-thickness-cycler').onclick = () => App.annotationEngine.cycleThickness();
                         document.getElementById('pdf-undo-btn').onclick = () => App.annotationEngine.undo();
                         header.querySelector('button[title="Clear Annotations on Page"]').onclick = () => App.annotationEngine.clearCurrentPage();
-                        header.querySelector('button[title="Clear Annotations on Page"]').onclick = () => App.annotationEngine.clearCurrentPage();
                         document.addEventListener('keydown', this.handleKeyDown);
                         document.addEventListener('keyup', this.handleKeyUp);
 
@@ -1161,7 +1167,14 @@ export const pdf = {
                         });
 
 
-                        const pdfData = atob(attachment.data.substring(attachment.data.indexOf(',') + 1));
+                        let pdfData;
+                        try {
+                            pdfData = atob(attachment.data.substring(attachment.data.indexOf(',') + 1));
+                        } catch (err) {
+                            console.error('Invalid PDF attachment base64 data:', err);
+                            App.ui.showToast('Could not read attached PDF data.', 'error');
+                            return;
+                        }
 
                         if (typeof pdfjsLib === 'undefined' && window.App?.loadLibrary) {
                             try {
@@ -1175,15 +1188,27 @@ export const pdf = {
                             return;
                         }
 
-                        pdfjsLib.getDocument({ data: pdfData }).promise.then(pdfDoc_ => {
+                        if (pdfjsLib.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+                            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+                        }
+
+                        try {
+                            const pdfDoc_ = await pdfjsLib.getDocument({ data: pdfData }).promise;
                             App.pdf.state.pdfDoc = pdfDoc_;
                             const pageCountEl = document.getElementById('pdf-page-count');
                             if (pageCountEl) pageCountEl.textContent = App.pdf.state.pdfDoc.numPages;
-                            document.getElementById('pdf-page-num').max = App.pdf.state.pdfDoc.numPages;
+                            const pageNumInput = document.getElementById('pdf-page-num');
+                            if (pageNumInput) {
+                                pageNumInput.max = App.pdf.state.pdfDoc.numPages;
+                                pageNumInput.value = attachment.lastPage || 1;
+                            }
                             App.pdf.state.pageNum = attachment.lastPage || 1;
                             this.renderPage(App.pdf.state.pageNum);
                             this.buildThumbnails();
-                        });
+                        } catch (err) {
+                            console.error('Failed to load PDF document:', err);
+                            App.ui.showToast('Could not load PDF document.', 'error');
+                        }
                     },
 
                     async renderTextViewForPage(pageNum) {
