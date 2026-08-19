@@ -556,17 +556,19 @@
         }
 
         .study-card-content-box .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
-            margin-top: 0.85rem;
-            padding: 0.75rem 1.15rem;
-            background-color: color-mix(in srgb, var(--bg-tertiary) 45%, var(--bg-secondary));
-            border: 1px solid color-mix(in srgb, var(--border-color) 35%, transparent);
-            border-left: 3.5px solid var(--primary-color);
-            border-radius: 9px;
+            margin-top: 0.9rem;
+            padding: 0.85rem 1.25rem;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.09), rgba(34, 197, 94, 0.03));
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            border-left: 3.5px solid #22c55e;
+            border-radius: 10px;
             font-size: 0.9em;
             line-height: 1.55;
+            color: var(--text-primary);
+            box-shadow: 0 2px 10px rgba(34, 197, 94, 0.05);
         }
 
-        /* --- NOTEKASH TEXTILE-STYLE EXPLANATION BLOCK --- */
+        /* ── NOTEKASH GREEN-TEXTILE INSPIRED EXPLANATION BLOCK ───────── */
         .nk-mcq-explanation {
             max-height: 0;
             opacity: 0;
@@ -581,12 +583,12 @@
 
             outline: none;
             margin-top: 0;
-            padding: 0 1.15rem;
-            background-color: color-mix(in srgb, var(--bg-tertiary) 45%, var(--bg-secondary));
-            border: 1px solid color-mix(in srgb, var(--border-color) 35%, transparent);
-            border-left: 3.5px solid var(--primary-color);
-            border-radius: 9px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(0, 0, 0, 0.02);
+            padding: 0 1.25rem;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.025));
+            border: 1px solid rgba(34, 197, 94, 0.22);
+            border-left: 3.5px solid #22c55e;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(34, 197, 94, 0.05), 0 2px 8px rgba(0, 0, 0, 0.02);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             box-sizing: border-box;
@@ -596,18 +598,33 @@
             font-family: inherit;
         }
 
-        /* Difficulty-matched left border for explanation textile */
-        .nk-mcq-explanation[data-difficulty="easy"]   { border-left-color: #3ce29e !important; }
-        .nk-mcq-explanation[data-difficulty="medium"] { border-left-color: #ff9f43 !important; }
-        .nk-mcq-explanation[data-difficulty="hard"]   { border-left-color: #ff5252 !important; }
+        /* ── Dark Theme Green Aesthetics ────────────────────────────── */
+        [data-theme="dark"] .nk-mcq-explanation,
+        [data-theme="dark"] .study-card-content-box .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.09), rgba(16, 185, 129, 0.03));
+            border: 1px solid rgba(16, 185, 129, 0.26);
+            border-left: 3.5px solid #10b981;
+            box-shadow: 0 2px 14px rgba(16, 185, 129, 0.08), 0 1px 3px rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
+        }
+
+        /* ── Sepia Theme Green Aesthetics ───────────────────────────── */
+        [data-theme="sepia"] .nk-mcq-explanation,
+        [data-theme="sepia"] .study-card-content-box .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.09), rgba(46, 125, 50, 0.03));
+            border: 1px solid rgba(46, 125, 50, 0.25);
+            border-left: 3.5px solid #2e7d32;
+            box-shadow: 0 2px 10px rgba(46, 125, 50, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+            color: var(--text-primary);
+        }
 
         /* Write mode: Always show explanation for editing */
         body.write-mode .nk-mcq-explanation {
             max-height: none;
             opacity: 1;
             transform: translateY(0);
-            margin-top: 0.85rem;
-            padding: 0.75rem 1.15rem;
+            margin-top: 0.9rem;
+            padding: 0.85rem 1.25rem;
         }
 
         .nk-mcq-explanation:empty::before {
@@ -627,8 +644,8 @@
             max-height: 800px;
             opacity: 1;
             transform: translateY(0);
-            margin-top: 0.85rem;
-            padding: 0.75rem 1.15rem;
+            margin-top: 0.9rem;
+            padding: 0.85rem 1.25rem;
             position: relative;
         }
 

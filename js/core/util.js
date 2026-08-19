@@ -2060,8 +2060,8 @@ export const util = {
                     while ((m = tagRegex.exec(text)) !== null) {
                         const raw = m[1];
                         if (DIFFICULTY_KEYWORDS.has(raw.toLowerCase())) continue;
-                        // Normalize: underscores to spaces, capitalize first letter
-                        const display = raw.replace(/_/g, ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase());
+                        // Convert underscores to spaces and preserve exact original casing
+                        const display = raw.replace(/_/g, ' ');
                         if (!tags.includes(display)) tags.push(display);
                     }
                     if (tags.length > 0) {

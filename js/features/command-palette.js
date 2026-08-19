@@ -1421,8 +1421,8 @@ export const commandPalette = {
                                 expText += ` #${diff}`;
                             }
                             tags.forEach(t => {
-                                const slug = t.trim().toLowerCase().replace(/\s+/g, '_');
-                                if (slug && !expText.toLowerCase().includes(`#${slug}`)) {
+                                const slug = t.trim().replace(/\s+/g, '_');
+                                if (slug && !expText.toLowerCase().includes(`#${slug.toLowerCase()}`)) {
                                     expText += ` #${slug}`;
                                 }
                             });
