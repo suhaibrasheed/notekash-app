@@ -1243,9 +1243,9 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 5px;
+            gap: 7px;
             margin-top: 0;
-            margin-bottom: 8px;
+            margin-bottom: 9px;
             padding: 0;
             border: none;
             pointer-events: none;  /* non-interactive decorations */
@@ -1259,17 +1259,25 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 4.5px;
             white-space: nowrap;
             font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
             font-size: 0.63rem !important;
             font-weight: 500 !important;
             letter-spacing: 0.02em !important;
-            padding: 2px 9px !important;
+            padding: 2.5px 8.5px !important;
             border-radius: 999px !important;
             box-sizing: border-box !important;
-            line-height: 1.2 !important;
+            line-height: 1 !important;
             border-style: solid !important;
             border-width: 1px !important;
+        }
+
+        .nk-mcq-tag-capsule .nk-capsule-text,
+        .nk-mcq-pyq-capsule .nk-capsule-text {
+            display: inline-block;
+            line-height: 1;
+            vertical-align: middle;
         }
 
         /* ── Difficulty circular capsule (emoji/dot only) ───────────── */
@@ -1279,6 +1287,7 @@
             justify-content: center;
             width: 18px !important;
             height: 18px !important;
+            margin-right: 2px; /* Tiny gap between dot and first capsule */
             border-radius: 50% !important;
             padding: 0 !important;
             box-sizing: border-box !important;
@@ -1321,12 +1330,18 @@
             box-shadow: 0 0 6px rgba(255, 82, 82, 0.25) !important;
         }
         
-        /* ── PYQ Icon inside capsule ───────────────────────────────── */
+        /* ── Topic Tag & PYQ Icons inside capsules ──────────────────── */
+        .nk-mcq-tag-capsule .nk-tag-icon,
         .nk-mcq-pyq-capsule .nk-pyq-icon {
-            margin-right: 4px;
-            font-size: 0.82em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            font-size: 0.74em;
+            line-height: 1;
             opacity: 0.85;
-            vertical-align: baseline;
+            vertical-align: middle;
+            transform: translateY(-0.5px); /* Optical subpixel alignment with text */
         }
 
         /* ── Default / Light Theme Colors (Unified & Minimal) ────────── */

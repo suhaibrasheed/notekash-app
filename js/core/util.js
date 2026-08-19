@@ -2152,7 +2152,16 @@ export const util = {
                         tags.forEach(tag => {
                             const capsule = document.createElement('span');
                             capsule.className = 'nk-mcq-tag-capsule';
-                            capsule.textContent = tag;
+                            
+                            const tagIcon = document.createElement('i');
+                            tagIcon.className = 'fa-solid fa-lightbulb nk-tag-icon';
+                            capsule.appendChild(tagIcon);
+                            
+                            const tagLabel = document.createElement('span');
+                            tagLabel.className = 'nk-capsule-text';
+                            tagLabel.textContent = tag;
+                            capsule.appendChild(tagLabel);
+                            
                             bar.appendChild(capsule);
                         });
                         
@@ -2165,8 +2174,10 @@ export const util = {
                             pyqIcon.className = 'fa-solid fa-graduation-cap nk-pyq-icon';
                             pyqBadge.appendChild(pyqIcon);
                             
-                            const pyqText = document.createTextNode(pyq);
-                            pyqBadge.appendChild(pyqText);
+                            const pyqLabel = document.createElement('span');
+                            pyqLabel.className = 'nk-capsule-text';
+                            pyqLabel.textContent = pyq;
+                            pyqBadge.appendChild(pyqLabel);
                             
                             bar.appendChild(pyqBadge);
                         }
