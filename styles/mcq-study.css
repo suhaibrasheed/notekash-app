@@ -1,47 +1,49 @@
-        /* --- NEW: MCQ Block Styles (Feature #2) - POLISHED --- */
+        /* --- MCQ Block Styles - Sleek, Lightweight & Dynamically Scaled --- */
         .nk-mcq-block {
             position: relative;
             background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-left: 4px solid var(--primary-color);
+            border: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);
+            border-left: 3.5px solid var(--primary-color);
             border-radius: 12px;
-            padding: 1.5rem 1.75rem;
-            margin: 1.5em 0;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05),
-                0 1px 3px rgba(0, 0, 0, 0.03);
+            padding: 1.2rem 1.45rem;
+            margin: 1.3em 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
             font-family: inherit;
             font-size: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+
+        /* Difficulty-based left border color on the MCQ block */
+        .nk-mcq-block:has(.nk-mcq-explanation[data-difficulty="easy"])   { border-left-color: #3ce29e !important; }
+        .nk-mcq-block:has(.nk-mcq-explanation[data-difficulty="medium"]) { border-left-color: #ff9f43 !important; }
+        .nk-mcq-block:has(.nk-mcq-explanation[data-difficulty="hard"])   { border-left-color: #ff5252 !important; }
 
         /* Subtle hover effect in read mode */
         body.read-mode .nk-mcq-block:not([data-answered="true"]):hover,
         .focus-mode-overlay .nk-mcq-block:not([data-answered="true"]):hover {
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08),
-                0 2px 8px rgba(0, 0, 0, 0.04);
-            border-left-width: 5px;
+            border-color: color-mix(in srgb, var(--primary-color) 35%, var(--border-color));
+            box-shadow: 0 3px 14px rgba(0, 0, 0, 0.05);
         }
 
-        /* Answered state - elegant with subtle glow */
+        /* Answered state */
         .nk-mcq-block[data-answered="true"] {
-            border-left-color: var(--success-color);
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05),
-                -2px 0 12px color-mix(in srgb, var(--success-color) 15%, transparent);
+            border-left-color: var(--success-color) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03), -1px 0 8px color-mix(in srgb, var(--success-color) 12%, transparent);
         }
 
         .nk-mcq-block[data-answered="true"][data-user-incorrect="true"] {
-            border-left-color: var(--danger-color);
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05),
-                -2px 0 12px color-mix(in srgb, var(--danger-color) 15%, transparent);
+            border-left-color: var(--danger-color) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03), -1px 0 8px color-mix(in srgb, var(--danger-color) 12%, transparent);
         }
 
-        /* Question text - refined typography */
+        /* Question text - refined typography inheriting appearance settings */
         .nk-mcq-question {
-            font-weight: 500;
-            font-size: 1.05em;
-            margin-bottom: 1.2rem;
-            margin-right: 40px;
+            font-weight: 550;
+            font-size: inherit;
+            margin-bottom: 0.85rem;
+            margin-right: 36px;
             outline: none;
-            line-height: 1.55;
+            line-height: 1.42; /* Slightly reduced line spacing as requested */
             letter-spacing: -0.005em;
             color: var(--text-primary);
             font-family: inherit;
@@ -110,51 +112,48 @@
             display: none;
         }
 
-
         .nk-mcq-options {
             display: flex;
             flex-direction: column;
-            gap: 0.6rem;
+            gap: 0.55rem;
         }
 
         .nk-mcq-option {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .nk-mcq-option-radio {
-            width: 24px;
-            height: 24px;
-            border: 2.5px solid var(--border-color);
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
             border-radius: 50%;
             flex-shrink: 0;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             background: var(--bg-secondary);
         }
 
         .nk-mcq-option-radio:hover {
             border-color: var(--primary-color);
-            transform: scale(1.1);
+            transform: scale(1.08);
         }
 
         .nk-mcq-option-text {
             flex-grow: 1;
             outline: none;
-            padding: 10px 14px;
+            padding: 8px 12px;
             border-radius: 8px;
             border: 1px solid transparent;
             transition: all 0.2s ease;
             background: var(--bg-tertiary);
             min-height: 22px;
-            /* Inherit font from MCQ block */
             font-family: inherit;
-            font-size: 0.95em;
-            line-height: 1.5;
-            letter-spacing: 0.01em;
+            font-size: 0.9em; /* 10% smaller than question for optimal hierarchy */
+            line-height: 1.45;
         }
 
         .nk-mcq-option-text:focus-within {
@@ -187,12 +186,10 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         }
 
-        /* Larger images in presentation/focus mode */
         .focus-mode-overlay .nk-mcq-option-text img {
             max-height: 150px;
         }
 
-        /* --- Image Layout in MCQ --- */
         .nk-mcq-option-text:has(img) {
             flex-grow: 0;
             width: fit-content;
@@ -205,7 +202,6 @@
             min-height: auto;
         }
 
-        /* Remove margins from the image itself when in this compact mode */
         .nk-mcq-option-text:has(img) img {
             margin: 0;
             display: block;
@@ -237,10 +233,9 @@
             background: color-mix(in srgb, var(--danger-color) 10%, transparent);
         }
 
-
         /* --- Write Mode Specific Styles --- */
         body.write-mode .nk-mcq-option[data-is-correct="true"] .nk-mcq-option-radio {
-            background: linear-gradient(135deg, var(--success-color), color-mix(in srgb, var(--success-color), #000 10%));
+            background: var(--success-color);
             border-color: var(--success-color);
             box-shadow: 0 2px 8px color-mix(in srgb, var(--success-color) 40%, transparent);
         }
@@ -250,571 +245,371 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: white;
             font-weight: bold;
             transform: translate(-50%, -50%);
         }
 
-
-        /* --- Read Mode Specific Styles - POLISHED --- */
+        /* --- Read Mode & Presentation Mode Option Styles --- */
         body.read-mode .nk-mcq-add-option,
         body.read-mode .nk-mcq-delete-option,
         body.read-mode .nk-mcq-option-radio,
-        .focus-mode-overlay .nk-mcq-add-option {
-            display: none;
+        .focus-mode-overlay .nk-mcq-add-option,
+        .focus-mode-overlay .nk-mcq-delete-option,
+        .focus-mode-overlay .nk-mcq-option-radio {
+            display: none !important;
         }
 
-        body.read-mode .nk-mcq-option {
-            padding: 14px 18px;
-            border: 2px solid var(--border-color);
-            border-radius: 14px;
+        body.read-mode .nk-mcq-option,
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option {
+            padding: 10px 14px;
+            border: 1px solid color-mix(in srgb, var(--border-color) 45%, transparent);
+            border-radius: 9px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: var(--bg-secondary);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: color-mix(in srgb, var(--bg-tertiary) 45%, var(--bg-secondary));
             position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             overflow: hidden;
         }
 
-        /* Refined radio indicator */
-        body.read-mode .nk-mcq-option::before {
+        /* Sleek Radio Indicator */
+        body.read-mode .nk-mcq-option::before,
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option::before {
             content: '';
-            position: absolute;
-            top: 50%;
-            left: 12px;
-            width: 20px;
-            height: 20px;
-            border: 2.5px solid var(--border-color);
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
             border-radius: 50%;
-            transform: translateY(-50%);
+            border: 1.5px solid color-mix(in srgb, var(--border-color) 75%, var(--text-secondary));
             background: var(--bg-primary);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+            flex-shrink: 0;
+            box-sizing: border-box;
+            line-height: 1;
         }
 
-        body.read-mode .nk-mcq-option .nk-mcq-option-text {
-            padding-left: 34px;
+        body.read-mode .nk-mcq-option .nk-mcq-option-text,
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option .nk-mcq-option-text {
+            padding: 0;
             background: transparent;
             border: none;
+            font-family: inherit;
+            font-size: 0.9em;
+            line-height: 1.45;
+            color: var(--text-primary);
+            flex: 1;
+            min-width: 0;
         }
 
-        /* Hover state - show inner dot */
-        body.read-mode .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover {
+        /* Hover state */
+        body.read-mode .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover,
+        .focus-mode-overlay .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover {
+            border-color: color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
+            background: color-mix(in srgb, var(--primary-color) 4%, var(--bg-tertiary));
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+        }
+
+        body.read-mode .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before,
+        .focus-mode-overlay .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before {
             border-color: var(--primary-color);
-            background: color-mix(in srgb, var(--primary-color) 4%, var(--bg-secondary));
-            transform: translateX(4px) scale(1.01);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            background: color-mix(in srgb, var(--primary-color) 12%, var(--bg-primary));
+            transform: scale(1.08);
         }
 
-        body.read-mode .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before {
-            border-color: var(--primary-color);
-            background: var(--bg-secondary);
-            box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 10%, transparent);
-        }
-
-
-
-        body.read-mode .nk-mcq-block[data-answered="true"] .nk-mcq-option {
+        /* Answered state */
+        body.read-mode .nk-mcq-block[data-answered="true"] .nk-mcq-option,
+        .focus-mode-overlay .nk-mcq-block[data-answered="true"] .nk-mcq-option {
             cursor: default;
         }
 
-        /* Premium Correct Answer Style - POLISHED */
-        body.read-mode .nk-mcq-option.correct {
-            border: 2.5px solid var(--success-color);
-            color: var(--text-primary);
-            background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--success-color) 14%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--success-color) 7%, var(--bg-secondary)));
-            box-shadow: 0 2px 12px color-mix(in srgb, var(--success-color) 20%, transparent);
-            animation: mcqCorrectPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        body.read-mode .nk-mcq-block[data-answered="true"] .nk-mcq-option:not(.correct):not(.incorrect),
+        .focus-mode-overlay .nk-mcq-block[data-answered="true"] .nk-mcq-option:not(.correct):not(.incorrect) {
+            opacity: 0.55;
         }
 
-        body.read-mode .nk-mcq-option.correct::before {
+        /* ── Visually Enticing Correct Answer Style ─────────────────── */
+        body.read-mode .nk-mcq-option.correct,
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct {
+            border: 1.5px solid color-mix(in srgb, var(--success-color) 85%, transparent);
+            background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--success-color) 16%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--success-color) 6%, var(--bg-secondary)));
+            box-shadow: 0 0 16px color-mix(in srgb, var(--success-color) 22%, transparent),
+                inset 0 0 14px color-mix(in srgb, var(--success-color) 5%, transparent);
+            animation: mcqCorrectPulse 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            opacity: 1 !important;
+        }
+
+        body.read-mode .nk-mcq-option.correct::before,
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct::before {
             content: '✓';
-            border-color: var(--success-color);
-            background: linear-gradient(135deg, var(--success-color), color-mix(in srgb, var(--success-color), #000 10%));
-            color: white;
-            font-size: 0.75rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px color-mix(in srgb, var(--success-color) 35%, transparent),
-                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            border: none;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 900;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5),
+                inset 0 1px 1.5px rgba(255, 255, 255, 0.45);
+            transform: scale(1.08);
         }
 
-
-
-        /* Premium Incorrect Answer Style - POLISHED */
-        body.read-mode .nk-mcq-option.incorrect {
-            border: 2.5px solid var(--danger-color);
-            color: var(--text-primary);
+        /* ── Visually Enticing Incorrect Answer Style ───────────────── */
+        body.read-mode .nk-mcq-option.incorrect,
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect {
+            border: 1.5px solid color-mix(in srgb, var(--danger-color) 85%, transparent);
             background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--danger-color) 12%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--danger-color) 5%, var(--bg-secondary)));
-            box-shadow: 0 2px 12px color-mix(in srgb, var(--danger-color) 20%, transparent);
-            animation: mcqIncorrectShake 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    color-mix(in srgb, var(--danger-color) 16%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--danger-color) 6%, var(--bg-secondary)));
+            box-shadow: 0 0 16px color-mix(in srgb, var(--danger-color) 22%, transparent),
+                inset 0 0 14px color-mix(in srgb, var(--danger-color) 5%, transparent);
+            animation: mcqIncorrectShake 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            opacity: 1 !important;
         }
 
-        body.read-mode .nk-mcq-option.incorrect::before {
+        body.read-mode .nk-mcq-option.incorrect::before,
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect::before {
             content: '×';
-            border-color: var(--danger-color);
-            background: linear-gradient(135deg, var(--danger-color), color-mix(in srgb, var(--danger-color), #000 10%));
-            color: white;
-            font-size: 0.9rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px color-mix(in srgb, var(--danger-color) 35%, transparent),
-                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            border: none;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 900;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5),
+                inset 0 1px 1.5px rgba(255, 255, 255, 0.45);
+            transform: scale(1.08);
+        }
+
+        /* Dark Theme Specific Rich Glows */
+        [data-theme="dark"] body.read-mode .nk-mcq-option.correct,
+        [data-theme="dark"] .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct {
+            border-color: rgba(16, 185, 129, 0.7);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(16, 185, 129, 0.05));
+            box-shadow: 0 0 18px rgba(16, 185, 129, 0.18), inset 0 0 14px rgba(16, 185, 129, 0.06);
+        }
+
+        [data-theme="dark"] body.read-mode .nk-mcq-option.incorrect,
+        [data-theme="dark"] .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect {
+            border-color: rgba(239, 68, 68, 0.7);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.16), rgba(239, 68, 68, 0.05));
+            box-shadow: 0 0 18px rgba(239, 68, 68, 0.18), inset 0 0 14px rgba(239, 68, 68, 0.06);
         }
 
         @keyframes mcqCorrectPulse {
             0% {
                 transform: scale(1);
             }
-
             50% {
-                transform: scale(1.02);
-                box-shadow: 0 0 20px color-mix(in srgb, var(--success-color) 40%, transparent);
+                transform: scale(1.015);
             }
-
             100% {
                 transform: scale(1);
             }
         }
 
         @keyframes mcqIncorrectShake {
-
-            0%,
-            100% {
+            0%, 100% {
                 transform: translateX(0);
             }
-
             20% {
-                transform: translateX(-6px);
+                transform: translateX(-3px);
             }
-
             40% {
-                transform: translateX(6px);
+                transform: translateX(3px);
             }
-
             60% {
-                transform: translateX(-4px);
+                transform: translateX(3px);
             }
-
             80% {
-                transform: translateX(4px);
+                transform: translateX(2px);
             }
         }
 
-        @keyframes shimmer {
-            0% {
-                transform: translateX(-100%);
-            }
-
-            100% {
-                transform: translateX(100%);
-            }
-        }
-
-        /* --- MCQ Study Card Font Size Fix --- */
+        /* --- STUDY FLASHCARD MODE MCQ STYLING --- */
         .study-card-content-box.mcq-type {
-            font-size: var(--study-card-font-size, 1.5rem);
-            line-height: 1.6;
+            font-size: var(--study-card-font-size, 1.4rem);
+            line-height: 1.55;
         }
 
-        /* FOCUS/PRESENTATION MODE MCQ STYLING - POLISHED */
-
-        /* Hide radios and delete buttons in presentation mode */
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option-radio,
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-delete-option {
-            display: none;
-        }
-
-        /* Remove inner background from option text - let the option container handle it */
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option-text {
-            padding: 0;
-            padding-left: 40px;
-            background: transparent;
-            border: none;
-        }
-
-        /* Option container - clean card style */
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option {
-            padding: 18px 24px;
-            border: 2px solid var(--border-color);
-            border-radius: 14px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: var(--bg-secondary);
-            position: relative;
-        }
-
-        /* Refined radio indicator */
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 18px;
-            width: 22px;
-            height: 22px;
-            border: 2.5px solid var(--border-color);
-            border-radius: 50%;
-            transform: translateY(-50%);
-            background: var(--bg-primary);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Removed inner dot - user preference */
-
-        /* Hover state before answering */
-        .focus-mode-overlay .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover {
-            border-color: var(--primary-color);
-            background: color-mix(in srgb, var(--primary-color) 6%, var(--bg-secondary));
-            transform: translateX(6px) scale(1.01);
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .focus-mode-overlay .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before {
-            border-color: var(--primary-color);
-            background: var(--bg-secondary);
-            box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 12%, transparent);
-        }
-
-
-
-        /* Disable pointer after answering */
-        .focus-mode-overlay .nk-mcq-block[data-answered="true"] .nk-mcq-option {
-            cursor: default;
-        }
-
-        /* Correct answer styling - POLISHED */
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct {
-            border: 2.5px solid var(--success-color);
-            background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--success-color) 14%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--success-color) 7%, var(--bg-secondary)));
-            box-shadow: 0 3px 16px color-mix(in srgb, var(--success-color) 25%, transparent);
-            animation: mcqCorrectPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct::before {
-            content: '✓';
-            border-color: var(--success-color);
-            background: linear-gradient(135deg, var(--success-color), color-mix(in srgb, var(--success-color), #000 10%));
-            color: white;
-            font-size: 0.85rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--success-color) 40%, transparent),
-                inset 0 1px 1px rgba(255, 255, 255, 0.3);
-        }
-
-
-
-        /* Incorrect answer styling - POLISHED */
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect {
-            border: 2.5px solid var(--danger-color);
-            background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--danger-color) 12%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--danger-color) 5%, var(--bg-secondary)));
-            box-shadow: 0 3px 16px color-mix(in srgb, var(--danger-color) 25%, transparent);
-            animation: mcqIncorrectShake 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect::before {
-            content: '×';
-            border-color: var(--danger-color);
-            background: linear-gradient(135deg, var(--danger-color), color-mix(in srgb, var(--danger-color), #000 10%));
-            color: white;
-            font-size: 1.05rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--danger-color) 40%, transparent),
-                inset 0 1px 1px rgba(255, 255, 255, 0.3);
-        }
-
-        /* STUDY FLASHCARD MODE MCQ STYLING */
-
-        /* Hide radios, delete buttons, and toolbar in study card mode */
-        .study-card-content-box .nk-mcq-block .nk-mcq-option-radio,
-        .study-card-content-box .nk-mcq-block .nk-mcq-delete-option,
-        .study-card-content-box .nk-mcq-block .nk-mcq-toolbar {
-            display: none;
-        }
-
-        /* Study card MCQ block - Premium container with beautiful curved left border */
         .study-card-content-box .nk-mcq-block {
             border: none;
             background: transparent;
             box-shadow: none;
-            padding: 1.5rem 0 1.5rem 1.5rem;
+            padding: 0.5rem 0;
             margin: 0;
             position: relative;
-            transition: all 0.3s ease;
         }
 
-        /* Curved, polished left border using pseudo-element */
-        .study-card-content-box .nk-mcq-block::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 5px;
-            background: linear-gradient(180deg,
-                    var(--primary-color) 0%,
-                    color-mix(in srgb, var(--primary-color), #000 15%) 100%);
-            border-radius: 12px;
-            box-shadow: 2px 0 8px color-mix(in srgb, var(--primary-color) 20%, transparent),
-                inset 0 1px 2px rgba(255, 255, 255, 0.3);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        /* Answered state - Green curved border with glow */
-        .study-card-content-box .nk-mcq-block[data-answered="true"]::before {
-            width: 6px;
-            background: linear-gradient(180deg,
-                    var(--success-color) 0%,
-                    color-mix(in srgb, var(--success-color), #000 20%) 100%);
-            box-shadow: 2px 0 12px color-mix(in srgb, var(--success-color) 35%, transparent),
-                inset 0 1px 2px rgba(255, 255, 255, 0.4);
-        }
-
-        /* Incorrect answer - Red curved border with glow */
-        .study-card-content-box .nk-mcq-block[data-answered="true"][data-user-incorrect="true"]::before {
-            width: 6px;
-            background: linear-gradient(180deg,
-                    var(--danger-color) 0%,
-                    color-mix(in srgb, var(--danger-color), #000 20%) 100%);
-            box-shadow: 2px 0 12px color-mix(in srgb, var(--danger-color) 35%, transparent),
-                inset 0 1px 2px rgba(255, 255, 255, 0.4);
-        }
-
-        /* MCQ Question - More prominent and beautiful, inherits font size */
         .study-card-content-box .nk-mcq-block .nk-mcq-question {
-            font-weight: 700;
-            font-size: calc(var(--study-card-font-size, 1.6rem) * 1.05);
-            line-height: 1.5;
-            margin-bottom: 1.75rem;
+            font-weight: 550;
+            font-size: 1.05em;
+            line-height: 1.45;
+            margin-bottom: 1.1rem;
             color: var(--text-primary);
-            padding-bottom: 1rem;
-            position: relative;
         }
 
-        /* Elegant gradient underline for the question */
-        .study-card-content-box .nk-mcq-block .nk-mcq-question::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-color), transparent);
-            border-radius: 2px;
-        }
-
-        /* Options container - Better spacing */
         .study-card-content-box .nk-mcq-block .nk-mcq-options {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.65rem;
         }
 
-        /* Remove inner background from option text in study cards, inherits font size */
-        .study-card-content-box .nk-mcq-block .nk-mcq-option-text {
-            padding: 0;
-            padding-left: 32px;
-            background: transparent;
-            border: none;
-            font-size: var(--study-card-font-size, 1.6rem);
-            line-height: 1.6;
-            color: var(--text-primary);
-        }
-
-        /* Option container - Modern card style with premium feel */
         .study-card-content-box .nk-mcq-block .nk-mcq-option {
-            padding: 18px 24px;
-            border: 2.5px solid var(--border-color);
-            border-radius: 16px;
+            padding: 11px 15px;
+            border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            background: linear-gradient(135deg,
-                    var(--bg-secondary) 0%,
-                    color-mix(in srgb, var(--bg-tertiary) 30%, var(--bg-secondary)) 100%);
-            position: relative;
+            transition: all 0.2s ease;
+            background: color-mix(in srgb, var(--bg-tertiary) 50%, var(--bg-secondary));
             display: flex;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            gap: 12px;
         }
 
-        /* Radio pseudo-element for study cards - Larger and more prominent */
         .study-card-content-box .nk-mcq-block .nk-mcq-option::before {
             content: '';
-            flex-shrink: 0;
-            position: relative;
-            top: auto;
-            left: auto;
-            width: 22px;
-            height: 22px;
-            border: 2.5px solid var(--border-color);
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
             border-radius: 50%;
-            transform: none;
-            background: var(--bg-secondary);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1.5px solid color-mix(in srgb, var(--border-color) 75%, var(--text-secondary));
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
         }
 
-        /* Premium hover state for study cards */
+        .study-card-content-box .nk-mcq-block .nk-mcq-option .nk-mcq-option-text {
+            padding: 0;
+            background: transparent;
+            border: none;
+            font-size: 0.9em;
+            line-height: 1.45;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
         .study-card-content-box .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover {
             border-color: var(--primary-color);
-            background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--primary-color) 8%, var(--bg-secondary)) 0%,
-                    color-mix(in srgb, var(--primary-color) 4%, var(--bg-secondary)) 100%);
-            transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08),
-                0 0 0 3px color-mix(in srgb, var(--primary-color) 12%, transparent);
+            background: color-mix(in srgb, var(--primary-color) 5%, var(--bg-secondary));
+            transform: translateY(-1px);
         }
 
-        .study-card-content-box .nk-mcq-block:not([data-answered="true"]) .nk-mcq-option:hover::before {
-            border-color: var(--primary-color);
-            background: color-mix(in srgb, var(--primary-color) 20%, var(--bg-secondary));
-            transform: scale(1.15);
-            box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 15%, transparent);
-        }
-
-        /* Disable pointer after answering in study cards */
-        .study-card-content-box .nk-mcq-block[data-answered="true"] .nk-mcq-option {
-            cursor: default;
-        }
-
-        /* Correct answer for study cards - Premium success state */
         .study-card-content-box .nk-mcq-block .nk-mcq-option.correct {
-            border: 2.5px solid var(--success-color);
+            border: 1.5px solid color-mix(in srgb, var(--success-color) 85%, transparent);
             background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--success-color) 15%, var(--bg-secondary)) 0%,
-                    color-mix(in srgb, var(--success-color) 8%, var(--bg-secondary)) 100%);
-            box-shadow: 0 4px 16px color-mix(in srgb, var(--success-color) 25%, transparent);
-            animation: mcqCorrectPulse 0.6s ease;
+                    color-mix(in srgb, var(--success-color) 16%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--success-color) 6%, var(--bg-secondary)));
+            box-shadow: 0 0 16px color-mix(in srgb, var(--success-color) 22%, transparent);
         }
 
         .study-card-content-box .nk-mcq-block .nk-mcq-option.correct::before {
             content: '✓';
-            border-color: var(--success-color);
-            background: var(--success-color);
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
             color: white;
-            font-size: 0.85rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--success-color) 40%, transparent);
+            font-size: 0.72rem;
+            font-weight: 900;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5), inset 0 1px 1.5px rgba(255, 255, 255, 0.45);
+            transform: scale(1.08);
         }
 
-
-
-        /* Incorrect answer for study cards - Clear but not harsh */
         .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect {
-            border: 2.5px solid var(--danger-color);
+            border: 1.5px solid color-mix(in srgb, var(--danger-color) 85%, transparent);
             background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--danger-color) 12%, var(--bg-secondary)) 0%,
-                    color-mix(in srgb, var(--danger-color) 6%, var(--bg-secondary)) 100%);
-            box-shadow: 0 4px 16px color-mix(in srgb, var(--danger-color) 20%, transparent);
-            animation: mcqIncorrectShake 0.5s ease;
+                    color-mix(in srgb, var(--danger-color) 16%, var(--bg-secondary)),
+                    color-mix(in srgb, var(--danger-color) 6%, var(--bg-secondary)));
+            box-shadow: 0 0 16px color-mix(in srgb, var(--danger-color) 22%, transparent);
         }
 
         .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect::before {
             content: '×';
-            border-color: var(--danger-color);
-            background: var(--danger-color);
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: none;
             color: white;
-            font-size: 1rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--danger-color) 40%, transparent);
+            font-size: 0.85rem;
+            font-weight: 900;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5), inset 0 1px 1.5px rgba(255, 255, 255, 0.45);
+            transform: scale(1.08);
         }
 
-        /* Hide add option in study cards */
-        .study-card-content-box .nk-mcq-block .nk-mcq-add-option {
-            display: none;
-        }
-
-        /* ACCORDION STYLING IN STUDY FLASHCARDS */
-        /* Accordion title in study cards - inherits font size */
-        .study-card-content-box .nk-accordion-title {
-            font-size: calc(var(--study-card-font-size, 1.6rem) * 1.05);
-            line-height: 1.5;
-        }
-
-        /* Accordion content in study cards - inherits font size */
-        .study-card-content-box .nk-accordion-content {
-            font-size: var(--study-card-font-size, 1.6rem);
-            line-height: 1.6;
-        }
-
-
-        /* Enhanced explanation reveal in study cards */
         .study-card-content-box .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
-            margin-top: 1.5rem;
-            padding: 1.25rem 1.5rem;
-            background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--primary-color) 8%, var(--bg-tertiary)) 0%,
-                    color-mix(in srgb, var(--primary-color) 4%, var(--bg-tertiary)) 100%);
-            border-left: 4px solid var(--primary-color);
-            border-radius: 12px;
-            font-size: 1.05rem;
-            line-height: 1.7;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            margin-top: 0.85rem;
+            padding: 0.75rem 1.15rem;
+            background-color: color-mix(in srgb, var(--bg-tertiary) 45%, var(--bg-secondary));
+            border: 1px solid color-mix(in srgb, var(--border-color) 35%, transparent);
+            border-left: 3.5px solid var(--primary-color);
+            border-radius: 9px;
+            font-size: 0.9em;
+            line-height: 1.55;
         }
 
-
-        /*PREMIUM "INSIGHT CARD" EXPLANATION - Glassmorphic Reveal Effect*/
+        /* --- NOTEKASH TEXTILE-STYLE EXPLANATION BLOCK --- */
         .nk-mcq-explanation {
             max-height: 0;
             opacity: 0;
             overflow: hidden;
-            transform: translateY(-12px);
+            transform: translateY(-6px);
             transition:
-                max-height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                opacity 0.4s ease,
-                transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                padding 0.3s ease,
-                margin 0.3s ease;
+                max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease,
+                transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.25s ease,
+                margin 0.25s ease;
 
-            /* Visual styling */
             outline: none;
             margin-top: 0;
-            padding: 0 16px;
-            border-radius: 8px;
-            font-size: 0.93em;
-            color: inherit;
-            line-height: 1.6;
+            padding: 0 1.15rem;
+            background-color: color-mix(in srgb, var(--bg-tertiary) 45%, var(--bg-secondary));
+            border: 1px solid color-mix(in srgb, var(--border-color) 35%, transparent);
+            border-left: 3.5px solid var(--primary-color);
+            border-radius: 9px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(0, 0, 0, 0.02);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-sizing: border-box;
+            font-size: 0.9em;
+            color: var(--text-primary);
+            line-height: 1.55;
             font-family: inherit;
-
-            /* Subtle background */
-            background: color-mix(in srgb, var(--bg-tertiary) 50%, transparent);
-            border-left: 2px solid color-mix(in srgb, var(--primary-color) 40%, transparent);
         }
+
+        /* Difficulty-matched left border for explanation textile */
+        .nk-mcq-explanation[data-difficulty="easy"]   { border-left-color: #3ce29e !important; }
+        .nk-mcq-explanation[data-difficulty="medium"] { border-left-color: #ff9f43 !important; }
+        .nk-mcq-explanation[data-difficulty="hard"]   { border-left-color: #ff5252 !important; }
 
         /* Write mode: Always show explanation for editing */
         body.write-mode .nk-mcq-explanation {
             max-height: none;
             opacity: 1;
             transform: translateY(0);
-            margin-top: 1rem;
-            padding: 12px 16px;
+            margin-top: 0.85rem;
+            padding: 0.75rem 1.15rem;
         }
 
-        /* Placeholder that disappears when typing */
         .nk-mcq-explanation:empty::before {
             content: attr(data-placeholder);
             color: var(--text-secondary);
@@ -822,29 +617,21 @@
             font-style: italic;
         }
 
-        /* Hide placeholder when focused */
         .nk-mcq-explanation:focus:empty::before {
             opacity: 0.3;
         }
 
-        /* Read Mode - The Reveal State - Clean and simple */
+        /* Read Mode & Focus Mode Reveal State */
         body.read-mode .nk-mcq-block[data-answered="true"] .nk-mcq-explanation,
         .focus-mode-overlay .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
-            max-height: 600px;
+            max-height: 800px;
             opacity: 1;
             transform: translateY(0);
-            margin-top: 1rem;
-            padding: 14px 16px;
-            background: color-mix(in srgb, var(--bg-tertiary) 70%, transparent);
-            border-left: 2px solid var(--primary-color);
-        }
-
-        body.read-mode .nk-mcq-block[data-answered="true"] .nk-mcq-explanation,
-        .focus-mode-overlay .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
+            margin-top: 0.85rem;
+            padding: 0.75rem 1.15rem;
             position: relative;
         }
 
-        /* Hide empty explanations even after answering */
         .nk-mcq-block[data-answered="true"] .nk-mcq-explanation:empty {
             display: none !important;
             max-height: 0 !important;
@@ -1432,26 +1219,22 @@
         }
 
         /* ══════════════════════════════════════════════════════════════
-           MCQ METADATA — DIFFICULTY, TAGS, PYQ
+           MCQ METADATA — DIFFICULTY, TAGS, PYQ (Top Header)
            ══════════════════════════════════════════════════════════════ */
-        /* Difficulty-based left border color on the MCQ block */
-        .nk-mcq-block:has(.nk-mcq-explanation[data-difficulty="easy"])   { border-left-color: var(--text-green)  !important; }
-        .nk-mcq-block:has(.nk-mcq-explanation[data-difficulty="medium"]) { border-left-color: var(--text-orange) !important; }
-        .nk-mcq-block:has(.nk-mcq-explanation[data-difficulty="hard"])   { border-left-color: var(--text-red)    !important; }
-        
-        /* ── Meta bar container ──────────────────────────────────────── */
+        /* ── Meta bar container (Top Header) ──────────────────────────── */
         .nk-mcq-meta-bar {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 8px;
-            margin-top: 18px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border-color);
+            gap: 5px;
+            margin-top: 0;
+            margin-bottom: 8px;
+            padding: 0;
+            border: none;
             pointer-events: none;  /* non-interactive decorations */
             user-select: none;
             -webkit-user-select: none;
-            line-height: 1.2;
+            line-height: 1;
         }
         /* ── Shared capsule base style ───────────────────────────────── */
         .nk-mcq-tag-capsule,
@@ -1461,24 +1244,24 @@
             justify-content: center;
             white-space: nowrap;
             font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-            font-size: 0.72rem !important;
-            font-weight: 500 !important; /* Elegant medium weight */
+            font-size: 0.63rem !important;
+            font-weight: 500 !important;
             letter-spacing: 0.02em !important;
-            padding: 4px 12px !important;
+            padding: 2px 9px !important;
             border-radius: 999px !important;
             box-sizing: border-box !important;
-            line-height: 1 !important;
+            line-height: 1.2 !important;
             border-style: solid !important;
-            border-width: 1.5px !important; /* Slight thickness */
+            border-width: 1px !important;
         }
 
-        /* ── Difficulty circular capsule (emoji only) ───────────────── */
+        /* ── Difficulty circular capsule (emoji/dot only) ───────────── */
         .nk-mcq-difficulty-capsule {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 28px !important;
-            height: 28px !important;
+            width: 18px !important;
+            height: 18px !important;
             border-radius: 50% !important;
             padding: 0 !important;
             box-sizing: border-box !important;
@@ -1487,75 +1270,70 @@
         }
 
         .nk-mcq-difficulty-capsule .nk-capsule-icon {
-            font-size: 1rem !important;
+            font-size: 0.62rem !important;
             line-height: 1 !important;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: 0.5px; /* Subpixel baseline alignment */
         }
 
         .nk-capsule-icon {
-            font-size: 0.72rem;
+            font-size: 0.62rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
         }
         
-        /* ── Difficulty capsules with 3D dots and colored borders ───────────────── */
+        /* ── Difficulty capsules ─────────────────────────────────────── */
         .nk-mcq-difficulty-capsule.nk-diff-easy {
             background: rgba(60, 226, 158, 0.12) !important;
             color: #3ce29e !important;
-            border: 2.5px solid rgba(60, 226, 158, 0.75) !important;
-            box-shadow: 0 0 8px rgba(60, 226, 158, 0.4) !important;
+            border: 1.5px solid rgba(60, 226, 158, 0.6) !important;
+            box-shadow: 0 0 6px rgba(60, 226, 158, 0.25) !important;
         }
         .nk-mcq-difficulty-capsule.nk-diff-medium {
             background: rgba(255, 159, 67, 0.12) !important;
             color: #ff9f43 !important;
-            border: 2.5px solid rgba(255, 159, 67, 0.75) !important;
-            box-shadow: 0 0 8px rgba(255, 159, 67, 0.4) !important;
+            border: 1.5px solid rgba(255, 159, 67, 0.6) !important;
+            box-shadow: 0 0 6px rgba(255, 159, 67, 0.25) !important;
         }
         .nk-mcq-difficulty-capsule.nk-diff-hard {
             background: rgba(255, 82, 82, 0.12) !important;
             color: #ff5252 !important;
-            border: 2.5px solid rgba(255, 82, 82, 0.75) !important;
-            box-shadow: 0 0 8px rgba(255, 82, 82, 0.4) !important;
+            border: 1.5px solid rgba(255, 82, 82, 0.6) !important;
+            box-shadow: 0 0 6px rgba(255, 82, 82, 0.25) !important;
         }
         
-        /* ── Default / Light Theme Colors ────────────────────────────── */
-        .nk-mcq-tag-capsule {
-            background: rgba(0, 0, 0, 0.02) !important;
-            color: #475569 !important;
-            border-color: rgba(0, 0, 0, 0.08) !important;
+        /* ── PYQ Icon inside capsule ───────────────────────────────── */
+        .nk-mcq-pyq-capsule .nk-pyq-icon {
+            margin-right: 4px;
+            font-size: 0.82em;
+            opacity: 0.85;
+            vertical-align: baseline;
         }
+
+        /* ── Default / Light Theme Colors (Unified & Minimal) ────────── */
+        .nk-mcq-tag-capsule,
         .nk-mcq-pyq-capsule {
-            background: rgba(180, 83, 9, 0.04) !important;
-            color: #b45309 !important;
-            border-color: rgba(180, 83, 9, 0.2) !important;
+            background: color-mix(in srgb, var(--text-primary) 4%, transparent) !important;
+            color: var(--text-secondary) !important;
+            border-color: color-mix(in srgb, var(--border-color) 60%, transparent) !important;
         }
 
         /* ── Dark Theme Colors ───────────────────────────────────────── */
-        [data-theme="dark"] .nk-mcq-tag-capsule {
-            background: rgba(255, 255, 255, 0.02) !important;
-            color: #94a3b8 !important;
-            border-color: rgba(255, 255, 255, 0.08) !important;
-        }
+        [data-theme="dark"] .nk-mcq-tag-capsule,
         [data-theme="dark"] .nk-mcq-pyq-capsule {
-            background: rgba(251, 211, 141, 0.03) !important;
-            color: #fbd38d !important;
-            border-color: rgba(251, 211, 141, 0.2) !important;
+            background: rgba(255, 255, 255, 0.04) !important;
+            color: #94a3b8 !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
         }
 
         /* ── Sepia Theme Colors ──────────────────────────────────────── */
-        [data-theme="sepia"] .nk-mcq-tag-capsule {
+        [data-theme="sepia"] .nk-mcq-tag-capsule,
+        [data-theme="sepia"] .nk-mcq-pyq-capsule {
             background: rgba(92, 64, 51, 0.04) !important;
             color: #5c4033 !important;
             border-color: rgba(92, 64, 51, 0.15) !important;
-        }
-        [data-theme="sepia"] .nk-mcq-pyq-capsule {
-            background: rgba(160, 82, 45, 0.05) !important;
-            color: #a0522d !important;
-            border-color: rgba(160, 82, 45, 0.25) !important;
         }
         
         /* ── Hide meta bar in write mode (never show in editor) ──────── */

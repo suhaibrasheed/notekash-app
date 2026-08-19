@@ -2160,12 +2160,24 @@ export const util = {
                         if (pyq) {
                             const pyqBadge = document.createElement('span');
                             pyqBadge.className = 'nk-mcq-pyq-capsule';
-                            pyqBadge.textContent = pyq;
+                            
+                            const pyqIcon = document.createElement('i');
+                            pyqIcon.className = 'fa-solid fa-graduation-cap nk-pyq-icon';
+                            pyqBadge.appendChild(pyqIcon);
+                            
+                            const pyqText = document.createTextNode(pyq);
+                            pyqBadge.appendChild(pyqText);
+                            
                             bar.appendChild(pyqBadge);
                         }
                         
-                        // Insert after explanation element
-                        expEl.after(bar);
+                        // Insert at the top of the MCQ block (before question)
+                        const questionEl = block.querySelector('.nk-mcq-question');
+                        if (questionEl) {
+                            questionEl.before(bar);
+                        } else {
+                            block.prepend(bar);
+                        }
                     });
                 },
 
