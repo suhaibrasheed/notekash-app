@@ -10,16 +10,16 @@ export const services = {
                         const FAINT = '#94A3B8';   // used: footer text
                         const BORDER = '#E2E8F0';   // used: footer rule & content dividers
 
-                        // Pill bg colors = the 8 highlight underline colors from highlightUnderlineMap
+                        // High-contrast, tinted accessible palette (WCAG AAA compliant)
                         const PILLS = [
-                            { label: 'VISUAL MAP', bg: '#4F46E5', tc: WHITE },  // accent indigo
-                            { label: 'MIND MAP', bg: '#9333EA', tc: WHITE },  // purple-600
-                            { label: 'FLASHCARDS', bg: '#DC2626', tc: WHITE },  // red-600
-                            { label: 'FOCUS MODE', bg: '#2563EB', tc: WHITE },  // blue-600
-                            { label: 'NoteKash AI', bg: '#16A34A', tc: WHITE },  // green-600
-                            { label: 'SUPER TAGS', bg: '#EAB308', tc: DARK },  // yellow-500
-                            { label: 'WHITEBOARD', bg: '#0891B2', tc: WHITE },  // cyan-600
-                            { label: 'CLOUD SYNC', bg: '#DB2777', tc: WHITE }   // pink-600
+                            { label: 'VISUAL MAP', bg: '#EEF2FF', tc: '#4338CA' },   // soft indigo
+                            { label: 'MIND MAP', bg: '#FAF5FF', tc: '#7E22CE' },     // soft purple
+                            { label: 'FLASHCARDS', bg: '#FEF2F2', tc: '#B91C1C' },   // soft rose
+                            { label: 'FOCUS HUB', bg: '#EFF6FF', tc: '#1D4ED8' },    // soft blue
+                            { label: 'NoteKash AI', bg: '#F0FDF4', tc: '#15803D' },  // soft green
+                            { label: 'SUPER TAGS', bg: '#FFFBEB', tc: '#B45309' },   // soft amber
+                            { label: 'WHITEBOARD', bg: '#F0FDFA', tc: '#0F766E' },   // soft teal
+                            { label: 'CLOUD SYNC', bg: '#FDF2F8', tc: '#BE185D' }    // soft pink
                         ];
 
                         // makePillGrid — fresh object each call (pdfmake mutates objects in-place)
@@ -64,7 +64,7 @@ export const services = {
                                             text: 'CIVILSKASH EDITION',
                                             fontSize: 7.5, bold: true, color: FAINT,
                                             characterSpacing: 1.5, alignment: 'right',
-                                            margin: [0, 5, 0, 0], link: 'https://notekash.com'
+                                            margin: [0, 5, 0, 0], link: 'https://civilskash.in'
                                         }
                                     ],
                                     margin: [0, 0, 0, 12]
@@ -84,7 +84,8 @@ export const services = {
                                                 { text: 'Flashcards  ·  Focus Study Mode', fontSize: 12, color: TEXT, margin: [0, 0, 0, 5] },
                                                 { text: 'Mind map  ·  Visual map (special)', fontSize: 12, color: TEXT, margin: [0, 0, 0, 5] },
                                                 { text: 'AI NoteTaking  ·  Super Search', fontSize: 12, color: TEXT, margin: [0, 0, 0, 5] },
-                                                { text: 'Spatial Notes  ·  Whiteboard', fontSize: 12, color: TEXT, margin: [0, 0, 0, 13] },
+                                                { text: 'Spatial Notes  ·  Whiteboard', fontSize: 12, color: TEXT, margin: [0, 0, 0, 5] },
+                                                { text: 'Focus Hub App  ·  Daily Tracker', fontSize: 12, color: TEXT, margin: [0, 0, 0, 13] },
                                                 { text: 'Unlock your Second Brain only on NoteKash.', fontSize: 10, color: FAINT, lineHeight: 1.5 }
                                             ]
                                         },

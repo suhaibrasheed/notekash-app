@@ -2812,11 +2812,11 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         }
                     }
 
-                    // Inject Top & Bottom Branding Tiles and 3 Notes Pages
+                    // Inject Top & Bottom Branding Tiles, Promotional Cards (Free Users), and Notes Pages
                     if (articleContainer && !articleContainer.querySelector('.nk-print-branding-tile-top')) {
                         const brandLeftHtml = (isPremium && brandName)
                             ? `<span class="nk-tile-label">Made by:</span> <a href="${brandLink ? App.util.escapeHtml(brandLink) : '#'}" class="nk-tile-brand" target="_blank" rel="noopener noreferrer">${App.util.escapeHtml(brandName)}</a>`
-                            : `<span class="nk-tile-label">Made by:</span> <span class="nk-tile-brand">${App.util.escapeHtml(articleTitle)}</span>`;
+                            : `<span class="nk-tile-label">Edition:</span> <a href="https://civilskash.in" class="nk-tile-brand" target="_blank" rel="noopener noreferrer">Civilskash</a>`;
 
                         const brandTileHtml = (isTop = true) => `
                             <div class="nk-print-branding-tile ${isTop ? 'nk-print-branding-tile-top' : 'nk-print-branding-tile-bottom'}">
@@ -2828,6 +2828,52 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                                     <a href="https://notekash.com" target="_blank" rel="noopener noreferrer" class="nk-tile-link">
                                         <span class="nk-tile-brand-name">notekash</span><span class="nk-tile-brand-tld">.com</span>
                                     </a>
+                                </div>
+                            </div>
+                        `;
+
+                        const promoCardHtml = (isEnd = false) => `
+                            <div class="nk-print-promo-card ${isEnd ? 'nk-print-promo-card-end' : 'nk-print-promo-card-start'}">
+                                <div class="nk-promo-header">
+                                    <div class="nk-promo-brand">
+                                        <span class="nk-promo-brand-dark">NOTE</span><span class="nk-promo-brand-accent"> KASH</span>
+                                    </div>
+                                    <a href="https://civilskash.in" target="_blank" rel="noopener noreferrer" class="nk-promo-edition">CIVILSKASH EDITION</a>
+                                </div>
+                                <div class="nk-promo-divider"></div>
+                                <div class="nk-promo-columns">
+                                    <div class="nk-promo-col">
+                                        <div class="nk-promo-col-title nk-title-users">FOR NEW USERS</div>
+                                        <div class="nk-promo-feature">Flashcards &nbsp;·&nbsp; Focus Study Mode</div>
+                                        <div class="nk-promo-feature">Mind map &nbsp;·&nbsp; Visual map (special)</div>
+                                        <div class="nk-promo-feature">AI NoteTaking &nbsp;·&nbsp; Super Search</div>
+                                        <div class="nk-promo-feature">Spatial Notes &nbsp;·&nbsp; Whiteboard</div>
+                                        <div class="nk-promo-feature">Focus Hub App &nbsp;·&nbsp; Daily Habit Tracker</div>
+                                        <div class="nk-promo-faint">Unlock your Second Brain only on NoteKash.</div>
+                                    </div>
+                                    <div class="nk-promo-col">
+                                        <div class="nk-promo-col-title nk-title-creators">FOR CREATORS</div>
+                                        <div class="nk-promo-feature">Remove watermark & add Branding</div>
+                                        <div class="nk-promo-feature">Unlimited AI + Presentation Tools</div>
+                                        <div class="nk-promo-feature">Share Project or Export notes</div>
+                                        <div class="nk-promo-feature">MCQs, Accordian & Audio Transcribe</div>
+                                        <div class="nk-promo-feature">Focus Hub App &nbsp;·&nbsp; Creator Studio</div>
+                                        <div class="nk-promo-faint">Upgrade to Creator tier to start curating Pro Content.</div>
+                                    </div>
+                                </div>
+                                <div class="nk-promo-pills-grid">
+                                    <a href="https://notekash.com" target="_blank" rel="noopener noreferrer" class="nk-promo-pill nk-pill-visual">VISUAL MAP</a>
+                                    <a href="https://notekash.com" target="_blank" rel="noopener noreferrer" class="nk-promo-pill nk-pill-mindmap">MIND MAP</a>
+                                    <a href="https://notekash.com" target="_blank" rel="noopener noreferrer" class="nk-promo-pill nk-pill-flashcards">FLASHCARDS</a>
+                                    <a href="https://notekash.com" target="_blank" rel="noopener noreferrer" class="nk-promo-pill nk-pill-focushub">FOCUS HUB</a>
+                                    <a href="https://notekash.com" target="_blank" rel="noopener noreferrer" class="nk-promo-pill nk-pill-ai">NoteKash AI</a>
+                                    <a href="https://notekash.com" target="_blank" rel="noopener noreferrer" class="nk-promo-pill nk-pill-supertags">SUPER TAGS</a>
+                                    <a href="https://notekash.com" target="_blank" rel="noopener noreferrer" class="nk-promo-pill nk-pill-whiteboard">WHITEBOARD</a>
+                                    <a href="https://notekash.com" target="_blank" rel="noopener noreferrer" class="nk-promo-pill nk-pill-cloudsync">CLOUD SYNC</a>
+                                </div>
+                                <div class="nk-promo-divider"></div>
+                                <div class="nk-promo-footer">
+                                    Get started free at <a href="https://notekash.com" class="nk-promo-cta-link" target="_blank" rel="noopener noreferrer">notekash.com</a>
                                 </div>
                             </div>
                         `;
@@ -2852,7 +2898,18 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             </div>
                         `;
 
-                        // Insert Top Tile before article-content (after title-divider)
+                        // Free Users: Insert Top Promotional Tile at the very beginning
+                        if (!isPremium) {
+                            const promoStartWrapper = document.createElement('div');
+                            promoStartWrapper.innerHTML = promoCardHtml(false);
+                            if (contentEl) {
+                                articleContainer.insertBefore(promoStartWrapper.firstElementChild, contentEl);
+                            } else {
+                                articleContainer.appendChild(promoStartWrapper.firstElementChild);
+                            }
+                        }
+
+                        // Insert Top Tile before article-content
                         const topTileWrapper = document.createElement('div');
                         topTileWrapper.innerHTML = brandTileHtml(true);
                         if (contentEl) {
@@ -2865,6 +2922,13 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         const bottomTileWrapper = document.createElement('div');
                         bottomTileWrapper.innerHTML = brandTileHtml(false);
                         articleContainer.appendChild(bottomTileWrapper.firstElementChild);
+
+                        // Free Users: Insert Bottom Promotional Tile at the end
+                        if (!isPremium) {
+                            const promoEndWrapper = document.createElement('div');
+                            promoEndWrapper.innerHTML = promoCardHtml(true);
+                            articleContainer.appendChild(promoEndWrapper.firstElementChild);
+                        }
 
                         // Insert 3 Blank Notes Pages at end of document
                         const notesWrapper = document.createElement('div');
@@ -2880,13 +2944,16 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         footerEl.className = 'nk-print-page-footer';
                         document.body.appendChild(footerEl);
                     }
-                    const brandDisplay = (isPremium && brandName) ? brandName : (articleTitle || 'NoteKash');
+                    const brandDisplayHtml = (isPremium && brandName)
+                        ? `<span class="nk-print-footer-brand">${App.util.escapeHtml(brandName)}</span>`
+                        : `<a href="https://civilskash.in" class="nk-print-footer-brand" target="_blank" rel="noopener noreferrer">Civilskash</a>`;
+
                     footerEl.innerHTML = `
                         <div class="nk-print-footer-left">
-                            <span class="nk-print-footer-brand">${App.util.escapeHtml(brandDisplay)}</span>
+                            ${brandDisplayHtml}
                         </div>
                         <div class="nk-print-footer-right">
-                            <span class="nk-print-footer-notekash">notekash<span class="nk-print-footer-tld">.com</span></span>
+                            <a href="https://notekash.com" class="nk-print-footer-notekash" target="_blank" rel="noopener noreferrer">notekash<span class="nk-print-footer-tld">.com</span></a>
                         </div>
                     `;
 
@@ -2896,7 +2963,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                 cleanupPrintDocument() {
                     this._isPrintPrepared = false;
-                    document.querySelectorAll('.nk-print-branding-tile, .nk-print-notes-pages, .nk-print-page-footer, #nk-print-page-footer').forEach(el => el.remove());
+                    document.querySelectorAll('.nk-print-promo-card, .nk-print-branding-tile, .nk-print-notes-pages, .nk-print-page-footer, #nk-print-page-footer').forEach(el => el.remove());
                     if (App.state.currentMode === 'write') {
                         const contentEl = document.getElementById('article-content');
                         if (contentEl) App.util.unrenderKaTeXToSource(contentEl);

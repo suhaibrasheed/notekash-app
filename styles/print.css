@@ -5,6 +5,7 @@
    ========================================================================== */
 
 /* ── 1. Screen Mode: Hide Print-Only Elements ────────────────────────────── */
+.nk-print-promo-card,
 .nk-print-branding-tile,
 .nk-print-notes-pages,
 .nk-print-page-footer {
@@ -846,6 +847,7 @@
         font-weight: 600 !important;
         letter-spacing: 0.2px !important;
         text-transform: uppercase !important;
+        text-decoration: none !important;
     }
 
     .nk-print-footer-notekash {
@@ -853,10 +855,189 @@
         font-weight: 750 !important;
         letter-spacing: 0.2px !important;
         color: #4f46e5 !important;
+        text-decoration: none !important;
     }
 
     .nk-print-footer-tld {
         color: #94a3b8 !important;
         font-weight: 500 !important;
+    }
+
+    /* ── M. Promotional Watermark Tile for Free Users ───────────────────── */
+    .nk-print-promo-card {
+        display: block !important;
+        background: #ffffff !important;
+        border: 1px solid #E2E8F0 !important;
+        border-top: 4px solid #4F46E5 !important;
+        border-radius: 8px !important;
+        padding: 18px 22px !important;
+        box-sizing: border-box !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif !important;
+    }
+
+    .nk-print-promo-card-start {
+        margin: 0 0 22px 0 !important;
+    }
+
+    .nk-print-promo-card-end {
+        margin: 26px 0 0 0 !important;
+        break-before: page !important;
+        page-break-before: always !important;
+    }
+
+    .nk-promo-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        margin-bottom: 8px !important;
+    }
+
+    .nk-promo-brand {
+        font-size: 15pt !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+        letter-spacing: -0.2px !important;
+    }
+
+    .nk-promo-brand-dark {
+        color: #0F172A !important;
+    }
+
+    .nk-promo-brand-accent {
+        color: #4F46E5 !important;
+    }
+
+    .nk-promo-edition {
+        font-size: 7.5pt !important;
+        font-weight: 700 !important;
+        letter-spacing: 1.5px !important;
+        color: #64748B !important;
+        text-decoration: none !important;
+        text-transform: uppercase !important;
+    }
+
+    .nk-promo-divider {
+        height: 1px !important;
+        background-color: #E2E8F0 !important;
+        margin: 10px 0 14px 0 !important;
+        border: none !important;
+    }
+
+    .nk-promo-columns {
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 20px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .nk-promo-col {
+        flex: 1 !important;
+    }
+
+    .nk-promo-col-title {
+        font-size: 11pt !important;
+        font-weight: 800 !important;
+        letter-spacing: 1.2px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .nk-title-users {
+        color: #4F46E5 !important;
+    }
+
+    .nk-title-creators {
+        color: #DC2626 !important;
+    }
+
+    .nk-promo-feature {
+        font-size: 9.5pt !important;
+        color: #374151 !important;
+        margin-bottom: 4px !important;
+        line-height: 1.45 !important;
+    }
+
+    .nk-promo-faint {
+        font-size: 8pt !important;
+        color: #94A3B8 !important;
+        line-height: 1.4 !important;
+        margin-top: 8px !important;
+    }
+
+    .nk-promo-pills-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 6px !important;
+        margin: 12px 0 !important;
+    }
+
+    .nk-promo-pill {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 6px 4px !important;
+        border-radius: 5px !important;
+        font-size: 7.5pt !important;
+        font-weight: 750 !important;
+        text-align: center !important;
+        text-decoration: none !important;
+        letter-spacing: 0.3px !important;
+        box-sizing: border-box !important;
+        line-height: 1.2 !important;
+    }
+
+    .nk-pill-visual {
+        background: #EEF2FF !important;
+        color: #4338CA !important;
+        border: 1px solid #C7D2FE !important;
+    }
+    .nk-pill-mindmap {
+        background: #FAF5FF !important;
+        color: #7E22CE !important;
+        border: 1px solid #E9D5FF !important;
+    }
+    .nk-pill-flashcards {
+        background: #FEF2F2 !important;
+        color: #B91C1C !important;
+        border: 1px solid #FECACA !important;
+    }
+    .nk-pill-focushub {
+        background: #EFF6FF !important;
+        color: #1D4ED8 !important;
+        border: 1px solid #BFDBFE !important;
+    }
+    .nk-pill-ai {
+        background: #F0FDF4 !important;
+        color: #15803D !important;
+        border: 1px solid #BBF7D0 !important;
+    }
+    .nk-pill-supertags {
+        background: #FFFBEB !important;
+        color: #B45309 !important;
+        border: 1px solid #FDE68A !important;
+    }
+    .nk-pill-whiteboard {
+        background: #F0FDFA !important;
+        color: #0F766E !important;
+        border: 1px solid #99F6E4 !important;
+    }
+    .nk-pill-cloudsync {
+        background: #FDF2F8 !important;
+        color: #BE185D !important;
+        border: 1px solid #FBCFE8 !important;
+    }
+
+    .nk-promo-footer {
+        text-align: center !important;
+        font-size: 8pt !important;
+        color: #64748B !important;
+        margin-top: 10px !important;
+    }
+
+    .nk-promo-cta-link {
+        color: #4F46E5 !important;
+        font-weight: 750 !important;
+        text-decoration: none !important;
     }
 }
