@@ -125,6 +125,58 @@ export const util = {
                     return !!container?.querySelector?.('.katex, .katex-display');
                 },
 
+                unrenderKaTeXToSource(container) {
+                    if (!container) return;
+
+                    const extractTex = (el) => {
+                        const annotation = el.querySelector('annotation[encoding="application/x-tex"]')
+                            || el.querySelector('annotation');
+                        if (annotation && annotation.textContent.trim()) {
+                            return annotation.textContent.trim();
+                        }
+                        const mathEl = el.tagName?.toLowerCase() === 'math' ? el : el.querySelector('math');
+                        if (mathEl) {
+                            const alttext = mathEl.getAttribute('alttext') || mathEl.getAttribute('alt');
+                            if (alttext && alttext.trim()) return alttext.trim();
+                        }
+                        return el.dataset?.tex || '';
+                    };
+
+                    // 1. Process block display math (.katex-display)
+                    container.querySelectorAll('.katex-display').forEach(displayEl => {
+                        const tex = extractTex(displayEl);
+                        if (tex) {
+                            displayEl.replaceWith(document.createTextNode(`\n$$\n${tex}\n$$\n`));
+                        } else {
+                            const fallback = displayEl.textContent.trim();
+                            displayEl.replaceWith(document.createTextNode(fallback ? `\n$$\n${fallback}\n$$\n` : ''));
+                        }
+                    });
+
+                    // 2. Process inline math (.katex)
+                    container.querySelectorAll('.katex').forEach(katexEl => {
+                        const tex = extractTex(katexEl);
+                        if (tex) {
+                            katexEl.replaceWith(document.createTextNode(`$${tex}$`));
+                        } else {
+                            const fallback = katexEl.textContent.trim();
+                            katexEl.replaceWith(document.createTextNode(fallback ? `$${fallback}$` : ''));
+                        }
+                    });
+
+                    // 3. Process standalone MathML (<math>)
+                    container.querySelectorAll('math').forEach(mathEl => {
+                        const tex = extractTex(mathEl) || mathEl.textContent.trim();
+                        if (tex) {
+                            const isDisplay = mathEl.getAttribute('display') === 'block';
+                            const replacement = isDisplay ? `\n$$\n${tex}\n$$\n` : `$${tex}$`;
+                            mathEl.replaceWith(document.createTextNode(replacement));
+                        } else {
+                            mathEl.remove();
+                        }
+                    });
+                },
+
                 // Surgical & consistent Word Count logic
                 calculateWordCount(content) {
                     if (!content || typeof content !== 'string') return 0;

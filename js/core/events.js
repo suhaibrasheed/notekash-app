@@ -723,12 +723,12 @@ export const events = {
                             });
                             break;
                         case 'article':
-                            document.getElementById('article-controls').addEventListener('mousedown', this.handleArticleControlsClick);
+                            const articleControls = document.getElementById('article-controls');
+                            if (articleControls) articleControls.addEventListener('mousedown', this.handleArticleControlsClick);
                             const mainEl = document.querySelector('main');
                             if (mainEl) mainEl.addEventListener('scroll', App.events.updateReadingProgress, { passive: true });
                             const contentDiv = document.getElementById('article-content');
-
-                            contentDiv.addEventListener('click', this.handleContentClick);
+                            if (contentDiv) contentDiv.addEventListener('click', this.handleContentClick);
                             const exportBtn = document.getElementById('export-popover-btn');
                             if (exportBtn) {
                                 const popoverGroup = exportBtn.parentElement;
@@ -2542,6 +2542,10 @@ export const events = {
                             return;
                         }
                         if (isWriteMode && App.util.hasRenderedMath(contentDiv)) {
+                            // Auto-heal: convert any rendered KaTeX back to clean LaTeX source ($...$ / $$...$$)
+                            App.util.unrenderKaTeXToSource(contentDiv);
+                        }
+                        if (isWriteMode && App.util.hasRenderedMath(contentDiv)) {
                             if (!isAutosave) App.ui.showToast("Save blocked to protect note source. Reopen the note and try again.", { type: 'error' });
                             console.warn('Save blocked: rendered KaTeX markup was found in write-mode content.');
                             return;
@@ -2893,6 +2897,10 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                 cleanupPrintDocument() {
                     this._isPrintPrepared = false;
                     document.querySelectorAll('.nk-print-branding-tile, .nk-print-notes-pages, .nk-print-page-footer, #nk-print-page-footer').forEach(el => el.remove());
+                    if (App.state.currentMode === 'write') {
+                        const contentEl = document.getElementById('article-content');
+                        if (contentEl) App.util.unrenderKaTeXToSource(contentEl);
+                    }
                 },
 
                 printDocument() {
@@ -2902,10 +2910,12 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                 deleteArticleWithConfirmation() {
                     const id = App.state.activeArticleId;
+                    if (!id) return;
                     const article = App.storage.getArticle(id);
+                    const title = article?.title || 'this article';
                     App.ui.showConfirmationModal({
                         title: 'Delete Article',
-                        message: `Are you sure you want to delete "${article.title}"? This will be deleted from your folder and synced.`,
+                        message: `Are you sure you want to delete "${title}"? This will be deleted from your folder and synced.`,
                         confirmText: 'Delete',
                         onConfirm: async () => {
                             await App.storage.deleteArticle(id);
@@ -2998,6 +3008,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     if (pastedHTML && pastedHTML.includes('nk-mcq-block')) {
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = App.util.sanitizeHTML(pastedHTML);
+                        App.util.unrenderKaTeXToSource(tempDiv);
                         
                         // Reset interactive state from the source
                         tempDiv.querySelectorAll('.nk-mcq-block').forEach(block => {
@@ -3053,6 +3064,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                                 const tempDiv = document.createElement('div');
                                 tempDiv.innerHTML = App.util.sanitizeHTML(pastedHTML);
+                                App.util.unrenderKaTeXToSource(tempDiv);
                                 App.util.cleanPastedStyles(tempDiv);
 
                                 tempDiv.querySelectorAll('.nk-accordion').forEach(accordion => {
@@ -3730,7 +3742,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                 applyFormatting(type, value) {
                     const selection = window.getSelection();
-                    if (!selection || !selection.rangeCount || selection.isCollapsed) return false; // Return false on failure
+                    if (!selection || !selection.rangeCount || selection.isCollapsed) return false;
                     let range = selection.getRangeAt(0);
                     const container = range.commonAncestorContainer;
                     const parentElement = container.nodeType === 3 ? container.parentNode : container;
@@ -3740,10 +3752,10 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         if (text && type === 'class' && value.startsWith('highlight-')) {
                             App.pdf.highlights.add(text, value);
                         }
-                        return true; // Assume success for PDF context
+                        return true;
                     }
 
-                    if (!parentElement || !parentElement.closest('#article-content')) return false; // Return false on failure
+                    if (!parentElement || !parentElement.closest('#article-content')) return false;
 
                     if (type === 'cloze') {
                         const paragraph = parentElement.closest('p, div, li, h1, h2, h3, h4, h5, h6, blockquote, td, th');
@@ -3774,16 +3786,44 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         const selectedHTML = tempDiv.innerHTML;
                         document.execCommand('insertHTML', false, `{{c${existingClozes + 1}::${selectedHTML}}}`);
 
-                        // Cloze creation/editing must persist reliably.
                         App.state.isArticleDirty = true;
                         App.events.saveArticle({ isAutosave: true });
-                    } else {
+                    } else if (type === 'class') {
+                        const isTextColor = (App.config.textClasses && App.config.textClasses.includes(value)) || value.startsWith('text-');
+                        const isHighlight = (App.config.highlightClasses && App.config.highlightClasses.includes(value)) || value.startsWith('highlight-');
+                        const conflictingClasses = isTextColor
+                            ? (App.config.textClasses || ['text-red', 'text-green', 'text-blue', 'text-magenta', 'text-orange', 'text-teal', 'text-slate'])
+                            : (isHighlight ? (App.config.highlightClasses || ['highlight-1', 'highlight-2', 'highlight-3', 'highlight-4', 'highlight-5', 'highlight-6', 'highlight-7']) : []);
+
+                        // 1. FAST PATH: If selection exactly matches or covers a single parent span with a conflicting color
+                        let existingStyledSpan = null;
+                        let p = parentElement;
+                        while (p && p.id !== 'article-content' && p.tagName === 'SPAN') {
+                            if (conflictingClasses.some(c => p.classList.contains(c))) {
+                                existingStyledSpan = p;
+                                break;
+                            }
+                            p = p.parentElement;
+                        }
+
+                        if (existingStyledSpan && selection.toString().trim() === existingStyledSpan.textContent.trim()) {
+                            conflictingClasses.forEach(c => existingStyledSpan.classList.remove(c));
+                            existingStyledSpan.classList.add(value);
+                            App.state.isArticleDirty = true;
+                            if (App.state.currentMode === 'read') App.events.saveArticle({ isAutosave: true });
+                            selection.collapseToEnd();
+                            App.ui.hideSelectionToolbar();
+                            return true;
+                        }
+
+                        // 2. GENERAL PATH: Extract selection, strip inner conflicting classes, and cleanly wrap
                         document.execCommand('styleWithCSS', false, true);
                         const span = document.createElement('span');
                         span.className = value;
-                        if (App.config.highlightClasses.includes(value) || App.config.textClasses.includes(value)) {
+                        if (isHighlight || isTextColor) {
                             span.id = `snip-${crypto.randomUUID().slice(0, 12)}`;
                         }
+
                         try {
                             const startBlockEl = range.startContainer.nodeType === 3
                                 ? range.startContainer.parentElement.closest('h1,h2,h3,h4,h5,h6,p,li,div,blockquote,td,th')
@@ -3793,18 +3833,82 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                                     ? range.endContainer.parentElement.closest('h1,h2,h3,h4,h5,h6,p,li,div,blockquote,td,th')
                                     : range.endContainer.closest('h1,h2,h3,h4,h5,h6,p,li,div,blockquote,td,th');
                                 if (endBlockEl && endBlockEl !== startBlockEl && !startBlockEl.contains(endBlockEl)) {
-                                    // Range crosses block boundary — snap end to the end of the start block
                                     range.setEndAfter(startBlockEl.lastChild || startBlockEl);
                                 }
                             }
-                            span.appendChild(range.extractContents());
+
+                            const fragment = range.extractContents();
+
+                            // Strip conflicting classes from extracted nodes
+                            if (conflictingClasses.length > 0) {
+                                const innerSpans = Array.from(fragment.querySelectorAll('span'));
+                                innerSpans.forEach(el => {
+                                    conflictingClasses.forEach(c => el.classList.remove(c));
+                                    if (el.classList.length === 0 && !el.style.cssText) {
+                                        App.util.unwrapNode(el);
+                                    }
+                                });
+                            }
+
+                            span.appendChild(fragment);
                             range.insertNode(span);
-                        } catch (e) { App.ui.showToast("Could not apply formatting.", { type: 'error' }); console.error("Formatting error:", e); return false; }
+
+                            // 3. SPLIT PARENT SPAN IF NESTED INSIDE CONFLICTING COLOR
+                            let parentSpan = span.parentElement;
+                            if (parentSpan && parentSpan.tagName === 'SPAN' && conflictingClasses.some(c => parentSpan.classList.contains(c))) {
+                                const grandParent = parentSpan.parentElement;
+                                if (grandParent) {
+                                    const beforeRange = document.createRange();
+                                    beforeRange.setStart(parentSpan, 0);
+                                    beforeRange.setEndBefore(span);
+                                    const beforeFrag = beforeRange.extractContents();
+
+                                    const afterRange = document.createRange();
+                                    afterRange.setStartAfter(span);
+                                    afterRange.setEnd(parentSpan, parentSpan.childNodes.length);
+                                    const afterFrag = afterRange.extractContents();
+
+                                    if (beforeFrag.textContent.length > 0) {
+                                        const leftSpan = parentSpan.cloneNode(false);
+                                        leftSpan.appendChild(beforeFrag);
+                                        grandParent.insertBefore(leftSpan, parentSpan);
+                                    }
+
+                                    grandParent.insertBefore(span, parentSpan);
+
+                                    if (afterFrag.textContent.length > 0) {
+                                        const rightSpan = parentSpan.cloneNode(false);
+                                        rightSpan.appendChild(afterFrag);
+                                        grandParent.insertBefore(rightSpan, parentSpan.nextSibling);
+                                    }
+
+                                    parentSpan.remove();
+                                }
+                            }
+
+                            // Clean up empty spans
+                            const containerBlock = span.closest('h1,h2,h3,h4,h5,h6,p,li,div,blockquote,td,th') || document.getElementById('article-content');
+                            if (containerBlock) {
+                                containerBlock.querySelectorAll('span').forEach(s => {
+                                    if (s !== span && s.textContent === '' && !s.querySelector('img, svg, input')) {
+                                        s.remove();
+                                    }
+                                });
+                                containerBlock.normalize();
+                            }
+
+                        } catch (e) {
+                            App.ui.showToast("Could not apply formatting.", { type: 'error' });
+                            console.error("Formatting error:", e);
+                            return false;
+                        }
                         document.execCommand('styleWithCSS', false, false);
+                        App.state.isArticleDirty = true;
+                        if (App.state.currentMode === 'read') App.events.saveArticle({ isAutosave: true });
                     }
                     selection.collapseToEnd();
                     App.ui.hideSelectionToolbar();
-                    return true; // Return true on success
+                    return true;
                 },
 
 

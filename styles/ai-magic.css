@@ -647,12 +647,20 @@
         }
 
 
-        /* --- Timeline Block (Pixel-Perfect Alignment) --- */
+        /* --- Timeline Block (2-Column Parallel Flow, Zero Space Wastage & Premium Polish) --- */
         .nk-timeline-block {
             position: relative;
-            padding: 2rem 0 0;
-            margin: 2rem auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            column-gap: 72px;
+            row-gap: 0px;
+            padding: 2.25rem 0 1.5rem;
+            margin: 2.5rem auto;
             max-width: 90ch;
+            font-size: 0.82em;
+            line-height: 1.55;
+            box-sizing: border-box;
+            align-items: start;
         }
 
         /* MOBILE PREVIEW FIX */
@@ -673,150 +681,234 @@
             }
         }
 
+        /* Luminous Central Spine with Soft Gradient Fade at Terminations */
         .nk-timeline-block::before {
             content: '';
             position: absolute;
-            top: 0;
+            top: 20px;
             left: 50%;
-            bottom: 25px;
+            bottom: 45px;
             transform: translateX(-50%);
-            width: 4px;
-            background: linear-gradient(to bottom,
-                    color-mix(in srgb, var(--primary-color) 80%, transparent),
-                    var(--border-color),
-                    var(--primary-color));
-            border-radius: 4px;
+            width: 2.5px;
+            background: linear-gradient(180deg,
+                    transparent 0%,
+                    var(--primary-color) 4%,
+                    var(--primary-color) 96%,
+                    transparent 100%);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--primary-color) 40%, transparent);
+            border-radius: 3px;
+            z-index: 1;
         }
 
         .nk-timeline-entry {
             position: relative;
-            width: 50%;
-            padding: 0 45px;
-            margin-bottom: 25px;
+            width: 100%;
+            margin-bottom: 24px;
+            box-sizing: border-box;
+            z-index: 2;
         }
 
+        /* Left Column (Odd Entries) */
         .nk-timeline-entry:nth-child(odd) {
-            left: 0;
-            text-align: right;
-        }
-
-        .nk-timeline-entry:nth-child(even) {
-            left: 50%;
+            grid-column: 1;
             text-align: left;
         }
 
-        /* The new solid dot icon, now perfectly centered horizontally and vertically. */
+        /* Right Column (Even Entries) - Subtle Stagger for Natural Reading Rhythm */
+        .nk-timeline-entry:nth-child(even) {
+            grid-column: 2;
+            margin-top: 36px;
+            text-align: left;
+        }
+
+        /* Glowing Center Nodes on the 50% Central Spine */
         .nk-timeline-entry::after {
             content: '';
             position: absolute;
-            width: 16px;
-            height: 16px;
-            border: none;
+            width: 12px;
+            height: 12px;
             background-color: var(--primary-color);
-            top: 27px;
-            transform: translateY(-50%);
+            border: 2.5px solid var(--bg-secondary);
             border-radius: 50%;
-            z-index: 1;
-            transition: transform 0.2s ease-out;
+            top: 24px;
+            transform: translateY(-50%);
+            z-index: 5;
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 45%, transparent),
+                        0 0 10px var(--primary-color);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
         }
 
-        /* FIX: Positioning the icon by exactly half its width (-8px) guarantees its center is on the timeline. */
         .nk-timeline-entry:nth-child(odd)::after {
-            right: -8px;
+            right: -42px;
         }
 
         .nk-timeline-entry:nth-child(even)::after {
-            left: -8px;
+            left: -42px;
+        }
+
+        .nk-timeline-entry:hover {
+            z-index: 10;
         }
 
         .nk-timeline-entry:hover::after {
-            transform: scale(1.2) translateY(-50%);
+            transform: translateY(-50%) scale(1.4);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 60%, transparent),
+                        0 0 18px var(--primary-color);
         }
 
+        /* Elevated Card / Tile Design */
         .nk-timeline-content {
-            padding: 1.25rem;
+            padding: 1.15rem 1.35rem;
             background-color: var(--bg-secondary);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow);
-            border-top: 4px solid var(--primary-color);
+            border: 1px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 14px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08), var(--shadow-sm);
             position: relative;
-            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                        border-color 0.2s ease;
         }
 
         .nk-timeline-content:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-lg);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.16),
+                        0 0 18px color-mix(in srgb, var(--primary-color) 18%, transparent);
+            border-color: color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
         }
 
-        /* The arrow, now perfectly aligned with the dot icon. */
+        /* Mathematical S-Curve Connector Streams */
         .nk-timeline-content::before {
-            content: " ";
-            height: 0;
+            content: '';
             position: absolute;
-            top: 27px;
-            transform: translateY(-50%);
-            width: 0;
-            z-index: 1;
-            border: medium solid var(--border-color);
+            top: 22px;
+            width: 36px;
+            height: 24px;
+            background-color: var(--primary-color);
+            pointer-events: none;
+            opacity: 0.85;
+            transition: opacity 0.25s ease, filter 0.25s ease;
+            z-index: 3;
         }
 
+        /* Left entry: Connects node at spine (x=36, y=2) curving into card (x=0, y=22) */
         .nk-timeline-entry:nth-child(odd) .nk-timeline-content::before {
-            right: -15px;
-            border-width: 10px 0 10px 15px;
-            border-color: transparent transparent transparent var(--border-color);
+            right: -36px;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 24' fill='none'%3E%3Cpath d='M36 2 C20 2 16 22 0 22' stroke='black' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 24' fill='none'%3E%3Cpath d='M36 2 C20 2 16 22 0 22' stroke='black' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
         }
 
+        /* Right entry: Connects node at spine (x=0, y=2) curving into card (x=36, y=22) */
         .nk-timeline-entry:nth-child(even) .nk-timeline-content::before {
-            left: -15px;
-            border-width: 10px 15px 10px 0;
-            border-color: transparent var(--border-color) transparent transparent;
+            left: -36px;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 24' fill='none'%3E%3Cpath d='M0 2 C16 2 20 22 36 22' stroke='black' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 24' fill='none'%3E%3Cpath d='M0 2 C16 2 20 22 36 22' stroke='black' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
         }
 
+        .nk-timeline-entry:hover .nk-timeline-content::before {
+            opacity: 1;
+            filter: drop-shadow(0 0 5px var(--primary-color));
+        }
+
+        /* Refined Micro-Typography */
         .nk-timeline-date {
             font-weight: 700;
             color: var(--primary-color);
-            margin-bottom: 0.5rem;
-            font-size: 0.9em;
+            margin-bottom: 0.45rem;
+            font-size: 0.88em;
+            letter-spacing: 0.035em;
+            line-height: 1.35;
             outline: none;
-            opacity: 0.9;
+            display: inline-block;
+            transition: color 0.2s ease;
         }
 
         .nk-timeline-title {
             font-weight: 500;
-            font-size: 1.05em;
+            font-size: 0.98em;
+            line-height: 1.6;
+            color: var(--text-primary);
             outline: none;
         }
 
-        /* The add button styling remains the same as the last fix. */
+        /* Add Entry Button - Centered across both columns */
         .nk-timeline-add {
+            grid-column: 1 / -1;
             text-align: center;
             position: relative;
-            padding-bottom: 1rem;
+            padding-top: 1.25rem;
+            padding-bottom: 0.5rem;
+            z-index: 4;
         }
 
         .nk-timeline-add button {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            border: 4px solid var(--bg-secondary);
+            border: 3px solid var(--bg-secondary);
             background-color: var(--primary-color);
-            color: var(--text-on-primary);
-            font-size: 0;
+            color: var(--text-on-primary, #ffffff);
+            font-size: 1.35rem;
             line-height: 1;
             cursor: pointer;
-            transition: all 0.2s ease-out;
-            box-shadow: var(--shadow);
-            display: flex;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 12px color-mix(in srgb, var(--primary-color) 45%, transparent);
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto;
+            padding: 0;
+            font-weight: 300;
         }
 
         .nk-timeline-add button:hover {
-            background-color: var(--primary-color-hover);
-            transform: scale(1.1);
-            box-shadow: var(--shadow-lg);
-            font-size: 1.8rem;
+            background-color: var(--primary-color-hover, var(--primary-color));
+            transform: scale(1.15) rotate(90deg);
+            box-shadow: 0 0 18px var(--primary-color);
+        }
+
+        /* Mobile & Tablet Responsive Flow */
+        @media (max-width: 768px) {
+            .nk-timeline-block {
+                display: flex !important;
+                flex-direction: column !important;
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+
+            .nk-timeline-block::before {
+                left: 18px;
+            }
+
+            .nk-timeline-entry {
+                width: 100% !important;
+                left: 0 !important;
+                padding-left: 46px !important;
+                padding-right: 0 !important;
+                text-align: left !important;
+                margin-top: 0 !important;
+                margin-bottom: 18px !important;
+            }
+
+            .nk-timeline-entry::after {
+                left: 12px !important;
+                right: auto !important;
+                top: 22px !important;
+            }
+
+            .nk-timeline-entry .nk-timeline-content::before {
+                left: -28px !important;
+                right: auto !important;
+                width: 28px !important;
+                top: 20px !important;
+                mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 24' fill='none'%3E%3Cpath d='M0 2 C14 2 14 22 28 22' stroke='black' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain !important;
+                -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 24' fill='none'%3E%3Cpath d='M0 2 C14 2 14 22 28 22' stroke='black' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain !important;
+            }
+
+            .nk-timeline-add {
+                text-align: left;
+                padding-left: 0;
+            }
         }
 
         .focus-mode-overlay .nk-timeline-block {

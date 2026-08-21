@@ -1242,11 +1242,16 @@ export const ui = {
                             App.util.initPlyr(contentDiv);
                         }, 50);
 
-                        // FIX: Restore MCQ Editability in Write Mode
+                        // FIX: Restore MCQ & Timeline Editability in Write Mode
                         setTimeout(() => {
                             contentDiv.querySelectorAll('.nk-mcq-block').forEach(block => {
                                 block.contentEditable = "false"; // Protect the container itself from being deleted easily
                                 const editables = block.querySelectorAll('.nk-mcq-question, .nk-mcq-option-text, .nk-mcq-explanation, .nk-mcq-hint-content');
+                                editables.forEach(el => el.contentEditable = "true");
+                            });
+                            contentDiv.querySelectorAll('.nk-timeline-block').forEach(block => {
+                                block.contentEditable = "false"; // Protect the container itself from being deleted easily
+                                const editables = block.querySelectorAll('.nk-timeline-date, .nk-timeline-title');
                                 editables.forEach(el => el.contentEditable = "true");
                             });
                         }, 60);
