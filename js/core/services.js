@@ -704,6 +704,12 @@ export const services = {
 
                             /* MCQ */
                             .nk-mcq-block { position: relative; background: var(--bg-secondary); border: 1px solid var(--border-color); border-left: 3px solid var(--primary-color); border-radius: 10px; padding: 1.25rem 1.5rem; margin: 1.5em 0; }
+                            .nk-mcq-meta-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 0.75rem; }
+                            .nk-mcq-difficulty-capsule { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; font-size: 0.75rem; }
+                            .nk-mcq-difficulty-capsule.nk-diff-easy { background: rgba(60, 226, 158, 0.15); border: 1.5px solid #3ce29e; }
+                            .nk-mcq-difficulty-capsule.nk-diff-medium { background: rgba(255, 159, 67, 0.15); border: 1.5px solid #ff9f43; }
+                            .nk-mcq-difficulty-capsule.nk-diff-hard { background: rgba(255, 82, 82, 0.15); border: 1.5px solid #ff5252; }
+                            .nk-mcq-tag-capsule, .nk-mcq-pyq-capsule { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 0.8em; font-weight: 600; background: color-mix(in srgb, var(--primary-color) 8%, transparent); color: var(--text-primary); border: 1px solid var(--border-color); }
                             .nk-mcq-question { font-weight: 500; font-size: 1.05em; margin-bottom: 1rem; color: var(--text-primary); line-height: 1.55; letter-spacing: -0.005em; }
                             .nk-mcq-options { display: flex; flex-direction: column; gap: 0.6rem; }
                             .nk-mcq-option { display: flex; align-items: center; gap: 0.75rem; padding: 8px; border-radius: 6px; border: 1px solid transparent; }
@@ -973,6 +979,10 @@ export const services = {
                                 }
                             }
                         });
+                        // Render MCQ capsules and sanitize explanations for HTML export
+                        doc.querySelectorAll('.nk-mcq-explanation').forEach(el => App.util.parseMcqExplanationMeta(el));
+                        App.util.renderMcqCapsules(doc.body);
+
                         processedContent = doc.body.innerHTML;
                         const tagsPills = (article.tags || []).map(tag => {
                             const label = App.state.tags[tag]?.displayName || tag;
@@ -1732,9 +1742,43 @@ export const services = {
                                         if (isMCQ) {
                                             const qEl = node.querySelector('.nk-mcq-question');
                                             const eEl = node.querySelector('.nk-mcq-explanation');
-                                            const qBlocks = qEl ? processChildren(qEl, { bold: true }, context) : [];
-                                            const eBlocks = eEl && eEl.innerText.trim() ? processChildren(eEl, { color: '#36354b' }, context) : [];
 
+                                            // 1. Extract metadata and clean explanation in one simple pass
+                                            const metaSpans = [];
+                                            let cleanExp = eEl ? (eEl.innerText || eEl.textContent || '') : '';
+
+                                            // Difficulty (#easy / #medium / #hard)
+                                            cleanExp = cleanExp.replace(/#(easy|medium|hard)\b/gi, (match, diff) => {
+                                                metaSpans.push({ text: `[${diff.toUpperCase()}]`, bold: true, color: '#4F46E5' });
+                                                return '';
+                                            });
+
+                                            // Topic tags (#tag_name)
+                                            cleanExp = cleanExp.replace(/#([\w]+)/g, (match, tag) => {
+                                                metaSpans.push({ text: `#${tag.replace(/_/g, ' ')}`, color: '#6366F1' });
+                                                return '';
+                                            });
+
+                                            // PYQ ([[Exam Year]])
+                                            cleanExp = cleanExp.replace(/\[\[([^\]]+)\]\]/g, (match, pyq) => {
+                                                metaSpans.push({ text: `[PYQ: ${pyq.trim()}]`, bold: true, color: '#7C3AED' });
+                                                return '';
+                                            });
+
+                                            cleanExp = cleanExp.replace(/\s+/g, ' ').replace(/\s+([.,!?;:])?/g, (m, p) => p || ' ').trim();
+
+                                            // 2. Clean metadata line at the top (if present)
+                                            if (metaSpans.length > 0) {
+                                                const metaLine = [];
+                                                metaSpans.forEach((span, i) => {
+                                                    if (i > 0) metaLine.push({ text: '   ', fontSize: 8.5 });
+                                                    metaLine.push(span);
+                                                });
+                                                pdfStack.push({ text: metaLine, fontSize: 8.5, margin: [0, 0, 0, 6] });
+                                            }
+
+                                            // 3. Question & Options
+                                            const qBlocks = qEl ? processChildren(qEl, { bold: true }, context) : [];
                                             pdfStack.push({ text: 'Question:', bold: true, fontSize: 12.6, color: '#6366F1', margin: [0, 0, 0, 2] });
                                             pdfStack.push(wr(qBlocks));
 
@@ -1763,9 +1807,10 @@ export const services = {
                                                 pdfStack.push(wr(aBlocks));
                                             }
 
-                                            if (eBlocks.length) {
+                                            // 4. Clean Explanation
+                                            if (cleanExp) {
                                                 pdfStack.push({ text: 'Explanation:', bold: true, fontSize: 12.6, color: '#F59E0B', margin: [0, 6, 0, 2] });
-                                                pdfStack.push(wr(eBlocks));
+                                                pdfStack.push({ text: cleanExp, color: '#36354b', lineHeight: 1.45 });
                                             }
                                         } else {
                                             const qEl = node.querySelector('.nk-accordion-title');
