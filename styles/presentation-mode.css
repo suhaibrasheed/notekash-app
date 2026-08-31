@@ -618,14 +618,18 @@
         .focus-mode-body .spotlight-key-focus,
         .focus-mode-body .snippet:focus,
         .focus-mode-body .snippet:hover,
-        .focus-mode-body .nk-mcq-block.spotlight-key-focus,
-        .focus-mode-body .nk-mcq-block:focus,
         .focus-mode-body .nk-accordion.spotlight-key-focus,
         .focus-mode-body .nk-accordion:focus {
             outline: none;
             box-shadow: 0 0 0 2px var(--primary-color), 0 4px 12px rgba(0, 0, 0, 0.15);
             animation: glow-focus 4.5s infinite alternate;
             border-color: var(--primary-color) !important;
+        }
+
+        .focus-mode-body .nk-mcq-block.spotlight-key-focus,
+        .focus-mode-body .nk-mcq-block:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 40%, transparent), 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .focus-mode-body .spotlight-key-focus,

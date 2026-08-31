@@ -1161,10 +1161,9 @@ export const ui = {
                         });
                     }
 
-                    const wrapper = container.querySelector('.article-view-wrapper');
                     const controls = document.getElementById('article-controls');
-                    if (wrapper && controls) {
-                        wrapper.appendChild(controls);
+                    if (controls && controls.parentElement !== document.body) {
+                        document.body.appendChild(controls);
                     }
                     this.applyReaderTheme();
 
@@ -2160,14 +2159,22 @@ export const ui = {
                         cardBack = card.backText;
                     } else if (card.type === 'mcq') {
                         contentBoxClass = 'mcq-type';
-                        const optionsHtml = card.options.map(opt => `<div class="nk-mcq-option" data-is-correct="${opt.isCorrect}">${opt.text}</div>`).join('');
-                        cardFront = `<div class="nk-mcq-block" data-quiz-mode="${session.quizType}"><div class="nk-mcq-question">${card.question}</div><div class="nk-mcq-options">${optionsHtml}</div></div>`;
-                        const correctOption = card.options.find(opt => opt.isCorrect);
-                        let answerHTML = `<strong>Answer:</strong> <span style="color: var(--success-color);">${correctOption ? correctOption.text : 'N/A'}</span>`;
+                        const optionsHtml = card.options.map(opt => `<div class="nk-mcq-option" data-is-correct="${opt.isCorrect}"><div class="nk-mcq-option-text">${opt.text}</div></div>`).join('');
+                        const metaAttrs = `data-difficulty="${App.util.escapeHtml(card.difficulty || '')}" data-tags="${App.util.escapeHtml(card.tags || '')}" data-pyq="${App.util.escapeHtml(card.pyq || '')}"`;
+                        const expPlaceholder = `<div class="nk-mcq-explanation" style="display:none;" ${metaAttrs}>${card.explanation || ''}</div>`;
+                        cardFront = `<div class="nk-mcq-block" data-quiz-mode="${session.quizType}"><div class="nk-mcq-question">${card.question}</div><div class="nk-mcq-options">${optionsHtml}</div>${expPlaceholder}</div>`;
+                        
+                        const optionsBackHtml = card.options.map(opt => {
+                            const isCorr = opt.isCorrect;
+                            const optClass = isCorr ? 'nk-mcq-option correct' : 'nk-mcq-option';
+                            return `<div class="${optClass}" data-is-correct="${isCorr}"><div class="nk-mcq-option-text">${opt.text}</div></div>`;
+                        }).join('');
+                        
+                        let answerContent = '';
                         if (card.explanation) {
-                            answerHTML += `<hr style="margin: 1rem 0;"><div class="nk-mcq-explanation" style="font-size: 0.8em; color: var(--text-secondary);">${card.explanation}</div>`;
+                            answerContent = `<div class="nk-mcq-explanation" style="display:block; opacity:1; max-height:none; margin-top:0.9rem;" ${metaAttrs}>${card.explanation}</div>`;
                         }
-                        cardBack = `<div class="nk-mcq-block" data-quiz-mode="${session.quizType}"><div><strong>Question:</strong> ${card.question}</div><hr style="margin: 1.5rem 0;"><div>${answerHTML}</div></div>`;
+                        cardBack = `<div class="nk-mcq-block" data-answered="true"><div class="nk-mcq-question">${card.question}</div><div class="nk-mcq-options">${optionsBackHtml}</div>${answerContent}</div>`;
                     } else if (card.type === 'image-occlusion') {
                         // Image Occlusion: show front (with tape) and back (revealed) images
                         contentBoxClass = 'image-occlusion-type';
@@ -2679,14 +2686,16 @@ export const ui = {
                         App.events.presentation._initProPresenter();
                     }
 
-                    // Parse and render MCQ capsules in Focus Mode
-                    setTimeout(() => {
+                    // Parse and render MCQ capsules in Focus/Stage Mode immediately and after mount
+                    const renderCaps = () => {
                         const contentBody = overlay.querySelector('.focus-mode-body');
                         if (contentBody) {
                             contentBody.querySelectorAll('.nk-mcq-explanation').forEach(el => App.util.parseMcqExplanationMeta(el));
                             App.util.renderMcqCapsules(contentBody);
                         }
-                    }, 120);
+                    };
+                    renderCaps();
+                    setTimeout(renderCaps, 60);
                 },
 
                 renderFocusModeControls() {

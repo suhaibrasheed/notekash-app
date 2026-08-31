@@ -615,7 +615,8 @@ export const events = {
                                     App.state.articles.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
                                     if (App.state.activeArticleId === id && App.state.currentMode === 'read' && App.router.getActiveView() === 'article') {
-                                        App.ui.renderArticleView(article, 'read');
+                                        App.ui.renderArticleControls(article);
+                                        App.ui.updateArticleMetadata(article.content, article.createdAt);
                                     } else {
                                         refreshActiveView();
                                     }
@@ -3411,31 +3412,59 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     }
 
                     const audioPlayer = target.closest('.nk-audio-player');
-                    const transcribeBtn = target.closest('.nk-transcribe-container .btn');
+
+                    // Dismiss open audio settings popovers when clicking outside
+                    if (!target.closest('.audio-settings-wrapper')) {
+                        document.querySelectorAll('.audio-popover-menu').forEach(menu => {
+                            menu.style.display = 'none';
+                        });
+                    }
 
                     if (audioPlayer) {
-                        e.preventDefault();
                         const playPauseBtn = target.closest('.audio-play-pause-btn');
                         const progressBar = target.closest('.audio-progress-bar');
+                        const settingsBtn = target.closest('.audio-settings-btn');
                         const speedBtn = target.closest('.audio-speed-btn');
-
+                        const deleteBtn = target.closest('.audio-delete-btn');
 
                         if (playPauseBtn) {
+                            e.preventDefault();
                             App.audio.handlePlayPause(playPauseBtn);
                         } else if (progressBar) {
+                            // Do NOT preventDefault on range input — let native events fire.
+                            // The 'input' event listener wired in _initializeSinglePlayer handles seeking.
+                            // Just ensure currentTime syncs on click too.
                             const audio = audioPlayer.querySelector('audio');
                             if (audio) audio.currentTime = progressBar.value;
+                        } else if (settingsBtn) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const wrapper = settingsBtn.closest('.audio-settings-wrapper');
+                            const popover = wrapper ? wrapper.querySelector('.audio-popover-menu') : null;
+                            if (popover) {
+                                const isVisible = popover.style.display === 'flex' || popover.style.display === 'block';
+                                document.querySelectorAll('.audio-popover-menu').forEach(m => m.style.display = 'none');
+                                popover.style.display = isVisible ? 'none' : 'flex';
+                            }
                         } else if (speedBtn) {
+                            e.preventDefault();
+                            e.stopPropagation();
                             App.audio.handleSpeedChange(speedBtn);
+                        } else if (target.closest('.audio-transcribe-btn')) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (App.license.isPremium()) {
+                                App.audio.transcribeAudioBlock(target.closest('.audio-transcribe-btn'));
+                            } else {
+                                document.querySelectorAll('.audio-popover-menu').forEach(m => m.style.display = 'none');
+                                App.ui.showAscensionModal();
+                            }
+                        } else if (deleteBtn) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            App.audio.handleDeleteAudio(deleteBtn);
                         }
-                        return;
-                    } else if (transcribeBtn) {
-                        e.preventDefault();
-                        if (App.license.isPremium()) {
-                            App.audio.transcribeAudioBlock(transcribeBtn);
-                        } else {
-                            App.ui.showAscensionModal();
-                        }
+                        // Do NOT call e.preventDefault() as a catch-all — it blocks native range/input events.
                         return;
                     }
 
@@ -3625,7 +3654,17 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         }
                         return;
                     }
+                    const renderedTag = target.closest('.rendered-tag');
+                    if (renderedTag && App.state.currentMode === 'read') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const tag = renderedTag.dataset.tag || renderedTag.textContent.replace(/^\[\[|\]\]$/g, '').trim();
+                        if (tag) App.events.showTagModal(tag);
+                        return;
+                    }
                     if (tagSuggestion) {
+                        e.preventDefault();
+                        e.stopPropagation();
                         clearTimeout(App.state.suggestionTimeout);
                         App.contentTools.tagSelection(tagSuggestion);
                         const contentDiv = document.getElementById('article-content');

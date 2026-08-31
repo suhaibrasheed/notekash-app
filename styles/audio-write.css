@@ -11,6 +11,72 @@
             margin: 0.25em;
             box-shadow: var(--shadow-sm);
             user-select: none;
+            position: relative;
+        }
+
+        .audio-settings-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .audio-settings-btn {
+            padding: 6px 10px;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .audio-settings-btn:hover {
+            color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .audio-popover-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 6px);
+            z-index: 1000;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 4px 6px;
+            box-shadow: var(--shadow-md);
+            gap: 6px;
+            align-items: center;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .audio-popover-menu .btn-icon {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .audio-popover-menu .btn-icon:hover {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+        }
+
+        .audio-delete-btn:hover {
+            color: #ef4444 !important;
+            background-color: rgba(239, 68, 68, 0.1) !important;
+            border-color: rgba(239, 68, 68, 0.2) !important;
         }
 
         .audio-play-pause-btn {

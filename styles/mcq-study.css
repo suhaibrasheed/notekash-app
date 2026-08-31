@@ -1243,9 +1243,9 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 7px;
+            gap: 0.45em;
             margin-top: 0;
-            margin-bottom: 9px;
+            margin-bottom: 0.55em;
             padding: 0;
             border: none;
             pointer-events: none;  /* non-interactive decorations */
@@ -1259,16 +1259,16 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 4.5px;
+            gap: 0.35em;
             white-space: nowrap;
             font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-            font-size: 0.63rem !important;
+            font-size: 0.62em !important;
             font-weight: 500 !important;
             letter-spacing: 0.02em !important;
-            padding: 2.5px 8.5px !important;
+            padding: 0.22em 0.72em !important;
             border-radius: 999px !important;
             box-sizing: border-box !important;
-            line-height: 1 !important;
+            line-height: 1.1 !important;
             border-style: solid !important;
             border-width: 1px !important;
         }
@@ -1285,9 +1285,11 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 18px !important;
-            height: 18px !important;
-            margin-right: 2px; /* Tiny gap between dot and first capsule */
+            width: 1.05em !important;
+            height: 1.05em !important;
+            min-width: 1.05em !important;
+            min-height: 1.05em !important;
+            margin-right: 0.15em; /* Proportional gap between dot and first capsule */
             border-radius: 50% !important;
             padding: 0 !important;
             box-sizing: border-box !important;
@@ -1296,7 +1298,7 @@
         }
 
         .nk-mcq-difficulty-capsule .nk-capsule-icon {
-            font-size: 0.62rem !important;
+            font-size: 0.72em !important;
             line-height: 1 !important;
             display: flex;
             align-items: center;
@@ -1304,7 +1306,7 @@
         }
 
         .nk-capsule-icon {
-            font-size: 0.62rem;
+            font-size: 0.72em;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -1315,19 +1317,19 @@
             background: rgba(60, 226, 158, 0.12) !important;
             color: #3ce29e !important;
             border: 1.5px solid rgba(60, 226, 158, 0.6) !important;
-            box-shadow: 0 0 6px rgba(60, 226, 158, 0.25) !important;
+            box-shadow: 0 0 5px rgba(60, 226, 158, 0.25) !important;
         }
         .nk-mcq-difficulty-capsule.nk-diff-medium {
             background: rgba(255, 159, 67, 0.12) !important;
             color: #ff9f43 !important;
             border: 1.5px solid rgba(255, 159, 67, 0.6) !important;
-            box-shadow: 0 0 6px rgba(255, 159, 67, 0.25) !important;
+            box-shadow: 0 0 5px rgba(255, 159, 67, 0.25) !important;
         }
         .nk-mcq-difficulty-capsule.nk-diff-hard {
             background: rgba(255, 82, 82, 0.12) !important;
             color: #ff5252 !important;
             border: 1.5px solid rgba(255, 82, 82, 0.6) !important;
-            box-shadow: 0 0 6px rgba(255, 82, 82, 0.25) !important;
+            box-shadow: 0 0 5px rgba(255, 82, 82, 0.25) !important;
         }
         
         /* ── Topic Tag & PYQ Icons inside capsules ──────────────────── */
@@ -1368,8 +1370,8 @@
             border-color: rgba(92, 64, 51, 0.15) !important;
         }
         
-        /* ── Hide meta bar in write mode (never show in editor) ──────── */
-        body.write-mode .nk-mcq-meta-bar { display: none !important; }
+        /* ── Hide meta bar in write mode editor (never show in active editor content) ──────── */
+        body.write-mode #article-content .nk-mcq-meta-bar { display: none !important; }
 
         /* ── Add Option button styling inside the editor ── */
         .nk-mcq-block .nk-mcq-add-option {
@@ -1402,12 +1404,14 @@
         }
         /* ── Study card mode ─────────────────────────────────────────── */
         .study-card-content-box .nk-mcq-meta-bar {
+            display: flex !important;
             pointer-events: none;
             margin-top: 8px;
             padding-top: 8px;
         }
         /* ── Focus/Presentation mode ─────────────────────────────────── */
         .focus-mode-overlay .nk-mcq-meta-bar {
+            display: flex !important;
             pointer-events: none;
         }
         /* ── Teleprompter sidebar ────────────────────────────────────── */

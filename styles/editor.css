@@ -1593,58 +1593,35 @@
         }
 
         .rendered-tag {
-            /* SuperTag: distinct magenta “chip”, lighter + more elegant */
             cursor: pointer;
-            display: inline-block;
-            position: relative;
-            padding: 0.18em 0.55em;
-            margin: 0 0.1em;
-            border-radius: 9999px;
-
-            background: linear-gradient(120deg,
-                    color-mix(in srgb, var(--text-magenta) 16%, transparent) 0%,
-                    color-mix(in srgb, var(--text-magenta) 8%, transparent) 100%);
-            border: 1px solid color-mix(in srgb, var(--text-magenta) 38%, transparent);
-            color: color-mix(in srgb, var(--text-primary) 35%, var(--text-magenta) 65%);
-            font-weight: 850;
-
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(8px) saturate(150%);
-            -webkit-backdrop-filter: blur(8px) saturate(150%);
-
-            transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-        }
-
-        .rendered-tag::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background: linear-gradient(135deg, color-mix(in srgb, var(--text-magenta) 40%, transparent), transparent 60%);
-            opacity: 0.18;
-            pointer-events: none;
+            display: inline;
+            padding: 0.1em 0.35em;
+            margin: 0 0.08em;
+            border-radius: 4px;
+            background-color: color-mix(in srgb, var(--text-magenta) 15%, transparent);
+            color: var(--text-magenta);
+            font-weight: 500;
+            text-decoration: none;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+            transition: background-color 0.15s ease, color 0.15s ease;
         }
 
         .rendered-tag:hover {
-            transform: translateY(-0.5px);
-            border-color: color-mix(in srgb, var(--text-magenta) 60%, transparent 40%);
-            box-shadow: 0 10px 26px -14px color-mix(in srgb, var(--text-magenta) 60%, transparent), inset 0 0 0 1px rgba(255, 255, 255, 0.10);
-            background: linear-gradient(120deg,
-                    color-mix(in srgb, var(--text-magenta) 20%, transparent) 0%,
-                    color-mix(in srgb, var(--text-magenta) 10%, transparent) 100%);
-        }
-
-        .rendered-tag:hover::after {
-            opacity: 0.26;
+            background-color: color-mix(in srgb, var(--text-magenta) 26%, transparent);
         }
 
         .tag-suggestion {
-            color: var(--text-magenta);
-            border-bottom: 2px dotted var(--text-magenta);
-            padding: 0.1em 0.3em;
-            margin: 0 -0.1em;
-            border-radius: 4px;
+            color: inherit;
+            background: linear-gradient(90deg, transparent, var(--text-magenta) 10%, var(--text-magenta) 90%, transparent) no-repeat bottom / 100% 2px;
+            padding-bottom: 2px;
             cursor: pointer;
+            transition: color 0.15s ease, background 0.15s ease;
+        }
+
+        .tag-suggestion:hover {
+            color: var(--text-magenta);
+            background: linear-gradient(90deg, transparent, var(--text-magenta) 4%, var(--text-magenta) 96%, transparent) no-repeat bottom / 100% 2.5px;
         }
 
         #category-view .rendered-tag,
@@ -3472,7 +3449,6 @@
             flex-shrink: 0;
             font-weight: bold;
             font-size: 0.95rem;
-        }
         }
 
         .settings-section {

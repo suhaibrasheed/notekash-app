@@ -262,9 +262,7 @@ export const audio = {
 
                 insertTranscriptionAsTile(text, transcriptionId) {
                     if (!text || !text.trim() || !transcriptionId) return;
-                    navigator.clipboard.writeText(text.trim()).then(() => {
-                        App.ui.showToast('Transcription complete & copied!', { type: 'success' });
-                    });
+
                     const tileHTML = `<div class="nk-text-tile color-default" contenteditable="false" data-color="default">
                     <span class="nk-text-tile-icon">🎙️</span>
                     <div class="nk-text-tile-color-cycler" title="Cycle Color"><i class="fa-solid fa-palette fa-xs"></i></div>
@@ -276,19 +274,14 @@ export const audio = {
                         placeholderContainer.outerHTML = tileHTML;
                     } else {
                         console.warn("Could not find transcription placeholder container for ID:", transcriptionId);
-                        // Fallback just in case, inserts at the end of the article.
                         document.getElementById('article-content').insertAdjacentHTML('beforeend', tileHTML + '<p><br></p>');
                     }
                     App.state.isArticleDirty = true;
+                    App.ui.showToast('Transcription complete!', { type: 'success' });
                 },
 
                 insertPlayer(base64Url, transcriptionId) {
                     const playerId = `audio-player-${transcriptionId}`;
-
-                    const transcribeButtonHTML = `
-                    <div class="nk-transcribe-container" id="transcribe-container-${transcriptionId}">
-                    <button class="btn btn-secondary btn-gradient-text">Transcribe Audio</button>
-                    </div>`;
 
                     const playerHTML = `
                     <div class="nk-audio-block">
@@ -298,10 +291,18 @@ export const audio = {
                                 <input type="range" class="audio-progress-bar" value="0" min="0" max="100" step="0.1">
                             </div>
                             <div class="audio-time-display">0:00 / 0:00</div>
-                            <button class="btn btn-secondary audio-speed-btn" data-speed="1" title="Playback Speed">1x</button>
+                            <div class="audio-settings-wrapper">
+                                <button class="btn btn-secondary audio-settings-btn" title="Audio Settings" aria-label="Audio settings">
+                                    <i class="fa-solid fa-gear"></i>
+                                </button>
+                                <div class="audio-popover-menu" style="display: none;">
+                                    <button class="btn-icon audio-speed-btn" data-speed="1" title="Playback Speed">1x</button>
+                                    <button class="btn-icon audio-transcribe-btn" title="Transcribe Audio" aria-label="Transcribe audio"><i class="fa-solid fa-microphone-lines"></i></button>
+                                    <button class="btn-icon audio-delete-btn" title="Delete Audio" aria-label="Delete audio"><i class="fa-solid fa-trash-can"></i></button>
+                                </div>
+                            </div>
                             <audio src="${base64Url}" preload="metadata" data-speed="1"></audio>
                         </div>
-                        ${transcribeButtonHTML}
                     </div>`;
 
                     App.util.insertGuardianBlock(playerHTML);
@@ -321,59 +322,173 @@ export const audio = {
                 },
 
                 _initializeSinglePlayer(player) {
-                    const audio = player.querySelector('audio'); const playPauseBtn = player.querySelector('.audio-play-pause-btn'); const progressBar = player.querySelector('.audio-progress-bar'); const timeDisplay = player.querySelector('.audio-time-display');
+                    const audio = player.querySelector('audio');
+                    const playPauseBtn = player.querySelector('.audio-play-pause-btn');
+                    const progressBar = player.querySelector('.audio-progress-bar');
+                    const timeDisplay = player.querySelector('.audio-time-display');
                     if (!audio || !playPauseBtn || !progressBar || !timeDisplay) return;
-                    const formatTime = (seconds) => `${Math.floor(seconds / 60)}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
-                    const updateDisplay = () => { if (!audio.duration) return; progressBar.value = audio.currentTime; timeDisplay.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 0)}`; };
-                    playPauseBtn.classList.remove('playing');
-                    audio.addEventListener('loadedmetadata', () => { progressBar.max = audio.duration; updateDisplay(); });
+
+                    // Ensure gear popover controls are present (backward compatibility)
+                    if (!player.querySelector('.audio-settings-wrapper')) {
+                        const existingSpeedBtn = player.querySelector('.audio-speed-btn');
+                        const currentSpeed = existingSpeedBtn ? (existingSpeedBtn.dataset.speed || '1') : '1';
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'audio-settings-wrapper';
+                        wrapper.innerHTML = `
+                            <button class="btn btn-secondary audio-settings-btn" title="Audio Settings" aria-label="Audio settings">
+                                <i class="fa-solid fa-gear"></i>
+                            </button>
+                            <div class="audio-popover-menu" style="display: none;">
+                                <button class="btn-icon audio-speed-btn" data-speed="${currentSpeed}" title="Playback Speed">${currentSpeed}x</button>
+                                <button class="btn-icon audio-transcribe-btn" title="Transcribe Audio" aria-label="Transcribe audio"><i class="fa-solid fa-microphone-lines"></i></button>
+                                <button class="btn-icon audio-delete-btn" title="Delete Audio" aria-label="Delete audio"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        `;
+                        if (existingSpeedBtn) {
+                            existingSpeedBtn.replaceWith(wrapper);
+                        } else {
+                            timeDisplay.insertAdjacentElement('afterend', wrapper);
+                        }
+                    } else if (!player.querySelector('.audio-transcribe-btn')) {
+                        // Older gear popover exists but predates the transcribe btn — inject it before delete
+                        const deleteBtn = player.querySelector('.audio-delete-btn');
+                        if (deleteBtn) {
+                            const transcribeBtn = document.createElement('button');
+                            transcribeBtn.className = 'btn-icon audio-transcribe-btn';
+                            transcribeBtn.title = 'Transcribe Audio';
+                            transcribeBtn.setAttribute('aria-label', 'Transcribe audio');
+                            transcribeBtn.innerHTML = '<i class="fa-solid fa-microphone-lines"></i>';
+                            deleteBtn.insertAdjacentElement('beforebegin', transcribeBtn);
+                        }
+                    }
+
+                    const speedBtn = player.querySelector('.audio-speed-btn');
+
+                    const formatTime = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+                    const updateDisplay = () => {
+                        progressBar.value = audio.currentTime;
+                        timeDisplay.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 0)}`;
+                    };
+
+                    // Apply stored speed to the audio element — only playbackRate, never defaultPlaybackRate
+                    const applyStoredSpeed = () => {
+                        const stored = parseFloat(audio.dataset.speed || speedBtn?.dataset.speed || '1');
+                        if (!isNaN(stored) && stored > 0 && Math.abs(audio.playbackRate - stored) > 0.01) {
+                            audio.playbackRate = stored;
+                        }
+                    };
+
+                    audio.addEventListener('loadedmetadata', () => {
+                        progressBar.max = audio.duration;
+                        progressBar.value = 0;
+                        updateDisplay();
+                        applyStoredSpeed();
+                    });
+
                     audio.addEventListener('timeupdate', updateDisplay);
-                    audio.addEventListener('play', () => { playPauseBtn.classList.add('playing'); this.activePlayer = audio; });
-                    audio.addEventListener('pause', () => { playPauseBtn.classList.remove('playing'); if (this.activePlayer === audio) this.activePlayer = null; });
-                    audio.addEventListener('ended', () => { playPauseBtn.classList.remove('playing'); audio.currentTime = 0; updateDisplay(); if (this.activePlayer === audio) this.activePlayer = null; });
-                    progressBar.addEventListener('input', () => { audio.currentTime = progressBar.value; updateDisplay(); });
+
+                    audio.addEventListener('play', () => {
+                        playPauseBtn.classList.add('playing');
+                        this.activePlayer = audio;
+                        applyStoredSpeed();
+                    });
+
+                    audio.addEventListener('pause', () => {
+                        playPauseBtn.classList.remove('playing');
+                        if (this.activePlayer === audio) this.activePlayer = null;
+                    });
+
+                    audio.addEventListener('ended', () => {
+                        playPauseBtn.classList.remove('playing');
+                        audio.currentTime = 0;
+                        updateDisplay();
+                        if (this.activePlayer === audio) this.activePlayer = null;
+                    });
+
+                    // Keep speed button label in sync if browser changes rate externally
+                    audio.addEventListener('ratechange', () => {
+                        if (!speedBtn) return;
+                        const rate = audio.playbackRate;
+                        speedBtn.dataset.speed = rate;
+                        speedBtn.textContent = `${rate}x`;
+                    });
+
+                    // Seeking via the range slider
+                    progressBar.addEventListener('input', () => {
+                        audio.currentTime = progressBar.value;
+                        updateDisplay();
+                    });
+
+                    applyStoredSpeed();
                     player.dataset.initialized = 'true';
                 },
 
+                handleDeleteAudio(button) {
+                    const audioBlock = button.closest('.nk-audio-block') || button.closest('.nk-audio-player');
+                    if (!audioBlock) return;
+
+                    const audio = audioBlock.querySelector('audio');
+                    if (audio) {
+                        try { audio.pause(); } catch(e) {}
+                        if (this.activePlayer === audio) this.activePlayer = null;
+                    }
+
+                    audioBlock.remove();
+                    App.state.isArticleDirty = true;
+
+                    const contentDiv = document.getElementById('article-content');
+                    if (contentDiv) {
+                        App.events.saveArticle({ content: contentDiv.innerHTML }, true);
+                    }
+                    App.ui.showToast('Audio deleted', { type: 'info' });
+                },
+
                 async transcribeAudioBlock(buttonEl) {
-                    const container = buttonEl.parentElement;
-                    const audioPlayer = container.previousElementSibling;
-                    if (!audioPlayer || !audioPlayer.classList.contains('nk-audio-player')) {
-                        App.ui.showToast("Could not find the associated audio player.", 'error');
+                    // Button lives inside the gear popover, which is inside .nk-audio-player
+                    const audioPlayer = buttonEl.closest('.nk-audio-player');
+                    if (!audioPlayer) {
+                        App.ui.showToast('Could not find the audio player.', 'error');
                         return;
                     }
 
                     const audioEl = audioPlayer.querySelector('audio');
                     const modelName = App.settings.get('transcriptionModel');
                     if (!audioEl || !audioEl.src || !modelName) {
-                        App.ui.showToast("Audio source or transcription model not found.", 'error');
+                        App.ui.showToast('Audio source or transcription model not found.', 'error');
                         return;
                     }
 
-                    // Show feedback to the user immediately
-                    container.innerHTML = `<p id="${container.id}" class="transcript-placeholder" style="color:var(--text-secondary); font-style:italic;">Transcribing, wait for a moment ...</p>`;
+                    // Close the popover immediately
+                    const popover = audioPlayer.querySelector('.audio-popover-menu');
+                    if (popover) popover.style.display = 'none';
+
+                    // Create a fresh placeholder paragraph after the audio block for the result tile
+                    const audioBlock = audioPlayer.closest('.nk-audio-block') || audioPlayer;
+                    const transcriptionId = `transcribe-placeholder-${crypto.randomUUID()}`;
+                    const placeholder = document.createElement('p');
+                    placeholder.id = transcriptionId;
+                    placeholder.className = 'transcript-placeholder';
+                    placeholder.style.cssText = 'color:var(--text-secondary); font-style:italic; margin: 0.5em 0;';
+                    placeholder.textContent = 'Transcribing, please wait...';
+                    audioBlock.insertAdjacentElement('afterend', placeholder);
 
                     let audioContext = null;
                     try {
-                        // Convert the base64 data URL back into an ArrayBuffer the AI can use
                         const audioBlob = App.util.dataURLtoBlob(audioEl.src);
-                        if (!audioBlob) throw new Error("Could not convert audio data.");
+                        if (!audioBlob) throw new Error('Could not convert audio data.');
 
                         const arrayBuffer = await audioBlob.arrayBuffer();
-                        // Use a temporary AudioContext for this one-off task
                         audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
                         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
                         const audioDataForTranscription = audioBuffer.getChannelData(0);
 
-                        // The container's ID is our unique key for this transcription job
-                        const transcriptionId = container.id;
                         this.runTranscription(audioDataForTranscription, modelName, transcriptionId);
 
                     } catch (error) {
-                        console.error("Error preparing audio for transcription:", error);
-                        App.ui.showToast("Failed to process audio for transcription.", 'error');
-                        // Restore the button if processing fails
-                        container.innerHTML = `<button class="btn btn-secondary" onclick="App.audio.transcribeAudioBlock(this)">Transcribe Audio</button>`;
+                        console.error('Error preparing audio for transcription:', error);
+                        App.ui.showToast('Failed to process audio for transcription.', 'error');
+                        placeholder.remove();
                     } finally {
                         if (audioContext && audioContext.state !== 'closed') {
                             try { audioContext.close(); } catch (e) {}
@@ -387,7 +502,6 @@ export const audio = {
                     if (audio.paused) audio.play(); else audio.pause();
                 },
 
-                // NEW FUNCTION
                 handleSpeedChange(button) {
                     const player = button.closest('.nk-audio-player');
                     if (!player) return;
@@ -395,15 +509,18 @@ export const audio = {
                     if (!audio) return;
 
                     const speeds = [1, 1.25, 1.5, 1.75, 2];
-                    const currentSpeed = parseFloat(button.dataset.speed || "1");
-                    const currentIndex = speeds.indexOf(currentSpeed);
-                    const nextIndex = (currentIndex + 1) % speeds.length;
-                    const newSpeed = speeds[nextIndex];
+                    // Use actual audio.playbackRate as the source of truth — never stale dataset values
+                    const current = audio.playbackRate;
+                    let idx = speeds.findIndex(s => Math.abs(s - current) < 0.01);
+                    if (idx === -1) idx = 0;
 
+                    const newSpeed = speeds[(idx + 1) % speeds.length];
                     audio.playbackRate = newSpeed;
+                    // Update dataset so applyStoredSpeed restores correctly after pause/play
+                    audio.dataset.speed = newSpeed;
                     button.dataset.speed = newSpeed;
-                    button.textContent = `${newSpeed}x`;
-                    button.title = `Playback Speed: ${newSpeed}x`;
+                    // ratechange listener in _initializeSinglePlayer will update button text automatically
+                    App.state.isArticleDirty = true;
                 },
 
                 async requestPermission() {

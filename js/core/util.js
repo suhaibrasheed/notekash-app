@@ -912,6 +912,11 @@ export const util = {
                         const masterSelector = selectorsToQuery.join(', ');
                         if (!masterSelector) return;
 
+                        if (types.includes('mcq')) {
+                            queryRoot.querySelectorAll('.nk-mcq-explanation').forEach(el => this.parseMcqExplanationMeta(el));
+                            this.renderMcqCapsules(queryRoot);
+                        }
+
                         queryRoot.querySelectorAll(masterSelector).forEach((node, index) => {
                             let snippetObject = null;
 
@@ -1222,8 +1227,17 @@ export const util = {
 
                         const explanationEl = mcqBlock.querySelector('.nk-mcq-explanation');
                         let explanationText = null;
-                        if (explanationEl && explanationEl.textContent.trim()) {
-                            explanationText = explanationEl.innerHTML;
+                        let difficulty = null;
+                        let tags = null;
+                        let pyq = null;
+                        if (explanationEl) {
+                            this.parseMcqExplanationMeta(explanationEl);
+                            if (explanationEl.textContent.trim()) {
+                                explanationText = explanationEl.innerHTML;
+                            }
+                            difficulty = explanationEl.dataset.difficulty || null;
+                            tags = explanationEl.dataset.tags || null;
+                            pyq = explanationEl.dataset.pyq || null;
                         }
                         if (options.length < 2 || !options.some(opt => opt.isCorrect)) return;
 
@@ -1235,6 +1249,7 @@ export const util = {
                             newCards[cardId] = {
                                 id: cardId, type: 'mcq', articleId, category,
                                 question: questionText, options: options, explanation: explanationText,
+                                difficulty, tags, pyq,
                                 rating: existingCard?.rating || null, reviewCount: existingCard?.reviewCount || 0,
                                 interval: existingCard?.interval || 0, lastReviewed: existingCard?.lastReviewed || null,
                                 nextReviewDue: existingCard?.nextReviewDue || null, createdAt: existingCard?.createdAt || new Date().toISOString(),
@@ -2096,6 +2111,14 @@ export const util = {
                     // Get raw text (strip HTML tags for parsing, but keep original HTML for display)
                     const text = explanationEl.innerText || explanationEl.textContent || '';
                     
+                    const hasSourceTokens = /#(easy|medium|hard)\b/i.test(text) || /#[\w]+/g.test(text) || /\[\[[^\]]+\]\]/.test(text);
+                    const alreadyHasMetaBar = block.querySelector('.nk-mcq-meta-bar');
+                    
+                    // If text was already cleaned for display and block already has its meta bar, keep existing metadata
+                    if (!hasSourceTokens && alreadyHasMetaBar) {
+                        return;
+                    }
+                    
                     // ── Difficulty ──────────────────────────────────────────────────────────
                     const diffMatch = text.match(/#(easy|medium|hard)\b/i);
                     if (diffMatch) {
@@ -2131,17 +2154,21 @@ export const util = {
                     }
                 },
 
-                parseAllMcqMetadata() {
-                    document.querySelectorAll('#article-content .nk-mcq-explanation').forEach(el => this.parseMcqExplanationMeta(el));
+                parseAllMcqMetadata(root = document) {
+                    root.querySelectorAll('.nk-mcq-explanation').forEach(el => this.parseMcqExplanationMeta(el));
                 },
 
                 renderMcqCapsules(container = document) {
-                    container.querySelectorAll('.nk-mcq-block').forEach(block => {
+                    const blocks = container.querySelectorAll ? container.querySelectorAll('.nk-mcq-block') : [];
+                    blocks.forEach(block => {
                         // Clean up existing capsule bars first
                         block.querySelectorAll('.nk-mcq-meta-bar').forEach(el => el.remove());
                         
                         const expEl = block.querySelector('.nk-mcq-explanation');
                         if (!expEl) return;
+                        
+                        // Always ensure metadata attributes are parsed and populated on the explanation
+                        this.parseMcqExplanationMeta(expEl);
                         
                         const difficulty = expEl.dataset.difficulty;
                         const tags = expEl.dataset.tags
