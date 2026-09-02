@@ -318,7 +318,7 @@ export const mindMap = {
 
                         snippetsData.forEach((snippet) => {
                             const isImageSnippet = !!snippet.isImage;
-                            const level = isImageSnippet ? lastMindmapLevel : (snippet.level || 1);
+                            const level = isImageSnippet ? lastMindmapLevel : Math.max(1, snippet.level || 1);
                             const nodeText = isImageSnippet ? `<img src="${snippet.src}">` : snippet.text;
                             const childDims = this.calculateNodeDimensions(nodeText, 'child');
 

@@ -3945,16 +3945,20 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                             const fragment = range.extractContents();
 
-                            // Strip conflicting classes from extracted nodes
-                            if (conflictingClasses.length > 0) {
-                                const innerSpans = Array.from(fragment.querySelectorAll('span'));
-                                innerSpans.forEach(el => {
+                            // Strip conflicting classes and unbold overrides from extracted nodes
+                            const innerSpans = Array.from(fragment.querySelectorAll('span'));
+                            innerSpans.forEach(el => {
+                                if (conflictingClasses.length > 0) {
                                     conflictingClasses.forEach(c => el.classList.remove(c));
-                                    if (el.classList.length === 0 && !el.style.cssText) {
-                                        App.util.unwrapNode(el);
-                                    }
-                                });
-                            }
+                                }
+                                el.classList.remove('unbold', 'font-normal');
+                                if (el.style.fontWeight === 'normal' || el.style.fontWeight === '400') {
+                                    el.style.fontWeight = '';
+                                }
+                                if (el.classList.length === 0 && !el.style.cssText) {
+                                    App.util.unwrapNode(el);
+                                }
+                            });
 
                             span.appendChild(fragment);
                             range.insertNode(span);
@@ -4017,6 +4021,39 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     return true;
                 },
 
+                toggleBold() {
+                    const sel = window.getSelection();
+                    if (!sel || sel.isCollapsed || !sel.rangeCount) {
+                        document.execCommand('bold', false, null);
+                        return;
+                    }
+                    const range = sel.getRangeAt(0);
+                    const parent = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
+                    const textSpan = parent?.closest('span[class*="text-"]:not([class*="nk-text"])');
+                    const unboldSpan = parent?.closest('.unbold');
+
+                    if (unboldSpan) {
+                        // Already unbolded -> re-bold by removing unbold
+                        unboldSpan.classList.remove('unbold');
+                        if (unboldSpan.classList.length === 0 && !unboldSpan.style.cssText && unboldSpan.tagName === 'SPAN') {
+                            App.util.unwrapNode(unboldSpan);
+                        }
+                    } else if (textSpan) {
+                        // Currently bold via text-color -> unbold it
+                        if (sel.toString().trim() === textSpan.textContent.trim()) {
+                            textSpan.classList.add('unbold');
+                        } else {
+                            const span = document.createElement('span');
+                            span.className = 'unbold';
+                            span.appendChild(range.extractContents());
+                            range.insertNode(span);
+                        }
+                    } else {
+                        document.execCommand('bold', false, null);
+                    }
+                    App.state.isArticleDirty = true;
+                    if (App.state.currentMode === 'read') App.events.saveArticle({ isAutosave: true });
+                },
 
                 cycleColorFormatting() {
                     let currentIndex = App.settings.get('colorCycleIndex');
@@ -4296,8 +4333,13 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                     if (cmdKey && (e.key.toLowerCase() === 'b' || e.key.toLowerCase() === 'i' || e.key.toLowerCase() === 'u')) {
                         e.preventDefault();
-                        const command = { 'b': 'bold', 'i': 'italic', 'u': 'underline' }[e.key.toLowerCase()];
-                        document.execCommand(command);
+                        const key = e.key.toLowerCase();
+                        if (key === 'b') {
+                            App.events.toggleBold();
+                        } else {
+                            const command = { 'i': 'italic', 'u': 'underline' }[key];
+                            document.execCommand(command);
+                        }
                         return;
                     }
 
@@ -5407,21 +5449,27 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                         const systemPrompt = `You are a master concept mapper and subject matter expert. Your task is to analyze the provided article and generate a concise, highly insightful mindmap summarizing the core concepts.
 
-                            The syntax works strictly as follows:
-                            {{m0::Central Topic / Core Idea}}
-                            {{m1::Main Branch 1 (Summarized key point, max 9 sentences)}}
-                            {{m2::Sub-point of Branch 1 (Max 9 sentences)}}
-                            {{m3::Detail of Sub-point in Branch 1 (Max 9 sentences)}}
-                            {{m1::Main Branch 2...}}
+                            Hierarchy Architecture:
+                            The Article Title automatically acts as the Central Root Node. Do NOT output a root tag (no m0).
+                            The mindmap hierarchy radiates outward using m1, m2, and m3:
+                            {{m1::Main Branch 1 (Key theme / primary pillar, max 9 sentences)}}
+                            {{m2::Sub-topic of Branch 1 (Sub-concept / mechanism, max 9 sentences)}}
+                            {{m3::Detail / Example of Sub-topic (Specific data point / rule, max 9 sentences)}}
+                            {{m2::Another Sub-topic of Branch 1...}}
+                            {{m1::Main Branch 2 (Next primary pillar)...}}
 
                             Rules:
-                            1. {{m0::...}} is the Central Idea/Core Concept. There must be EXACTLY ONE m0, representing the root.
-                            2. Structure hierarchy up to ONLY 3 levels deep from the root: {{m1::...}}, {{m2::...}}, and {{m3::...}}. Do NOT use m4 or deeper.
-                            3. SUMMARIZATION & FILTERING: Do NOT create too many nodes. Filter out only the most important things worth remembering. A mindmap is for summarization, not expansion. It shouldnt seem like an infinite mindmap, it should look like filtered mindmap with important things squeezed from Article like the expert does. Mindmaps are for Revision and not for incorporating everything, they contain most important things.
-                            4. NODE LENGTH: You have freedom to write expansive descriptions! Each node can contain multiple sentences (up to 9 sentences) instead of just one short phrase. Notice i used "Can" so you have to decide as expert what fits best in mindmap and what things need to be mentioned. Use this to provide meaningful summaries within each node.
-                            5. ONLY output the mindmap structure using this syntax. Use newlines between each tag.
-                            6. U can use Bold/Italics for emphasis and important Keywords/terms/dates etc.
-                            6. Do NOT include any introductory or concluding text. Do not use Markdown formatting like bold or code blocks around the output.`;
+                            1. NEVER use m0. The Article Title itself is already the central node. Start directly with {{m1::...}} for primary branches radiating from the Article Title.
+                            2. Structure hierarchy up to 3 levels:
+                               - {{m1::...}} = Primary Category / Main Branch (attached to Article Title)
+                               - {{m2::...}} = Sub-topic / Mechanism (attached to the preceding m1)
+                               - {{m3::...}} = Detailed point / Example / Formula (attached to the preceding m2)
+                               Do NOT use m4 or deeper.
+                            3. SUMMARIZATION & FILTERING: Do NOT create too many nodes. Filter out only the most important concepts worth remembering. A mindmap is for summarization and high-yield revision, not whole-text regurgitation.
+                            4. NODE CONTENT & LENGTH: Each node can contain rich, explanatory summaries (up to 9 sentences when needed) rather than just trivial phrases.
+                            5. ONLY output the mindmap tags (one per line). Use newlines between each tag.
+                            6. You can use Bold/Italics inside node text for emphasis on key terms, dates, and formulas.
+                            7. Do NOT include introductory/concluding text or markdown code fences.`;
 
                         const userPrompt = contentDiv.innerText;
 
@@ -7600,6 +7648,10 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             case 'c':
                                 App.events.study.cycleStudyTheme();
                                 break;
+                            case 'w':
+                            case 'W':
+                                App.whiteboard.open('scratchpad');
+                                break;
                             case 'e':
                                 document.querySelector('.study-controls .btn-icon-nav[onclick*="toggleFontSize"]')?.click();
                                 break;
@@ -8091,7 +8143,13 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                                 else { document.execCommand('insertUnorderedList', false); setTimeout(() => { const newList = window.getSelection().focusNode.parentElement.closest('ul'); if (newList) newList.className = value; }, 0); }
                             }
                             break;
-                        case 'execCommand': document.execCommand(value); break;
+                        case 'execCommand': 
+                            if (value === 'bold') {
+                                App.events.toggleBold();
+                            } else {
+                                document.execCommand(value);
+                            }
+                            break;
                     }
                 },
 

@@ -214,6 +214,15 @@
             --search-highlight-bg: #f59e0b;
             --mindmap-snippet-bg: #fef08a;
             --mindmap-snippet-border: #facc15;
+            /* --- Mindmap Read-Mode Typographic Palette (Light Theme) --- */
+            --mindmap-m1-border: #059669;
+            --mindmap-m1-bg: rgba(16, 185, 129, 0.10);
+            --mindmap-m2-border: #0284c7;
+            --mindmap-m2-bg: rgba(2, 132, 199, 0.08);
+            --mindmap-m3-border: #d97706;
+            --mindmap-m3-bg: rgba(217, 119, 6, 0.07);
+            --mindmap-m4-border: rgba(100, 116, 139, 0.55);
+            --mindmap-m4-bg: rgba(100, 116, 139, 0.05);
             /* --- Read Counter Progression --- */
             --rc-0-gray: #adb5bd;
             --rc-1-red: #d90429;
@@ -389,6 +398,15 @@
             --text-orange: #ff9934;
             --text-teal: #0effef;
             --text-slate: #fcf006;
+            /* --- Mindmap Read-Mode Typographic Palette (Dark Theme) --- */
+            --mindmap-m1-border: #34d399;
+            --mindmap-m1-bg: rgba(16, 185, 129, 0.16);
+            --mindmap-m2-border: #38bdf8;
+            --mindmap-m2-bg: rgba(56, 189, 248, 0.13);
+            --mindmap-m3-border: #fbbf24;
+            --mindmap-m3-bg: rgba(251, 191, 36, 0.11);
+            --mindmap-m4-border: rgba(148, 163, 184, 0.45);
+            --mindmap-m4-bg: rgba(148, 163, 184, 0.07);
             --cat-tags: #f8f9fa;
             --cat-science: #22d3ee;
             --cat-society: #a78bfa;
@@ -583,6 +601,15 @@
             --text-orange: #dc7208;
             --text-teal: #0693be;
             --text-slate: #c59b1e;
+            /* --- Mindmap Read-Mode Typographic Palette (Sepia Theme) --- */
+            --mindmap-m1-border: #15803d;
+            --mindmap-m1-bg: rgba(21, 128, 61, 0.12);
+            --mindmap-m2-border: #1d4ed8;
+            --mindmap-m2-bg: rgba(29, 78, 216, 0.08);
+            --mindmap-m3-border: #b45309;
+            --mindmap-m3-bg: rgba(180, 83, 9, 0.07);
+            --mindmap-m4-border: rgba(120, 113, 108, 0.50);
+            --mindmap-m4-bg: rgba(120, 113, 108, 0.05);
             --cloze-bg: rgba(204, 238, 204, 0.5);
             --cloze-border: #28a745;
             --cloze-revealed-text: #166534;

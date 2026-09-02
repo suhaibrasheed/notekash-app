@@ -2117,6 +2117,7 @@ export const ui = {
                 <span style="font-weight: 700; font-size: 1rem;">${currentFontSize.replace('rem', '')}</span>
             </button>`;
                     const themeButtonIcon = `<button class="btn-icon-nav" title="Cycle Ambiance (C, Right-click to go back)" oncontextmenu="event.preventDefault(); App.events.study.cycleStudyTheme(true);" onclick="App.events.study.cycleStudyTheme()">${App.util.icons.theme}</button>`;
+                    const scratchpadButtonIcon = `<button class="btn-icon-nav" onclick="App.whiteboard.open('scratchpad')" title="Whiteboard Scratchpad (W)"><i class="fa-solid fa-pen-nib"></i></button>`;
 
                     if (session.quizType === 'mcq') {
                         controlsHTML = `
@@ -2126,6 +2127,7 @@ export const ui = {
                         ${nextButtonIcon}
                     </div>
                     <div class="mcq-controls-right-group">
+                        ${scratchpadButtonIcon}
                         ${fontSizeButton}
                         ${exitButtonIcon}
                     </div>
@@ -2146,6 +2148,7 @@ export const ui = {
                         <button class="btn btn-study-rating btn-easy" onclick="App.events.study.rate('Easy')">Easy</button>
                     </div>
                     <div class="mcq-controls-right-group">
+                        ${scratchpadButtonIcon}
                         ${fontSizeButton}
                         ${exitButtonIcon}
                     </div>
@@ -3446,7 +3449,7 @@ export const ui = {
                             <div class="format-toolbar-group" style="position: relative;">
                                 <button class="btn-icon" title="Text Formatting" onmousedown="event.preventDefault()">${icons.format}</button>
                                 <div class="format-popover" style="bottom: 110%;">
-                                    <button class="btn-icon" title="Bold (Cmd/Ctrl+B)" onmousedown="event.preventDefault(); document.execCommand('bold', false, null);" aria-label="Bold text"><b>B</b></button>
+                                    <button class="btn-icon" title="Bold (Cmd/Ctrl+B)" onmousedown="event.preventDefault(); App.events.toggleBold();" aria-label="Bold text"><b>B</b></button>
                                     <button class="btn-icon" title="Italic (Cmd/Ctrl+I)" onmousedown="event.preventDefault(); document.execCommand('italic', false, null);" aria-label="Italicize text"><i>I</i></button>
                                     <button class="btn-icon" title="Underline (Cmd/Ctrl+U)" onmousedown="event.preventDefault(); document.execCommand('underline', false, null);" aria-label="Underline text"><u>U</u></button>
                                     <button class="btn-icon" title="Insert Checkbox" data-action="insertCheckbox" onmousedown="event.preventDefault(); App.events.handleArticleControlsClick({ target: { closest: () => ({ dataset: { action: 'insertCheckbox' } }) } })" aria-label="Insert checkbox"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path><polyline points="9 11 12 14 22 4"></polyline></svg></button>

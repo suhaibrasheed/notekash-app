@@ -654,6 +654,15 @@
             transform: scale(0.92);
         }
 
+        .wb-tool-btn.danger-hover:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger-color, #ef4444);
+        }
+
+        .wb-tool-btn.danger-hover:hover svg {
+            color: var(--danger-color, #ef4444);
+        }
+
         /* More Menu Container */
         .wb-more-container {
             position: relative;

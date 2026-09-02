@@ -223,6 +223,7 @@ const whiteboard = {
         document.getElementById('whiteboard-undo-btn')?.addEventListener('click', () => this.undo());
         document.getElementById('whiteboard-paste-btn')?.addEventListener('click', () => this.pasteContent());
         document.getElementById('whiteboard-clear-btn')?.addEventListener('click', () => this.clear());
+        document.getElementById('whiteboard-clear-menu-btn')?.addEventListener('click', () => this.clear());
         document.getElementById('whiteboard-cancel-btn')?.addEventListener('click', () => this.close());
 
         document.getElementById('whiteboard-add-btn')?.addEventListener('click', async () => {
@@ -360,6 +361,12 @@ const whiteboard = {
         window.addEventListener('resize', () => {
             if (this.state.isOpen) this.resizeCanvas();
         });
+
+        if (window.ResizeObserver && this.els.container) {
+            new ResizeObserver(() => {
+                if (this.state.isOpen) this.resizeCanvas();
+            }).observe(this.els.container);
+        }
 
         this.els.container?.addEventListener('click', (e) => {
             if ((e.target === this.els.canvas || e.target === this.els.container) && this.state.tool === 'select') {
@@ -796,6 +803,13 @@ const whiteboard = {
                 }
             });
         });
+
+        // Pre-sync scratchpad from App.fs (Folder Storage / IndexedDB)
+        setTimeout(() => {
+            if (!this.getScratchpadState()) {
+                this.loadScratchpadFromStorage();
+            }
+        }, 500);
     },
 
     open(insertMode = 'end', articleId = null) {
@@ -844,9 +858,20 @@ const whiteboard = {
         this.els.overlay.classList.add('active');
 
         this.resizeCanvas();
-        this.clear();
 
-        this.setTool('pen');
+        const scratchState = this.getScratchpadState();
+        if (scratchState && this.hasSavedContent(scratchState)) {
+            this.restoreFromState(scratchState, true);
+        } else {
+            this.clear(false);
+            this.setTool('pen');
+            // Try loading from App.fs (Folder Storage / IndexedDB) if localStorage was empty
+            this.loadScratchpadFromStorage().then(fsState => {
+                if (fsState && this.state.isOpen && !this.state.editingBlockId && !this.state.hasContent) {
+                    this.restoreFromState(fsState, true);
+                }
+            });
+        }
 
         this.els.overlay.focus();
         document.body.style.overflow = 'hidden';
@@ -981,6 +1006,11 @@ const whiteboard = {
     },
 
     close() {
+        // Auto-save scratchpad if in regular whiteboard mode
+        if (!this.state.editingBlockId && !this.state.isImageAnnotation && !this.state.useSeparateBgImage) {
+            this.saveScratchpadState();
+        }
+
         if (this.state.animationFrameId) {
             cancelAnimationFrame(this.state.animationFrameId);
             this.state.animationFrameId = null;
@@ -1009,8 +1039,20 @@ const whiteboard = {
     resizeCanvas() {
         if (!this.els.container || !this.els.canvas) return;
 
-        const rect = this.els.container.getBoundingClientRect();
+        // Use unscaled client dimensions to ensure full 100% width and height coverage
+        const width = this.els.container.clientWidth || this.els.container.getBoundingClientRect().width;
+        const height = this.els.container.clientHeight || this.els.container.getBoundingClientRect().height;
         const dpr = window.devicePixelRatio || 1;
+
+        if (width <= 0 || height <= 0) return;
+
+        const targetW = Math.round(width * dpr);
+        const targetH = Math.round(height * dpr);
+
+        // If dimensions haven't changed, skip reallocation
+        if (this.els.canvas.width === targetW && this.els.canvas.height === targetH) {
+            return;
+        }
 
         // Store current drawing if any
         let imageData = null;
@@ -1020,10 +1062,10 @@ const whiteboard = {
             } catch (e) { /* empty canvas */ }
         }
 
-        this.els.canvas.width = rect.width * dpr;
-        this.els.canvas.height = rect.height * dpr;
-        this.els.canvas.style.width = rect.width + 'px';
-        this.els.canvas.style.height = rect.height + 'px';
+        this.els.canvas.width = targetW;
+        this.els.canvas.height = targetH;
+        this.els.canvas.style.width = width + 'px';
+        this.els.canvas.style.height = height + 'px';
 
         this.els.ctx.scale(dpr, dpr);
 
@@ -1823,6 +1865,9 @@ const whiteboard = {
             this.autoResizeTextBox(textBoxData, { force: true });
         }, 50);
 
+        this.state.hasContent = true;
+        this.scheduleScratchpadSave();
+
         return textBoxData;
     },
 
@@ -2361,8 +2406,19 @@ const whiteboard = {
         // Smart auto-resize while typing/pasting (grow only)
         if (content) {
             const scheduleResize = (force = false) => requestAnimationFrame(() => self.autoResizeTextBox(tb, { force }));
-            content.addEventListener('input', () => scheduleResize(false));
-            content.addEventListener('paste', () => setTimeout(() => scheduleResize(true), 0));
+            content.addEventListener('input', () => {
+                scheduleResize(false);
+                self.state.hasContent = true;
+                self.scheduleScratchpadSave();
+            });
+            content.addEventListener('blur', () => {
+                self.scheduleScratchpadSave();
+            });
+            content.addEventListener('paste', () => setTimeout(() => {
+                scheduleResize(true);
+                self.state.hasContent = true;
+                self.scheduleScratchpadSave();
+            }, 0));
             content.addEventListener('focus', () => scheduleResize(true));
         }
 
@@ -2938,6 +2994,9 @@ const whiteboard = {
         this.state.tapeBoxes.push(tapeData);
         this.setupTapeBoxInteractions(tapeData);
 
+        this.state.hasContent = true;
+        this.scheduleScratchpadSave();
+
         return tapeData;
     },
 
@@ -3253,6 +3312,9 @@ const whiteboard = {
 
         // End any ongoing paths
         this.els.ctx.beginPath();
+        this.state.hasContent = true;
+        this.saveToHistory();
+        this.scheduleScratchpadSave();
     },
 
     drawShape(start, end) {
@@ -3337,7 +3399,7 @@ const whiteboard = {
         }
     },
 
-    clear() {
+    clear(wipeScratchpad = true) {
         this.state.history = [];
         this.state.historyIndex = -1;
         this.els.ctx.clearRect(0, 0, this.els.canvas.width, this.els.canvas.height);
@@ -3348,16 +3410,23 @@ const whiteboard = {
             this.els.ctx.drawImage(this.state.backgroundImage, bg.x, bg.y, bg.w, bg.h);
         }
 
-        // Also clear text boxes and connectors
+        // Also clear text boxes, image boxes, tape boxes and connectors
         this.state.textBoxes.forEach(tb => tb.element?.remove());
         this.state.textBoxes = [];
         if (this.state.imageBoxes) {
             this.state.imageBoxes.forEach(ib => ib.element?.remove());
             this.state.imageBoxes = [];
         }
+        (this.state.tapeBoxes || []).forEach(tb => tb.element?.remove());
+        this.state.tapeBoxes = [];
         this.state.activeTextBox = null;
         this.state.connectors = [];
         if (this.els.connectorsSvg) this.els.connectorsSvg.innerHTML = '';
+
+        if (wipeScratchpad && !this.state.editingBlockId && !this.state.isImageAnnotation && !this.state.useSeparateBgImage) {
+            this.clearScratchpadState();
+            App.ui.showToast('🧹 Canvas cleared', { duration: 1200 });
+        }
     },
 
     // Keyboard shortcuts removed per user request - users prefer clicking
@@ -3576,7 +3645,10 @@ const whiteboard = {
             let contentDiv = document.getElementById('article-content');
 
             if (!contentDiv) {
-                App.ui.showToast('No article open', { type: 'error' });
+                // If opened from a view without an active editor (e.g. Study Mode, Mind Map, Visual Map, Library)
+                this.saveScratchpadState();
+                this.close();
+                App.ui.showToast('💾 Scratchpad saved!', { type: 'success' });
                 return;
             }
 
@@ -3741,8 +3813,232 @@ const whiteboard = {
             this.els.container.querySelectorAll('.wb-text-box, .wb-img-box, .wb-tape-box').forEach(el => el.remove());
         }
         this.resizeCanvas();
-        this.clear();
+        this.clear(false);
         this.setTool('pen');
+    },
+
+    hasScratchpadContent() {
+        if (this.state.hasContent) return true;
+        if (this.state.textBoxes && this.state.textBoxes.length > 0) return true;
+        if (this.state.imageBoxes && this.state.imageBoxes.length > 0) return true;
+        if (this.state.tapeBoxes && this.state.tapeBoxes.length > 0) return true;
+        if (this.state.connectors && this.state.connectors.length > 0) return true;
+        if (this.state.history && this.state.history.length > 0) return true;
+        return false;
+    },
+
+    hasSavedContent(savedState) {
+        if (!savedState) return false;
+        if (savedState.textBoxes && savedState.textBoxes.length > 0) return true;
+        if (savedState.imageBoxes && savedState.imageBoxes.length > 0) return true;
+        if (savedState.tapeBoxes && savedState.tapeBoxes.length > 0) return true;
+        if (savedState.connectors && savedState.connectors.length > 0) return true;
+        if (savedState.canvasData && typeof savedState.canvasData === 'string' && savedState.canvasData.startsWith('data:image/')) return true;
+        return false;
+    },
+
+    scheduleScratchpadSave() {
+        if (this.state.editingBlockId || this.state.isImageAnnotation || this.state.useSeparateBgImage) {
+            return;
+        }
+        if (this._saveScratchpadTimeout) {
+            clearTimeout(this._saveScratchpadTimeout);
+        }
+        this._saveScratchpadTimeout = setTimeout(() => {
+            this.saveScratchpadState();
+        }, 300);
+    },
+
+    saveScratchpadState() {
+        if (this.state.editingBlockId || this.state.isImageAnnotation || this.state.useSeparateBgImage) {
+            return;
+        }
+        if (!this.hasScratchpadContent()) {
+            return;
+        }
+        try {
+            const state = this.serializeState();
+            // 1. Fast synchronous cache in localStorage
+            localStorage.setItem('notekash_wb_scratchpad_v1', JSON.stringify(state));
+
+            // 2. Dual persistence across Folder Storage (App.fs file mode) and Browser Storage (App.fs IndexedDB)
+            if (window.App && App.fs && typeof App.fs.write === 'function') {
+                App.fs.write('_whiteboard_scratchpad.json', state).catch(err => {
+                    console.warn('App.fs.write scratchpad warning:', err);
+                });
+            }
+        } catch (e) {
+            console.warn('Failed to save whiteboard scratchpad:', e);
+        }
+    },
+
+    getScratchpadState() {
+        try {
+            const raw = localStorage.getItem('notekash_wb_scratchpad_v1');
+            if (raw) return JSON.parse(raw);
+        } catch (e) {
+            console.warn('Failed to parse whiteboard scratchpad from localStorage:', e);
+        }
+        return null;
+    },
+
+    async loadScratchpadFromStorage() {
+        if (window.App && App.fs && typeof App.fs.read === 'function') {
+            try {
+                const fileData = await App.fs.read('_whiteboard_scratchpad.json');
+                if (fileData && this.hasSavedContent(fileData)) {
+                    localStorage.setItem('notekash_wb_scratchpad_v1', JSON.stringify(fileData));
+                    return fileData;
+                }
+            } catch (e) {
+                console.warn('Failed to read scratchpad from App.fs:', e);
+            }
+        }
+        return null;
+    },
+
+    clearScratchpadState() {
+        try {
+            localStorage.removeItem('notekash_wb_scratchpad_v1');
+        } catch (e) {}
+        if (window.App && App.fs && typeof App.fs.write === 'function') {
+            App.fs.write('_whiteboard_scratchpad.json', null).catch(() => {});
+        }
+        this.state.hasContent = false;
+    },
+
+    restoreFromState(savedState, isScratchpad = false) {
+        if (!savedState) return;
+
+        // Reset visual containers & elements
+        this.state.textBoxes.forEach(tb => tb.element?.remove());
+        this.state.textBoxes = [];
+        (this.state.imageBoxes || []).forEach(ib => ib.element?.remove());
+        this.state.imageBoxes = [];
+        (this.state.tapeBoxes || []).forEach(tb => tb.element?.remove());
+        this.state.tapeBoxes = [];
+        this.state.tapeIdCounter = 0;
+        this.state.connectors = [];
+        if (this.els.connectorsSvg) this.els.connectorsSvg.innerHTML = '';
+
+        this.state.hasContent = true;
+
+        // Restore background style
+        this.state.backgroundStyle = savedState.backgroundStyle || 0;
+        if (this.els.container) {
+            const bgColors = { 0: 'transparent', 1: '#ffffff', 2: '#1a1a2e', 3: '#fafafa' };
+            this.els.container.style.background = bgColors[this.state.backgroundStyle] || 'transparent';
+            if (this.state.backgroundStyle === 3) {
+                this.els.container.style.backgroundImage =
+                    'linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px), ' +
+                    'linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px)';
+                this.els.container.style.backgroundSize = '20px 20px';
+            } else {
+                this.els.container.style.backgroundImage = 'none';
+            }
+            if (this.state.backgroundStyle === 2) {
+                this.els.container.classList.add('wb-theme-dark');
+            } else {
+                this.els.container.classList.remove('wb-theme-dark');
+            }
+        }
+
+        // Restore canvas drawing
+        if (savedState.canvasData) {
+            const img = new Image();
+            const renderCanvas = () => {
+                const dpr = window.devicePixelRatio || 1;
+                this.els.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                this.els.ctx.clearRect(0, 0, this.els.canvas.width, this.els.canvas.height);
+                this.els.ctx.drawImage(img, 0, 0, this.els.canvas.width, this.els.canvas.height);
+                this.els.ctx.scale(dpr, dpr);
+                this.state.history = [];
+                this.state.historyIndex = -1;
+                this.saveToHistory();
+                this.state.hasContent = true;
+            };
+            img.onload = renderCanvas;
+            img.onerror = (err) => console.warn('Failed to load whiteboard canvasData image:', err);
+            img.src = savedState.canvasData;
+            if (img.complete && img.naturalWidth > 0) {
+                renderCanvas();
+            }
+        }
+
+        // Restore image boxes
+        if (savedState.imageBoxes && savedState.imageBoxes.length > 0) {
+            if (!this.state.imageBoxes) this.state.imageBoxes = [];
+            savedState.imageBoxes.forEach(ibData => {
+                this.addImageBox(ibData.x, ibData.y, ibData.src, ibData.w, ibData.h);
+            });
+        }
+
+        // Restore text boxes
+        const idMap = {};
+        if (savedState.textBoxes && savedState.textBoxes.length > 0) {
+            savedState.textBoxes.forEach(tbData => {
+                const tb = this.addTextBox(tbData.x, tbData.y, tbData.color || this.getActiveColor());
+                const content = tb.element.querySelector('.wb-text-content');
+                if (content && tbData.text) {
+                    content.textContent = tbData.text;
+                }
+                if (tbData.fontSize) {
+                    tb.fontSize = tbData.fontSize;
+                    content.style.fontSize = tbData.fontSize + 'px';
+                }
+                if (tbData.fontFamilyIndex !== undefined) {
+                    tb.fontFamilyIndex = tbData.fontFamilyIndex;
+                    const font = this.fontFamilies ? this.fontFamilies[tbData.fontFamilyIndex] : null;
+                    if (font) content.style.fontFamily = font.value;
+                }
+                if (tbData.boxStyleIndex !== undefined) {
+                    tb.boxStyleIndex = tbData.boxStyleIndex;
+                    const styles = ['default', 'filled', 'glass', 'minimal'];
+                    tb.element.setAttribute('data-box-style', styles[tbData.boxStyleIndex] || 'default');
+                    this.updateTextBoxVisuals(tb);
+                }
+                if (tbData.width) tb.element.style.width = tbData.width + 'px';
+                if (tbData.height) tb.element.style.minHeight = tbData.height + 'px';
+
+                idMap[tbData.id] = tb.id;
+            });
+        }
+
+        // Restore connectors
+        if (savedState.connectors && savedState.connectors.length > 0) {
+            savedState.connectors.forEach(conn => {
+                const newFrom = idMap[conn.from] || conn.from;
+                const newTo = idMap[conn.to] || conn.to;
+                if (newFrom && newTo) {
+                    this.state.connectors.push({
+                        from: newFrom,
+                        to: newTo,
+                        color: conn.color
+                    });
+                }
+            });
+            setTimeout(() => this.drawConnectors(), 50);
+        }
+
+        // Restore tape boxes
+        if (savedState.tapeBoxes && savedState.tapeBoxes.length > 0) {
+            savedState.tapeBoxes.forEach(tbData => {
+                const tape = this.addTapeBox(tbData.x, tbData.y, tbData.w, tbData.h);
+                if (tbData.revealed) {
+                    tape.revealed = true;
+                    tape.element.classList.add('revealed');
+                }
+            });
+            const maxId = Math.max(...savedState.tapeBoxes.map(t => t.id || 0));
+            if (maxId >= this.state.tapeIdCounter) {
+                this.state.tapeIdCounter = maxId + 1;
+            }
+        }
+
+        // Restore tools & color
+        this.setTool(savedState.tool || 'pen');
+        if (savedState.color) this.setColor(savedState.color.replace(/^--/, ''));
+        if (savedState.thickness) this.state.thickness = savedState.thickness;
     },
 
     // Reopen whiteboard from an existing wb-embed container
@@ -3795,149 +4091,17 @@ const whiteboard = {
             this.state.isOpen = true;
             this.state.editingBlockId = embedId; // Track which embed we're editing
             this.state.pan = { x: 0, y: 0 };
-            this.state.textBoxes = [];
-            this.state.imageBoxes = [];
-            this.state.tapeBoxes = [];
-            this.state.tapeIdCounter = 0;
-            this.state.activeTextBox = null;
-            this.state.connectors = [];
-            this.state.isConnecting = false;
-            this.state.connectFromId = null;
-            this.state.connectFromColor = null;
             this.state.isImageAnnotation = false;
             this.state.sourceImageContainer = null;
             this.state.backgroundImage = null;
             this.state.bgImageData = null;
 
-            // Restore background style
-            this.state.backgroundStyle = savedState.backgroundStyle || 0;
-
-            // Apply background visual
-            if (this.els.container) {
-                const bgColors = { 0: 'transparent', 1: '#ffffff', 2: '#1a1a2e', 3: '#fafafa' };
-                this.els.container.style.background = bgColors[this.state.backgroundStyle] || 'transparent';
-                if (this.state.backgroundStyle === 3) {
-                    this.els.container.style.backgroundImage =
-                        'linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px), ' +
-                        'linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px)';
-                    this.els.container.style.backgroundSize = '20px 20px';
-                } else {
-                    this.els.container.style.backgroundImage = 'none';
-                }
-                if (this.state.backgroundStyle === 2) {
-                    this.els.container.classList.add('wb-theme-dark');
-                } else {
-                    this.els.container.classList.remove('wb-theme-dark');
-                }
-            }
-
             this.els.overlay.classList.add('active');
             this.els.overlay.focus();
             document.body.style.overflow = 'hidden';
 
-            // Resize canvas and restore drawing content
             this.resizeCanvas();
-
-            // Restore canvas drawing from saved data
-            if (savedState.canvasData) {
-                const img = new Image();
-                img.onload = () => {
-                    const dpr = window.devicePixelRatio || 1;
-                    this.els.ctx.setTransform(1, 0, 0, 1, 0, 0);
-                    this.els.ctx.clearRect(0, 0, this.els.canvas.width, this.els.canvas.height);
-                    this.els.ctx.scale(dpr, dpr);
-                    // Draw restored image scaled to current canvas
-                    this.els.ctx.drawImage(img, 0, 0, this.els.canvas.width / dpr, this.els.canvas.height / dpr);
-                };
-                img.src = savedState.canvasData;
-            }
-
-            // Restore image boxes
-            if (savedState.imageBoxes && savedState.imageBoxes.length > 0) {
-                if (!this.state.imageBoxes) this.state.imageBoxes = [];
-                savedState.imageBoxes.forEach(ibData => {
-                    this.addImageBox(ibData.x, ibData.y, ibData.src, ibData.w, ibData.h);
-                });
-            }
-
-            // Restore text boxes
-            if (savedState.textBoxes && savedState.textBoxes.length > 0) {
-                savedState.textBoxes.forEach(tbData => {
-                    const tb = this.addTextBox(tbData.x, tbData.y, tbData.color || this.getActiveColor());
-                    const content = tb.element.querySelector('.wb-text-content');
-                    if (content && tbData.text) {
-                        content.textContent = tbData.text;
-                    }
-                    if (tbData.fontSize) {
-                        tb.fontSize = tbData.fontSize;
-                        content.style.fontSize = tbData.fontSize + 'px';
-                    }
-                    if (tbData.fontFamilyIndex !== undefined) {
-                        tb.fontFamilyIndex = tbData.fontFamilyIndex;
-                        const font = this.fontFamilies[tbData.fontFamilyIndex];
-                        if (font) content.style.fontFamily = font.value;
-                    }
-                    if (tbData.boxStyleIndex !== undefined) {
-                        tb.boxStyleIndex = tbData.boxStyleIndex;
-                        const styles = ['default', 'filled', 'glass', 'minimal'];
-                        tb.element.setAttribute('data-box-style', styles[tbData.boxStyleIndex] || 'default');
-                        this.updateTextBoxVisuals(tb);
-                    }
-                    if (tbData.width) tb.element.style.width = tbData.width + 'px';
-                    if (tbData.height) tb.element.style.minHeight = tbData.height + 'px';
-
-                    // Map old ID to new ID for connector restoration
-                    tbData._newId = tb.id;
-                });
-            }
-
-            // Restore connectors (map old IDs to new IDs)
-            if (savedState.connectors && savedState.connectors.length > 0 && savedState.textBoxes) {
-                const idMap = {};
-                savedState.textBoxes.forEach((tb, idx) => {
-                    if (this.state.textBoxes[idx]) {
-                        idMap[tb.id] = this.state.textBoxes[idx].id;
-                    }
-                });
-
-                savedState.connectors.forEach(conn => {
-                    const newFrom = idMap[conn.from];
-                    const newTo = idMap[conn.to];
-                    if (newFrom && newTo) {
-                        this.state.connectors.push({
-                            from: newFrom,
-                            to: newTo,
-                            color: conn.color
-                        });
-                    }
-                });
-                this.drawConnectors();
-            }
-
-            // Restore tape boxes (Visual Flashcard occlusions)
-            if (savedState.tapeBoxes && savedState.tapeBoxes.length > 0) {
-                savedState.tapeBoxes.forEach(tbData => {
-                    const tape = this.addTapeBox(tbData.x, tbData.y, tbData.w, tbData.h);
-                    if (tbData.revealed) {
-                        tape.revealed = true;
-                        tape.element.classList.add('revealed');
-                    }
-                });
-                // Update tape ID counter
-                const maxId = Math.max(...savedState.tapeBoxes.map(t => t.id || 0));
-                if (maxId >= this.state.tapeIdCounter) {
-                    this.state.tapeIdCounter = maxId + 1;
-                }
-            }
-
-            // Set default tool
-            this.setTool(savedState.tool || 'pen');
-            if (savedState.color) this.state.color = savedState.color;
-            if (savedState.thickness) this.state.thickness = savedState.thickness;
-
-            // Clear history for fresh start
-            this.state.history = [];
-            this.state.historyIndex = -1;
+            this.restoreFromState(savedState, false);
 
             App.ui.showToast('✏️ Whiteboard reopened for editing', { type: 'success' });
 
@@ -3952,10 +4116,9 @@ const whiteboard = {
         const dpr = window.devicePixelRatio || 1;
         return {
             version: 1,
-            canvasData: this.els.canvas.toDataURL('image/png', 0.8),
+            canvasData: this.els.canvas.toDataURL('image/png'),
             canvasWidth: this.els.canvas.width,
             canvasHeight: this.els.canvas.height,
-            tapeBoxes: this.state.tapeBoxes,
             dpr: dpr,
             backgroundStyle: this.state.backgroundStyle,
             textBoxes: this.state.textBoxes.map(tb => ({

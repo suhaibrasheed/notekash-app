@@ -475,6 +475,9 @@
         color: #a16207 !important;
         font-weight: 600 !important;
     }
+    .unbold, .font-normal, [class*="text-"].unbold, [class*="text-"].font-normal, [class*="text-"] .unbold, [class*="text-"] .font-normal {
+        font-weight: 400 !important;
+    }
 
     /* ── H. High-Contrast Pastel Highlights ──────────────────────────────── */
     .highlight-1, [class*="highlight-1"], mark.hl-1, #article-content .highlight-1 {

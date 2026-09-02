@@ -162,6 +162,10 @@
             stroke-width: 2;
         }
 
+        .control-btn i {
+            font-size: 15px;
+        }
+
         /* --- NEW: Export Popover Styles --- */
         .control-group-popover {
             position: relative;
@@ -342,39 +346,51 @@
             font-weight: 600;
         }
 
-        /* Read Mode Highlight Adjustments - Beautiful Hierarchical Styling */
+        /* Read Mode Mindmap Nodes - Editorial Typography & Visual Hierarchy */
         #article-content .mindmap-node {
             display: inline;
             cursor: pointer;
-            transition: background-color 0.2s ease;
             text-decoration: none;
-            color: var(--hl-text, inherit);
-            border-radius: 4px;
-            padding: 0.1em 0.3em;
-            margin: 0 -0.1em;
+            color: inherit;
+            border-radius: 3px;
+            padding: 0.05em 0.28em;
+            margin: 0 0.03em;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+            transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
         }
 
         #article-content .mindmap-node:hover {
-            opacity: 0.8;
+            opacity: 0.88;
+            filter: brightness(1.1);
         }
 
-        /* m1 Style: Distinct Background Highlight (Green) */
+        /* m1 Style: Primary Concept / Pillar - Classic Editorial Double Underline, Slightly Bold */
         #article-content .mindmap-node[data-level="1"] {
-            background-color: var(--hl-2-bg);
-            border-bottom: 2px solid var(--hl-2-border);
-            font-weight: 500;
+            background-color: var(--mindmap-m1-bg);
+            border-bottom: 3.5px double var(--mindmap-m1-border);
+            font-weight: 550;
         }
 
-        /* m2 Style: Softer Background Highlight (Blue) */
+        /* m2 Style: Sub-branch - Sleek Single Line Underline, Refined Weight */
         #article-content .mindmap-node[data-level="2"] {
-            background-color: var(--hl-3-bg);
-            border-bottom: 2px dashed var(--hl-3-border);
+            background-color: var(--mindmap-m2-bg);
+            border-bottom: 1.5px solid var(--mindmap-m2-border);
+            font-weight: 450;
         }
 
-        /* m3+ Style: Very Subtle Background Highlight (Yellow) */
-        #article-content .mindmap-node[data-level]:not([data-level="1"]):not([data-level="2"]) {
-            background-color: var(--hl-1-bg);
-            border-bottom: 1px dotted var(--hl-1-border);
+        /* m3 Style: Tertiary Detail - Distinct Dotted Underline, Regular Weight */
+        #article-content .mindmap-node[data-level="3"] {
+            background-color: var(--mindmap-m3-bg);
+            border-bottom: 1.5px dotted var(--mindmap-m3-border);
+            font-weight: 400;
+        }
+
+        /* m4+ Style: Deep Leaf Details - Whispering Dotted Underline with Lower Opacity */
+        #article-content .mindmap-node[data-level]:not([data-level="1"]):not([data-level="2"]):not([data-level="3"]) {
+            background-color: var(--mindmap-m4-bg);
+            border-bottom: 1.2px dotted var(--mindmap-m4-border);
+            font-weight: 400;
         }
 
         .mindmap-node .node-html-content.has-custom-scroll {

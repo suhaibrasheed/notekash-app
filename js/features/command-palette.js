@@ -422,7 +422,7 @@ export const commandPalette = {
                         { id: 'words', title: 'Word Count', desc: 'Count words in selection or document', icon: '🧮', selection: true, execute: () => App.commandPalette.insertStatBadge('words'), isPremium: true },
                         { id: 'reading-time', title: 'Reading Time', desc: 'Estimate reading time for selection/doc', icon: '⏱️', selection: true, execute: () => App.commandPalette.insertStatBadge('time'), isPremium: true },
                         // --- Text Formatting ---
-                        { id: 'bold', title: 'Bold', desc: 'Bold the selected text', icon: 'B', execute: () => document.execCommand('bold') },
+                        { id: 'bold', title: 'Bold', desc: 'Bold the selected text', icon: 'B', execute: () => App.events.toggleBold() },
                         { id: 'italic', title: 'Italic', desc: 'Italicize the selected text', icon: 'I', execute: () => document.execCommand('italic') },
                         { id: 'underline', title: 'Underline', desc: 'Underline the selected text', icon: 'U', execute: () => document.execCommand('underline') },
                         { id: 'normalize', title: 'Normalize Fonts', desc: 'Fix font sizes & remove styling issues', icon: '🧹', execute: () => App.commandPalette.normalizeFonts() },
