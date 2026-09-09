@@ -1,8 +1,8 @@
 export const commandPalette = {
                 state: {
                     textileColors: [
-                        // 9 Premium Color Styles: Lavender, Mint, Sun, Rose, Sky, Amber, Stone, Crimson, Indigo
-                        '1', '2', '3', '4', '5', '6', '7', '8', '9'
+                        // 10 Premium Color Styles: Lavender, Mint, Sun, Rose, Sky, Amber, Stone, Crimson, Indigo, Teal
+                        '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'
                     ],
                     isOpen: false,
                     commands: [],
@@ -393,6 +393,7 @@ export const commandPalette = {
                         { id: 'timeline', title: 'Insert Timeline', desc: 'Create a historical timeline block', icon: '⏳', execute: () => App.commandPalette.insertTimeline(), isPremium: true },
                         { id: 'mcq', title: 'Insert MCQ Block', desc: 'Create a multiple-choice question', icon: '❓', execute: () => App.commandPalette.insertMcqBlock(), isPremium: true },
                         { id: 'deck', title: 'Insert Decktile', desc: 'A container for multiple text tiles', icon: '🗂️', execute: () => App.commandPalette.insertTextileDeck(), isPremium: true },
+                        { id: 'statscards', title: 'Insert Stat Cards', desc: 'Bento cards for numbers, metrics, kpi, and parameters', icon: '📊', execute: () => App.commandPalette.insertStatsCards(), isPremium: true },
                         { id: 'convert', title: 'Convert List to Deck', desc: 'Turns a bulleted list into a Decktile', icon: '🪄', execute: () => App.commandPalette.convertListToDeck(), isPremium: true },
                         { id: 'textile', title: 'Insert Text Tile', desc: 'e.g., textile My important quote', icon: '📝', execute: () => App.commandPalette.insertTextTile(), isPremium: true },
                         { id: 'copymcq', title: 'Copy All MCQs', desc: 'Copy all MCQs in format for Creator Studio', icon: '📋', execute: () => App.commandPalette.copyAllMcqs() },
@@ -1266,6 +1267,35 @@ export const commandPalette = {
                 </div>
                 <p><br></p>`;
                     App.util.insertGuardianBlock(deckHTML);
+                    if (App.events && App.events.updateDeckTileWidths) App.events.updateDeckTileWidths();
+                },
+
+                insertStatsCards() {
+                    const statDeckHTML = `
+                <div class="nk-stat-deck" contenteditable="false">
+                    <div class="nk-stat-card color-1" contenteditable="false" data-color="1">
+                        <div class="stat-card-color-cycler" title="Cycle Color"><i class="fa-solid fa-palette fa-xs"></i></div>
+                        <div class="stat-card-delete-btn" title="Delete Card"><i class="fa-solid fa-xmark fa-xs"></i></div>
+                        <div class="stat-card-value" contenteditable="true" data-placeholder="99%">7.2%</div>
+                        <div class="stat-card-label" contenteditable="true" data-placeholder="Stat Label">Real GDP</div>
+                    </div>
+                    <div class="nk-stat-card color-2" contenteditable="false" data-color="2">
+                        <div class="stat-card-color-cycler" title="Cycle Color"><i class="fa-solid fa-palette fa-xs"></i></div>
+                        <div class="stat-card-delete-btn" title="Delete Card"><i class="fa-solid fa-xmark fa-xs"></i></div>
+                        <div class="stat-card-value" contenteditable="true" data-placeholder="120/80">4.8%</div>
+                        <div class="stat-card-label" contenteditable="true" data-placeholder="Stat Label">Inflation Rate</div>
+                    </div>
+                    <div class="nk-stat-card color-3" contenteditable="false" data-color="3">
+                        <div class="stat-card-color-cycler" title="Cycle Color"><i class="fa-solid fa-palette fa-xs"></i></div>
+                        <div class="stat-card-delete-btn" title="Delete Card"><i class="fa-solid fa-xmark fa-xs"></i></div>
+                        <div class="stat-card-value" contenteditable="true" data-placeholder="$650B">$650B</div>
+                        <div class="stat-card-label" contenteditable="true" data-placeholder="Stat Label">Forex Reserves</div>
+                    </div>
+                    <div class="stat-add-card-btn" title="Add another stat card">+ Add Stat</div>
+                </div>
+                <p><br></p>`;
+                    App.util.insertGuardianBlock(statDeckHTML);
+                    App.state.isArticleDirty = true;
                 },
 
                 convertListToDeck() {
@@ -1303,6 +1333,7 @@ export const commandPalette = {
                 </div>`;
 
                     listNode.outerHTML = deckHTML;
+                    if (App.events && App.events.updateDeckTileWidths) App.events.updateDeckTileWidths();
                     App.state.isArticleDirty = true;
                     App.ui.showToast("List converted to Decktile!", { type: 'success' });
                 },
@@ -1682,7 +1713,7 @@ export const commandPalette = {
                     const kashExtractMatch = query.match(/^kashextract\s*(.*)/i);
                     const kashLinkMatch = query.match(/^kashlink\s+(.*)/i);
                     const webMatch = query.match(/^web\s+(https?:\/\/[^\s]+)/i);
-                    const tableMatch = query.match(/^table\s+(\d+)x(\d+)/i);
+                    const tableMatch = query.match(/^table\s+(\d+)(?:[x\s](\d+))?/i);
 
                     if (webMatch) {
                         this.state.mode = 'web';
@@ -1702,27 +1733,27 @@ export const commandPalette = {
                     if (tableMatch) {
                         this.state.mode = 'commands';
                         const rows = parseInt(tableMatch[1], 10);
-                        const cols = parseInt(tableMatch[2], 10);
+                        const cols = tableMatch[2] !== undefined ? parseInt(tableMatch[2], 10) : (rows === 0 ? 0 : 2);
+                        const isDel = rows === 0 || cols === 0;
+
                         this.state.filteredResults = [{
-                            id: 'table-dynamic',
-                            title: `Insert Table ${rows}x${cols}`,
-                            desc: `Create (or Resize) table to ${rows} rows and ${cols} columns`,
-                            icon: '▦',
+                            id: isDel ? 'table-delete' : 'table-dynamic',
+                            title: isDel ? 'Delete Table (0x0)' : `Insert Table ${rows}x${cols}`,
+                            desc: isDel ? 'Delete table at current cursor' : `Create or resize table to ${rows}x${cols}`,
+                            icon: isDel ? '🗑️' : '▦',
                             execute: () => {
-                                const selection = window.getSelection();
-                                if (selection.rangeCount > 0) {
-                                    let anchor = selection.anchorNode;
-                                    if (anchor.nodeType === 3) anchor = anchor.parentElement;
-                                    const table = anchor.closest('table');
-                                    if (table) {
-                                        App.events.table.update(table, rows, cols);
-                                        App.ui.showToast(`Table resized to ${rows}x${cols}`, { type: 'success' });
-                                    } else {
-                                        App.events.table.create(rows, cols);
-                                        App.ui.showToast(`Inserted ${rows}x${cols} Table`, { type: 'success' });
-                                    }
+                                const sel = window.getSelection();
+                                const node = sel?.rangeCount ? (sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode) : null;
+                                const table = node?.closest('table') || document.getElementById(App.state.cursorMarkerId)?.closest('table');
+                                if (isDel) {
+                                    if (table) App.events.table.delete(table);
+                                    else App.ui.showToast('Place cursor inside a table to delete it.', { type: 'warning' });
+                                } else if (table) {
+                                    App.events.table.update(table, rows, cols);
+                                    App.ui.showToast(`Table resized to ${rows}x${cols}`, { type: 'success' });
                                 } else {
                                     App.events.table.create(rows, cols);
+                                    App.ui.showToast(`Inserted ${rows}x${cols} Table`, { type: 'success' });
                                 }
                             }
                         }];

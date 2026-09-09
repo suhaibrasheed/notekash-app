@@ -804,18 +804,44 @@ export const services = {
                             .nk-text-tile + .nk-text-tile { margin-top: 0.35rem; }
                             .nk-textile-deck + .nk-textile-deck { margin-top: 0.45rem; }
                             .nk-text-tile + .nk-textile-deck, .nk-textile-deck + .nk-text-tile { margin-top: 0.45rem; }
-                            .nk-textile-deck .nk-text-tile {
+                            .nk-textile-deck:not(.layout-stack) .nk-text-tile {
                                 margin: 0;
-                                flex: 1 1 180px;
-                                min-width: 140px;
+                                flex: 1 1 calc(25% - 8px);
+                                min-width: calc(25% - 8px);
+                                max-width: 100%;
                                 width: auto;
+                            }
+                            .nk-textile-deck:not(.layout-stack) .nk-text-tile.tile-wide {
+                                flex: 2 1 calc(50% - 8px);
+                                min-width: calc(50% - 8px);
                             }
                             .nk-textile-deck.layout-stack {
                                 flex-direction: column;
                                 align-items: stretch;
                                 gap: 6px;
                             }
-                            .deck-layout-toggle, .deck-add-tile-btn, .nk-text-tile-color-cycler { display: none !important; }
+                            .nk-textile-deck.layout-stack .nk-text-tile {
+                                flex: 0 0 auto !important;
+                                width: 100% !important;
+                                height: auto !important;
+                            }
+                            .deck-layout-toggle, .deck-add-tile-btn, .nk-text-tile-color-cycler, .stat-add-card-btn, .stat-card-delete-btn, .stat-card-color-cycler { display: none !important; }
+                            .nk-stat-deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; padding: 10px; border: 1px solid var(--border-color); border-radius: 12px; margin: 12px 0; }
+                            .nk-stat-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-radius: 10px; padding: 12px 10px; border: 1px solid var(--border-color); border-top: 2.5px solid var(--primary-color); border-bottom: 2.5px solid var(--primary-color); }
+                            .stat-card-value { font-size: 1.8rem; font-weight: 800; font-variant-numeric: tabular-nums; text-align: center; }
+                            .stat-card-label { font-size: 0.85rem; font-weight: 550; color: inherit; text-align: center; margin-top: 4px; }
+                            .nk-stat-card .stat-card-value, .nk-stat-card .stat-card-label { color: inherit; }
+
+                            .nk-stat-card.color-1 { background: var(--textile-bg-1) !important; border-top-color: var(--textile-border-1); border-bottom-color: var(--textile-border-1); color: var(--textile-text-1); }
+                            .nk-stat-card.color-2 { background: var(--textile-bg-2) !important; border-top-color: var(--textile-border-2); border-bottom-color: var(--textile-border-2); color: var(--textile-text-2); }
+                            .nk-stat-card.color-3 { background: var(--textile-bg-3) !important; border-top-color: var(--textile-border-3); border-bottom-color: var(--textile-border-3); color: var(--textile-text-3); }
+                            .nk-stat-card.color-4 { background: var(--textile-bg-4) !important; border-top-color: var(--textile-border-4); border-bottom-color: var(--textile-border-4); color: var(--textile-text-4); }
+                            .nk-stat-card.color-5 { background: var(--textile-bg-5) !important; border-top-color: var(--textile-border-5); border-bottom-color: var(--textile-border-5); color: var(--textile-text-5); }
+                            .nk-stat-card.color-6 { background: var(--textile-bg-6) !important; border-top-color: var(--textile-border-6); border-bottom-color: var(--textile-border-6); color: var(--textile-text-6); }
+                            .nk-stat-card.color-7 { background: var(--textile-bg-7) !important; border-top-color: var(--textile-border-7); border-bottom-color: var(--textile-border-7); color: var(--textile-text-7); }
+                            .nk-stat-card.color-8 { background: var(--textile-bg-8) !important; border-top-color: var(--textile-border-8); border-bottom-color: var(--textile-border-8); color: var(--textile-text-8); }
+                            .nk-stat-card.color-9 { background: var(--textile-bg-9) !important; border-top-color: var(--textile-border-9); border-bottom-color: var(--textile-border-9); color: var(--textile-text-9); }
+                            .nk-stat-card.color-10 { background: var(--textile-bg-10) !important; border-top-color: var(--textile-border-10); border-bottom-color: var(--textile-border-10); color: var(--textile-text-10); }
 
                             .nk-text-tile.color-1 { background: var(--textile-bg-1); border-color: color-mix(in srgb, var(--textile-border-1) 18%, transparent); border-left: 3.5px solid var(--textile-border-1); color: var(--textile-text-1); }
                             .nk-text-tile.color-2 { background: var(--textile-bg-2); border-color: color-mix(in srgb, var(--textile-border-2) 18%, transparent); border-left: 3.5px solid var(--textile-border-2); color: var(--textile-text-2); }

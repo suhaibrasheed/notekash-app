@@ -178,6 +178,12 @@
     .plyr__captions,
     .nk-video-delete-btn,
     .nk-video-align-btn,
+    .deck-add-tile-btn,
+    .deck-layout-toggle,
+    .nk-text-tile-color-cycler,
+    .stat-add-card-btn,
+    .stat-card-delete-btn,
+    .stat-card-color-cycler,
     .btn-icon,
     button:not(.nk-keep-print),
     .view:not(.active),
@@ -532,6 +538,10 @@
         font-weight: 700 !important;
         padding: 1px 4px !important;
         border-radius: 3px !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+        opacity: 1 !important;
+        user-select: auto !important;
     }
 
     /* Links in print */
@@ -594,10 +604,6 @@
         background-color: #fafbfc !important;
     }
 
-    table td:first-child {
-        font-weight: 600 !important;
-        color: #0f172a !important;
-    }
 
     /* Table embedded images */
     table td img,
@@ -694,6 +700,50 @@
         font-style: normal !important;
         break-inside: avoid !important;
         page-break-inside: avoid !important;
+    }
+
+    .nk-stat-deck {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+        gap: 10px !important;
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 10px !important;
+        margin: 12px 0 !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .nk-stat-card {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-top: 2.5px solid #4f46e5 !important;
+        border-bottom: 2.5px solid #4f46e5 !important;
+        border-radius: 8px !important;
+        padding: 10px !important;
+        text-align: center !important;
+        align-items: center !important;
+        justify-content: center !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .stat-card-value {
+        font-size: 1.6rem !important;
+        font-weight: 800 !important;
+        color: #0f172a !important;
+        line-height: 1.1 !important;
+        text-align: center !important;
+    }
+
+    .stat-card-label {
+        font-size: 0.85rem !important;
+        font-weight: 550 !important;
+        color: #1e293b !important;
+        text-transform: none !important;
+        text-align: center !important;
+        margin-top: 4px !important;
     }
 
     details,

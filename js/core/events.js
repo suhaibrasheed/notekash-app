@@ -779,6 +779,10 @@ export const events = {
                                         if (expEl) {
                                             App.util.parseMcqExplanationMeta(expEl);
                                         }
+                                        const deck = e.target.closest('.nk-textile-deck');
+                                        if (deck) {
+                                            App.events.updateDeckTileWidths(deck);
+                                        }
                                     }
                                     
                                     debouncedAutosave();
@@ -807,6 +811,12 @@ export const events = {
                                     if ((e.key === 'Enter' || e.key === ' ') && trigger && !document.activeElement.isContentEditable) {
                                         e.preventDefault();
                                         trigger.click();
+                                        return;
+                                    }
+                                    const cloze = document.activeElement.closest('.cloze-flashcard');
+                                    if ((e.key === 'Enter' || e.key === ' ') && cloze && !document.activeElement.isContentEditable) {
+                                        e.preventDefault();
+                                        cloze.click();
                                         return;
                                     }
                                     App.events.handleWriterShortcuts(e);
@@ -3329,6 +3339,20 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         App.events.deselectImage();
                     }
 
+                    // --- FLASHCARD REVISION IN READ MODE: Reveal / Hide Cloze Flashcard ---
+                    const clozeFlashcard = target.closest('.cloze-flashcard');
+                    if (clozeFlashcard && !isWriteMode) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const isRevisionDefault = App.settings.get('readModeFlashcardRevision') !== false;
+                        if (isRevisionDefault) {
+                            clozeFlashcard.classList.toggle('is-revealed');
+                        } else {
+                            clozeFlashcard.classList.toggle('is-occluded');
+                        }
+                        return;
+                    }
+
                     // --- NEW LOGIC FOR FOCUS/STAGE MODE ACCORDIONS ---
                     const focusOverlay = target.closest('.focus-mode-overlay');
                     if (focusOverlay) {
@@ -3480,7 +3504,64 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         <div class="nk-text-tile-content" contenteditable="true" data-placeholder="New tile..."></div>
                     </div>`;
                         addTileBtn.insertAdjacentHTML('beforebegin', newTileHTML);
+                        const deck = addTileBtn.closest('.nk-textile-deck');
+                        if (deck) App.events.updateDeckTileWidths(deck);
                         App.state.isArticleDirty = true;
+                        return;
+                    }
+
+                    // --- Bento Stat Cards Click Handlers ---
+                    const addStatBtn = target.closest('.stat-add-card-btn');
+                    if (addStatBtn) {
+                        e.preventDefault();
+                        const deck = addStatBtn.closest('.nk-stat-deck');
+                        const existingCards = deck ? deck.querySelectorAll('.nk-stat-card') : [];
+                        const solidColors = App.commandPalette.state.textileColors.filter(c => !isNaN(c));
+                        const nextColor = solidColors[existingCards.length % solidColors.length] || '1';
+                        const newCardHTML = `
+                    <div class="nk-stat-card color-${nextColor}" contenteditable="false" data-color="${nextColor}">
+                        <div class="stat-card-color-cycler" title="Cycle Color"><i class="fa-solid fa-palette fa-xs"></i></div>
+                        <div class="stat-card-delete-btn" title="Delete Card"><i class="fa-solid fa-xmark fa-xs"></i></div>
+                        <div class="stat-card-value" contenteditable="true" data-placeholder="00"></div>
+                        <div class="stat-card-label" contenteditable="true" data-placeholder="Stat label"></div>
+                    </div>`;
+                        addStatBtn.insertAdjacentHTML('beforebegin', newCardHTML);
+                        const newlyInserted = addStatBtn.previousElementSibling;
+                        if (newlyInserted) {
+                            const valEl = newlyInserted.querySelector('.stat-card-value');
+                            if (valEl) App.util.placeCursor(valEl, true);
+                        }
+                        App.state.isArticleDirty = true;
+                        return;
+                    }
+
+                    const deleteStatBtn = target.closest('.stat-card-delete-btn');
+                    if (deleteStatBtn) {
+                        e.preventDefault();
+                        const card = deleteStatBtn.closest('.nk-stat-card');
+                        const deck = card ? card.closest('.nk-stat-deck') : null;
+                        if (card) card.remove();
+                        if (deck && deck.querySelectorAll('.nk-stat-card').length === 0) {
+                            deck.remove();
+                        }
+                        App.state.isArticleDirty = true;
+                        return;
+                    }
+
+                    const statColorCycler = target.closest('.stat-card-color-cycler');
+                    if (statColorCycler) {
+                        e.preventDefault();
+                        const card = statColorCycler.closest('.nk-stat-card');
+                        if (card) {
+                            const colors = App.commandPalette.state.textileColors.filter(c => !isNaN(c));
+                            const currentColor = card.dataset.color || '1';
+                            const currentIndex = colors.indexOf(currentColor);
+                            const nextColor = colors[(currentIndex + 1) % colors.length];
+                            card.classList.remove(`color-${currentColor}`);
+                            card.classList.add(`color-${nextColor}`);
+                            card.dataset.color = nextColor;
+                            App.state.isArticleDirty = true;
+                        }
                         return;
                     }
                     const layoutToggleBtn = target.closest('.deck-layout-toggle');
@@ -3619,6 +3700,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     const accordionTrigger = target.closest('.nk-accordion-trigger');
                     const tagSuggestion = target.closest('.tag-suggestion');
                     const checkboxBox = target.closest('.nk-checkbox-box');
+                    const checkboxWrapper = target.closest('.nk-checkbox-wrapper');
                     const timelineAddButton = target.closest('.nk-timeline-add button');
                     if (accordionTrigger) {
                         const accordion = accordionTrigger.closest('.nk-accordion');
@@ -3674,31 +3756,42 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         App.contentTools.autoSuggestTags(contentDiv);
                         return;
                     }
-                    if (checkboxBox) {
-                        const wrapper = checkboxBox.closest('.nk-checkbox-wrapper');
-                        // Allow interactivity in both write AND read mode
-                        if (wrapper && (App.state.currentMode === 'write' || App.state.currentMode === 'read')) {
+                    const isReadMode = App.state.currentMode === 'read';
+                    if ((isReadMode && checkboxWrapper) || (!isReadMode && checkboxBox)) {
+                        const sel = window.getSelection();
+                        if (isReadMode && sel && !sel.isCollapsed && sel.toString().trim() !== '') {
+                            return;
+                        }
+                        const wrapper = checkboxWrapper || checkboxBox.closest('.nk-checkbox-wrapper');
+                        if (wrapper) {
+                            e.preventDefault();
                             const isChecked = wrapper.getAttribute('data-checked') === 'true';
                             wrapper.setAttribute('data-checked', String(!isChecked));
-
-                            // In write mode, just mark dirty. In read mode, we might need to save explicitly or ensure dirty state is picked up.
                             App.state.isArticleDirty = true;
 
-                            if (App.state.currentMode === 'read') {
-                                // In read mode, we want the interaction to feel responsive and save.
-                                // Since we modified the DOM directly, we should trigger a save if we are viewing the active article.
-                                const contentDiv = document.getElementById('article-content');
-                                if (contentDiv) {
-                                    // Debounce saving or save immediately depending on preference. 
-                                    // For checkboxes, saving immediately (or triggering autosave logic) is good.
-                                    // We'll rely on the dirty flag pickup if 'read' mode supports autosave, 
-                                    // otherwise we force a save after a short delay to batch clicks.
-                                    clearTimeout(this._checkboxSaveTimeout);
-                                    this._checkboxSaveTimeout = setTimeout(() => {
-                                        const currentContent = contentDiv.innerHTML;
-                                        App.events.saveArticle({ content: currentContent }, true); // true for silent save
-                                    }, 500);
-                                }
+                            if (isReadMode) {
+                                clearTimeout(this._checkboxSaveTimeout);
+                                this._checkboxSaveTimeout = setTimeout(() => {
+                                    const id = App.state.activeArticleId;
+                                    const article = App.storage.getArticle(id);
+                                    const contentDiv = document.getElementById('article-content');
+                                    if (!article || !article.content || !contentDiv) return;
+
+                                    const liveCheckboxes = Array.from(contentDiv.querySelectorAll('.nk-checkbox-wrapper'));
+                                    const temp = document.createElement('div');
+                                    temp.innerHTML = article.content;
+                                    const sourceCheckboxes = temp.querySelectorAll('.nk-checkbox-wrapper');
+
+                                    liveCheckboxes.forEach((liveCb, idx) => {
+                                        if (sourceCheckboxes[idx]) {
+                                            sourceCheckboxes[idx].setAttribute('data-checked', liveCb.getAttribute('data-checked') || 'false');
+                                        }
+                                    });
+
+                                    const updatedContent = temp.innerHTML;
+                                    article.content = updatedContent;
+                                    App.events.saveArticle({ content: updatedContent, isAutosave: true, force: true });
+                                }, 300);
                             }
                         }
                         return;
@@ -4187,6 +4280,45 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             return;
                         }
 
+                        // Case 1.5: Inside table - Tab navigation & auto-row append
+                        const cell = (focusNode?.nodeType === 3 ? focusNode.parentElement : focusNode)?.closest('td, th');
+                        const table = cell?.closest('table');
+                        if (cell && table?.closest('#article-content')) {
+                            e.preventDefault();
+                            const cells = Array.from(table.querySelectorAll('th, td'));
+                            const idx = cells.indexOf(cell);
+                            if (e.shiftKey) {
+                                if (idx > 0) App.util.placeCursor(cells[idx - 1], true);
+                            } else if (idx < cells.length - 1) {
+                                App.util.placeCursor(cells[idx + 1], true);
+                            } else {
+                                const row = (table.tBodies[0] || table.createTBody()).insertRow();
+                                for (let i = 0; i < (table.rows[0]?.cells.length || 1); i++) row.insertCell().innerHTML = '<br>';
+                                App.util.placeCursor(row.cells[0], true);
+                                App.state.isArticleDirty = true;
+                                if (App.state.currentMode === 'read') App.events.saveArticle({ isAutosave: true });
+                            }
+                            return;
+                        }
+
+                        // Case 1.6: Inside Stat Cards - Tab navigation & auto-card append
+                        const statField = (focusNode?.nodeType === 3 ? focusNode.parentElement : focusNode)?.closest('.stat-card-value, .stat-card-label');
+                        const statDeck = statField?.closest('.nk-stat-deck');
+                        if (statField && statDeck?.closest('#article-content')) {
+                            e.preventDefault();
+                            const fields = Array.from(statDeck.querySelectorAll('.stat-card-value, .stat-card-label'));
+                            const idx = fields.indexOf(statField);
+                            if (e.shiftKey) {
+                                if (idx > 0) App.util.placeCursor(fields[idx - 1], true);
+                            } else if (idx < fields.length - 1) {
+                                App.util.placeCursor(fields[idx + 1], true);
+                            } else {
+                                const addStatBtn = statDeck.querySelector('.stat-add-card-btn');
+                                if (addStatBtn) addStatBtn.click();
+                            }
+                            return;
+                        }
+
                         // Case 2: Standard Paragraph Indentation (User Request)
                         const container = range.commonAncestorContainer;
                         const parentElement = container.nodeType === 3 ? container.parentNode : container;
@@ -4254,6 +4386,27 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             return;
                         }
 
+                        // Check for backspace at start of checkbox
+                        const checkboxTextEl = (selection.focusNode?.nodeType === 1 ? selection.focusNode : selection.focusNode?.parentElement)?.closest('.nk-checkbox-text');
+                        if (checkboxTextEl) {
+                            const testRange = range.cloneRange();
+                            testRange.setStart(checkboxTextEl, 0);
+                            testRange.setEnd(range.startContainer, range.startOffset);
+                            if (testRange.toString() === '') {
+                                const wrapper = checkboxTextEl.closest('.nk-checkbox-wrapper');
+                                if (wrapper) {
+                                    e.preventDefault();
+                                    const text = checkboxTextEl.innerHTML.replace(/^<br\s*\/?>$/i, '').trim();
+                                    const newP = document.createElement('p');
+                                    newP.innerHTML = text || '<br>';
+                                    wrapper.parentNode.replaceChild(newP, wrapper);
+                                    App.util.placeCursor(newP);
+                                    App.state.isArticleDirty = true;
+                                    return;
+                                }
+                            }
+                        }
+
                         // Check for deleting an empty accordion title first
                         const accordion = selection.focusNode.parentElement?.closest('.nk-accordion');
                         const title = accordion?.querySelector('.nk-accordion-title');
@@ -4268,18 +4421,21 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                             if (currentBlock) {
                                 const elementToDelete = currentBlock.previousElementSibling;
-                                // This selector now covers ALL complex, non-editable blocks
-                                const customBlockSelector = '.nk-mcq-block, .nk-timeline-block, .nk-textile-deck, .chart-container, .nk-accordion';
+                                // This selector now covers ALL complex blocks including tables and stat decks
+                                const customBlockSelector = 'table, .nk-mcq-block, .nk-timeline-block, .nk-textile-deck, .nk-stat-deck, .chart-container, .nk-accordion';
 
                                 if (elementToDelete && elementToDelete.matches(customBlockSelector)) {
                                     e.preventDefault();
-
-                                    const sel = window.getSelection();
-                                    const newRange = document.createRange();
-                                    newRange.selectNode(elementToDelete);
-                                    sel.removeAllRanges();
-                                    sel.addRange(newRange);
-                                    document.execCommand('delete', false, null);
+                                    if (elementToDelete.tagName === 'TABLE') {
+                                        App.events.table.delete(elementToDelete);
+                                    } else {
+                                        const sel = window.getSelection();
+                                        const newRange = document.createRange();
+                                        newRange.selectNode(elementToDelete);
+                                        sel.removeAllRanges();
+                                        sel.addRange(newRange);
+                                        document.execCommand('delete', false, null);
+                                    }
 
                                     return; // Deletion handled, stop further processing.
                                 }
@@ -4302,7 +4458,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                     if (e.key === 'Enter') {
                         const focusNode = selection.focusNode;
-                        const checkboxWrapper = focusNode?.parentElement.closest('.nk-checkbox-wrapper');
+                        const checkboxWrapper = (focusNode?.nodeType === 1 ? focusNode : focusNode?.parentElement)?.closest('.nk-checkbox-wrapper');
                         if (checkboxWrapper) {
                             e.preventDefault();
                             const checkboxText = checkboxWrapper.querySelector('.nk-checkbox-text');
@@ -4310,7 +4466,18 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                                 const newP = document.createElement('p'); newP.innerHTML = '<br>';
                                 checkboxWrapper.insertAdjacentElement('afterend', newP); checkboxWrapper.remove(); App.util.placeCursor(newP);
                             } else {
-                                const newCheckboxHTML = `<div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box"></span><span class="nk-checkbox-text"><br></span></div>`;
+                                let afterHTML = '<br>';
+                                if (checkboxText && checkboxText.contains(range.startContainer)) {
+                                    const splitRange = range.cloneRange();
+                                    splitRange.setEndAfter(checkboxText.lastChild || checkboxText);
+                                    const extracted = splitRange.extractContents();
+                                    const tempSpan = document.createElement('span');
+                                    tempSpan.appendChild(extracted);
+                                    if (tempSpan.textContent.trim() !== '') {
+                                        afterHTML = tempSpan.innerHTML;
+                                    }
+                                }
+                                const newCheckboxHTML = `<div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box" contenteditable="false"></span><span class="nk-checkbox-text">${afterHTML}</span></div>`;
                                 checkboxWrapper.insertAdjacentHTML('afterend', newCheckboxHTML);
                                 const newCheckbox = checkboxWrapper.nextElementSibling; if (newCheckbox) App.util.placeCursor(newCheckbox.querySelector('.nk-checkbox-text'));
                             }
@@ -4409,44 +4576,60 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     App.state.lastClickTime = now;
                 },
                 showTableModal() {
-                    const selection = window.getSelection(); const contentDiv = document.getElementById('article-content');
-                    if (selection.rangeCount === 0 || !contentDiv.contains(selection.getRangeAt(0).commonAncestorContainer)) { App.ui.showToast("Please place your cursor in the editor first.", { type: 'error' }); return; }
+                    const sel = window.getSelection(); const contentDiv = document.getElementById('article-content');
+                    if (!sel.rangeCount || !contentDiv.contains(sel.getRangeAt(0).commonAncestorContainer)) return App.ui.showToast("Place cursor in the editor first.", { type: 'error' });
 
-                    // Insert a temporary marker to hold the cursor position
-                    const range = selection.getRangeAt(0);
-                    const markerId = `nk-cursor-marker-${Date.now()}`;
-                    const markerNode = document.createElement('span');
-                    markerNode.id = markerId;
-                    range.insertNode(markerNode);
-                    App.state.cursorMarkerId = markerId;
-
+                    const markerNode = document.createElement('span'); markerNode.id = `nk-cursor-marker-${Date.now()}`;
+                    sel.getRangeAt(0).insertNode(markerNode); App.state.cursorMarkerId = markerNode.id;
                     const table = markerNode.closest('table');
-                    let currentRows = 2, currentCols = 2; let title = 'Create Table';
-                    if (table) { title = 'Update Table Dimensions'; currentRows = table.rows.length; currentCols = table.rows[0] ? table.rows[0].cells.length : 0; }
-                    const message = `<p>${table ? 'Enter new dimensions for the table.' : 'Enter table dimensions. Press Enter for 2x2.'}</p><div class="settings-grid" style="grid-template-columns: auto 1fr; gap: 0.5rem 1rem;"><label for="table-rows-input">Rows</label><input type="number" id="table-rows-input" class="text-input" value="${currentRows}" min="1" style="width:100%;"><label for="table-cols-input">Columns</label><input type="number" id="table-cols-input" class="text-input" value="${currentCols}" min="1" style="width:100%;"></div>`;
-                    App.ui.showConfirmationModal({ title, message, confirmText: table ? 'Update' : 'Create', onConfirm: () => { const rows = parseInt(document.getElementById('table-rows-input').value, 10); const cols = parseInt(document.getElementById('table-cols-input').value, 10); if (isNaN(rows) || isNaN(cols) || rows < 1 || cols < 1) { App.ui.showToast("Invalid dimensions.", { type: 'error' }); return; } App.events.table.createOrUpdate(rows, cols); } });
-                    const rowsInput = document.getElementById('table-rows-input'); const colsInput = document.getElementById('table-cols-input'); const confirmBtn = document.getElementById('modal-confirm'); const handleEnter = e => { if (e.key === 'Enter') { e.preventDefault(); confirmBtn.click(); } };
-                    rowsInput.addEventListener('keydown', handleEnter); colsInput.addEventListener('keydown', handleEnter); rowsInput.focus(); rowsInput.select();
+                    const r = table ? table.rows.length : 2, c = table?.rows[0]?.cells.length || 2;
+                    const delHtml = table ? `<div style="margin-top:0.75rem;text-align:right;"><button type="button" id="modal-del-tbl" class="btn btn-danger" style="padding:4px 12px;font-size:0.85em;">🗑️ Delete Table</button></div>` : '';
+
+                    App.ui.showConfirmationModal({
+                        title: table ? 'Update Table' : 'Create Table',
+                        message: `<p>${table ? 'Enter dimensions (0 to delete).' : 'Enter table dimensions (e.g. 2x2).'}</p><div class="settings-grid" style="grid-template-columns:auto 1fr;gap:0.5rem 1rem;"><label>Rows</label><input type="number" id="tbl-r" class="text-input" value="${r}" min="0" style="width:100%;"><label>Columns</label><input type="number" id="tbl-c" class="text-input" value="${c}" min="0" style="width:100%;"></div>${delHtml}`,
+                        confirmText: table ? 'Update' : 'Create',
+                        onConfirm: () => {
+                            const rows = parseInt(document.getElementById('tbl-r').value, 10);
+                            const cols = parseInt(document.getElementById('tbl-c').value, 10);
+                            if (isNaN(rows) || isNaN(cols) || rows < 0 || cols < 0) return App.ui.showToast("Invalid dimensions.", { type: 'error' });
+                            App.events.table.createOrUpdate(rows, cols);
+                        }
+                    });
+                    const rInp = document.getElementById('tbl-r');
+                    const onEnter = e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('modal-confirm')?.click(); } };
+                    rInp?.addEventListener('keydown', onEnter);
+                    document.getElementById('tbl-c')?.addEventListener('keydown', onEnter);
+                    document.getElementById('modal-del-tbl')?.addEventListener('click', () => { App.ui.closeModal(); App.events.table.createOrUpdate(0, 0); });
+                    rInp?.focus(); rInp?.select();
                 },
                 table: {
-                    // FIX: Added a dedicated `create` function for commands to call directly.
+                    delete(table) {
+                        if (!table) return;
+                        const p = document.createElement('p'); p.innerHTML = '<br>';
+                        table.replaceWith(p);
+                        App.util.placeCursor(p, true);
+                        App.state.isArticleDirty = true;
+                        if (App.state.currentMode === 'read') App.events.saveArticle({ isAutosave: true });
+                        App.ui.showToast("Table deleted.", { type: 'info' });
+                    },
+
                     create(rows, cols) {
-                        let tableHTML = '<table><thead><tr>';
-                        for (let c = 0; c < cols; c++) tableHTML += `<th><br></th>`;
-                        tableHTML += '</tr></thead><tbody>';
+                        let html = '<table><thead><tr>';
+                        for (let c = 0; c < cols; c++) html += `<th><br></th>`;
+                        html += '</tr></thead><tbody>';
                         for (let r = 1; r < rows; r++) {
-                            tableHTML += '<tr>';
-                            for (let c = 0; c < cols; c++) tableHTML += `<td><br></td>`;
-                            tableHTML += '</tr>';
+                            html += '<tr>';
+                            for (let c = 0; c < cols; c++) html += `<td><br></td>`;
+                            html += '</tr>';
                         }
-                        tableHTML += '</tbody></table><p><br></p>';
-                        document.execCommand('insertHTML', false, tableHTML);
+                        html += '</tbody></table><p><br></p>';
+                        document.execCommand('insertHTML', false, html);
                         App.state.isArticleDirty = true;
                     },
 
                     createTile() {
-                        const tileHTML = `<table class="tile-box-table"><tbody><tr><td class="tile-cell"><b><br></b></td></tr></tbody></table><p><br></p>`;
-                        document.execCommand('insertHTML', false, tileHTML);
+                        document.execCommand('insertHTML', false, `<table class="tile-box-table"><tbody><tr><td class="tile-cell"><b><br></b></td></tr></tbody></table><p><br></p>`);
                         App.state.isArticleDirty = true;
                     },
 
@@ -4456,42 +4639,29 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         for (let r = 0; r < newRows; r++) {
                             const newRow = document.createElement('tr');
                             for (let c = 0; c < newCols; c++) {
-                                const isHeaderRow = (r === 0 && table.tHead && table.tHead.rows.length > 0);
-                                const newCell = document.createElement(isHeaderRow ? 'th' : 'td');
-                                if (table.rows[r] && table.rows[r].cells[c]) newCell.innerHTML = table.rows[r].cells[c].innerHTML;
-                                else newCell.innerHTML = '<br>';
-                                newRow.appendChild(newCell);
+                                const isHeader = (r === 0 && table.tHead?.rows.length > 0);
+                                const cell = document.createElement(isHeader ? 'th' : 'td');
+                                cell.innerHTML = table.rows[r]?.cells[c]?.innerHTML || '<br>';
+                                newRow.appendChild(cell);
                             }
-                            if (r === 0 && table.tHead && table.tHead.rows.length > 0) newTHead.appendChild(newRow); else newTBody.appendChild(newRow);
+                            if (r === 0 && table.tHead?.rows.length > 0) newTHead.appendChild(newRow); else newTBody.appendChild(newRow);
                         }
-                        const parent = table.parentNode; const nextSibling = table.nextElementSibling;
-                        parent.removeChild(table);
-                        if (nextSibling) parent.insertBefore(newTable, nextSibling); else parent.appendChild(newTable);
-                        let trailingP = newTable.nextElementSibling;
-                        if (!trailingP || trailingP.tagName !== 'P') { trailingP = document.createElement('p'); trailingP.innerHTML = '<br>'; newTable.insertAdjacentElement('afterend', trailingP); }
-                        App.util.placeCursor(trailingP, true);
+                        const p = document.createElement('p'); p.innerHTML = '<br>';
+                        table.replaceWith(newTable);
+                        newTable.insertAdjacentElement('afterend', p);
+                        App.util.placeCursor(p, true);
                         App.state.isArticleDirty = true;
                     },
 
                     createOrUpdate(newRows, newCols) {
-                        const markerId = App.state.cursorMarkerId;
-                        if (!markerId) { App.ui.showToast("Editor selection lost. Please try again.", { type: 'error' }); return; }
-
-                        const markerNode = document.getElementById(markerId);
-                        if (!markerNode) { App.ui.showToast("Cursor marker not found. Please try again.", { type: 'error' }); return; }
-
+                        const markerNode = document.getElementById(App.state.cursorMarkerId);
+                        if (!markerNode) return App.ui.showToast("Selection lost. Please try again.", { type: 'error' });
                         const table = markerNode.closest('table');
-
-                        const sel = window.getSelection();
-                        const range = document.createRange();
-                        range.setStartBefore(markerNode);
-                        range.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                        markerNode.parentNode.removeChild(markerNode);
+                        markerNode.remove();
                         App.state.cursorMarkerId = null;
 
-                        if (table && table.classList.contains('tile-box-table')) { App.ui.showToast("You already created a Box Tile. It cannot be expanded.", { type: 'warning' }); return; }
+                        if (table && (newRows === 0 || newCols === 0)) return this.delete(table);
+                        if (table?.classList.contains('tile-box-table')) return App.ui.showToast("Box Tile cannot be expanded.", { type: 'warning' });
                         if (!table && newRows === 1 && newCols === 1) this.createTile();
                         else if (table) this.update(table, newRows, newCols);
                         else this.create(newRows, newCols);
@@ -6784,8 +6954,8 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                                 </tbody>
                             </table>`,
                             'swot-analysis': `<h2>SWOT Analysis</h2><div class="nk-textile-deck" contenteditable="false"><div class="nk-text-tile color-10"><div class="nk-text-tile-content" contenteditable="true"><b>Strengths:</b> What do we do well internally?</div></div><div class="nk-text-tile color-4"><div class="nk-text-tile-content" contenteditable="true"><b>Weaknesses:</b> Where can we improve internally?</div></div><div class="nk-text-tile color-2"><div class="nk-text-tile-content" contenteditable="true"><b>Opportunities:</b> What are the external chances to grow?</div></div><div class="nk-text-tile color-8"><div class="nk-text-tile-content" contenteditable="true"><b>Threats:</b> What external factors could harm us?</div></div></div>`,
-                            'meeting-agenda': `<h2>Meeting Agenda</h2><div class="nk-text-tile color-7"><div class="nk-text-tile-content"><b>Date:</b> ${new Date().toLocaleDateString()}</div></div><div class="nk-text-tile color-7"><div class="nk-text-tile-content"><b>Attendees:</b> </div></div><hr><h3>Topics for Discussion:</h3><div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box"></span><span class="nk-checkbox-text">Topic 1...</span></div><div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box"></span><span class="nk-checkbox-text">Topic 2...</span></div><h3>Action Items:</h3><ul><li><br></li></ul>`,
-                            'daily-planner': `<h2>Daily Plan: ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h2><div class="nk-text-tile color-ghost-1"><div class="nk-text-tile-content"><b>Top Priority for Today:</b> </div></div><h3>To-Do List:</h3><div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box"></span><span class="nk-checkbox-text">Task 1...</span></div><div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box"></span><span class="nk-checkbox-text">Task 2...</span></div><div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box"></span><span class="nk-checkbox-text">Task 3...</span></div><h3>Notes:</h3><p><br></p>`,
+                            'meeting-agenda': `<h2>Meeting Agenda</h2><div class="nk-text-tile color-7"><div class="nk-text-tile-content"><b>Date:</b> ${new Date().toLocaleDateString()}</div></div><div class="nk-text-tile color-7"><div class="nk-text-tile-content"><b>Attendees:</b> </div></div><hr><h3>Topics for Discussion:</h3><div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box" contenteditable="false"></span><span class="nk-checkbox-text">Topic 1...</span></div><div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box" contenteditable="false"></span><span class="nk-checkbox-text">Topic 2...</span></div><h3>Action Items:</h3><ul><li><br></li></ul>`,
+                            'daily-planner': `<h2>Daily Plan: ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h2><div class="nk-text-tile color-ghost-1"><div class="nk-text-tile-content"><b>Top Priority for Today:</b> </div></div><h3>To-Do List:</h3><div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box" contenteditable="false"></span><span class="nk-checkbox-text">Task 1...</span></div><div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box" contenteditable="false"></span><span class="nk-checkbox-text">Task 2...</span></div><div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box" contenteditable="false"></span><span class="nk-checkbox-text">Task 3...</span></div><h3>Notes:</h3><p><br></p>`,
                             'smart-goals': `<h2>SMART Goal Setting</h2><div class="nk-text-tile color-ghost-1"><div class="nk-text-tile-content"><b>Goal:</b> </div></div><hr><div class="nk-accordion" data-state="open"><div class="nk-accordion-trigger"><span class="nk-accordion-title"><b>(S)pecific</b></span></div><div class="nk-accordion-content" data-placeholder="What exactly do I want to achieve?"><p><br></p></div></div><div class="nk-accordion" data-state="closed"><div class="nk-accordion-trigger"><span class="nk-accordion-title"><b>(M)easurable</b></span></div><div class="nk-accordion-content" data-placeholder="How will I know when I have achieved it?"><p><br></p></div></div><div class="nk-accordion" data-state="closed"><div class="nk-accordion-trigger"><span class="nk-accordion-title"><b>(A)chievable</b></span></div><div class="nk-accordion-content" data-placeholder="Is this goal realistic with my current resources?"><p><br></p></div></div><div class="nk-accordion" data-state="closed"><div class="nk-accordion-trigger"><span class="nk-accordion-title"><b>(R)elevant</b></span></div><div class="nk-accordion-content" data-placeholder="Why is this goal important to me right now?"><p><br></p></div></div><div class="nk-accordion" data-state="closed"><div class="nk-accordion-trigger"><span class="nk-accordion-title"><b>(T)ime-bound</b></span></div><div class="nk-accordion-content" data-placeholder="What is the deadline for this goal?"><p><br></p></div></div>`,
                             'kwl-chart': `<h2>KWL Chart</h2><table style="width:100%;"><thead><tr><th>What I Know</th><th>What I Want to Know</th><th>What I Learned</th></tr></thead><tbody><tr><td data-placeholder="List prior knowledge..."><p><br></p></td><td data-placeholder="List questions..."><p><br></p></td><td data-placeholder="List new learnings..."><p><br></p></td></tr></tbody></table>`,
                             'pros-cons': `<h2>Pros & Cons: Decision Matrix</h2><div class="nk-text-tile color-7"><div class="nk-text-tile-content"><b>Decision to make:</b> </div></div><table style="width:100%;"><thead><tr><th style="background-color: color-mix(in srgb, var(--success-color) 10%, transparent);">Pros (Arguments For)</th><th style="background-color: color-mix(in srgb, var(--danger-color) 10%, transparent);">Cons (Arguments Against)</th></tr></thead><tbody><tr><td data-placeholder="List advantages..."><p><br></p></td><td data-placeholder="List disadvantages..."><p><br></p></td></tr></tbody></table>`,
@@ -8106,7 +8276,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             }
                             const checkboxTextContent = selectedText ? selectedText : '<br>';
                             const insertPara = !selectedText;
-                            const checkboxHTML = `<div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box"></span><span class="nk-checkbox-text">${checkboxTextContent}</span></div>${insertPara ? '<p><br></p>' : ''}`;
+                            const checkboxHTML = `<div class="nk-checkbox-wrapper" data-checked="false"><span class="nk-checkbox-box" contenteditable="false"></span><span class="nk-checkbox-text">${checkboxTextContent}</span></div>${insertPara ? '<p><br></p>' : ''}`;
                             document.execCommand('insertHTML', false, checkboxHTML);
                             setTimeout(() => {
                                 if (!selectedText) {
@@ -9565,5 +9735,48 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             }
                         );
                     }
+                },
+
+                updateDeckTileWidths(container = document) {
+                    if (!container) return;
+                    let decks = [];
+                    if (container.classList && container.classList.contains('nk-textile-deck')) {
+                        decks = [container];
+                    } else if (container.querySelectorAll) {
+                        decks = Array.from(container.querySelectorAll('.nk-textile-deck'));
+                    }
+                    decks.forEach(deck => {
+                        const tiles = deck.querySelectorAll('.nk-text-tile');
+                        tiles.forEach(tile => {
+                            const content = tile.querySelector('.nk-text-tile-content') || tile;
+                            const text = (content.textContent || '').trim();
+                            // If text is long (> 45 chars or > 6 words), mark as wide
+                            const isWide = text.length > 45 || text.split(/\s+/).filter(Boolean).length > 6;
+                            if (isWide) {
+                                tile.classList.add('tile-wide');
+                            } else {
+                                tile.classList.remove('tile-wide');
+                            }
+                        });
+                    });
+                },
+
+                normalizeStatCardColors(container = document) {
+                    if (!container) return;
+                    const cards = container.querySelectorAll ? Array.from(container.querySelectorAll('.nk-stat-card')) : [];
+                    if (container.classList && container.classList.contains('nk-stat-card')) cards.push(container);
+                    cards.forEach((card, idx) => {
+                        const hasColor = Array.from(card.classList).some(c => c.startsWith('color-'));
+                        if (!hasColor) {
+                            const legacyMap = { 'stat-card-primary': '3', 'stat-card-info': '5', 'stat-card-success': '2', 'stat-card-warning': '6', 'stat-card-danger': '4' };
+                            let matched = null;
+                            for (const [cls, col] of Object.entries(legacyMap)) {
+                                if (card.classList.contains(cls)) { matched = col; break; }
+                            }
+                            if (!matched) matched = String((idx % 9) + 1);
+                            card.classList.add(`color-${matched}`);
+                            card.dataset.color = matched;
+                        }
+                    });
                 },
 };

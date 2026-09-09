@@ -58,6 +58,7 @@ export const settings = {
         pdfTextViewTheme: 'default',
         intervalModifier: 1.0,
         showReadModeWordCount: false, // Default is off
+        readModeFlashcardRevision: true, // Flashcard revision in Read mode (default ON)
     },
 
     _saveTimer: null,

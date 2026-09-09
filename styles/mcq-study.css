@@ -676,7 +676,7 @@
             max-width: 100% !important;
             box-sizing: border-box;
             white-space: pre-wrap;
-            word-break: break-word;
+            word-break: normal;
             overflow-wrap: break-word;
             transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
             backdrop-filter: blur(8px);
@@ -797,8 +797,8 @@
             letter-spacing: -0.01em;
             width: 100%;
             white-space: pre-wrap;
-            word-break: break-word;
-            overflow-wrap: anywhere;
+            word-break: normal;
+            overflow-wrap: break-word;
         }
 
         /* Normalize internal elements for natural flow and seamless line spacing */
@@ -952,20 +952,49 @@
             height: 4px;
         }
 
-        /* A Textile inside a deck loses standalone margin to fit neatly */
-        .nk-textile-deck .nk-text-tile {
+        /* A Textile inside a deck loses standalone margin to fit neatly with smart auto flex */
+        /* Rule: Maximum 4 textiles per row to prevent visual clutter */
+        .nk-textile-deck:not(.layout-stack) .nk-text-tile {
             margin: 0;
-            flex: 1 1 200px;
-            min-width: 140px;
-            width: auto;
+            flex: 1 1 calc(25% - 8px);
+            min-width: calc(25% - 8px);
             max-width: 100%;
+            width: auto;
+            padding: 0.6rem 0.85rem;
+            box-sizing: border-box;
         }
 
-        /* Stack layout for Decks */
+        /* Long paragraph tiles: comfortably expand to 50% split on desktop (maximum 2 per row) */
+        .nk-textile-deck:not(.layout-stack) .nk-text-tile.tile-wide {
+            flex: 2 1 calc(50% - 8px);
+            min-width: calc(50% - 8px);
+        }
+
+        .nk-textile-deck .nk-text-tile .nk-text-tile-content {
+            white-space: normal;
+            word-break: normal;
+            overflow-wrap: break-word;
+        }
+
+        /* Stack / List layout for Decks: zero vertical space wastage, natural content height */
         .nk-textile-deck.layout-stack {
             flex-direction: column;
             align-items: stretch;
             gap: 6px;
+            padding: 0.6rem;
+        }
+
+        .nk-textile-deck.layout-stack .nk-text-tile,
+        .nk-textile-deck.layout-stack .nk-text-tile.tile-wide {
+            flex: 0 0 auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            min-height: auto !important;
+            height: auto !important;
+            padding: 0.55rem 0.85rem;
+            margin: 0;
+            box-sizing: border-box;
         }
 
         .deck-add-tile-btn {
@@ -980,8 +1009,8 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            flex: 1 1 140px;
-            min-width: 140px;
+            flex: 1 1 calc(25% - 8px);
+            min-width: calc(25% - 8px);
             background: transparent;
         }
 
@@ -1037,6 +1066,287 @@
 
         #article-content>.nk-text-tile .nk-text-tile-content {
             white-space: normal;
+        }
+
+        /* --- Bento Stat Cards (Feature: "/statscards") - Symmetrical Top & Bottom Border Framing --- */
+        .nk-stat-deck {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            padding: 0.85rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background-color: color-mix(in srgb, var(--bg-tertiary) 35%, transparent);
+            margin: 0.85rem 0;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .nk-stat-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: var(--textile-bg-1);
+            background-color: var(--textile-bg-1);
+            border: 1px solid color-mix(in srgb, var(--border-color) 35%, transparent);
+            border-top: 2.5px solid var(--primary-color);
+            border-bottom: 2.5px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 1.15rem 1rem 1rem;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
+            box-sizing: border-box;
+            min-height: 90px;
+        }
+
+        body.write-mode .nk-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        /* Default uncolored or legacy stat cards */
+        .nk-stat-card:not([class*="color-"]),
+        .nk-stat-card.color-default,
+        .nk-stat-card.stat-card-primary {
+            background: var(--textile-bg-1) !important;
+            background-color: var(--textile-bg-1) !important;
+            border-top-color: var(--textile-border-1);
+            border-bottom-color: var(--textile-border-1);
+            border-left-color: color-mix(in srgb, var(--textile-border-1) 18%, transparent);
+            border-right-color: color-mix(in srgb, var(--textile-border-1) 18%, transparent);
+            color: var(--textile-text-1);
+        }
+
+        .nk-stat-card.stat-card-info {
+            background: var(--textile-bg-5) !important;
+            background-color: var(--textile-bg-5) !important;
+            border-top-color: var(--textile-border-5);
+            border-bottom-color: var(--textile-border-5);
+            border-left-color: color-mix(in srgb, var(--textile-border-5) 18%, transparent);
+            border-right-color: color-mix(in srgb, var(--textile-border-5) 18%, transparent);
+            color: var(--textile-text-5);
+        }
+
+        .nk-stat-card.stat-card-success {
+            background: var(--textile-bg-2) !important;
+            background-color: var(--textile-bg-2) !important;
+            border-top-color: var(--textile-border-2);
+            border-bottom-color: var(--textile-border-2);
+            border-left-color: color-mix(in srgb, var(--textile-border-2) 18%, transparent);
+            border-right-color: color-mix(in srgb, var(--textile-border-2) 18%, transparent);
+            color: var(--textile-text-2);
+        }
+
+        /* Stat Card Color Accents - Symmetrical Top & Bottom Border Framing + Ambient Background matching textiles */
+        .nk-stat-card.color-1 { border-top-color: var(--textile-border-1); border-bottom-color: var(--textile-border-1); border-left-color: color-mix(in srgb, var(--textile-border-1) 18%, transparent); border-right-color: color-mix(in srgb, var(--textile-border-1) 18%, transparent); background: var(--textile-bg-1) !important; background-color: var(--textile-bg-1) !important; color: var(--textile-text-1); }
+        .nk-stat-card.color-2 { border-top-color: var(--textile-border-2); border-bottom-color: var(--textile-border-2); border-left-color: color-mix(in srgb, var(--textile-border-2) 18%, transparent); border-right-color: color-mix(in srgb, var(--textile-border-2) 18%, transparent); background: var(--textile-bg-2) !important; background-color: var(--textile-bg-2) !important; color: var(--textile-text-2); }
+        .nk-stat-card.color-3 { border-top-color: var(--textile-border-3); border-bottom-color: var(--textile-border-3); border-left-color: color-mix(in srgb, var(--textile-border-3) 18%, transparent); border-right-color: color-mix(in srgb, var(--textile-border-3) 18%, transparent); background: var(--textile-bg-3) !important; background-color: var(--textile-bg-3) !important; color: var(--textile-text-3); }
+        .nk-stat-card.color-4 { border-top-color: var(--textile-border-4); border-bottom-color: var(--textile-border-4); border-left-color: color-mix(in srgb, var(--textile-border-4) 18%, transparent); border-right-color: color-mix(in srgb, var(--textile-border-4) 18%, transparent); background: var(--textile-bg-4) !important; background-color: var(--textile-bg-4) !important; color: var(--textile-text-4); }
+        .nk-stat-card.color-5 { border-top-color: var(--textile-border-5); border-bottom-color: var(--textile-border-5); border-left-color: color-mix(in srgb, var(--textile-border-5) 18%, transparent); border-right-color: color-mix(in srgb, var(--textile-border-5) 18%, transparent); background: var(--textile-bg-5) !important; background-color: var(--textile-bg-5) !important; color: var(--textile-text-5); }
+        .nk-stat-card.color-6 { border-top-color: var(--textile-border-6); border-bottom-color: var(--textile-border-6); border-left-color: color-mix(in srgb, var(--textile-border-6) 18%, transparent); border-right-color: color-mix(in srgb, var(--textile-border-6) 18%, transparent); background: var(--textile-bg-6) !important; background-color: var(--textile-bg-6) !important; color: var(--textile-text-6); }
+        .nk-stat-card.color-7 { border-top-color: var(--textile-border-7); border-bottom-color: var(--textile-border-7); border-left-color: color-mix(in srgb, var(--textile-border-7) 18%, transparent); border-right-color: color-mix(in srgb, var(--textile-border-7) 20%, transparent); background: var(--textile-bg-7) !important; background-color: var(--textile-bg-7) !important; color: var(--textile-text-7); }
+        .nk-stat-card.color-8 { border-top-color: var(--textile-border-8); border-bottom-color: var(--textile-border-8); border-left-color: color-mix(in srgb, var(--textile-border-8) 18%, transparent); border-right-color: color-mix(in srgb, var(--textile-border-8) 18%, transparent); background: var(--textile-bg-8) !important; background-color: var(--textile-bg-8) !important; color: var(--textile-text-8); }
+        .nk-stat-card.color-9 { border-top-color: var(--textile-border-9); border-bottom-color: var(--textile-border-9); border-left-color: color-mix(in srgb, var(--textile-border-9) 18%, transparent); border-right-color: color-mix(in srgb, var(--textile-border-9) 18%, transparent); background: var(--textile-bg-9) !important; background-color: var(--textile-bg-9) !important; color: var(--textile-text-9); }
+        .nk-stat-card.color-10 { border-top-color: var(--textile-border-10); border-bottom-color: var(--textile-border-10); border-left-color: color-mix(in srgb, var(--textile-border-10) 18%, transparent); border-right-color: color-mix(in srgb, var(--textile-border-10) 18%, transparent); background: var(--textile-bg-10) !important; background-color: var(--textile-bg-10) !important; color: var(--textile-text-10); }
+
+        /* Ambient illumination overlay matching textiles */
+        .nk-stat-card.color-1::before,
+        .nk-stat-card.color-2::before,
+        .nk-stat-card.color-3::before,
+        .nk-stat-card.color-4::before,
+        .nk-stat-card.color-5::before,
+        .nk-stat-card.color-6::before,
+        .nk-stat-card.color-7::before,
+        .nk-stat-card.color-8::before,
+        .nk-stat-card.color-9::before,
+        .nk-stat-card.color-10::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 9px;
+            background: linear-gradient(180deg,
+                    rgba(255, 255, 255, 0.12) 0%,
+                    rgba(255, 255, 255, 0.03) 50%,
+                    rgba(0, 0, 0, 0.01) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        [data-theme="dark"] .nk-stat-card.color-1::before,
+        [data-theme="dark"] .nk-stat-card.color-2::before,
+        [data-theme="dark"] .nk-stat-card.color-3::before,
+        [data-theme="dark"] .nk-stat-card.color-4::before,
+        [data-theme="dark"] .nk-stat-card.color-5::before,
+        [data-theme="dark"] .nk-stat-card.color-6::before,
+        [data-theme="dark"] .nk-stat-card.color-7::before,
+        [data-theme="dark"] .nk-stat-card.color-8::before,
+        [data-theme="dark"] .nk-stat-card.color-9::before,
+        [data-theme="dark"] .nk-stat-card.color-10::before {
+            background: linear-gradient(180deg,
+                    rgba(255, 255, 255, 0.06) 0%,
+                    rgba(255, 255, 255, 0.01) 50%,
+                    rgba(0, 0, 0, 0.04) 100%);
+        }
+
+        .stat-card-value {
+            outline: none;
+            font-size: 2.15rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.025em;
+            font-variant-numeric: tabular-nums;
+            text-align: center;
+            width: 100%;
+            word-break: normal;
+            overflow-wrap: break-word;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-card-label {
+            outline: none;
+            font-size: 1rem;
+            font-weight: normal;
+            text-align: center;
+            text-transform: none; /* Preserves natural casing */
+            line-height: 1.35;
+            margin-top: 0.35rem;
+            width: 100%;
+            word-break: normal;
+            overflow-wrap: break-word;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Consistent unified color: both number AND label share the textile text color */
+        .nk-stat-card .stat-card-value,
+        .nk-stat-card .stat-card-label {
+            color: inherit;
+        }
+
+        .stat-card-value:empty::before {
+            content: attr(data-placeholder);
+            color: var(--text-tertiary, #999);
+            opacity: 0.5;
+        }
+
+        .stat-card-label:empty::before {
+            content: attr(data-placeholder);
+            color: var(--text-tertiary, #999);
+            opacity: 0.5;
+        }
+
+        /* Responsive Screen Sizing for Decktiles and Stat Cards */
+        @media (max-width: 600px) {
+            .nk-stat-deck {
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+                gap: 8px;
+                padding: 0.5rem;
+            }
+
+            .nk-textile-deck {
+                flex-direction: column !important;
+                gap: 6px !important;
+                padding: 0.5rem !important;
+            }
+
+            .nk-textile-deck .nk-text-tile,
+            .nk-textile-deck .nk-text-tile.tile-wide {
+                flex: 0 0 auto !important;
+                min-width: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+                height: auto !important;
+                padding: 0.5rem 0.75rem !important;
+                margin: 0 !important;
+                box-sizing: border-box;
+            }
+
+            .deck-add-tile-btn {
+                flex: 0 0 auto !important;
+                width: 100% !important;
+                min-height: 38px !important;
+            }
+        }
+
+        /* Add Stat Card Button */
+        .stat-add-card-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px dashed var(--border-color);
+            border-radius: 10px;
+            min-height: 90px;
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+        }
+
+        body.write-mode .stat-add-card-btn {
+            display: flex;
+        }
+
+        .stat-add-card-btn:hover {
+            background-color: color-mix(in srgb, var(--primary-color) 12%, var(--bg-secondary));
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* Card action buttons (color cycler & delete) */
+        .stat-card-color-cycler,
+        .stat-card-delete-btn {
+            position: absolute;
+            top: -9px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.85);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            z-index: 2;
+        }
+
+        .stat-card-color-cycler {
+            right: 28px;
+        }
+
+        .stat-card-delete-btn {
+            right: 4px;
+        }
+
+        body.write-mode .nk-stat-card:hover .stat-card-color-cycler,
+        body.write-mode .nk-stat-card:hover .stat-card-delete-btn {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        body.write-mode .stat-card-color-cycler:hover {
+            background: var(--primary-color);
+            color: var(--text-on-primary);
+            border-color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        body.write-mode .stat-card-delete-btn:hover {
+            background: #ef4444;
+            color: #fff;
+            border-color: #ef4444;
+            transform: scale(1.1);
         }
 
         /* --- NEW: Power Quote Gradient Text (Theme-Sensitive v2) --- */

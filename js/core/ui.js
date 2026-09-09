@@ -1100,6 +1100,7 @@ export const ui = {
                     document.body.classList.add(`${mode}-mode`);
                     if (App.settings.get('theme') === 'custom') { document.body.classList.add('image-theme-active'); }
                     App.ui.applyFontSettings();
+                    App.ui.applyReadModeFlashcardRevision();
 
                     const finalContent = overrideContent ?? article.content;
 
@@ -1220,6 +1221,8 @@ export const ui = {
                             App.state.isArticleDirty = true;
                         }
                         contentDiv.innerHTML = normalizedWriteContent;
+                        App.events.updateDeckTileWidths(contentDiv);
+                        App.events.normalizeStatCardColors(contentDiv);
                         const isEffectivelyEmpty = normalizedWriteContent.trim() === '' || normalizedWriteContent.trim() === '<p><br></p>';
                         contentDiv.classList.toggle('is-empty', isEffectivelyEmpty);
                         contentDiv.setAttribute('data-placeholder', "Start writing... Use [[tags]] for Visual Map, ==keywords== for Highlights, or {{c1::cloze}} for flashcards or {{m1::sentence}} for Mind Maps (further m2, m3 for sub nodes).");
@@ -1253,6 +1256,9 @@ export const ui = {
                                 const editables = block.querySelectorAll('.nk-timeline-date, .nk-timeline-title');
                                 editables.forEach(el => el.contentEditable = "true");
                             });
+                            contentDiv.querySelectorAll('.nk-checkbox-box').forEach(box => {
+                                box.contentEditable = "false";
+                            });
                         }, 60);
 
                     } else {
@@ -1274,6 +1280,8 @@ export const ui = {
                         }
 
                         contentDiv.innerHTML = App.util.sanitizeHTML(finalContent);
+                        App.events.updateDeckTileWidths(contentDiv);
+                        App.events.normalizeStatCardColors(contentDiv);
 
                         // RESET MCQ STATE: Remove previous answer states so users can re-interact with MCQs
                         contentDiv.querySelectorAll('.nk-mcq-block').forEach(mcqBlock => {
@@ -3354,6 +3362,15 @@ export const ui = {
                     document.documentElement.style.setProperty('--article-font-family', family);
                     document.documentElement.style.setProperty('--article-font-size', size);
                     document.documentElement.style.setProperty('--article-line-height', lineHeight);
+                },
+
+                applyReadModeFlashcardRevision() {
+                    const isReadMode = document.body.classList.contains('read-mode');
+                    const isRevisionActive = isReadMode && App.settings.get('readModeFlashcardRevision') !== false;
+                    document.body.classList.toggle('cloze-revision-active', isRevisionActive);
+                    document.querySelectorAll('#article-content .cloze-flashcard, .focus-mode-overlay .cloze-flashcard').forEach(el => {
+                        el.classList.remove('is-revealed', 'is-occluded');
+                    });
                 },
 
                 updateHeaderState() {
@@ -5938,18 +5955,18 @@ export const ui = {
                         </div>
 
                         <div class="settings-section">
-                            <h4><i class="fa-solid fa-mobile-screen-button"></i> View Mode</h4>
+                            <h4><i class="fa-solid fa-sliders"></i> View & Reading Preferences</h4>
                             <div class="settings-item">
                                 <div class="settings-label" id="mobile-view-label-container"><b>${mobileViewLabel}</b><small>${mobileViewDescription}</small></div>
                                 <div id="mobile-view-toggle" class="toggle-switch ${isMobileViewEnabled ? 'active' : ''}"></div>
                             </div>
-                        </div>
-
-                        <div class="settings-section">
-                            <h4><i class="fa-solid fa-calculator"></i> Reading Stats</h4>
                             <div class="settings-item">
                                 <div class="settings-label"><b>Selection Word Counter</b><small>Show live word count when selecting text in Read Mode.</small></div>
                                 <div id="read-mode-word-count-toggle" class="toggle-switch ${App.settings.get('showReadModeWordCount') ? 'active' : ''}"></div>
+                            </div>
+                            <div class="settings-item">
+                                <div class="settings-label"><b>Flashcard revision in Read mode</b><small>Default flashcards blurred in Read Mode for active recall revision. Click to reveal or hide.</small></div>
+                                <div id="read-mode-flashcard-revision-toggle" class="toggle-switch ${App.settings.get('readModeFlashcardRevision') !== false ? 'active' : ''}"></div>
                             </div>
                         </div>
 
@@ -5973,6 +5990,11 @@ export const ui = {
                     document.getElementById('read-mode-word-count-toggle').addEventListener('click', function () {
                         this.classList.toggle('active');
                         App.settings.set('showReadModeWordCount', this.classList.contains('active'));
+                    });
+                    document.getElementById('read-mode-flashcard-revision-toggle')?.addEventListener('click', function () {
+                        this.classList.toggle('active');
+                        App.settings.set('readModeFlashcardRevision', this.classList.contains('active'));
+                        App.ui.applyReadModeFlashcardRevision();
                     });
                     document.getElementById('image-quality-slider').addEventListener('input', App.events.changeImageQuality);
                     document.getElementById('ocr-threshold-slider').addEventListener('input', App.events.changeOcrThreshold);

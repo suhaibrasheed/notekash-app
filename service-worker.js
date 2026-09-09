@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'notekash-v2.3.2';
+const CACHE_VERSION = 'notekash-v2.3.3';
 
 const CORE_APP_SHELL = [
   './',

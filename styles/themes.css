@@ -300,6 +300,9 @@
             --textile-bg-9: rgba(199, 210, 254, 0.85);
             --textile-border-9: #6366f1;
             --textile-text-9: #4f46e5;
+            --textile-bg-10: rgba(204, 251, 241, 0.85);
+            --textile-border-10: #14b8a6;
+            --textile-text-10: #0f766e;
 
 
             /* --- NEW: Unified Article Font System --- */
@@ -560,6 +563,9 @@
             --textile-bg-9: rgba(30, 27, 75, 0.75);
             --textile-border-9: #818cf8;
             --textile-text-9: #a5b4fc;
+            --textile-bg-10: rgba(19, 78, 74, 0.75);
+            --textile-border-10: #2dd4bf;
+            --textile-text-10: #99f6e4;
 
 
         }
@@ -685,6 +691,9 @@
             --textile-bg-9: rgba(224, 220, 252, 0.9);
             --textile-border-9: #4f46e5;
             --textile-text-9: #3730a3;
+            --textile-bg-10: rgba(204, 251, 241, 0.9);
+            --textile-border-10: #0d9488;
+            --textile-text-10: #115e59;
 
         }
 

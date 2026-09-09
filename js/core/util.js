@@ -1033,9 +1033,9 @@ export const util = {
                     // First restore Mind Map nodes so they are preserved
                     let processed = protectedMath.text.replace(/\{\{m(\d+)::(.*?)\}\}/g, (match, level, content) => { return `<span class="mindmap-node" data-level="${level}" id="snip-${App.util.cyrb53(level + content)}">${content}</span>`; });
                     // Accept the occasional extra-brace variant users paste/type around cloze cards.
-                    processed = processed.replace(/\{\{\{c\d+::((?:(?!\{\{\{?c\d+::)[\s\S])*?)\}\}\}/g, '<span class="cloze-flashcard">$1</span>');
+                    processed = processed.replace(/\{\{\{c\d+::((?:(?!\{\{\{?c\d+::)[\s\S])*?)\}\}\}/g, '<span class="cloze-flashcard" tabindex="0" role="button">$1</span>');
                     // Then parse Cloze (Matches {{c1::...}} but stops if it sees another {{c inside)
-                    processed = processed.replace(/{{c\d+::((?:(?!{{c\d+::)[\s\S])*?)}}/g, '<span class="cloze-flashcard">$1</span>');
+                    processed = processed.replace(/{{c\d+::((?:(?!{{c\d+::)[\s\S])*?)}}/g, '<span class="cloze-flashcard" tabindex="0" role="button">$1</span>');
                     let restored = App.util.restoreMathSegments(processed, protectedMath.tokens);
                     return restored.replace(/\uE000(\d+)\uE000/g, (match, index) => htmlTokens[parseInt(index, 10)] ?? match);
                 },
