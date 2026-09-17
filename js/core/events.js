@@ -471,7 +471,18 @@ export const events = {
                         if (!e.target.closest('#selection-toolbar')) App.ui.hideSelectionToolbar();
                         if (!e.target.closest('#image-toolbar')) App.ui.hideImageToolbar();
                         if (!e.target.closest('.context-menu')) App.ui.hideContextMenu();
+                        if (!e.target.closest('.control-group-popover')) {
+                            document.querySelectorAll('.control-group-popover.popover-active').forEach(p => p.classList.remove('popover-active'));
+                            document.querySelectorAll('.popover-menu.show').forEach(m => m.classList.remove('show'));
+                        }
                     });
+
+                    document.addEventListener('touchstart', (e) => {
+                        if (!e.target.closest('.control-group-popover')) {
+                            document.querySelectorAll('.control-group-popover.popover-active').forEach(p => p.classList.remove('popover-active'));
+                            document.querySelectorAll('.popover-menu.show').forEach(m => m.classList.remove('show'));
+                        }
+                    }, { passive: true });
 
                     document.addEventListener('click', (e) => {
                         // Specifically check for backlink clicks within the article content in read mode

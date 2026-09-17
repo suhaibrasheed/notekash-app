@@ -1415,7 +1415,7 @@ export const ui = {
                 <div class="controls-wrapper read-mode-controls" style="gap:6px; padding: 0 8px;">
                     <!-- 1. Category & Modes Popover (Left) -->
                     <div class="control-group-popover">
-                        <button class="btn-icon" onclick="this.nextElementSibling.classList.toggle('show'); event.stopPropagation();" title="Category & Modes" aria-label="Category and modes">
+                        <button class="btn-icon" onclick="this.parentElement.classList.toggle('popover-active'); this.nextElementSibling.classList.toggle('show'); event.stopPropagation();" title="Category & Modes" aria-label="Category and modes">
                             ${App.util.icons.category}
                         </button>
                         <div class="popover-menu" style="min-width: auto; padding: 6px; gap: 4px; display: flex; flex-direction: column;">
@@ -1423,8 +1423,13 @@ export const ui = {
                             <button class="btn-icon" onclick="App.router.navigateTo('category', { category: '${article.category || 'All'}', articleId: '${article.id}' })" title="Category View">
                                 ${App.util.icons.list}
                             </button>
+
+                            <!-- B. Find in Article -->
+                            <button class="btn-icon" onmousedown="event.preventDefault()" onclick="App.find.open(); this.closest('.popover-menu')?.classList.remove('show'); this.closest('.control-group-popover')?.classList.remove('popover-active');" title="Find in Article (Cmd+F)" aria-label="Find in article">
+                                ${App.util.icons.search}
+                            </button>
                             
-                            <!-- B. Presentation Mode -->
+                            <!-- C. Presentation Mode -->
                             <button class="btn-icon" onclick="App.events.enterFocusMode('${article.id}')" title="Presentation Mode">
                                 ${App.util.icons.present}
                             </button>
@@ -1438,7 +1443,7 @@ export const ui = {
                                 ${!App.license.isPremium() ? '<span style="position:absolute; top:-2px; right:-2px; font-size:10px;">👑</span>' : ''}
                             </button>
                             
-                            <!-- C. Study Flashcards -->
+                            <!-- D. Study Flashcards -->
                             <button class="btn-icon" onclick="const allCards = App.util.getAllFlashcards(); const articleCards = allCards.filter(c => c.articleId === '${article.id}'); if(articleCards.length) { App.events.study.start({ quizCards: articleCards, mode: 'custom' }); } else { App.ui.showToast('No flashcards in this article', 'info'); }" title="Study Article Flashcards">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l10-5 10 5-10 5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
                             </button>
@@ -1512,7 +1517,7 @@ export const ui = {
                         <div class="insert-popover">
                             
                             <button class="btn-icon" title="Find in Article (Ctrl+F)" onmousedown="event.preventDefault()" onclick="App.find.open()" aria-label="Find in article" id="insert-find-btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                                ${App.util.icons.search}
                             </button>
                             <button class="btn-icon" title="Manage Table" data-action="manageTable" onmousedown="event.preventDefault()" aria-label="Insert or modify table">${App.util.icons.table}</button>
                             <button class="btn-icon" title="Insert Accordion Card" data-action="insertAccordion" onmousedown="event.preventDefault()" aria-label="Insert accordion card">${App.util.icons.accordion}</button>
