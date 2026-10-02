@@ -1017,9 +1017,12 @@ const whiteboard = {
         }
         this.state.isOpen = false;
         this.state.editingBlockId = null; // Reset editing mode
+        this.state.stageModeSrcArticleId = null;
         this.els.overlay.classList.remove('active');
         this.els.overlay.classList.remove('has-bg-image'); // Clean up image mode class
-        document.body.style.overflow = '';
+        if (!document.body.classList.contains('pdf-viewer-active')) {
+            document.body.style.overflow = '';
+        }
         // Hide background image element
         if (this.els.bgImage) {
             this.els.bgImage.style.display = 'none';
@@ -3582,6 +3585,12 @@ const whiteboard = {
                             tags: newTags,
                             updatedAt: new Date().toISOString()
                         });
+
+                        // Sync background DOM if present so editor/reader stays fresh
+                        const contentDiv = document.getElementById('article-content');
+                        if (contentDiv && targetId === App.state.activeArticleId) {
+                            contentDiv.insertAdjacentHTML('beforeend', `<p>${html}</p><p><br></p>`);
+                        }
 
                         if (keepOpen) {
                             this.resetForNewWhiteboard();

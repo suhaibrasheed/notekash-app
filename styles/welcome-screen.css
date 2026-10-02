@@ -442,8 +442,8 @@
             display: inline-block;
         }
 
-        .ai-viewer-message-bubble strong,
-        .ai-viewer-message-bubble b {
+        .ai-viewer-message-bubble strong:not([class*="text-"]),
+        .ai-viewer-message-bubble b:not([class*="text-"]) {
             color: var(--primary-color);
             font-weight: 600;
         }
@@ -616,10 +616,51 @@
             font-weight: 700;
         }
 
-        .ai-viewer-message-bubble Strong,
-        .ai-viewer-message-bubble b {
+        .ai-viewer-message-bubble h3.text-red {
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            -webkit-text-fill-color: var(--text-red, #ff4830) !important;
+            color: var(--text-red, #ff4830) !important;
+            border-bottom: 2px solid rgba(239, 68, 68, 0.3) !important;
+            padding-bottom: 2px;
+            display: inline-block;
+        }
+
+        .ai-viewer-message-bubble strong:not([class*="text-"]),
+        .ai-viewer-message-bubble b:not([class*="text-"]) {
             color: var(--primary-color-hover);
             font-weight: 700;
+        }
+
+        /* Color-coding preservation for NoteKash AI Output */
+        .ai-viewer-message-bubble .text-red {
+            color: var(--text-red, #ff4830) !important;
+            font-weight: 650;
+        }
+        .ai-viewer-message-bubble .text-green {
+            color: var(--text-green, #2cfb3e) !important;
+            font-weight: 650;
+        }
+        .ai-viewer-message-bubble .text-blue {
+            color: var(--text-blue, #906eff) !important;
+            font-weight: 650;
+        }
+        .ai-viewer-message-bubble .text-magenta {
+            color: var(--text-magenta, #e84fff) !important;
+            font-weight: 650;
+        }
+        .ai-viewer-message-bubble .text-orange {
+            color: var(--text-orange, #ff9934) !important;
+            font-weight: 650;
+        }
+        .ai-viewer-message-bubble .text-teal {
+            color: var(--text-teal, #0effef) !important;
+            font-weight: 650;
+        }
+        .ai-viewer-message-bubble .text-slate {
+            color: var(--text-slate, #fcf006) !important;
+            font-weight: 650;
         }
 
         .ai-viewer-message-bubble em,
@@ -681,17 +722,17 @@
         /* Viewer Bookmarks Popover */
         .ai-viewer-bookmarks-popover {
             position: absolute;
-            bottom: 60px;
-            left: 1rem;
-            width: 280px;
-            max-height: 300px;
+            bottom: calc(100% + 10px);
+            left: 10px;
+            width: 290px;
+            max-height: 290px;
             background: rgba(var(--bg-secondary-rgb), 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            padding: 8px 0;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            padding: 0;
             z-index: 1000;
             display: none;
             flex-direction: column;

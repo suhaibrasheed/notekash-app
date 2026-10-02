@@ -3351,13 +3351,14 @@ export const services = {
                     },
                 },
                 ai: {
-                    async queryGenerativeAI(systemPrompt, userPrompt) {
+                    async queryGenerativeAI(systemPrompt, userPrompt, options = {}) {
                         if (!App.offline.check('AI Features')) throw new Error("Offline");
                         const provider = App.settings.get('aiProvider') || 'openrouter';
                         const modelName = App.settings.get('openRouterModel');
 
                         let apiKey, apiUrl, headers, body;
-                        const toastId = App.ui.showToast("AI is thinking...", { type: 'info', duration: 0 });
+                        const showToast = options.showToast !== false && !options.silentToast;
+                        const toastId = showToast ? App.ui.showToast("AI is thinking...", { type: 'info', duration: 0 }) : null;
 
                         const maxRetries = 3;
                         let delay = 2000;
@@ -3439,13 +3440,13 @@ export const services = {
                                     }
 
                                     if (!content) throw new Error("AI returned an empty or invalid response structure.");
-                                    App.ui.hideToast(toastId);
+                                    if (toastId) App.ui.hideToast(toastId);
                                     return content;
                                 }
 
                                 const retriableStatusCodes = [429, 500, 503, 504];
                                 if (retriableStatusCodes.includes(response.status) && attempt < maxRetries - 1) {
-                                    App.ui.updateToast(toastId, `Model is busy. Retrying in ${delay / 1000}s...`);
+                                    if (toastId) App.ui.updateToast(toastId, `Model is busy. Retrying in ${delay / 1000}s...`);
                                     await new Promise(resolve => setTimeout(resolve, delay));
                                     delay *= 2;
                                     continue;
@@ -3458,7 +3459,7 @@ export const services = {
 
                             } catch (error) {
                                 // --- THIS IS THE NEW, SMARTER ERROR HANDLING ---
-                                App.ui.hideToast(toastId);
+                                if (toastId) App.ui.hideToast(toastId);
                                 console.error(`Generative AI Error (attempt ${attempt + 1}):`, error);
 
                                 if (error.message.toLowerCase().includes('quota')) {
@@ -3484,13 +3485,13 @@ export const services = {
                                     return null;
                                 }
 
-                                App.ui.updateToast(toastId, `Connection issue. Retrying in ${delay / 1000}s...`);
+                                if (toastId) App.ui.updateToast(toastId, `Connection issue. Retrying in ${delay / 1000}s...`);
                                 await new Promise(resolve => setTimeout(resolve, delay));
                                 delay *= 2;
                             }
                         }
 
-                        App.ui.hideToast(toastId);
+                        if (toastId) App.ui.hideToast(toastId);
                         App.ui.showToast("AI query failed after multiple retries.", "error");
                         return null;
                     },

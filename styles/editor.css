@@ -6273,3 +6273,346 @@
             50% { left: 25%; width: 60%; }
             100% { left: 100%; width: 40%; }
         }
+
+        /* --- UNIQUE CONSOLIDATED PDF HIGHLIGHT BOX IN NOTE --- */
+        .pdf-highlights-box {
+            margin: 1.25rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            font-style: normal !important;
+        }
+
+        .pdf-highlights-box-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 14px;
+            user-select: none;
+        }
+
+        .pdf-highlights-box-title {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-weight: 600;
+            font-size: 0.88em;
+            color: var(--text-primary);
+        }
+
+        .pdf-highlights-box-title svg {
+            color: var(--primary-color, #3b82f6);
+            flex-shrink: 0;
+        }
+
+        .pdf-highlights-box-count {
+            font-size: 0.8em;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.02em;
+            opacity: 0.82;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .pdf-highlights-box-body {
+            padding: 8px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .pdf-highlight-entry {
+            display: block;
+            font-size: inherit;
+            line-height: 1.6;
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+        }
+
+        .pdf-hl-quote {
+            display: inline;
+            border-radius: 4px;
+            padding: 0.12em 0.45em;
+            margin: 0;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+            font-size: inherit;
+            line-height: inherit;
+            font-style: normal;
+            transition: background-color 0.15s ease;
+        }
+
+        .pdf-hl-page-inline {
+            font-style: italic;
+            font-weight: 500;
+            opacity: 0.72;
+            margin-left: 0.4em;
+            font-size: 0.88em;
+            white-space: nowrap;
+            user-select: all;
+            cursor: pointer;
+        }
+
+        .pdf-hl-page-inline:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        /* --- THEME-CRAFTED COLORS FOR PDF HIGHLIGHT BOX --- */
+        /* 1. DARK THEME (Default and [data-theme="dark"]) */
+        [data-theme="dark"] .pdf-highlights-box,
+        :root:not([data-theme="light"]):not([data-theme="sepia"]) .pdf-highlights-box {
+            background: var(--bg-secondary, #1f2937);
+            border: 1px solid var(--border-color, #374151);
+            border-left: 3.5px solid var(--primary-color, #3b82f6);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="dark"] .pdf-highlights-box-header,
+        :root:not([data-theme="light"]):not([data-theme="sepia"]) .pdf-highlights-box-header {
+            background: var(--bg-tertiary, rgba(255, 255, 255, 0.03));
+            border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+        }
+
+        [data-theme="dark"] .pdf-hl-quote.highlight-1,
+        :root:not([data-theme="light"]):not([data-theme="sepia"]) .pdf-hl-quote.highlight-1 {
+            background-color: rgba(234, 179, 8, 0.22);
+            color: #fef08a;
+            border-bottom: 1.5px solid rgba(234, 179, 8, 0.65);
+        }
+
+        [data-theme="dark"] .pdf-hl-quote.highlight-2,
+        :root:not([data-theme="light"]):not([data-theme="sepia"]) .pdf-hl-quote.highlight-2 {
+            background-color: rgba(34, 197, 94, 0.22);
+            color: #bbf7d0;
+            border-bottom: 1.5px solid rgba(34, 197, 94, 0.65);
+        }
+
+        [data-theme="dark"] .pdf-hl-quote.highlight-3,
+        :root:not([data-theme="light"]):not([data-theme="sepia"]) .pdf-hl-quote.highlight-3 {
+            background-color: rgba(59, 130, 246, 0.22);
+            color: #bfdbfe;
+            border-bottom: 1.5px solid rgba(59, 130, 246, 0.65);
+        }
+
+        [data-theme="dark"] .pdf-hl-quote.highlight-4,
+        :root:not([data-theme="light"]):not([data-theme="sepia"]) .pdf-hl-quote.highlight-4 {
+            background-color: rgba(239, 68, 68, 0.22);
+            color: #fecaca;
+            border-bottom: 1.5px solid rgba(239, 68, 68, 0.65);
+        }
+
+        [data-theme="dark"] .pdf-hl-quote.highlight-5,
+        :root:not([data-theme="light"]):not([data-theme="sepia"]) .pdf-hl-quote.highlight-5 {
+            background-color: rgba(168, 85, 247, 0.22);
+            color: #f3e8ff;
+            border-bottom: 1.5px solid rgba(168, 85, 247, 0.65);
+        }
+
+        [data-theme="dark"] .pdf-hl-quote.highlight-6,
+        :root:not([data-theme="light"]):not([data-theme="sepia"]) .pdf-hl-quote.highlight-6 {
+            background-color: rgba(6, 182, 212, 0.22);
+            color: #cffafe;
+            border-bottom: 1.5px solid rgba(6, 182, 212, 0.65);
+        }
+
+        /* 2. LIGHT THEME ([data-theme="light"]) */
+        [data-theme="light"] .pdf-highlights-box {
+            background: #fdfdfd;
+            border: 1px solid #e5e7eb;
+            border-left: 3.5px solid var(--primary-color, #2563eb);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        }
+
+        [data-theme="light"] .pdf-highlights-box-header {
+            background: #f8fafc;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        [data-theme="light"] .pdf-hl-quote.highlight-1 {
+            background-color: rgba(254, 240, 138, 0.7);
+            color: #713f12;
+            border-bottom: 1.5px solid #eab308;
+        }
+
+        [data-theme="light"] .pdf-hl-quote.highlight-2 {
+            background-color: rgba(220, 252, 231, 0.75);
+            color: #14532d;
+            border-bottom: 1.5px solid #22c55e;
+        }
+
+        [data-theme="light"] .pdf-hl-quote.highlight-3 {
+            background-color: rgba(219, 234, 254, 0.75);
+            color: #1e3a8a;
+            border-bottom: 1.5px solid #3b82f6;
+        }
+
+        [data-theme="light"] .pdf-hl-quote.highlight-4 {
+            background-color: rgba(254, 226, 226, 0.8);
+            color: #7f1d1d;
+            border-bottom: 1.5px solid #ef4444;
+        }
+
+        [data-theme="light"] .pdf-hl-quote.highlight-5 {
+            background-color: rgba(243, 232, 255, 0.8);
+            color: #581c87;
+            border-bottom: 1.5px solid #a855f7;
+        }
+
+        [data-theme="light"] .pdf-hl-quote.highlight-6 {
+            background-color: rgba(224, 231, 255, 0.8);
+            color: #312e81;
+            border-bottom: 1.5px solid #6366f1;
+        }
+
+        /* 3. SEPIA THEME ([data-theme="sepia"]) */
+        [data-theme="sepia"] .pdf-highlights-box {
+            background: #fbf7ed;
+            border: 1px solid #eedec5;
+            border-left: 3.5px solid var(--primary-color, #c27d38);
+            box-shadow: 0 2px 10px rgba(91, 70, 54, 0.06);
+        }
+
+        [data-theme="sepia"] .pdf-highlights-box-header {
+            background: rgba(142, 114, 87, 0.07);
+            border-bottom: 1px solid rgba(142, 114, 87, 0.12);
+        }
+
+        [data-theme="sepia"] .pdf-hl-quote.highlight-1 {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: #5c3a0b;
+            border-bottom: 1.5px solid #d97706;
+        }
+
+        [data-theme="sepia"] .pdf-hl-quote.highlight-2 {
+            background-color: rgba(74, 122, 89, 0.2);
+            color: #284430;
+            border-bottom: 1.5px solid #4a7a59;
+        }
+
+        [data-theme="sepia"] .pdf-hl-quote.highlight-3 {
+            background-color: rgba(70, 95, 133, 0.2);
+            color: #24354f;
+            border-bottom: 1.5px solid #465f85;
+        }
+
+        [data-theme="sepia"] .pdf-hl-quote.highlight-4 {
+            background-color: rgba(180, 83, 60, 0.2);
+            color: #692212;
+            border-bottom: 1.5px solid #b4533c;
+        }
+
+        [data-theme="sepia"] .pdf-hl-quote.highlight-5 {
+            background-color: rgba(139, 74, 127, 0.2);
+            color: #4e2246;
+            border-bottom: 1.5px solid #8b4a7f;
+        }
+
+        [data-theme="sepia"] .pdf-hl-quote.highlight-6 {
+            background-color: rgba(45, 133, 140, 0.2);
+            color: #18474b;
+            border-bottom: 1.5px solid #2d858c;
+        }
+
+        /* --- NOTEKASH AI INSIGHTS BOX IN NOTE --- */
+        .pdf-ai-notes-box {
+            margin: 1.5rem 0;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-left: 3.5px solid #a855f7;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+            font-style: normal !important;
+        }
+
+        .pdf-ai-notes-box-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            user-select: none;
+            background: rgba(168, 85, 247, 0.08);
+            border-bottom: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+        }
+
+        .pdf-ai-notes-box-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: var(--text-primary);
+        }
+        .pdf-ai-notes-box-title svg { color: #a855f7; flex-shrink: 0; }
+        .pdf-ai-notes-box-count { font-size: 0.8em; color: var(--text-secondary); opacity: 0.85; }
+
+        .pdf-ai-notes-box-body {
+            padding: 10px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pdf-ai-note-entry {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: rgba(var(--bg-tertiary-rgb), 0.35);
+            border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
+        }
+
+        .pdf-ai-note-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding-bottom: 4px;
+            border-bottom: 1px solid color-mix(in srgb, var(--border-color) 40%, transparent);
+        }
+
+        .pdf-ai-note-page-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(168, 85, 247, 0.15);
+            color: #a855f7;
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .pdf-ai-note-page-tag:hover { background: rgba(168, 85, 247, 0.25); }
+        .pdf-ai-note-time { font-size: 0.76rem; opacity: 0.75; }
+
+        .pdf-ai-note-content { font-size: 0.95em; line-height: 1.65; color: var(--text-primary); }
+        .pdf-ai-note-content h3 { margin: 0.6em 0 0.3em; font-size: 1.1em; font-weight: 700; }
+        .pdf-ai-note-content h3.text-red {
+            color: var(--text-red, #ff4830) !important;
+            border-bottom: 2px solid rgba(239, 68, 68, 0.25);
+            padding-bottom: 2px;
+            display: inline-block;
+        }
+        .pdf-ai-note-content ul { margin: 0.4em 0; padding-left: 1.3rem; }
+        .pdf-ai-note-content li { margin-bottom: 0.3em; }
+
+        /* Semantic Color Preservation in Inserted Notes */
+        .pdf-ai-note-content .text-red { color: var(--text-red, #ff4830) !important; font-weight: 650; }
+        .pdf-ai-note-content .text-green { color: var(--text-green, #2cfb3e) !important; font-weight: 650; }
+        .pdf-ai-note-content .text-blue { color: var(--text-blue, #906eff) !important; font-weight: 650; }
+        .pdf-ai-note-content .text-magenta { color: var(--text-magenta, #e84fff) !important; font-weight: 650; }
+        .pdf-ai-note-content .text-orange { color: var(--text-orange, #ff9934) !important; font-weight: 650; }
+        .pdf-ai-note-content .text-teal { color: var(--text-teal, #0effef) !important; font-weight: 650; }
+        .pdf-ai-note-content .text-slate { color: var(--text-slate, #fcf006) !important; font-weight: 650; }

@@ -64,7 +64,14 @@ export const annotationEngine = {
                     container.classList.toggle('annotation-active', this.state.isActive);
                     toggleBtn.classList.toggle('active', this.state.isActive);
                     toolbar.style.display = this.state.isActive ? 'flex' : 'none';
-                    if (isPdf) toolbar.classList.toggle('hidden', !this.state.isActive);
+                    if (isPdf) {
+                        toolbar.classList.toggle('hidden', !this.state.isActive);
+                        if (this.state.isActive && App.pdf?.viewer?.clampToolbar) {
+                            requestAnimationFrame(() => {
+                                App.pdf.viewer.clampToolbar();
+                            });
+                        }
+                    }
 
                     const newCanvas = canvas.cloneNode(true);
                     canvas.parentNode.replaceChild(newCanvas, canvas);
@@ -255,6 +262,7 @@ export const annotationEngine = {
 
 
                 startDrawing(e) {
+                    if (e.target?.closest?.('#pdf-annotation-toolbar') || e.target?.closest?.('.pdf-actions-flyout')) return;
                     const { canvas, ctx } = this.getCanvasAndContext();
                     const { pageKey, data } = this._getDataStore();
                     if (!ctx || !this.state.isActive || pageKey === null || !data) return;
@@ -410,67 +418,355 @@ export const pdf = {
                     pageNumPending: null,
                     scale: 1.5,
                     currentAttachment: null,
-                    currentAttachment: null,
                     annotationsByPage: {},
                     isPanMode: false,
                 },
 
                 // --- NEW: PDF HIGHLIGHTS SUB-MODULE ---
                 highlights: {
-                    add(text, className) {
-                        const article = App.storage.getArticle(App.state.activeArticleId);
-                        const attachment = App.pdf.state.currentAttachment;
-                        if (!article || !attachment) return;
+                    getBoxId(attachment) {
+                        const name = (attachment?.name || 'Document').replace(/\.pdf$/i, '').trim();
+                        const slug = App.util.slugify ? App.util.slugify(name) : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                        return `pdf-highlights-${slug || 'doc'}`;
+                    },
 
-                        const attachmentIndex = article.attachments.findIndex(att => att.id === attachment.id);
+                    appendHighlightToNote(hl) {
+                        if (!App.settings.get('pdfSyncHighlightsToNote', true)) return;
+
+                        const articleId = App.pdf.state.articleId || App.state.activeArticleId;
+                        const attachment = App.pdf.state.currentAttachment;
+                        if (!articleId || !attachment || !hl) return;
+
+                        const article = App.storage.getArticle(articleId);
+                        if (!article) return;
+
+                        const boxId = this.getBoxId(attachment);
+                        const pdfName = App.util.escapeHtml((attachment.name || 'Document').replace(/\.pdf$/i, ''));
+
+                        const entryHtml = `
+                            <div class="pdf-highlight-entry" data-hl-id="${hl.id}" data-page="${hl.page}">
+                                <span class="pdf-hl-quote ${hl.class || 'highlight-1'}">${App.util.escapeHtml(hl.text)} <em class="pdf-hl-page-inline" data-page="${hl.page}" title="Jump to page ${hl.page} in PDF">(p-${hl.page})</em></span>
+                            </div>
+                        `.trim();
+
+                        // 1. Update source content in storage
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(`<div>${article.content || ''}</div>`, 'text/html');
+                        const root = doc.body.firstElementChild;
+                        let box = root.querySelector(`#${boxId}`);
+
+                        if (box) {
+                            let body = box.querySelector('.pdf-highlights-box-body');
+                            if (!body) {
+                                body = doc.createElement('div');
+                                body.className = 'pdf-highlights-box-body';
+                                box.appendChild(body);
+                            }
+                            const temp = doc.createElement('div');
+                            temp.innerHTML = entryHtml;
+                            body.appendChild(temp.firstElementChild);
+                            const count = body.querySelectorAll('.pdf-highlight-entry').length;
+                            const countEl = box.querySelector('.pdf-highlights-box-count');
+                            if (countEl) countEl.textContent = count === 1 ? '1 snip' : `${count} snips`;
+                        } else {
+                            const boxHtml = `
+                                <div id="${boxId}" class="pdf-highlights-box" data-attachment-id="${attachment.id}" data-pdf-name="${pdfName}">
+                                    <div class="pdf-highlights-box-header">
+                                        <div class="pdf-highlights-box-title">
+                                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                            <span>Highlights: <strong>${pdfName}</strong></span>
+                                        </div>
+                                        <span class="pdf-highlights-box-count">1 snip</span>
+                                    </div>
+                                    <div class="pdf-highlights-box-body">
+                                        ${entryHtml}
+                                    </div>
+                                </div>
+                            `.trim();
+                            const temp = doc.createElement('div');
+                            temp.innerHTML = '<p><br></p>' + boxHtml;
+                            while (temp.firstChild) root.appendChild(temp.firstChild);
+                        }
+                        article.content = root.innerHTML;
+                        App.storage.updateArticle(article.id, { content: article.content });
+
+                        // 2. Also update live DOM in contentDiv if active article is displayed
+                        const contentDiv = document.getElementById('article-content');
+                        if (contentDiv && (App.state.activeArticleId === articleId)) {
+                            let liveBox = contentDiv.querySelector(`#${boxId}`);
+                            if (liveBox) {
+                                let liveBody = liveBox.querySelector('.pdf-highlights-box-body');
+                                if (!liveBody) {
+                                    liveBody = document.createElement('div');
+                                    liveBody.className = 'pdf-highlights-box-body';
+                                    liveBox.appendChild(liveBody);
+                                }
+                                liveBody.insertAdjacentHTML('beforeend', entryHtml);
+                                const liveCount = liveBody.querySelectorAll('.pdf-highlight-entry').length;
+                                const liveCountEl = liveBox.querySelector('.pdf-highlights-box-count');
+                                if (liveCountEl) liveCountEl.textContent = liveCount === 1 ? '1 snip' : `${liveCount} snips`;
+                            } else {
+                                const boxHtml = `
+                                    <div id="${boxId}" class="pdf-highlights-box" data-attachment-id="${attachment.id}" data-pdf-name="${pdfName}">
+                                        <div class="pdf-highlights-box-header">
+                                            <div class="pdf-highlights-box-title">
+                                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                                <span>Highlights: <strong>${pdfName}</strong></span>
+                                            </div>
+                                            <span class="pdf-highlights-box-count">1 snip</span>
+                                        </div>
+                                        <div class="pdf-highlights-box-body">
+                                            ${entryHtml}
+                                        </div>
+                                    </div>
+                                `.trim();
+                                contentDiv.insertAdjacentHTML('beforeend', '<p><br></p>' + boxHtml);
+                            }
+                        }
+                        App.events.saveArticle({ isAutosave: true });
+                    },
+
+                    removeHighlightFromNote(hlId) {
+                        const articleId = App.pdf.state.articleId || App.state.activeArticleId;
+                        const attachment = App.pdf.state.currentAttachment;
+                        if (!articleId || !attachment || !hlId) return;
+
+                        const article = App.storage.getArticle(articleId);
+                        if (!article) return;
+
+                        const boxId = this.getBoxId(attachment);
+
+                        // 1. Update source content in storage
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(`<div>${article.content || ''}</div>`, 'text/html');
+                        const root = doc.body.firstElementChild;
+                        const box = root.querySelector(`#${boxId}`);
+                        if (box) {
+                            const entry = box.querySelector(`.pdf-highlight-entry[data-hl-id="${hlId}"]`);
+                            if (entry) entry.remove();
+                            const remaining = box.querySelectorAll('.pdf-highlight-entry').length;
+                            if (remaining === 0) {
+                                box.remove();
+                            } else {
+                                const countEl = box.querySelector('.pdf-highlights-box-count');
+                                if (countEl) countEl.textContent = remaining === 1 ? '1 snip' : `${remaining} snips`;
+                            }
+                            article.content = root.innerHTML;
+                            App.storage.updateArticle(article.id, { content: article.content });
+                        }
+
+                        // 2. Also update live DOM in contentDiv if open
+                        const contentDiv = document.getElementById('article-content');
+                        if (contentDiv && (App.state.activeArticleId === articleId)) {
+                            const liveBox = contentDiv.querySelector(`#${boxId}`);
+                            if (liveBox) {
+                                const liveEntry = liveBox.querySelector(`.pdf-highlight-entry[data-hl-id="${hlId}"]`);
+                                if (liveEntry) liveEntry.remove();
+                                const liveRemaining = liveBox.querySelectorAll('.pdf-highlight-entry').length;
+                                if (liveRemaining === 0) {
+                                    liveBox.remove();
+                                } else {
+                                    const liveCountEl = liveBox.querySelector('.pdf-highlights-box-count');
+                                    if (liveCountEl) liveCountEl.textContent = liveRemaining === 1 ? '1 snip' : `${liveRemaining} snips`;
+                                }
+                            }
+                        }
+                        App.events.saveArticle({ isAutosave: true });
+                    },
+
+                    updateHighlightClassInNote(hlId, newClass) {
+                        const articleId = App.pdf.state.articleId || App.state.activeArticleId;
+                        const attachment = App.pdf.state.currentAttachment;
+                        if (!articleId || !attachment || !hlId) return;
+
+                        const article = App.storage.getArticle(articleId);
+                        if (!article) return;
+
+                        const boxId = this.getBoxId(attachment);
+
+                        // 1. Update source content in storage
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(`<div>${article.content || ''}</div>`, 'text/html');
+                        const root = doc.body.firstElementChild;
+                        const box = root.querySelector(`#${boxId}`);
+                        if (box) {
+                            const entry = box.querySelector(`.pdf-highlight-entry[data-hl-id="${hlId}"]`);
+                            if (entry) {
+                                const quote = entry.querySelector('.pdf-hl-quote');
+                                if (quote) quote.className = `pdf-hl-quote ${newClass}`;
+                                article.content = root.innerHTML;
+                                App.storage.updateArticle(article.id, { content: article.content });
+                            }
+                        }
+
+                        // 2. Also update live DOM in contentDiv if open
+                        const contentDiv = document.getElementById('article-content');
+                        if (contentDiv && (App.state.activeArticleId === articleId)) {
+                            const liveBox = contentDiv.querySelector(`#${boxId}`);
+                            if (liveBox) {
+                                const liveEntry = liveBox.querySelector(`.pdf-highlight-entry[data-hl-id="${hlId}"]`);
+                                if (liveEntry) {
+                                    const liveQuote = liveEntry.querySelector('.pdf-hl-quote');
+                                    if (liveQuote) liveQuote.className = `pdf-hl-quote ${newClass}`;
+                                }
+                            }
+                        }
+                        App.events.saveArticle({ isAutosave: true });
+                    },
+
+                    toggleSyncToNote() {
+                        const current = App.settings.get('pdfSyncHighlightsToNote', true);
+                        const next = !current;
+                        App.settings.set('pdfSyncHighlightsToNote', next);
+                        this.updateSyncButton();
+                        App.ui.showToast(next ? 'Highlights will save to note' : 'Highlights stay in PDF only', { type: 'info', duration: 1500 });
+                    },
+
+                    updateSyncButton() {
+                        const btn = document.getElementById('pdf-toggle-sync-btn');
+                        if (!btn) return;
+                        const isEnabled = App.settings.get('pdfSyncHighlightsToNote', true);
+                        btn.innerHTML = `
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                            <span style="flex: 1; text-align: left; white-space: nowrap;">Save to Note</span>
+                            <span class="pdf-sync-pill ${isEnabled ? 'is-on' : 'is-off'}">${isEnabled ? 'ON' : 'OFF'}</span>
+                        `.trim();
+                        btn.title = isEnabled ? 'Highlights are automatically added to note (Click to turn OFF)' : 'Highlights stay in PDF only (Click to turn ON)';
+                    },
+
+                    add(text, className = 'highlight-1', rects = null) {
+                        const article = App.storage.getArticle(App.pdf.state.articleId || App.state.activeArticleId);
+                        const currentAttId = App.pdf.state.currentAttachment?.id;
+                        if (!article || !currentAttId) return;
+
+                        const attachmentIndex = article.attachments.findIndex(att => att.id === currentAttId);
                         if (attachmentIndex === -1) return;
 
                         if (!article.attachments[attachmentIndex].highlights) {
                             article.attachments[attachmentIndex].highlights = [];
                         }
 
+                        const pageNum = App.pdf.state.pageNum;
+
                         const exists = article.attachments[attachmentIndex].highlights.some(h =>
-                            h.page === App.pdf.state.pageNum && h.text === text && h.class === className
+                            h.page === pageNum && h.text === text && h.class === className
                         );
 
                         if (!exists) {
-                            article.attachments[attachmentIndex].highlights.push({
-                                page: App.pdf.state.pageNum,
+                            const newHighlight = {
+                                id: 'hl_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                                page: pageNum,
                                 text: text,
-                                class: className
-                            });
-                            App.state.isArticleDirty = true; // Mark the main article for autosave
+                                class: className,
+                                rects: rects || null,
+                                createdAt: Date.now()
+                            };
+
+                            article.attachments[attachmentIndex].highlights.push(newHighlight);
+                            App.pdf.state.currentAttachment = article.attachments[attachmentIndex];
+
+                            // 1. Instant optimistic visual rendering on PDF canvas (0ms perceived latency!)
+                            this.renderPageHighlights(pageNum);
+
+                            // 2. Incremental append to note box (if enabled)
+                            this.appendHighlightToNote(newHighlight);
+
+                            // 3. Lazy background persistence
+                            setTimeout(async () => {
+                                try {
+                                    await App.storage.updateArticle(article.id, {
+                                        attachments: article.attachments
+                                    });
+                                    App.state.isArticleDirty = true;
+                                    await App.events.saveArticle({ isAutosave: true });
+                                } catch (e) {
+                                    console.error('Failed to background sync highlight:', e);
+                                }
+                            }, 0);
                         }
                     },
 
-                    apply() {
-                        const article = App.storage.getArticle(App.state.activeArticleId);
-                        const attachment = App.pdf.state.currentAttachment;
-                        const textContentDiv = document.getElementById('pdf-text-view-content');
-                        const preElement = textContentDiv ? textContentDiv.querySelector('pre') : null;
+                    renderPageHighlights(pageNum) {
+                        const pageContainer = document.querySelector('.pdf-page-container');
+                        if (!pageContainer) return;
 
-                        if (!article || !attachment || !preElement || !attachment.highlights) return;
+                        let highlightLayer = pageContainer.querySelector('.pdf-highlight-layer');
+                        if (!highlightLayer) {
+                            highlightLayer = document.createElement('div');
+                            highlightLayer.className = 'pdf-highlight-layer';
+                            pageContainer.insertBefore(highlightLayer, pageContainer.querySelector('.textLayer') || null);
+                        }
+                        highlightLayer.innerHTML = '';
 
-                        const pageHighlights = attachment.highlights.filter(h => h.page === App.pdf.state.pageNum);
-                        if (pageHighlights.length === 0) return;
+                        const article = App.storage.getArticle(App.pdf.state.articleId || App.state.activeArticleId);
+                        const currentAttId = App.pdf.state.currentAttachment?.id;
+                        const attachment = article?.attachments?.find(a => a.id === currentAttId) || App.pdf.state.currentAttachment;
+                        if (!attachment) return;
+                        if (!attachment.highlights) attachment.highlights = [];
 
-                        let content = preElement.textContent;
+                        App.pdf.state.currentAttachment = attachment;
 
-                        pageHighlights.forEach(highlight => {
-                            if (!highlight.text) return;
-                            const regex = new RegExp(App.util.escapeRegex(highlight.text), 'g');
-                            const escapedHighlightText = App.util.escapeHtml(highlight.text);
-                            content = content.replace(regex, `< span class="${highlight.class}" > ${escapedHighlightText}</span > `);
+                        const pageHighlights = attachment.highlights.filter(h => h.page === pageNum);
+                        if (!pageHighlights.length) return;
+
+                        pageHighlights.forEach((hl, idx) => {
+                            if (hl.rects && Array.isArray(hl.rects) && hl.rects.length > 0) {
+                                hl.rects.forEach(rect => {
+                                    const div = document.createElement('div');
+                                    div.className = `pdf-highlight-rect ${hl.class || 'highlight-1'}`;
+                                    div.style.left = `${rect.x * 100}%`;
+                                    div.style.top = `${rect.y * 100}%`;
+                                    div.style.width = `${rect.w * 100}%`;
+                                    div.style.height = `${rect.h * 100}%`;
+                                    div.title = `"${hl.text}" (Click to edit or remove)`;
+                                    div.dataset.hlId = hl.id || idx;
+                                    highlightLayer.appendChild(div);
+                                });
+                            }
                         });
-
-                        preElement.innerHTML = content;
                     },
 
-                    async copyPage() {
+                    remove(idOrIndex) {
+                        const article = App.storage.getArticle(App.pdf.state.articleId || App.state.activeArticleId);
+                        const currentAttId = App.pdf.state.currentAttachment?.id;
+                        if (!article || !currentAttId) return;
+
+                        const attachmentIndex = article.attachments.findIndex(att => att.id === currentAttId);
+                        if (attachmentIndex === -1) return;
+
+                        const list = article.attachments[attachmentIndex].highlights || [];
+                        const targetItem = list.find((h, idx) => (h.id ? h.id === idOrIndex : idx === idOrIndex));
+                        const targetId = targetItem?.id || idOrIndex;
+
+                        article.attachments[attachmentIndex].highlights = list.filter((h, idx) => (h.id ? h.id !== idOrIndex : idx !== idOrIndex));
+                        App.pdf.state.currentAttachment = article.attachments[attachmentIndex];
+
+                        // 1. Instant optimistic visual update on PDF canvas
+                        this.renderPageHighlights(App.pdf.state.pageNum);
+
+                        // 2. Incremental removal from note box
+                        this.removeHighlightFromNote(targetId);
+
+                        // 3. Lazy background persistence
+                        setTimeout(async () => {
+                            try {
+                                await App.storage.updateArticle(article.id, { attachments: article.attachments });
+                                App.state.isArticleDirty = true;
+                                await App.events.saveArticle({ isAutosave: true });
+                            } catch (e) {
+                                console.error('Failed to background sync highlight removal:', e);
+                            }
+                        }, 0);
+                    },
+
+                    apply() {
+                        this.renderPageHighlights(App.pdf.state.pageNum);
+                    },
+
+                    copyPage() {
                         App.pdf.viewer.toggleMoreMenu(true);
-                        const article = App.storage.getArticle(App.state.activeArticleId);
                         const attachment = App.pdf.state.currentAttachment;
-                        if (!article || !attachment || !attachment.highlights) {
+                        if (!attachment || !attachment.highlights) {
                             App.ui.showToast('No snips to copy.', 'info');
                             return;
                         }
@@ -480,35 +776,15 @@ export const pdf = {
                             return;
                         }
 
-                        const textToCopy = pageHighlights.map(h => `• ${h.text} `).join('\n');
+                        const textToCopy = pageHighlights.map(h => `• ${h.text}`).join('\n');
                         navigator.clipboard.writeText(textToCopy);
-                        App.ui.showToast(`Copied ${pageHighlights.length} snip(s) from page ${App.pdf.state.pageNum}.`, 'success');
-
-                        try {
-                            const pdfName = App.util.escapeHtml(attachment.name.replace(/\.pdf$/i, ''));
-                            const pageNum = App.pdf.state.pageNum;
-                            const highlightsHtml = pageHighlights.map(h => `< li > ${App.util.escapeHtml(h.text)}</li > `).join('');
-                            const snippetHtml = `< blockquote ><ul>${highlightsHtml}</ul><footer><small>— Snips extracted from page ${pageNum} of "${pdfName}"</small></footer></blockquote > <p><br></p>`;
-                            const updatedContent = article.content + snippetHtml;
-
-                            const result = await App.storage.updateArticle(article.id, { content: updatedContent });
-
-                            if (result.success) {
-                                App.ui.showToast('Page snips also added to your note!', 'success');
-                            } else {
-                                throw new Error('Failed to update the article.');
-                            }
-                        } catch (e) {
-                            console.error('Failed to append page snips to article:', e);
-                            App.ui.showToast('Could not add snips to note.', 'error');
-                        }
+                        App.ui.showToast(`Copied ${pageHighlights.length} snip(s) to clipboard`, 'success');
                     },
 
-                    async copyAll() {
+                    copyAll() {
                         App.pdf.viewer.toggleMoreMenu(true);
-                        const article = App.storage.getArticle(App.state.activeArticleId);
                         const attachment = App.pdf.state.currentAttachment;
-                        if (!article || !attachment || !attachment.highlights || attachment.highlights.length === 0) {
+                        if (!attachment || !attachment.highlights || attachment.highlights.length === 0) {
                             App.ui.showToast('No snips in this document to copy.', 'info');
                             return;
                         }
@@ -520,62 +796,48 @@ export const pdf = {
 
                         let textToCopy = `Highlights from "${attachment.name.replace(/\.pdf$/i, '')}"\n\n`;
                         Object.keys(highlightsByPage).sort((a, b) => a - b).forEach(pageNum => {
-                            textToCopy += `-- - Page ${pageNum} ---\n`;
-                            textToCopy += highlightsByPage[pageNum].map(text => `• ${text} `).join('\n') + '\n\n';
+                            textToCopy += `--- Page ${pageNum} ---\n`;
+                            textToCopy += highlightsByPage[pageNum].map(text => `• ${text}`).join('\n') + '\n\n';
                         });
                         navigator.clipboard.writeText(textToCopy.trim());
-                        App.ui.showToast(`Copied all ${attachment.highlights.length} snip(s).`, 'success');
-
-                        try {
-                            const pdfName = App.util.escapeHtml(attachment.name.replace(/\.pdf$/i, ''));
-                            let allHighlightsHtml = '';
-                            Object.keys(highlightsByPage).sort((a, b) => a - b).forEach(pageNum => {
-                                allHighlightsHtml += `< p > <b>Page ${pageNum}:</b></p > <ul>`;
-                                allHighlightsHtml += highlightsByPage[pageNum].map(text => `<li>${App.util.escapeHtml(text)}</li>`).join('');
-                                allHighlightsHtml += '</ul>';
-                            });
-
-                            const snippetHtml = `<blockquote>${allHighlightsHtml}<footer><small>— All snips extracted from "${pdfName}"</small></footer></blockquote><p><br></p>`;
-                            const updatedContent = article.content + snippetHtml;
-
-                            const result = await App.storage.updateArticle(article.id, { content: updatedContent });
-
-                            if (result.success) {
-                                App.ui.showToast('All snips also added to your note!', 'success');
-                            } else {
-                                throw new Error('Failed to update the article.');
-                            }
-                        } catch (e) {
-                            console.error('Failed to append all snips to article:', e);
-                            App.ui.showToast('Could not add all snips to note.', 'error');
-                        }
+                        App.ui.showToast(`Copied all ${attachment.highlights.length} snip(s) to clipboard`, 'success');
                     },
 
-                    async clearPage() {
-                        App.pdf.viewer.toggleMoreMenu(true); // Close the menu immediately
+                    clearPage() {
+                        App.pdf.viewer.toggleMoreMenu(true);
 
-                        const article = App.storage.getArticle(App.state.activeArticleId);
+                        const article = App.storage.getArticle(App.pdf.state.articleId || App.state.activeArticleId);
                         const attachment = App.pdf.state.currentAttachment;
-                        if (!article || !attachment || !attachment.highlights) {
-                            App.ui.showToast('No highlights to clear on this page.', 'info');
-                            return;
-                        }
+                        if (!article || !attachment || !attachment.highlights) return;
 
                         const attachmentIndex = article.attachments.findIndex(att => att.id === attachment.id);
                         if (attachmentIndex === -1) return;
 
-                        const highlightsOnPage = article.attachments[attachmentIndex].highlights.some(h => h.page === App.pdf.state.pageNum);
-                        if (!highlightsOnPage) {
-                            App.ui.showToast('No highlights to clear on this page.', 'info');
-                            return;
-                        }
+                        const highlightsOnPage = article.attachments[attachmentIndex].highlights.filter(h => h.page === App.pdf.state.pageNum);
+                        if (highlightsOnPage.length === 0) return;
+
                         const highlightsToKeep = article.attachments[attachmentIndex].highlights.filter(h => h.page !== App.pdf.state.pageNum);
-
                         article.attachments[attachmentIndex].highlights = highlightsToKeep;
+                        App.pdf.state.currentAttachment = article.attachments[attachmentIndex];
 
-                        await App.events.saveArticle({ isAutosave: true });
-                        await App.pdf.viewer.renderTextViewForPage(App.pdf.state.pageNum);
-                        App.ui.showToast(`Page Snips Cleared`, 'success');
+                        // 1. Instant optimistic visual update on canvas
+                        this.renderPageHighlights(App.pdf.state.pageNum);
+
+                        // 2. Incremental removal of cleared snips from note box
+                        highlightsOnPage.forEach(hl => {
+                            this.removeHighlightFromNote(hl.id);
+                        });
+
+                        // 3. Lazy background persistence
+                        setTimeout(async () => {
+                            try {
+                                await App.storage.updateArticle(article.id, { attachments: article.attachments });
+                                App.state.isArticleDirty = true;
+                                await App.events.saveArticle({ isAutosave: true });
+                            } catch (e) {
+                                console.error('Failed to background sync page snips clear:', e);
+                            }
+                        }, 0);
                     },
                 },
 
@@ -591,6 +853,52 @@ export const pdf = {
                     if (input) {
                         input.addEventListener('change', (e) => this.handleFileSelect(e));
                     }
+
+                    // Interactive navigation: clicking inline citation (p-X) or AI note page tag jumps directly to that page in the PDF reader
+                    document.addEventListener('click', async (e) => {
+                        const pageInline = e.target.closest('.pdf-hl-page-inline, .pdf-ai-note-page-tag');
+                        if (pageInline) {
+                            const pageNum = parseInt(pageInline.dataset.page || (pageInline.textContent.match(/\d+/) || [])[0], 10);
+                            if (!pageNum) return;
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            const box = pageInline.closest('.pdf-highlights-box, .pdf-ai-notes-box');
+                            let attId = box?.dataset?.attachmentId;
+                            if (!attId) {
+                                const article = App.storage.getArticle(App.pdf.state.articleId || App.state.activeArticleId);
+                                const rawPdfName = box?.dataset?.pdfName || box?.querySelector('.pdf-highlights-box-title strong, .pdf-ai-notes-box-title strong')?.textContent?.trim();
+                                if (rawPdfName && article?.attachments) {
+                                    const att = article.attachments.find(a => (a.name || '').replace(/\.pdf$/i, '').trim().toLowerCase() === rawPdfName.toLowerCase());
+                                    if (att) {
+                                        attId = att.id;
+                                        box.dataset.attachmentId = att.id;
+                                    }
+                                }
+                            }
+
+                            if (App.pdf?.state?.pdfDoc && (!attId || App.pdf.state.currentAttachment?.id === attId)) {
+                                if (App.pdf?.viewer?.queueRenderPage) {
+                                    App.pdf.viewer.queueRenderPage(pageNum);
+                                } else if (App.pdf?.viewer?.renderPage) {
+                                    App.pdf.viewer.renderPage(pageNum);
+                                }
+                            } else if (attId && App.pdf?.viewer?.open) {
+                                await App.pdf.viewer.open(attId);
+                                if (App.pdf?.viewer?.queueRenderPage) {
+                                    App.pdf.viewer.queueRenderPage(pageNum);
+                                } else if (App.pdf?.viewer?.renderPage) {
+                                    App.pdf.viewer.renderPage(pageNum);
+                                }
+                            } else if (App.pdf?.state?.pdfDoc) {
+                                if (App.pdf?.viewer?.queueRenderPage) {
+                                    App.pdf.viewer.queueRenderPage(pageNum);
+                                } else if (App.pdf?.viewer?.renderPage) {
+                                    App.pdf.viewer.renderPage(pageNum);
+                                }
+                            }
+                        }
+                    });
                 },
 
                 triggerImport() {
@@ -779,6 +1087,13 @@ export const pdf = {
                             menu.classList.remove('visible');
                             document.removeEventListener('click', closeHandler, true);
                         } else {
+                            if (App.pdf?.highlights?.updateSyncButton) App.pdf.highlights.updateSyncButton();
+                            const container = document.getElementById('pdf-viewer-container');
+                            const isFullscreen = container?.classList.contains('pdf-fullscreen-active');
+                            const menuBtn = document.getElementById('pdf-menu-fullscreen');
+                            if (menuBtn) {
+                                menuBtn.innerHTML = `${isFullscreen ? App.util.icons.compress : App.util.icons.expand} ${isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}`;
+                            }
                             menu.classList.add('visible');
                             setTimeout(() => { document.addEventListener('click', closeHandler, { capture: true, once: true }); }, 0);
                         }
@@ -804,22 +1119,7 @@ export const pdf = {
                         this.toggleMoreMenu(true);
                     },
 
-                    cycleTextViewFontSize() {
-                        const fontSizes = ['0.9rem', '1.1rem', '1.3rem', '1.5rem', '1.7rem', '1.8rem', '2rem', '2.2rem', '2.5rem', '2.8rem', '3rem'];
-                        const currentSize = App.settings.get('pdfTextViewFontSize') || '1.1rem';
-                        const currentIndex = fontSizes.indexOf(currentSize);
-                        const nextIndex = (currentIndex + 1) % fontSizes.length;
-                        const newSize = fontSizes[nextIndex];
-                        App.settings.set('pdfTextViewFontSize', newSize);
-                        this.applyTextViewFontSize();
-                        App.ui.showToast(`Font size: ${newSize}`, { duration: 1500 });
-                    },
 
-                    applyTextViewFontSize() {
-                        const size = App.settings.get('pdfTextViewFontSize');
-                        const textContentDiv = document.getElementById('pdf-text-view-content');
-                        if (textContentDiv) { textContentDiv.style.fontSize = size; }
-                    },
 
                     cycleTextViewTheme() {
                         const themes = App.events.presentation.themes;
@@ -843,45 +1143,350 @@ export const pdf = {
                         }
                     },
 
-                    applyTextViewHighlight() {
+                    applyTextViewHighlight(colorClass = 'highlight-1') {
                         const selection = window.getSelection();
-                        if (!selection || selection.isCollapsed) {
-                            App.ui.showToast('Please select text to highlight.', 'warning');
-                            return;
+                        let textToHighlight = '';
+                        let range = null;
+
+                        if (selection && !selection.isCollapsed && selection.rangeCount > 0) {
+                            textToHighlight = selection.toString().trim();
+                            range = selection.getRangeAt(0);
+                        } else if (this._currentSelection && this._currentSelection.text) {
+                            textToHighlight = this._currentSelection.text;
                         }
-                        const textToHighlight = selection.toString();
+
                         if (!textToHighlight) return;
 
-                        App.pdf.highlights.add(textToHighlight, 'highlight-1');
-                        this.renderTextViewForPage(App.pdf.state.pageNum);
-                        selection.removeAllRanges();
+                        const pageContainer = document.querySelector('.pdf-page-container');
+                        let normalizedRects = null;
+
+                        if (range && pageContainer) {
+                            const pageRect = pageContainer.getBoundingClientRect();
+                            const clientRects = Array.from(range.getClientRects());
+                            if (clientRects.length > 0) {
+                                // 3.5px breathing room at start & end, 1px top & bottom
+                                const padX = 3.5;
+                                const padY = 1;
+                                normalizedRects = clientRects.map(r => {
+                                    const left = Math.max(0, r.left - pageRect.left - padX);
+                                    const top = Math.max(0, r.top - pageRect.top - padY);
+                                    const right = Math.min(pageRect.width, r.right - pageRect.left + padX);
+                                    const bottom = Math.min(pageRect.height, r.bottom - pageRect.top + padY);
+
+                                    return {
+                                        x: left / pageRect.width,
+                                        y: top / pageRect.height,
+                                        w: (right - left) / pageRect.width,
+                                        h: (bottom - top) / pageRect.height
+                                    };
+                                });
+                            }
+                        } else if (this._currentSelection && this._currentSelection.normalizedRects) {
+                            normalizedRects = this._currentSelection.normalizedRects;
+                        }
+
+                        App.pdf.highlights.add(textToHighlight, colorClass, normalizedRects);
+                        window.getSelection()?.removeAllRanges();
+                        this._currentSelection = null;
+                        this.hideSelectionPopup();
                     },
 
                     toggleTextView() {
-                        const container = document.getElementById('pdf-viewer-container');
-                        const toggleBtn = document.getElementById('pdf-text-view-toggle');
-                        if (!container || !toggleBtn) return;
+                        App.ui.showToast('Unified PDF Reader: native text selection is always active.', { type: 'info' });
+                    },
 
-                        if (App.annotationEngine.state.isActive) {
-                            App.annotationEngine.toggle('pdf');
+                    initSelectionPopup() {
+                        let popup = document.getElementById('pdf-selection-popup');
+                        if (!popup) {
+                            popup = document.createElement('div');
+                            popup.id = 'pdf-selection-popup';
+                            popup.className = 'pdf-selection-popup';
+                            // CRITICAL: Prevent mousedown from clearing text selection in browser!
+                            popup.addEventListener('mousedown', (e) => e.preventDefault());
+                            popup.innerHTML = `
+                                <div class="pdf-swatches">
+                                    <button class="pdf-swatch highlight-1" data-class="highlight-1" title="Yellow (2)"></button>
+                                    <button class="pdf-swatch highlight-2" data-class="highlight-2" title="Green (3)"></button>
+                                    <button class="pdf-swatch highlight-3" data-class="highlight-3" title="Blue (4)"></button>
+                                    <button class="pdf-swatch highlight-4" data-class="highlight-4" title="Coral (5)"></button>
+                                    <button class="pdf-swatch highlight-5" data-class="highlight-5" title="Purple (6)"></button>
+                                    <button class="pdf-swatch highlight-6" data-class="highlight-6" title="Cyan (7)"></button>
+                                </div>
+                                <div class="popup-divider"></div>
+                                <button class="popup-icon-btn btn-ai-explain" id="pdf-popup-explain-btn" title="Explain with NoteKash AI">
+                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                                        <path d="M12 2.25c.34 0 .647.205.778.52l1.986 4.767a1.5 1.5 0 00.869.869l4.767 1.986a.857.857 0 010 1.576l-4.767 1.986a1.5 1.5 0 00-.869.869l-1.986 4.767a.857.857 0 01-1.576 0l-1.986-4.767a1.5 1.5 0 00-.869-.869L2.77 12.018a.857.857 0 010-1.576l4.767-1.986a1.5 1.5 0 00.869-.869L10.422 2.77c.131-.315.438-.52.778-.52zM19.5 16.5a.75.75 0 01.696.471l.666 1.666 1.666.666a.75.75 0 010 1.394l-1.666.666-.666 1.666a.75.75 0 01-1.394 0l-.666-1.666-1.666-.666a.75.75 0 010-1.394l1.666-.666.666-1.666a.75.75 0 01.7-.471z"/>
+                                    </svg>
+                                </button>
+                                <button class="popup-icon-btn btn-ai-ask" id="pdf-popup-ai-btn" title="Ask NoteKash AI">
+                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                    </svg>
+                                </button>
+                                <button class="popup-icon-btn btn-remove-hl" id="pdf-popup-trash-btn" title="Remove Highlight" style="display: none;">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            `;
+
+                            const explainBtn = popup.querySelector('#pdf-popup-explain-btn');
+                            if (explainBtn) {
+                                explainBtn.onclick = (e) => {
+                                    e.stopPropagation();
+                                    const sel = window.getSelection();
+                                    const text = sel ? sel.toString().trim() : '';
+                                    App.pdf.viewer.hideSelectionPopup();
+                                    if (text && App.ui.aiMagicModal) {
+                                        if (!App.ui.aiMagicModal.state.isOpen || App.ui.aiMagicModal.state.mode !== 'viewer') {
+                                            App.ui.aiMagicModal.openAsViewer('pdf');
+                                        }
+                                        App.ui.aiMagicModal._sendViewerMessage(`Explain this passage in simple, intuitive terms with key takeaways:\n"${text}"`);
+                                    }
+                                };
+                            }
+
+                            const aiBtn = popup.querySelector('#pdf-popup-ai-btn');
+                            if (aiBtn) {
+                                aiBtn.onclick = (e) => {
+                                    e.stopPropagation();
+                                    const sel = window.getSelection();
+                                    const text = sel ? sel.toString().trim() : '';
+                                    App.pdf.viewer.hideSelectionPopup();
+                                    if (App.ui.aiMagicModal) {
+                                        if (!App.ui.aiMagicModal.state.isOpen || App.ui.aiMagicModal.state.mode !== 'viewer') {
+                                            App.ui.aiMagicModal.openAsViewer('pdf');
+                                        }
+                                        if (text) {
+                                            setTimeout(() => {
+                                                const input = document.getElementById('ai-viewer-input');
+                                                if (input) {
+                                                    input.value = `Regarding: "${text.slice(0, 100)}${text.length > 100 ? '...' : ''}" - `;
+                                                    input.focus();
+                                                    input.selectionStart = input.selectionEnd = input.value.length;
+                                                }
+                                            }, 100);
+                                        }
+                                    }
+                                };
+                            }
+
+                            document.body.appendChild(popup);
                         }
 
-                        const isActive = container.classList.toggle('text-view-active');
+                        if (this._selectionPopupInitialized) return;
+                        this._selectionPopupInitialized = true;
 
-                        if (isActive) {
-                            toggleBtn.innerHTML = App.util.icons.pdf;
-                            toggleBtn.title = 'Switch to PDF View';
-                            toggleBtn.classList.add('active');
-                            App.ui.showToast('Text View Enabled', { type: 'info' });
-                        } else {
-                            toggleBtn.innerHTML = App.util.icons.textView;
-                            toggleBtn.title = 'Switch to Text View';
-                            toggleBtn.classList.remove('active');
-                            App.ui.showToast('PDF View Enabled', { type: 'info' });
-                        }
-                        this.queueRenderPage(App.pdf.state.pageNum);
+                        const handleSelection = () => {
+                            const selection = window.getSelection();
+                            if (!selection || selection.isCollapsed || !selection.rangeCount) {
+                                this.hideSelectionPopup();
+                                return;
+                            }
 
-                        this.toggleMoreMenu(true);
+                            const text = selection.toString().trim();
+                            if (!text || text.length === 0) {
+                                this.hideSelectionPopup();
+                                return;
+                            }
+
+                            const range = selection.getRangeAt(0);
+                            const pageContainer = range.commonAncestorContainer.nodeType === 1
+                                ? range.commonAncestorContainer.closest('.pdf-page-container')
+                                : range.commonAncestorContainer.parentElement?.closest('.pdf-page-container');
+
+                            if (!pageContainer) {
+                                this.hideSelectionPopup();
+                                return;
+                            }
+
+                            const rects = range.getClientRects();
+                            if (!rects || rects.length === 0) {
+                                this.hideSelectionPopup();
+                                return;
+                            }
+
+                            const pageRect = pageContainer.getBoundingClientRect();
+                            const clientRects = Array.from(rects);
+                            const padX = 3.5;
+                            const padY = 1;
+                            const normalizedRects = clientRects.map(r => {
+                                const left = Math.max(0, r.left - pageRect.left - padX);
+                                const top = Math.max(0, r.top - pageRect.top - padY);
+                                const right = Math.min(pageRect.width, r.right - pageRect.left + padX);
+                                const bottom = Math.min(pageRect.height, r.bottom - pageRect.top + padY);
+
+                                return {
+                                    x: left / pageRect.width,
+                                    y: top / pageRect.height,
+                                    w: (right - left) / pageRect.width,
+                                    h: (bottom - top) / pageRect.height
+                                };
+                            });
+
+                            this._currentSelection = {
+                                text: text,
+                                normalizedRects: normalizedRects,
+                                page: App.pdf.state.pageNum
+                            };
+
+                            const firstRect = rects[0];
+                            const popupEl = document.getElementById('pdf-selection-popup');
+                            if (popupEl) {
+                                popupEl.style.display = 'flex';
+                                const popupWidth = popupEl.offsetWidth || 190;
+                                const halfWidth = popupWidth / 2;
+                                let targetLeft = firstRect.left + (firstRect.width / 2);
+                                targetLeft = Math.max(halfWidth + 12, Math.min(targetLeft, window.innerWidth - halfWidth - 12));
+
+                                popupEl.style.left = `${targetLeft}px`;
+
+                                if (firstRect.top < 65) {
+                                    popupEl.style.top = `${firstRect.bottom}px`;
+                                    popupEl.classList.add('popup-below');
+                                } else {
+                                    popupEl.style.top = `${firstRect.top}px`;
+                                    popupEl.classList.remove('popup-below');
+                                }
+
+                                // Check if active selection overlaps an existing highlight on this page
+                                const article = App.storage?.getArticle(App.state?.activeArticleId);
+                                const attachment = App.pdf?.state?.currentAttachment;
+                                const pageHighlights = (attachment?.highlights || []).filter(h => h.page === App.pdf.state.pageNum);
+                                const matchingHl = pageHighlights.find(h => h.text.includes(text) || text.includes(h.text));
+
+                                const trashBtn = popupEl.querySelector('#pdf-popup-trash-btn');
+                                if (trashBtn) {
+                                    if (matchingHl) {
+                                        trashBtn.style.display = 'inline-flex';
+                                        trashBtn.onclick = (e) => {
+                                            e.stopPropagation();
+                                            App.pdf.highlights.remove(matchingHl.id);
+                                            window.getSelection()?.removeAllRanges();
+                                            this.hideSelectionPopup();
+                                        };
+                                    } else {
+                                        trashBtn.style.display = 'none';
+                                    }
+                                }
+
+                                // Wire swatches to apply highlight to current selection
+                                popupEl.querySelectorAll('.pdf-swatch').forEach(btn => {
+                                    btn.onclick = (e) => {
+                                        e.stopPropagation();
+                                        const cls = btn.dataset.class || 'highlight-1';
+                                        App.pdf.viewer.applyTextViewHighlight(cls);
+                                    };
+                                });
+                            }
+                        };
+
+                        document.addEventListener('mouseup', handleSelection);
+                        document.addEventListener('keyup', (e) => {
+                            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                                handleSelection();
+                            } else if (e.key === 'Escape') {
+                                this.hideSelectionPopup();
+                            }
+                        });
+
+                        document.addEventListener('mousedown', (e) => {
+                            const popupEl = document.getElementById('pdf-selection-popup');
+                            if (popupEl && !popupEl.contains(e.target) && !e.target.closest('.textLayer')) {
+                                this.hideSelectionPopup();
+                            }
+                        });
+
+                        // Tap on existing highlight to open compact popup (re-color or delete)
+                        document.addEventListener('click', (e) => {
+                            const sel = window.getSelection();
+                            if (sel && !sel.isCollapsed) return;
+
+                            const popupEl = document.getElementById('pdf-selection-popup');
+                            if (popupEl && popupEl.contains(e.target)) return;
+
+                            const pageContainer = e.target.closest('.pdf-page-container');
+                            if (!pageContainer) return;
+
+                            const pageRect = pageContainer.getBoundingClientRect();
+                            const clickX = (e.clientX - pageRect.left) / pageRect.width;
+                            const clickY = (e.clientY - pageRect.top) / pageRect.height;
+
+                            const article = App.storage?.getArticle(App.state?.activeArticleId);
+                            const attachment = App.pdf?.state?.currentAttachment;
+                            if (!article || !attachment || !attachment.highlights) return;
+
+                            const pageHighlights = attachment.highlights.filter(h => h.page === App.pdf.state.pageNum);
+                            const hit = pageHighlights.find(h => {
+                                return h.rects && Array.isArray(h.rects) && h.rects.some(r =>
+                                    clickX >= r.x && clickX <= (r.x + r.w) &&
+                                    clickY >= r.y && clickY <= (r.y + r.h)
+                                );
+                            });
+
+                            if (hit && popupEl) {
+                                popupEl.style.display = 'flex';
+                                const popupWidth = popupEl.offsetWidth || 190;
+                                const halfWidth = popupWidth / 2;
+                                let targetLeft = Math.max(halfWidth + 12, Math.min(e.clientX, window.innerWidth - halfWidth - 12));
+                                popupEl.style.left = `${targetLeft}px`;
+
+                                if (e.clientY < 65) {
+                                    popupEl.style.top = `${e.clientY + 22}px`;
+                                    popupEl.classList.add('popup-below');
+                                } else {
+                                    popupEl.style.top = `${e.clientY - 12}px`;
+                                    popupEl.classList.remove('popup-below');
+                                }
+
+                                const trashBtn = popupEl.querySelector('#pdf-popup-trash-btn');
+                                if (trashBtn) {
+                                    trashBtn.style.display = 'inline-flex';
+                                    trashBtn.onclick = (ev) => {
+                                        ev.stopPropagation();
+                                        App.pdf.highlights.remove(hit.id);
+                                        App.pdf.viewer.hideSelectionPopup();
+                                    };
+                                }
+
+                                popupEl.querySelectorAll('.pdf-swatch').forEach(btn => {
+                                    btn.onclick = (ev) => {
+                                        ev.stopPropagation();
+                                        const newClass = btn.dataset.class || 'highlight-1';
+                                        hit.class = newClass;
+                                        const att = article.attachments.find(a => a.id === attachment.id);
+                                        if (att) {
+                                            const target = att.highlights.find(h => h.id === hit.id);
+                                            if (target) target.class = newClass;
+
+                                            // 1. Instant optimistic visual rendering on PDF canvas
+                                            App.pdf.highlights.renderPageHighlights(App.pdf.state.pageNum);
+                                            App.pdf.viewer.hideSelectionPopup();
+
+                                            // 2. Lazy background persistence and article note sync
+                                            setTimeout(async () => {
+                                                try {
+                                                    await App.storage.updateArticle(article.id, { attachments: article.attachments });
+                                                    App.state.isArticleDirty = true;
+                                                    await App.events.saveArticle({ isAutosave: true });
+                                                    App.pdf.highlights.updateHighlightClassInNote(hit.id, newClass);
+                                                } catch (e) {
+                                                    console.error('Failed to background sync highlight color change:', e);
+                                                }
+                                            }, 0);
+                                        } else {
+                                            App.pdf.viewer.hideSelectionPopup();
+                                        }
+                                    };
+                                });
+                            }
+                        });
+                    },
+
+                    hideSelectionPopup() {
+                        const popup = document.getElementById('pdf-selection-popup');
+                        if (popup) popup.style.display = 'none';
                     },
 
                     async capturePage() {
@@ -982,11 +1587,205 @@ export const pdf = {
                         }
                     },
 
+                    makeToolbarDraggable(toolbar, handle) {
+                        if (!toolbar || !handle) return;
+                        let isDragging = false;
+                        let hasDragged = false;
+                        let startX = 0, startY = 0;
+                        let initialLeft = 0, initialTop = 0;
+                        let downTime = 0;
+                        let lastTapTime = 0;
+                        let lastTapX = 0, lastTapY = 0;
+
+                        const pad = 10;
+
+                        const updateFlyoutDirection = (left, top, width, height) => {
+                            toolbar.classList.toggle('flyout-below', top < 65);
+                            toolbar.classList.toggle('flyout-left', left + width > window.innerWidth - 140);
+                        };
+
+                        const clampToolbar = () => {
+                            if (!toolbar || toolbar.style.display === 'none' || toolbar.classList.contains('hidden')) return;
+
+                            const winWidth = window.innerWidth;
+                            const winHeight = window.innerHeight;
+
+                            const rect = toolbar.getBoundingClientRect();
+                            const width = toolbar.offsetWidth || rect.width || 44;
+                            const height = toolbar.offsetHeight || rect.height || 44;
+
+                            const maxLeft = Math.max(pad, winWidth - width - pad);
+                            const maxTop = Math.max(pad, winHeight - height - pad);
+
+                            const currentLeft = rect.left;
+                            const currentTop = rect.top;
+
+                            const newLeft = Math.max(pad, Math.min(currentLeft, maxLeft));
+                            const newTop = Math.max(pad, Math.min(currentTop, maxTop));
+
+                            toolbar.style.transform = 'none';
+                            toolbar.style.left = `${newLeft}px`;
+                            toolbar.style.top = `${newTop}px`;
+                            toolbar.style.right = 'auto';
+                            toolbar.style.bottom = 'auto';
+
+                            updateFlyoutDirection(newLeft, newTop, width, height);
+                        };
+
+                        App.pdf.viewer.clampToolbar = clampToolbar;
+
+                        const toggleOrientation = (e) => {
+                            if (e) {
+                                if (e.preventDefault) e.preventDefault();
+                                if (e.stopPropagation) e.stopPropagation();
+                            }
+
+                            // 1. Calculate focal center before flipping
+                            const rect = toolbar.getBoundingClientRect();
+                            const centerX = rect.left + rect.width / 2;
+                            const centerY = rect.top + rect.height / 2;
+
+                            // 2. Toggle orientation class
+                            toolbar.classList.toggle('is-vertical');
+
+                            // 3. Reposition anchored to center
+                            const newWidth = toolbar.offsetWidth;
+                            const newHeight = toolbar.offsetHeight;
+
+                            let newLeft = centerX - newWidth / 2;
+                            let newTop = centerY - newHeight / 2;
+
+                            const maxLeft = Math.max(pad, window.innerWidth - newWidth - pad);
+                            const maxTop = Math.max(pad, window.innerHeight - newHeight - pad);
+
+                            newLeft = Math.max(pad, Math.min(newLeft, maxLeft));
+                            newTop = Math.max(pad, Math.min(newTop, maxTop));
+
+                            toolbar.style.transform = 'none';
+                            toolbar.style.left = `${newLeft}px`;
+                            toolbar.style.top = `${newTop}px`;
+
+                            updateFlyoutDirection(newLeft, newTop, newWidth, newHeight);
+                        };
+
+                        const onPointerDown = (e) => {
+                            if (e.button !== undefined && e.button !== 0) return;
+                            // Do not start drag on buttons or controls
+                            if (e.target.closest('button') || e.target.closest('.color-cycler-inner')) return;
+
+                            isDragging = true;
+                            hasDragged = false;
+                            toolbar.classList.add('is-dragging');
+
+                            const rect = toolbar.getBoundingClientRect();
+                            initialLeft = rect.left;
+                            initialTop = rect.top;
+
+                            toolbar.style.transform = 'none';
+                            toolbar.style.left = `${initialLeft}px`;
+                            toolbar.style.top = `${initialTop}px`;
+                            toolbar.style.right = 'auto';
+                            toolbar.style.bottom = 'auto';
+
+                            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                            startX = clientX;
+                            startY = clientY;
+                            downTime = Date.now();
+
+                            document.addEventListener('mousemove', onPointerMove, { passive: false });
+                            document.addEventListener('mouseup', onPointerUp);
+                            document.addEventListener('touchmove', onPointerMove, { passive: false });
+                            document.addEventListener('touchend', onPointerUp);
+                            document.addEventListener('touchcancel', onPointerUp);
+                            e.preventDefault();
+                        };
+
+                        const onPointerMove = (e) => {
+                            if (!isDragging) return;
+                            e.preventDefault();
+                            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                            const deltaX = clientX - startX;
+                            const deltaY = clientY - startY;
+
+                            if (Math.hypot(deltaX, deltaY) > 8) {
+                                hasDragged = true;
+                            }
+
+                            let newLeft = initialLeft + deltaX;
+                            let newTop = initialTop + deltaY;
+
+                            const maxLeft = Math.max(pad, window.innerWidth - toolbar.offsetWidth - pad);
+                            const maxTop = Math.max(pad, window.innerHeight - toolbar.offsetHeight - pad);
+
+                            newLeft = Math.max(pad, Math.min(newLeft, maxLeft));
+                            newTop = Math.max(pad, Math.min(newTop, maxTop));
+
+                            toolbar.style.left = `${newLeft}px`;
+                            toolbar.style.top = `${newTop}px`;
+                        };
+
+                        const onPointerUp = (e) => {
+                            if (!isDragging) return;
+                            isDragging = false;
+                            toolbar.classList.remove('is-dragging');
+                            document.removeEventListener('mousemove', onPointerMove);
+                            document.removeEventListener('mouseup', onPointerUp);
+                            document.removeEventListener('touchmove', onPointerMove);
+                            document.removeEventListener('touchend', onPointerUp);
+                            document.removeEventListener('touchcancel', onPointerUp);
+
+                            clampToolbar();
+
+                            const clientX = e.changedTouches ? e.changedTouches[0].clientX : (e.clientX || startX);
+                            const clientY = e.changedTouches ? e.changedTouches[0].clientY : (e.clientY || startY);
+                            const elapsed = Date.now() - downTime;
+                            const moveDist = Math.hypot(clientX - startX, clientY - startY);
+
+                            // Detect deliberate tap (not a drag)
+                            if (!hasDragged && moveDist < 8 && elapsed < 350) {
+                                const timeSinceLastTap = Date.now() - lastTapTime;
+                                const tapDist = Math.hypot(clientX - lastTapX, clientY - lastTapY);
+
+                                if (timeSinceLastTap < 400 && tapDist < 30) {
+                                    // DOUBLE TAP CONFIRMED!
+                                    toggleOrientation(e);
+                                    lastTapTime = 0;
+                                } else {
+                                    lastTapTime = Date.now();
+                                    lastTapX = clientX;
+                                    lastTapY = clientY;
+                                }
+                            }
+                        };
+
+                        toolbar.addEventListener('mousedown', onPointerDown);
+                        toolbar.addEventListener('touchstart', onPointerDown, { passive: false });
+
+                        if (this._toolbarResizeHandler) {
+                            window.removeEventListener('resize', this._toolbarResizeHandler);
+                        }
+                        this._toolbarResizeHandler = () => clampToolbar();
+                        window.addEventListener('resize', this._toolbarResizeHandler);
+                    },
+
+                    openWhiteboard() {
+                        const pdfLaser = document.getElementById('pdf-laser-canvas');
+                        if (pdfLaser && pdfLaser.style.display !== 'none') {
+                            App.events.toggleSharedLaser('pdf');
+                        }
+                        const articleId = App.pdf.state.articleId || App.state.activeArticleId;
+                        App.whiteboard.open('end', articleId);
+                    },
+
                     async open(attachmentId) {
                         App.pdf.init(); // Ensure worker is loaded
                         const aiToggle = document.getElementById('ai-magic-toggle');
                         if (aiToggle) aiToggle.style.display = 'flex';
                         this.applyTextViewTheme();
+                        App.pdf.state.articleId = App.state.activeArticleId;
                         const article = App.storage.getArticle(App.state.activeArticleId);
                         const attachment = article?.attachments?.find(att => att.id === attachmentId);
                         if (!attachment) { App.ui.showToast('Could not find attached PDF data.', 'error'); return; }
@@ -1010,20 +1809,6 @@ export const pdf = {
                                 <button id="pdf-thumbnails-toggle" class="btn-icon" title="Toggle Page Thumbnails (T)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 3h8v8H3V3m0 10h8v8H3v-8m10-10h8v8h-8V3m0 10h8v8h-8v-8z"/></svg></button>
                                 <div class="control-divider"></div>
                                 <button id="pdf-annotate-toggle" class="btn-icon" title="Toggle Annotation Mode (A)"></button>
-
-                                <div id="pdf-annotation-toolbar" class="pdf-viewer-controls hidden">
-                                    <div class="control-divider"></div>
-                                    <button id="pdf-tool-rect" class="btn-icon" title="Rectangle Tool (R)"></button>
-                                    <button id="pdf-tool-pen" class="btn-icon" title="Pen Tool (P)"></button>
-                                    
-                                    <button id="pdf-tool-eraser" class="btn-icon" title="Eraser Tool (E)"></button>
-                                    <div class="control-divider"></div>
-                                    <button id="pdf-color-cycler" class="btn-icon" style="border-radius: 50%;" title="Cycle Color (C)"></button>
-                                    <button id="pdf-thickness-cycler" class="btn-icon" title="Cycle Thickness (T)"></button>
-                                    <div class="control-divider"></div>
-                                    <button id="pdf-undo-btn" class="btn-icon" title="Undo Last Annotation (U)">${App.util.icons.reset}</button>
-                                    <button class="btn-icon" title="Clear Annotations on Page">${App.util.icons.trash}</button>
-                                </div>
                             </div>
                             <span class="pdf-viewer-title" title="${App.util.escapeHtml(attachment.name)}">${App.util.escapeHtml(displayName)}</span>
                             <div class="pdf-viewer-controls">
@@ -1031,9 +1816,7 @@ export const pdf = {
                                 <span class="pdf-page-indicator"><input type="number" id="pdf-page-num" min="1"> &nbsp;of&nbsp; <span id="pdf-page-count"></span></span>
                                 <button id="pdf-next" class="btn-icon" title="Next Page (→)"></button>
                                 <div class="control-divider"></div>
-                                <button id="pdf-text-highlight-btn" class="btn-icon text-view-only-btn"></button>
-                                <button id="pdf-text-view-toggle" class="btn-icon" title="Switch to Text View"></button>
-                                <button id="pdf-fullscreen-toggle" class="btn-icon" title="Toggle Fullscreen (F)"></button>
+                                <button id="pdf-fullscreen-toggle" class="btn-icon" title="Toggle Fullscreen (F)" style="display: none;"></button>
                                 <div class="pdf-more-menu-container">
                                     <button id="pdf-more-btn" class="btn-icon" title="More Options"></button>
                                     <div id="pdf-more-menu" class="pdf-more-menu"></div>
@@ -1045,39 +1828,67 @@ export const pdf = {
                             <div id="pdf-thumbnails-bar"></div>
                             <div class="pdf-viewer-canvas-wrapper">
                                 <div class="pdf-page-container"><canvas id="pdf-viewer-canvas"></canvas></div>
-                                <div id="pdf-text-view-content" class="ui-card"></div>
+                            </div>
+                        </div>
+                        <div id="pdf-annotation-toolbar" class="pdf-compact-toolbar hidden" style="display: none;">
+                            <div class="pdf-toolbar-drag-handle" title="Double-click to toggle vertical/horizontal orientation • Drag to move">
+                                <svg class="handle-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                                    <circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/>
+                                    <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                                    <circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
+                                </svg>
+                            </div>
+                            <button id="pdf-tool-pen" class="btn-icon" title="Pen Tool (P)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg></button>
+                            <button id="pdf-tool-rect" class="btn-icon" title="Rectangle Tool (R)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z" /></svg></button>
+                            <button id="pdf-tool-laser" class="btn-icon" title="Laser Pointer (L)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25a8.25 8.25 0 00-8.25 8.25c0 1.721.576 3.322 1.568 4.675A8.25 8.25 0 0012 21.75a8.25 8.25 0 008.25-8.25c0-4.556-3.694-8.25-8.25-8.25z" /></svg></button>
+                            <button id="pdf-tool-eraser" class="btn-icon" title="Eraser Tool (E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5" /><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button>
+                            <div class="control-divider"></div>
+                            <button id="pdf-color-cycler" class="btn-icon" style="border-radius: 50%;" title="Cycle Color (C)"></button>
+                            <button id="pdf-thickness-cycler" class="btn-icon" title="Cycle Thickness (T)"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></button>
+                            <div class="control-divider"></div>
+                            <div class="pdf-actions-menu-container" id="pdf-actions-menu-container">
+                                <button id="pdf-more-tools-btn" class="btn-icon" title="More Actions (Undo, Clear, Whiteboard)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/>
+                                    </svg>
+                                </button>
+                                <div class="pdf-actions-flyout" id="pdf-actions-flyout">
+                                    <button id="pdf-undo-btn" class="btn-icon" title="Undo Last Annotation (U)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" /></svg></button>
+                                    <button id="pdf-clear-page-btn" class="btn-icon" title="Clear Annotations on Page (X)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
+                                    <button id="pdf-whiteboard-btn" class="btn-icon" title="Whiteboard Notes (W)"><i class="fa-solid fa-pen-nib"></i></button>
+                                </div>
                             </div>
                         </div>`;
 
                         // Re-populate icons and re-attach listeners
                         const header = container.querySelector('.pdf-viewer-header');
                         header.querySelector('#pdf-annotate-toggle').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>`;
-                        header.querySelector('#pdf-tool-pen').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg>`;
-                        header.querySelector('#pdf-tool-rect').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z" /></svg>`;
-                        header.querySelector('#pdf-tool-eraser').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5" /><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-                        header.querySelector('#pdf-thickness-cycler').innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>`;
 
                         header.querySelector('#pdf-prev').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>';
                         header.querySelector('#pdf-next').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
-                        header.querySelector('#pdf-text-highlight-btn').innerHTML = App.util.icons.pen;
-                        header.querySelector('#pdf-text-view-toggle').innerHTML = App.util.icons.textView;
                         header.querySelector('#pdf-fullscreen-toggle').innerHTML = App.util.icons.expand;
-                        header.querySelector('#pdf-more-btn').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>';
+                        header.querySelector('#pdf-more-btn').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><circle cx="9" cy="6" r="2.5" fill="currentColor"></circle><line x1="4" y1="12" x2="20" y2="12"></line><circle cx="15" cy="12" r="2.5" fill="currentColor"></circle><line x1="4" y1="18" x2="20" y2="18"></line><circle cx="10" cy="18" r="2.5" fill="currentColor"></circle></svg>';
                         header.querySelector('#pdf-close').innerHTML = App.util.icons.close;
+                        const isFullscreen = container.classList.contains('pdf-fullscreen-active');
+                        const isSyncEnabled = App.settings.get('pdfSyncHighlightsToNote', true);
                         header.querySelector('#pdf-more-menu').innerHTML = `
-                        <button class="btn btn-secondary mobile-only-btn" onclick="App.pdf.viewer.toggleThumbnails()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 3h8v8H3V3m0 10h8v8H3v-8m10-10h8v8h-8V3m0 10h8v8h-8v-8z"/></svg> Page Snips</button>
-                        <button class="btn btn-secondary mobile-only-btn" onclick="App.pdf.viewer.toggleFullscreen()">${App.util.icons.expand} Fullscreen</button>
-                        <div class="control-divider mobile-only-btn" style="margin: 4px 8px; height: auto; width: calc(100% - 16px);"></div>
+                        <button id="pdf-menu-ai" class="btn btn-secondary" onclick="App.ui.aiMagicModal.openAsViewer('pdf')"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 6px; color: #a855f7;"><path d="M12 2.25c.34 0 .647.205.778.52l1.986 4.767a1.5 1.5 0 00.869.869l4.767 1.986a.857.857 0 010 1.576l-4.767 1.986a1.5 1.5 0 00-.869.869l-1.986 4.767a.857.857 0 01-1.576 0l-1.986-4.767a1.5 1.5 0 00-.869-.869L2.77 12.018a.857.857 0 010-1.576l4.767-1.986a1.5 1.5 0 00.869-.869L10.422 2.77c.131-.315.438-.52.778-.52zM19.5 16.5a.75.75 0 01.696.471l.666 1.666 1.666.666a.75.75 0 010 1.394l-1.666.666-.666 1.666a.75.75 0 01-1.394 0l-.666-1.666-1.666-.666a.75.75 0 010-1.394l1.666-.666.666-1.666a.75.75 0 01.7-.471z"/></svg> NoteKash AI Magic</button>
+                        <button id="pdf-menu-fullscreen" class="btn btn-secondary" onclick="App.pdf.viewer.toggleFullscreen()">${isFullscreen ? App.util.icons.compress : App.util.icons.expand} ${isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</button>
                         <button id="pdf-pan-toggle" class="btn btn-secondary" onclick="App.pdf.viewer.togglePanMode()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg> Pan Mode</button>
+                        <div class="control-divider" style="margin: 4px 8px; height: auto; width: calc(100% - 16px);"></div>
                         <button class="btn btn-secondary" id="pdf-zoom-out" title="Zoom Out (-)">${App.util.icons.zoomOut} Zoom Out</button>
                         <button class="btn btn-secondary" id="pdf-zoom-percent" title="Reset Zoom">100%</button>
                         <button class="btn btn-secondary" id="pdf-zoom-in" title="Zoom In (+)">${App.util.icons.zoomIn} Zoom In</button>
-                        <div class="control-divider text-view-only-btn" style="margin: 4px 8px; height: auto; width: calc(100% - 16px);"></div>
-                        <button id="pdf-text-font-size-toggle" class="btn btn-secondary text-view-only-btn" onclick="App.pdf.viewer.cycleTextViewFontSize()" title="Cycle Font Size">${App.util.icons.actions} Font Size</button>
-                        <button id="pdf-text-theme-toggle" class="btn btn-secondary text-view-only-btn" onclick="App.pdf.viewer.cycleTextViewTheme()" title="Cycle Ambiance Theme">${App.util.icons.theme} Color Ambiance</button>
-                        <button class="btn btn-secondary text-view-only-btn" onclick="App.pdf.highlights.copyPage()" title="Copy highlights from this page">${App.util.icons.copy} Page Snips</button>
-                        <button class="btn btn-secondary text-view-only-btn" onclick="App.pdf.highlights.copyAll()" title="Copy all highlights from this document">${App.util.icons.copy} All Snips</button>
-                        <button class="btn btn-danger text-view-only-btn" onclick="App.pdf.highlights.clearPage()" title="Permanently remove all highlights from this page">${App.util.icons.trash} Clear Snips</button>
+                        <div class="control-divider" style="margin: 4px 8px; height: auto; width: calc(100% - 16px);"></div>
+                        <button id="pdf-toggle-sync-btn" class="btn btn-secondary" onclick="App.pdf.highlights.toggleSyncToNote()" title="Toggle saving highlights to note">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                            <span style="flex: 1; text-align: left; white-space: nowrap;">Save to Note</span>
+                            <span class="pdf-sync-pill ${isSyncEnabled ? 'is-on' : 'is-off'}">${isSyncEnabled ? 'ON' : 'OFF'}</span>
+                        </button>
+                        <button id="pdf-text-theme-toggle" class="btn btn-secondary" onclick="App.pdf.viewer.cycleTextViewTheme()" title="Cycle Ambiance Theme">${App.util.icons.theme} Color Ambiance</button>
+                        <button class="btn btn-secondary" onclick="App.pdf.highlights.copyPage()" title="Copy highlights from this page to clipboard">${App.util.icons.copy} Page Snips</button>
+                        <button class="btn btn-secondary" onclick="App.pdf.highlights.copyAll()" title="Copy all highlights from this document to clipboard">${App.util.icons.copy} All Snips</button>
+                        <button class="btn btn-secondary" onclick="App.pdf.highlights.clearPage()" title="Permanently remove all highlights from this page">${App.util.icons.trash} Clear Snips</button>
                         <div class="control-divider" style="margin: 4px 8px; height: auto; width: calc(100% - 16px);"></div>
                         <button id="pdf-capture-btn" class="btn btn-secondary" onclick="App.pdf.viewer.capturePage()">${App.util.icons.save} Capture</button>
                         <button id="pdf-share" class="btn btn-secondary">${App.util.icons.actions} Share</button>
@@ -1090,13 +1901,11 @@ export const pdf = {
                         document.getElementById('pdf-zoom-in').onclick = () => App.pdf.viewer.zoom(0.1);
                         document.getElementById('pdf-zoom-out').onclick = () => App.pdf.viewer.zoom(-0.1);
                         document.getElementById('pdf-zoom-percent').onclick = () => App.pdf.viewer.zoom(0);
-                        document.getElementById('pdf-text-view-toggle').onclick = () => App.pdf.viewer.toggleTextView();
-                        document.getElementById('pdf-text-highlight-btn').onclick = () => App.pdf.viewer.applyTextViewHighlight();
+                        this.initSelectionPopup();
                         document.getElementById('pdf-fullscreen-toggle').onclick = () => App.pdf.viewer.toggleFullscreen();
                         document.getElementById('pdf-more-btn').onclick = () => App.pdf.viewer.toggleMoreMenu();
                         document.getElementById('pdf-close').onclick = () => App.pdf.viewer.close();
                         document.getElementById('pdf-capture-btn').onclick = () => App.pdf.viewer.capturePage();
-                        document.getElementById('pdf-text-font-size-toggle').onclick = () => App.pdf.viewer.cycleTextViewFontSize();
                         document.getElementById('pdf-text-theme-toggle').onclick = () => App.pdf.viewer.cycleTextViewTheme();
 
                         if (navigator.share) {
@@ -1106,14 +1915,75 @@ export const pdf = {
                             if (shareBtn) shareBtn.style.display = 'none';
                         }
 
+                        const deactivatePdfLaser = () => {
+                            const pdfLaser = document.getElementById('pdf-laser-canvas');
+                            if (pdfLaser && pdfLaser.style.display !== 'none') {
+                                App.events.toggleSharedLaser('pdf');
+                            }
+                        };
+
                         document.getElementById('pdf-annotate-toggle').onclick = () => App.annotationEngine.toggle('pdf');
-                        document.getElementById('pdf-tool-pen').onclick = () => App.annotationEngine.setTool('pen');
-                        document.getElementById('pdf-tool-rect').onclick = () => App.annotationEngine.setTool('rect');
-                        document.getElementById('pdf-tool-eraser').onclick = () => App.annotationEngine.setTool('eraser');
+                        document.getElementById('pdf-tool-pen').onclick = () => {
+                            deactivatePdfLaser();
+                            App.annotationEngine.setTool('pen');
+                        };
+                        document.getElementById('pdf-tool-rect').onclick = () => {
+                            deactivatePdfLaser();
+                            App.annotationEngine.setTool('rect');
+                        };
+                        document.getElementById('pdf-tool-laser').onclick = () => {
+                            App.events.toggleSharedLaser('pdf');
+                        };
+                        document.getElementById('pdf-tool-eraser').onclick = () => {
+                            deactivatePdfLaser();
+                            App.annotationEngine.setTool('eraser');
+                        };
+                        const actionsMenuContainer = document.getElementById('pdf-actions-menu-container');
+                        const moreToolsBtn = document.getElementById('pdf-more-tools-btn');
+                        if (moreToolsBtn && actionsMenuContainer) {
+                            moreToolsBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                actionsMenuContainer.classList.toggle('is-open');
+                            };
+                            if (this._closeFlyoutHandler) {
+                                document.removeEventListener('pointerdown', this._closeFlyoutHandler);
+                            }
+                            this._closeFlyoutHandler = (e) => {
+                                if (!actionsMenuContainer.contains(e.target)) {
+                                    actionsMenuContainer.classList.remove('is-open');
+                                }
+                            };
+                            document.addEventListener('pointerdown', this._closeFlyoutHandler);
+                        }
+
                         document.getElementById('pdf-color-cycler').onclick = () => App.annotationEngine.cycleColor();
                         document.getElementById('pdf-thickness-cycler').onclick = () => App.annotationEngine.cycleThickness();
-                        document.getElementById('pdf-undo-btn').onclick = () => App.annotationEngine.undo();
-                        header.querySelector('button[title="Clear Annotations on Page"]').onclick = () => App.annotationEngine.clearCurrentPage();
+                        document.getElementById('pdf-undo-btn').onclick = () => {
+                            actionsMenuContainer?.classList.remove('is-open');
+                            App.annotationEngine.undo();
+                        };
+                        const clearPageBtn = document.getElementById('pdf-clear-page-btn') || container.querySelector('button[title*="Clear Annotations"]');
+                        if (clearPageBtn) {
+                            clearPageBtn.onclick = () => {
+                                actionsMenuContainer?.classList.remove('is-open');
+                                App.annotationEngine.clearCurrentPage();
+                            };
+                        }
+                        const wbBtn = document.getElementById('pdf-whiteboard-btn');
+                        if (wbBtn) {
+                            wbBtn.onclick = () => {
+                                actionsMenuContainer?.classList.remove('is-open');
+                                App.pdf.viewer.openWhiteboard();
+                            };
+                        }
+
+                        // Initialize Draggable Floating Toolbar
+                        const toolbarEl = document.getElementById('pdf-annotation-toolbar');
+                        const dragHandle = toolbarEl?.querySelector('.pdf-toolbar-drag-handle');
+                        if (toolbarEl && dragHandle) {
+                            this.makeToolbarDraggable(toolbarEl, dragHandle);
+                        }
+
                         document.addEventListener('keydown', this.handleKeyDown);
                         document.addEventListener('keyup', this.handleKeyUp);
 
@@ -1264,78 +2134,123 @@ export const pdf = {
                             pageContainer.style.transformOrigin = 'top center';
                         }
 
-                        const container = document.getElementById('pdf-viewer-container');
-                        const isInTextView = container.classList.contains('text-view-active');
-
                         App.pdf.state.pdfDoc.getPage(num).then(page => {
                             const pageContainer = document.querySelector('.pdf-page-container');
-                            if (pageContainer.querySelector('#annotation-layer')) {
-                                pageContainer.querySelector('#annotation-layer').remove();
-                            }
-
-                            if (!isInTextView) {
-                                const canvas = document.getElementById('pdf-viewer-canvas');
-                                const scale = App.pdf.state.scale;
-
-                                const dpr = window.devicePixelRatio || 1;
-                                const outputScale = scale * dpr;
-
-                                const viewport = page.getViewport({ scale: outputScale });
-                                const displayViewport = page.getViewport({ scale: scale });
-
-                                canvas.width = viewport.width;
-                                canvas.height = viewport.height;
-
-                                // CSS display size (original) - THIS IS KEY FOR ANNOTATION SAFETY
-                                canvas.style.width = displayViewport.width + 'px';
-                                canvas.style.height = displayViewport.height + 'px';
-
-                                const annotationLayer = document.createElement('canvas');
-                                annotationLayer.id = 'annotation-layer';
-                                annotationLayer.width = viewport.width;
-                                annotationLayer.height = viewport.height;
-                                annotationLayer.style.width = displayViewport.width + 'px';
-                                annotationLayer.style.height = displayViewport.height + 'px';
-                                pageContainer.appendChild(annotationLayer);
-
-                                page.render({
-                                    canvasContext: canvas.getContext('2d', { willReadFrequently: true }),
-                                    viewport: viewport
-                                }).promise.then(() => {
-                                    App.pdf.state.pageRendering = false;
-
-                                    if (App.annotationEngine.state.isActive) {
-                                        const newCanvas = annotationLayer.cloneNode(true);
-                                        annotationLayer.parentNode.replaceChild(newCanvas, annotationLayer);
-                                        newCanvas.addEventListener('mousedown', App.annotationEngine.startDrawing.bind(App.annotationEngine));
-                                        newCanvas.addEventListener('mousemove', App.annotationEngine.draw.bind(App.annotationEngine));
-                                        newCanvas.addEventListener('mouseup', App.annotationEngine.stopDrawing.bind(App.annotationEngine));
-                                        newCanvas.addEventListener('mouseleave', App.annotationEngine.stopDrawing.bind(App.annotationEngine));
-                                        newCanvas.addEventListener('touchstart', (e) => App.annotationEngine.startDrawing(e.touches[0]), { passive: false });
-                                        newCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); App.annotationEngine.draw(e.touches[0]); }, { passive: false });
-                                        newCanvas.addEventListener('touchend', (e) => App.annotationEngine.stopDrawing(e.changedTouches[0]));
-                                    }
-
-                                    // FIX: ALWAYS redraw annotations after all canvas setup (visible in all modes)
-                                    App.annotationEngine.redrawPageAnnotations(num);
-
-                                    if (App.pdf.state.pageNumPending !== null) {
-                                        this.renderPage(App.pdf.state.pageNumPending);
-                                        App.pdf.state.pageNumPending = null;
-                                    }
-                                });
-                            }
-
-                            // The text view rendering remains unchanged.
-                            this.renderTextViewForPage(num);
-
-                            if (isInTextView) {
+                            if (!pageContainer) {
                                 App.pdf.state.pageRendering = false;
+                                return;
+                            }
+
+                            const canvas = document.getElementById('pdf-viewer-canvas');
+                            const scale = App.pdf.state.scale;
+
+                            const dpr = window.devicePixelRatio || 1;
+                            const outputScale = scale * dpr;
+
+                            const viewport = page.getViewport({ scale: outputScale });
+                            const displayViewport = page.getViewport({ scale: scale });
+
+                            // Size container to exact display CSS dimensions
+                            pageContainer.style.width = displayViewport.width + 'px';
+                            pageContainer.style.height = displayViewport.height + 'px';
+
+                            // 1. Canvas Layer (Sharp Retina)
+                            canvas.width = Math.floor(viewport.width);
+                            canvas.height = Math.floor(viewport.height);
+                            canvas.style.width = displayViewport.width + 'px';
+                            canvas.style.height = displayViewport.height + 'px';
+
+                            // 2. Highlights Layer
+                            let highlightLayer = pageContainer.querySelector('.pdf-highlight-layer');
+                            if (!highlightLayer) {
+                                highlightLayer = document.createElement('div');
+                                highlightLayer.className = 'pdf-highlight-layer';
+                                pageContainer.appendChild(highlightLayer);
+                            }
+                            highlightLayer.style.width = displayViewport.width + 'px';
+                            highlightLayer.style.height = displayViewport.height + 'px';
+
+                            // 3. Text Layer (Native Selection Stencil)
+                            let textLayer = pageContainer.querySelector('.textLayer');
+                            if (!textLayer) {
+                                textLayer = document.createElement('div');
+                                textLayer.className = 'textLayer';
+                                pageContainer.appendChild(textLayer);
+                            }
+                            textLayer.innerHTML = '';
+                            textLayer.style.width = displayViewport.width + 'px';
+                            textLayer.style.height = displayViewport.height + 'px';
+                            textLayer.style.setProperty('--scale-factor', displayViewport.scale);
+
+                            // 4. Freehand Annotation Layer
+                            let annotationLayer = pageContainer.querySelector('#annotation-layer');
+                            if (!annotationLayer) {
+                                annotationLayer = document.createElement('canvas');
+                                annotationLayer.id = 'annotation-layer';
+                                pageContainer.appendChild(annotationLayer);
+                            }
+                            annotationLayer.width = Math.floor(viewport.width);
+                            annotationLayer.height = Math.floor(viewport.height);
+                            annotationLayer.style.width = displayViewport.width + 'px';
+                            annotationLayer.style.height = displayViewport.height + 'px';
+
+                            // Start Canvas Rendering
+                            const renderPromise = page.render({
+                                canvasContext: canvas.getContext('2d', { willReadFrequently: true }),
+                                viewport: viewport
+                            }).promise;
+
+                            // Concurrently render Text Layer
+                            page.getTextContent().then(textContent => {
+                                const pageText = textContent.items.map(item => item.str).join(' ');
+                                App.pdf.state.currentPageText = pageText;
+
+                                if (window.pdfjsLib && pdfjsLib.renderTextLayer) {
+                                    pdfjsLib.renderTextLayer({
+                                        textContentSource: textContent,
+                                        container: textLayer,
+                                        viewport: displayViewport,
+                                        textDivs: []
+                                    });
+                                } else if (window.pdfjsLib && pdfjsLib.TextLayer) {
+                                    const tl = new pdfjsLib.TextLayer({
+                                        textContentSource: textContent,
+                                        container: textLayer,
+                                        viewport: displayViewport
+                                    });
+                                    tl.render();
+                                }
+                            }).catch(err => {
+                                console.warn('Text layer render warning:', err);
+                            });
+
+                            renderPromise.then(() => {
+                                App.pdf.state.pageRendering = false;
+                                if (App.ui.aiMagicModal?.updateViewerPage) {
+                                    App.ui.aiMagicModal.updateViewerPage(num);
+                                }
+
+                                if (App.annotationEngine.state.isActive) {
+                                    const newCanvas = annotationLayer.cloneNode(true);
+                                    annotationLayer.parentNode.replaceChild(newCanvas, annotationLayer);
+                                    newCanvas.addEventListener('mousedown', App.annotationEngine.startDrawing.bind(App.annotationEngine));
+                                    newCanvas.addEventListener('mousemove', App.annotationEngine.draw.bind(App.annotationEngine));
+                                    newCanvas.addEventListener('mouseup', App.annotationEngine.stopDrawing.bind(App.annotationEngine));
+                                    newCanvas.addEventListener('mouseleave', App.annotationEngine.stopDrawing.bind(App.annotationEngine));
+                                    newCanvas.addEventListener('touchstart', (e) => App.annotationEngine.startDrawing(e.touches[0]), { passive: false });
+                                    newCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); App.annotationEngine.draw(e.touches[0]); }, { passive: false });
+                                    newCanvas.addEventListener('touchend', (e) => App.annotationEngine.stopDrawing(e.changedTouches[0]));
+                                }
+
+                                // Redraw annotations and highlights
+                                App.annotationEngine.redrawPageAnnotations(num);
+                                App.pdf.highlights.renderPageHighlights(num);
+
                                 if (App.pdf.state.pageNumPending !== null) {
                                     this.renderPage(App.pdf.state.pageNumPending);
                                     App.pdf.state.pageNumPending = null;
                                 }
-                            }
+                            });
                         });
 
                         document.getElementById('pdf-page-num').value = num;
@@ -1438,10 +2353,18 @@ export const pdf = {
                     toggleFullscreen() {
                         const container = document.getElementById('pdf-viewer-container');
                         if (!container) return;
-                        container.classList.toggle('pdf-fullscreen-active');
+                        const isNowFullscreen = container.classList.toggle('pdf-fullscreen-active');
+                        const menuBtn = document.getElementById('pdf-menu-fullscreen');
+                        if (menuBtn) {
+                            menuBtn.innerHTML = `${isNowFullscreen ? App.util.icons.compress : App.util.icons.expand} ${isNowFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}`;
+                        }
+                        requestAnimationFrame(() => {
+                            if (App.pdf?.viewer?.clampToolbar) App.pdf.viewer.clampToolbar();
+                        });
                     },
 
                     handleKeyDown: (e) => {
+                        if (App.whiteboard?.state?.isOpen) return;
                         if (App.ui.aiMagicModal.state.isOpen && App.ui.aiMagicModal.state.mode === 'viewer') return;
 
                         // Spacebar for Pan Mode (Hold)
@@ -1451,7 +2374,7 @@ export const pdf = {
                             if (container) container.classList.add('grab-mode');
                         }
 
-                        if (e.target.id === 'pdf-page-num') return;
+                        if (e.target.id === 'pdf-page-num' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
                         const isAnnotationActive = App.annotationEngine.state.isActive && App.annotationEngine.state.context === 'pdf';
 
                         switch (e.key.toLowerCase()) {
@@ -1465,10 +2388,67 @@ export const pdf = {
                                 else App.pdf.viewer.toggleThumbnails();
                                 break;
                             case 'f': App.pdf.viewer.toggleFullscreen(); break;
+                            case '2': case '3': case '4': case '5': case '6': case '7': {
+                                const sel = window.getSelection();
+                                const hasSelection = (sel && !sel.isCollapsed) || (App.pdf.viewer._currentSelection && App.pdf.viewer._currentSelection.text);
+                                if (hasSelection) {
+                                    e.preventDefault();
+                                    const map = { '2': 'highlight-1', '3': 'highlight-2', '4': 'highlight-3', '5': 'highlight-4', '6': 'highlight-5', '7': 'highlight-6' };
+                                    App.pdf.viewer.applyTextViewHighlight(map[e.key]);
+                                }
+                                break;
+                            }
                             case 'a': App.annotationEngine.toggle('pdf'); break;
-                            case 'p': if (isAnnotationActive) { App.annotationEngine.setTool('pen'); e.preventDefault(); } break;
-                            case 'r': if (isAnnotationActive) { App.annotationEngine.setTool('rect'); e.preventDefault(); } break;
-                            case 'e': if (isAnnotationActive) { App.annotationEngine.setTool('eraser'); e.preventDefault(); } break;
+                            case 'l':
+                                e.preventDefault();
+                                App.events.toggleSharedLaser('pdf');
+                                break;
+                            case 'w':
+                                e.preventDefault();
+                                App.pdf.viewer.openWhiteboard();
+                                break;
+                            case 'p':
+                                if (isAnnotationActive) {
+                                    const pdfLaser = document.getElementById('pdf-laser-canvas');
+                                    if (pdfLaser && pdfLaser.style.display !== 'none') App.events.toggleSharedLaser('pdf');
+                                    App.annotationEngine.setTool('pen');
+                                    e.preventDefault();
+                                }
+                                break;
+                            case 'r':
+                                if (isAnnotationActive) {
+                                    const pdfLaser = document.getElementById('pdf-laser-canvas');
+                                    if (pdfLaser && pdfLaser.style.display !== 'none') App.events.toggleSharedLaser('pdf');
+                                    App.annotationEngine.setTool('rect');
+                                    e.preventDefault();
+                                }
+                                break;
+                            case 'e':
+                                if (isAnnotationActive) {
+                                    const pdfLaser = document.getElementById('pdf-laser-canvas');
+                                    if (pdfLaser && pdfLaser.style.display !== 'none') App.events.toggleSharedLaser('pdf');
+                                    App.annotationEngine.setTool('eraser');
+                                    e.preventDefault();
+                                }
+                                break;
+                            case 'u':
+                                if (isAnnotationActive) {
+                                    App.annotationEngine.undo();
+                                    e.preventDefault();
+                                }
+                                break;
+                            case 'c':
+                                if (isAnnotationActive) {
+                                    App.annotationEngine.cycleColor();
+                                    e.preventDefault();
+                                }
+                                break;
+                            case 'x':
+                                if (isAnnotationActive) {
+                                    App.annotationEngine.clearCurrentPage();
+                                    e.preventDefault();
+                                }
+                                break;
                         }
                     },
 
@@ -1506,8 +2486,15 @@ export const pdf = {
                     },
 
                     async close() {
+                        this.hideSelectionPopup();
                         document.getElementById('ai-magic-toggle').style.display = 'none';
                         if (App.ui.aiMagicModal.state.isOpen && App.ui.aiMagicModal.state.mode === 'viewer') App.ui.aiMagicModal.closeViewer();
+
+                        // Clean up laser if active
+                        const pdfLaser = document.getElementById('pdf-laser-canvas');
+                        if (pdfLaser && pdfLaser.style.display !== 'none') {
+                            App.events.toggleSharedLaser('pdf');
+                        }
 
                         if (App.annotationEngine.state.isActive) {
                             App.annotationEngine.toggle('pdf');
@@ -1536,6 +2523,14 @@ export const pdf = {
                         container.innerHTML = '';
                         document.removeEventListener('keydown', this.handleKeyDown);
                         document.removeEventListener('keyup', this.handleKeyUp);
+                        if (this._toolbarResizeHandler) {
+                            window.removeEventListener('resize', this._toolbarResizeHandler);
+                            this._toolbarResizeHandler = null;
+                        }
+                        if (this._closeFlyoutHandler) {
+                            document.removeEventListener('pointerdown', this._closeFlyoutHandler);
+                            this._closeFlyoutHandler = null;
+                        }
 
                         App.pdf.state.pdfDoc = null;
                         App.pdf.state.pageNum = 1;

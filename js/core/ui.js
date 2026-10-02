@@ -545,17 +545,21 @@ export const ui = {
 
                 // New Helper for Native-like Inputs
                 showInputModal(title, placeholder, defaultValue, onConfirm) {
-                    this.closeModal(); // Ensure no stacking
+                    // Clean up any existing input modal without destroying other active panels or AI viewer
+                    document.querySelectorAll('.app-input-modal-backdrop').forEach(el => el.remove());
 
                     const modalId = `input-modal-${Date.now()}`;
                     const modalHTML = `
-                    <div id="${modalId}" class="modal-backdrop" style="animation: fadeIn 0.2s ease-out; z-index: 20000; background-color: rgba(0,0,0,0.6);">
-                        <div class="modal-content ui-card" style="max-width: 400px; transform-origin: center center; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-                            <h3 style="margin-top:0;">${title}</h3>
-                            <input type="text" id="${modalId}-input" class="text-input" placeholder="${placeholder}" value="${defaultValue || ''}" style="width: 100%; margin-top: 10px; margin-bottom: 20px;">
+                    <div id="${modalId}" class="modal-backdrop app-input-modal-backdrop" style="animation: fadeIn 0.2s ease-out; z-index: 35000; background-color: rgba(0,0,0,0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+                        <div class="modal-content ui-card" style="max-width: 420px; z-index: 35001; transform-origin: center center; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 16px;">
+                            <h3 style="margin-top:0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-bookmark" style="color: var(--primary-color); font-size: 0.95em;"></i>
+                                ${title}
+                            </h3>
+                            <input type="text" id="${modalId}-input" class="text-input" placeholder="${placeholder}" value="${defaultValue || ''}" style="width: 100%; margin-top: 10px; margin-bottom: 20px; padding: 10px 14px; border-radius: 10px; font-size: 0.95rem;">
                             <div class="modal-buttons" style="margin-top: 0; justify-content: flex-end; gap: 10px;">
-                                <button class="btn btn-secondary" id="${modalId}-cancel">Cancel</button>
-                                <button class="btn btn-primary" id="${modalId}-confirm">Confirm</button>
+                                <button class="btn btn-secondary" id="${modalId}-cancel" style="border-radius: 10px; padding: 8px 16px;">Cancel</button>
+                                <button class="btn btn-primary" id="${modalId}-confirm" style="border-radius: 10px; padding: 8px 18px;">Confirm</button>
                             </div>
                         </div>
                     </div>`;
@@ -566,10 +570,16 @@ export const ui = {
                     const cancelBtn = document.getElementById(`${modalId}-cancel`);
                     const confirmBtn = document.getElementById(`${modalId}-confirm`);
 
-                    inputEl.focus();
-                    if (defaultValue) inputEl.select();
+                    setTimeout(() => {
+                        inputEl?.focus();
+                        if (defaultValue) inputEl?.select();
+                    }, 50);
 
-                    const cleanup = () => modalEl.remove();
+                    const cleanup = () => {
+                        modalEl?.remove();
+                        const viewerInput = document.getElementById('ai-viewer-input');
+                        if (viewerInput) viewerInput.focus();
+                    };
 
                     // Actions
                     const handleConfirm = () => {
@@ -583,6 +593,7 @@ export const ui = {
 
                     // Allow Enter to confirm, Esc to cancel
                     inputEl.onkeydown = (e) => {
+                        e.stopPropagation();
                         if (e.key === 'Enter') handleConfirm();
                         if (e.key === 'Escape') cleanup();
                     };
@@ -3842,11 +3853,16 @@ export const ui = {
                         this.state.mode = 'viewer';
                         this.state.viewerContext = context;
 
+                        const pageBadge = context === 'pdf' ? `<span class="ai-viewer-context-badge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-weight: 600; border: 1px solid rgba(59, 130, 246, 0.25);">p. ${App.pdf?.state?.pageNum || 1}</span>` : '';
+
                         const panelHTML = `
                         <div class="ai-magic-viewer-panel">
                             <div class="ai-viewer-resize-handle"></div>
                             <div class="ai-viewer-header">
-                                <span class="witty-gradient-text" style="font-size: 1.1rem;">NoteKash AI</span>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="witty-gradient-text" style="font-size: 1.1rem;">NoteKash AI</span>
+                                    ${pageBadge}
+                                </div>
                                 <div class="ai-viewer-header-actions">
                                     <button class="btn-icon" title="Clear Conversation" onclick="App.ui.aiMagicModal.clearViewerHistory()">
                                         <i class="fa-solid fa-broom"></i>
@@ -3903,19 +3919,59 @@ export const ui = {
                         }
                     },
 
+                    updateViewerPage(pageNum) {
+                        if (!this.state.isOpen || this.state.mode !== 'viewer' || this.state.viewerContext !== 'pdf') return;
+                        const badge = document.querySelector('.ai-viewer-context-badge');
+                        if (badge) {
+                            badge.textContent = `p. ${pageNum}`;
+                        }
+                    },
+
                     _getViewerContext() {
                         try {
                             if (this.state.viewerContext === 'pdf') {
-                                // Get text content from visible PDF page
-                                const pageContainer = document.querySelector('.pdf-page-container.active, .pdf-page-container');
-                                if (pageContainer) {
-                                    const textLayer = pageContainer.querySelector('.textLayer');
-                                    if (textLayer && textLayer.textContent.trim()) return textLayer.textContent.trim();
-                                }
-                                // Fallback: get page number info
                                 const pageNum = App.pdf?.state?.pageNum || 1;
                                 const totalPages = App.pdf?.state?.pdfDoc?.numPages || '?';
-                                return `[PDF Viewer - Page ${pageNum} of ${totalPages}. Text extraction unavailable for this page.]`;
+                                const attachment = App.pdf?.state?.currentAttachment;
+                                const docName = attachment?.name ? attachment.name.replace(/\.pdf$/i, '') : 'Document';
+
+                                const contextParts = [`[PDF: "${docName}" | Page ${pageNum} of ${totalPages}]`];
+
+                                // 1. Check if user currently has an active text selection
+                                const selection = window.getSelection()?.toString().trim();
+                                if (selection && selection.length > 2) {
+                                    const cleanSel = selection.replace(/\s+/g, ' ').slice(0, 800);
+                                    contextParts.push(`User Active Selection / Focus:\n"${cleanSel}"`);
+                                }
+
+                                // 2. Check for highlights on this current page
+                                const article = App.storage?.getArticle(App.state?.activeArticleId);
+                                const att = article?.attachments?.find(a => a.id === attachment?.id);
+                                const pageHighlights = (att?.highlights || []).filter(h => h.page === pageNum);
+                                if (pageHighlights.length > 0) {
+                                    const snips = pageHighlights.slice(0, 5).map(h => `• "${h.text.replace(/\s+/g, ' ').slice(0, 150)}"`).join('\n');
+                                    contextParts.push(`Key Highlights on this Page:\n${snips}`);
+                                }
+
+                                // 3. Extract text content from current page (clean & capped to ~1,500 chars to avoid token waste)
+                                let pageText = App.pdf?.state?.currentPageText || '';
+                                if (!pageText) {
+                                    const pageContainer = document.querySelector('.pdf-page-container.active, .pdf-page-container');
+                                    const textLayer = pageContainer?.querySelector('.textLayer');
+                                    if (textLayer && textLayer.textContent) {
+                                        pageText = textLayer.textContent;
+                                    }
+                                }
+
+                                if (pageText) {
+                                    const cleanText = pageText.replace(/\s+/g, ' ').trim();
+                                    const excerpt = cleanText.length > 1500 ? cleanText.slice(0, 1500) + '... [page excerpt]' : cleanText;
+                                    contextParts.push(`Page Content Excerpt:\n${excerpt}`);
+                                } else {
+                                    contextParts.push(`[Text extraction pending for this page]`);
+                                }
+
+                                return contextParts.join('\n\n');
                             } else if (this.state.viewerContext === 'category' || this.state.viewerContext === 'mindmap' || this.state.viewerContext === 'visual-map') {
                                 return `[${this.state.viewerContext.toUpperCase()} VIEW] The user is currently exploring their notes in the ${this.state.viewerContext} view. Provide a helpful conceptual explanation.`;
                             } else {
@@ -3990,7 +4046,7 @@ export const ui = {
 
                             const userPrompt = historyText ? `${historyText}\nUser: ${text}` : text;
 
-                            const result = await App.services.ai.queryGenerativeAI(systemPrompt, userPrompt);
+                            const result = await App.services.ai.queryGenerativeAI(systemPrompt, userPrompt, { silentToast: true });
 
                             // Remove thinking indicator
                             this.state.viewerHistory = this.state.viewerHistory.filter(m => !m.isThinking);
@@ -4033,19 +4089,40 @@ export const ui = {
                                 </div>`;
 
                             if (prompts.length === 0) {
-                                popover.innerHTML = headerHTML + '<div style="padding: 1rem; text-align: center; color: var(--text-secondary); height: 100px; display: flex; align-items: center; justify-content: center;">No saved prompts yet.</div>';
+                                popover.innerHTML = headerHTML + '<div style="padding: 1.25rem 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5;">No saved prompts yet.<br><span style="opacity: 0.75; font-size: 0.8rem;">Type in the input box and click the bookmark icon to save.</span></div>';
                             } else {
-                                popover.innerHTML = headerHTML + prompts.map((p, index) => `
-                                    <div class="ai-viewer-bookmark-item">
-                                        <div class="ai-viewer-bookmark-content" onclick="App.ui.aiMagicModal._useViewerBookmark('${p.text.replace(/'/g, "\\'")}')">
-                                            <i class="fa-solid fa-bookmark"></i>
-                                            <span>${p.name || (p.text.length > 25 ? p.text.substring(0, 25) + '...' : p.text)}</span>
-                                        </div>
-                                        <button class="ai-viewer-bookmark-delete" onclick="App.ui.aiMagicModal._deleteViewerBookmark(event, ${index})" title="Delete Prompt">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
+                                popover.innerHTML = headerHTML + `
+                                    <div class="ai-viewer-bookmarks-list" style="display: flex; flex-direction: column; gap: 2px;">
+                                        ${prompts.map((p, index) => `
+                                            <div class="ai-viewer-bookmark-item">
+                                                <div class="ai-viewer-bookmark-content" data-index="${index}">
+                                                    <i class="fa-solid fa-bookmark" style="color: var(--primary-color); flex-shrink: 0; font-size: 0.85rem;"></i>
+                                                    <span title="${App.util.escapeHtml(p.text || '')}">${App.util.escapeHtml(p.name || (p.text.length > 25 ? p.text.substring(0, 25) + '...' : p.text))}</span>
+                                                </div>
+                                                <button class="ai-viewer-bookmark-delete" data-index="${index}" title="Delete Prompt">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        `).join('')}
                                     </div>
-                                `).join('');
+                                `;
+
+                                // Attach event listeners safely without breaking on quotes or special characters
+                                popover.querySelectorAll('.ai-viewer-bookmark-content').forEach(el => {
+                                    el.onclick = () => {
+                                        const idx = parseInt(el.dataset.index, 10);
+                                        const p = prompts[idx];
+                                        if (p && p.text) App.ui.aiMagicModal._useViewerBookmark(p.text);
+                                    };
+                                });
+
+                                popover.querySelectorAll('.ai-viewer-bookmark-delete').forEach(btn => {
+                                    btn.onclick = (e) => {
+                                        e.stopPropagation();
+                                        const idx = parseInt(btn.dataset.index, 10);
+                                        App.ui.aiMagicModal._deleteViewerBookmark(e, idx);
+                                    };
+                                });
                             }
                             popover.classList.add('active');
                         } catch (e) { console.error('Error loading bookmarks', e); }
@@ -4062,7 +4139,7 @@ export const ui = {
                                 // Refresh the list
                                 const popover = document.getElementById('ai-viewer-bookmarks-popover');
                                 if (popover && popover.classList.contains('active')) {
-                                    popover.classList.remove('active'); // Close to reset state (or we could just re-render)
+                                    popover.classList.remove('active'); // Close to reset state
                                     setTimeout(() => this._toggleViewerBookmarks(), 50); // Re-open to refresh
                                 }
                             }
@@ -4085,7 +4162,7 @@ export const ui = {
                     _saveViewerPrompt() {
                         const input = document.getElementById('ai-viewer-input');
                         if (!input || !input.value.trim()) {
-                            App.ui.showToast("Type something to save!", "warning");
+                            App.ui.showToast("Type something to bookmark!", "warning");
                             return;
                         }
                         const text = input.value.trim();
@@ -4099,12 +4176,14 @@ export const ui = {
 
                         if (this.state.viewerHistory.length === 0) {
                             // Empty state with prompt starters
-                            const contextLabel = this.state.viewerContext === 'pdf' ? 'PDF Page' : 'Slide';
-                            const starters = this.state.viewerContext === 'pdf'
+                            const isPdf = this.state.viewerContext === 'pdf';
+                            const pageNum = App.pdf?.state?.pageNum || 1;
+                            const starters = isPdf
                                 ? [
-                                    { icon: 'fa-solid fa-file-lines', label: 'Summarize', text: 'Summarize this page for me' },
-                                    { icon: 'fa-solid fa-lightbulb', label: 'Explain', text: 'Explain the key concepts on this page' },
-                                    { icon: 'fa-solid fa-clipboard-question', label: 'Quiz Me', text: 'Generate quiz questions from this page' },
+                                    { icon: 'fa-solid fa-file-lines', label: 'Summarize', text: `Summarize page ${pageNum} for me with key takeaways` },
+                                    { icon: 'fa-solid fa-lightbulb', label: 'Explain', text: `Explain the key concepts on page ${pageNum} in simple terms` },
+                                    { icon: 'fa-solid fa-clipboard-question', label: 'Quiz Me', text: `Generate 3 insightful quiz questions from page ${pageNum}` },
+                                    { icon: 'fa-solid fa-layer-group', label: 'Flashcards', text: `Create high-yield Q&A study cards from page ${pageNum}` },
                                 ]
                                 : [
                                     { icon: 'fa-solid fa-file-lines', label: 'Summarize', text: 'Summarize this slide' },
@@ -4116,11 +4195,11 @@ export const ui = {
                                 <div class="ai-viewer-empty-state">
                                     <div class="ai-viewer-centered-header">
                                         <h2 class="witty-gradient-text">AI Magic</h2>
-                                        <p>Ask me anything about this ${contextLabel.toLowerCase()}</p>
+                                        <p>Ask me anything about this ${isPdf ? `PDF page (p. ${pageNum})` : 'slide'}</p>
                                     </div>
                                     <div class="ai-viewer-prompt-grid">
                                         ${starters.map(s => `
-                                            <div class="ai-viewer-prompt-card" onclick="App.ui.aiMagicModal._sendViewerMessage('${s.text}')">
+                                            <div class="ai-viewer-prompt-card" onclick="App.ui.aiMagicModal._sendViewerMessage('${s.text.replace(/'/g, "\\'")}')">
                                                 <i class="${s.icon}"></i>
                                                 ${s.label}
                                             </div>
@@ -4276,21 +4355,113 @@ export const ui = {
                         if (!bubble) return;
                         const clone = bubble.cloneNode(true);
                         clone.querySelector('.ai-viewer-bubble-actions')?.remove();
-                        const html = clone.innerHTML;
+                        const html = clone.innerHTML.trim();
+                        const text = clone.textContent.trim();
 
-                        // Create a new note with this content or append to current article
-                        const articleContent = document.getElementById('article-content');
-                        if (articleContent && App.state.currentMode === 'write') {
-                            articleContent.focus();
-                            document.execCommand('insertHTML', false, '<p><br></p>' + html);
-                            App.state.isArticleDirty = true;
-                            App.ui.showToast('Inserted into note!', { type: 'success' });
-                        } else {
-                            // Copy to clipboard as fallback
-                            navigator.clipboard.writeText(bubble.textContent).then(() => {
-                                App.ui.showToast('Copied to clipboard! Paste it into any note.', { type: 'info' });
-                            });
+                        // 1. Always copy formatted HTML & text to clipboard
+                        try {
+                            if (window.ClipboardItem) {
+                                navigator.clipboard.write([new ClipboardItem({
+                                    'text/html': new Blob([html], { type: 'text/html' }),
+                                    'text/plain': new Blob([text], { type: 'text/plain' })
+                                })]).catch(() => navigator.clipboard.writeText(text));
+                            } else {
+                                navigator.clipboard.writeText(text);
+                            }
+                        } catch (e) {
+                            navigator.clipboard.writeText(text).catch(() => {});
                         }
+
+                        // 2. Append to target article (PDF attachment or active article)
+                        const articleId = App.pdf?.state?.articleId || App.state?.activeArticleId;
+                        const article = articleId ? App.storage.getArticle(articleId) : null;
+
+                        if (!article) {
+                            App.ui.showToast('Copied AI response to clipboard! (Open a note to insert)', { type: 'info' });
+                            return;
+                        }
+
+                        const attachment = App.pdf?.state?.currentAttachment;
+                        const pageNum = App.pdf?.state?.pageNum || 1;
+                        const isPdfMode = this.state.viewerContext === 'pdf' || document.body.classList.contains('pdf-viewer-active');
+                        const docTitle = attachment?.name 
+                            ? App.util.escapeHtml(attachment.name.replace(/\.pdf$/i, '')) 
+                            : App.util.escapeHtml(article.title || 'Document');
+                        const slug = attachment?.name ? attachment.name.replace(/[^a-z0-9]/gi, '-').toLowerCase() : 'doc';
+                        const boxId = `pdf-ai-box-${slug || 'doc'}`;
+                        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const dateStr = new Date().toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+                        const entryHtml = `
+                            <div class="pdf-ai-note-entry" data-page="${pageNum}">
+                                <div class="pdf-ai-note-meta">
+                                    <span class="pdf-ai-note-page-tag pdf-hl-page-inline" data-page="${pageNum}" title="Jump to page ${pageNum} in PDF">
+                                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: -1px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                        ${isPdfMode ? `Page ${pageNum}` : 'AI Insight'}
+                                    </span>
+                                    <span class="pdf-ai-note-time">${dateStr} ${timeStr}</span>
+                                </div>
+                                <div class="pdf-ai-note-content">
+                                    ${html}
+                                </div>
+                            </div>
+                        `.trim();
+
+                        const buildBoxHtml = (content) => `
+                            <div id="${boxId}" class="pdf-ai-notes-box" data-attachment-id="${attachment?.id || ''}" data-pdf-name="${docTitle}">
+                                <div class="pdf-ai-notes-box-header">
+                                    <div class="pdf-ai-notes-box-title">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                            <path d="M12 2.25c.34 0 .647.205.778.52l1.986 4.767a1.5 1.5 0 00.869.869l4.767 1.986a.857.857 0 010 1.576l-4.767 1.986a1.5 1.5 0 00-.869.869l-1.986 4.767a.857.857 0 01-1.576 0l-1.986-4.767a1.5 1.5 0 00-.869-.869L2.77 12.018a.857.857 0 010-1.576l4.767-1.986a1.5 1.5 0 00.869-.869L10.422 2.77c.131-.315.438-.52.778-.52zM19.5 16.5a.75.75 0 01.696.471l.666 1.666 1.666.666a.75.75 0 010 1.394l-1.666.666-.666 1.666a.75.75 0 01-1.394 0l-.666-1.666-1.666-.666a.75.75 0 010-1.394l1.666-.666.666-1.666a.75.75 0 01.7-.471z"/>
+                                        </svg>
+                                        <span>NoteKash AI: <strong>${docTitle}</strong></span>
+                                    </div>
+                                    <span class="pdf-ai-notes-box-count">1 insight</span>
+                                </div>
+                                <div class="pdf-ai-notes-box-body">${content}</div>
+                            </div>
+                        `.trim();
+
+                        const appendToContainer = (container) => {
+                            let box = container.querySelector(`#${boxId}`);
+                            if (box) {
+                                let body = box.querySelector('.pdf-ai-notes-box-body') || box.appendChild(document.createElement('div'));
+                                body.className = 'pdf-ai-notes-box-body';
+                                body.insertAdjacentHTML('beforeend', entryHtml);
+                                const count = body.querySelectorAll('.pdf-ai-note-entry').length;
+                                const countEl = box.querySelector('.pdf-ai-notes-box-count');
+                                if (countEl) countEl.textContent = count === 1 ? '1 insight' : `${count} insights`;
+                            } else {
+                                container.insertAdjacentHTML('beforeend', '<p><br></p>' + buildBoxHtml(entryHtml));
+                            }
+                        };
+
+                        // 3. Update storage content
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(`<div>${article.content || ''}</div>`, 'text/html');
+                        appendToContainer(doc.body.firstElementChild);
+                        article.content = doc.body.firstElementChild.innerHTML;
+                        App.storage.updateArticle(article.id, { content: article.content });
+
+                        // 4. Update live DOM if active
+                        const contentDiv = document.getElementById('article-content');
+                        if (contentDiv && (App.state.activeArticleId === articleId)) {
+                            appendToContainer(contentDiv);
+                        }
+
+                        App.state.isArticleDirty = true;
+                        App.events.saveArticle({ isAutosave: true });
+
+                        // 5. Button feedback
+                        const origHTML = btn.innerHTML;
+                        btn.innerHTML = `<i class="fa-solid fa-check" style="color: #22c55e;"></i> Inserted`;
+                        btn.disabled = true;
+                        setTimeout(() => {
+                            btn.innerHTML = origHTML;
+                            btn.disabled = false;
+                        }, 2500);
+
+                        App.ui.showToast('✨ AI response appended to note & copied!', { type: 'success' });
                     },
 
                     _updateLastViewerMessage(html) {
@@ -4509,13 +4680,31 @@ export const ui = {
                                         format: formatToSave
                                     });
                                     localStorage.setItem('noteKashCustomPrompts', JSON.stringify(prompts));
-                                    App.ui.showToast("Prompt Saved! 💾", { type: 'success' });
+                                    App.ui.showToast("Prompt Bookmarked! 💾", { type: 'success' });
 
                                     // Refresh list
                                     this.state.commands = this._getCommands();
                                     this.state.fuse = App.offline.safeFuse(this.state.commands.filter(c => c.type !== 'separator'), { keys: ['title', 'desc', 'id'], threshold: 0.4 });
                                     this.state.filteredCommands = this.state.commands;
-                                    this._renderCommands();
+                                    if (this.state.mode === 'modal') {
+                                        this._renderCommands();
+                                    }
+
+                                    // Refresh viewer bookmarks popover if open
+                                    const popover = document.getElementById('ai-viewer-bookmarks-popover');
+                                    if (popover && popover.classList.contains('active')) {
+                                        popover.classList.remove('active');
+                                        setTimeout(() => this._toggleViewerBookmarks(), 50);
+                                    }
+
+                                    // Visual bookmark button feedback
+                                    const saveBtn = document.getElementById('ai-viewer-save-prompt-btn');
+                                    if (saveBtn) {
+                                        saveBtn.innerHTML = '<i class="fa-solid fa-bookmark" style="color: var(--primary-color);"></i>';
+                                        setTimeout(() => {
+                                            saveBtn.innerHTML = '<i class="fa-regular fa-bookmark"></i>';
+                                        }, 2000);
+                                    }
                                 }
                             );
                         } catch (e) { console.error(e); }
@@ -4917,11 +5106,18 @@ export const ui = {
                     _handleKeyDown(e) {
                         // CORRECTED: The internal reference must also use the correct name.
                         if (!App.ui.aiMagicModal.state.isOpen) return;
+                        if (this.state.mode === 'viewer') {
+                            if (e.key === 'Escape') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                this.closeViewer();
+                            }
+                            return;
+                        }
                         if (e.key === 'Escape') {
                             e.preventDefault();
                             e.stopPropagation();
-                            if (this.state.mode === 'viewer') this.closeViewer();
-                            else this.close();
+                            this.close();
                             return;
                         }
                         const items = Array.from(document.querySelectorAll('.ai-magic-command-item'));

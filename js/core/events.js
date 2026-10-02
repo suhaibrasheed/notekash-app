@@ -3957,7 +3957,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     const container = range.commonAncestorContainer;
                     const parentElement = container.nodeType === 3 ? container.parentNode : container;
 
-                    if (parentElement.closest('#pdf-text-view-content')) {
+                    if (parentElement.closest('#pdf-text-view-content') || parentElement.closest('.pdf-page-container') || parentElement.closest('.textLayer')) {
                         const text = selection.toString().trim();
                         if (text && type === 'class' && value.startsWith('highlight-')) {
                             App.pdf.highlights.add(text, value);
@@ -9013,13 +9013,17 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                 // UNIFIED LASER POINTER (Read & Stage Mode)
                 toggleSharedLaser(context = 'stage') {
-                    // Context: 'stage' (Focus/Stage Mode) or 'read' (Read/Global Mode)
+                    // Context: 'stage' (Focus/Stage Mode), 'pdf' (PDF Viewer), or 'read' (Read/Global Mode)
                     let overlay, canvasId, pointerId;
 
                     if (context === 'stage') {
                         overlay = document.querySelector('.focus-mode-overlay');
                         canvasId = 'laser-trail-canvas';
                         pointerId = 'laser-pointer';
+                    } else if (context === 'pdf') {
+                        overlay = document.getElementById('pdf-viewer-container') || document.body;
+                        canvasId = 'pdf-laser-canvas';
+                        pointerId = 'pdf-laser-pointer';
                     } else {
                         overlay = document.body;
                         canvasId = 'read-mode-laser-canvas';
@@ -9030,7 +9034,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                     let laserCanvas = document.getElementById(canvasId);
                     let pointer = document.getElementById(pointerId);
-                    const activeClass = context === 'stage' ? 'laser-active' : 'read-mode-laser-active';
+                    const activeClass = context === 'stage' ? 'laser-active' : (context === 'pdf' ? 'pdf-laser-active' : 'read-mode-laser-active');
 
                     // INITIALIZATION
                     if (!pointer) {
@@ -9044,7 +9048,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             borderRadius: '50%',
                             boxShadow: '0 0 8px #ff0055, 0 0 16px #ff0055',
                             pointerEvents: 'none',
-                            zIndex: '2147483647',
+                            zIndex: context === 'pdf' ? '25550' : '2147483647',
                             display: 'none',
                             transform: 'translate(-50%, -50%)',
                             transition: 'transform 0.035s linear, box-shadow 0.2s ease, background 0.2s ease'
@@ -9062,13 +9066,13 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             width: '100%',
                             height: '100%',
                             pointerEvents: 'none',
-                            zIndex: '2147483646'
+                            zIndex: context === 'pdf' ? '25500' : '2147483646'
                         });
                         overlay.appendChild(laserCanvas);
 
                         const resizeCanvas = () => {
-                            laserCanvas.width = context === 'stage' ? overlay.clientWidth : window.innerWidth;
-                            laserCanvas.height = context === 'stage' ? overlay.clientHeight : window.innerHeight;
+                            laserCanvas.width = (context === 'stage' || context === 'pdf') ? overlay.clientWidth : window.innerWidth;
+                            laserCanvas.height = (context === 'stage' || context === 'pdf') ? overlay.clientHeight : window.innerHeight;
                         };
                         window.addEventListener('resize', resizeCanvas);
                         resizeCanvas();
@@ -9078,7 +9082,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                     if (isActive) {
                         // Surgical: Theme Awareness & Aesthetic Upgrade
-                        const themeSource = context === 'stage' ? overlay : (document.querySelector('.article-view-wrapper') || document.body);
+                        const themeSource = context === 'stage' ? overlay : (context === 'pdf' ? (document.getElementById('pdf-viewer-container') || document.body) : (document.querySelector('.article-view-wrapper') || document.body));
                         const style = getComputedStyle(themeSource);
                         const rawText = style.getPropertyValue('--text-primary').trim();
                         const rawPrimary = style.getPropertyValue('--primary-color').trim();
@@ -9117,6 +9121,12 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             : laserCanvas;
 
                         if (context === 'stage') document.getElementById('laser-pointer-toggle')?.classList.add('active');
+                        if (context === 'pdf') {
+                            document.getElementById('pdf-tool-laser')?.classList.add('active');
+                            ['pen', 'rect', 'eraser'].forEach(t => {
+                                document.getElementById(`pdf-tool-${t}`)?.classList.remove('active');
+                            });
+                        }
 
                         const ctx = laserCanvas.getContext('2d', { willReadFrequently: true });
                         let paths = [];
@@ -9193,7 +9203,20 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
 
                         // Event Handlers
+                        const isOverToolbar = (target) => {
+                            return target && target.closest && (
+                                target.closest('#pdf-annotation-toolbar') ||
+                                target.closest('.pdf-compact-toolbar') ||
+                                target.closest('.pdf-viewer-header') ||
+                                target.closest('.pdf-actions-flyout')
+                            );
+                        };
+
                         const moveHandler = (e) => {
+                            if (isOverToolbar(e.target)) {
+                                pointer.style.display = 'none';
+                                return;
+                            }
                             if (pointer.style.display !== 'block') pointer.style.display = 'block';
                             pointer.style.left = `${e.clientX}px`;
                             pointer.style.top = `${e.clientY}px`;
@@ -9201,6 +9224,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         };
                         const downHandler = (e) => {
                             if (e.button !== 0) return;
+                            if (isOverToolbar(e.target)) return;
                             if (context !== 'stage') e.preventDefault();
                             currentPath = [{ x: e.clientX, y: e.clientY }];
                         };
@@ -9217,7 +9241,11 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                         const wheelHandler = (e) => {
                             // Manual scroll relay to fix locked scrolling in laser mode
-                            const scrollTarget = context === 'stage' ? eventTarget : (document.querySelector('main') || document.scrollingElement || document.documentElement || document.body);
+                            const scrollTarget = context === 'stage'
+                                ? eventTarget
+                                : (context === 'pdf'
+                                    ? (document.querySelector('.pdf-viewer-canvas-wrapper') || overlay)
+                                    : (document.querySelector('main') || document.scrollingElement || document.documentElement || document.body));
                             if (!scrollTarget) return;
 
                             // Prevent native to avoid conflict, manually move the scroll position
@@ -9259,6 +9287,12 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         laserCanvas.style.display = 'none';
                         laserCanvas.style.pointerEvents = 'none';
                         if (context === 'stage') document.getElementById('laser-pointer-toggle')?.classList.remove('active');
+                        if (context === 'pdf') {
+                            document.getElementById('pdf-tool-laser')?.classList.remove('active');
+                            if (App.annotationEngine?.state?.isActive && App.annotationEngine?.state?.context === 'pdf') {
+                                App.annotationEngine.updateToolbarUI();
+                            }
+                        }
 
                         const ctx = laserCanvas.getContext('2d', { willReadFrequently: true });
                         ctx.clearRect(0, 0, laserCanvas.width, laserCanvas.height);

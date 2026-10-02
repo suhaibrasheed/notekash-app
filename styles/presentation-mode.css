@@ -1008,7 +1008,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            z-index: 25000;
+            z-index: 30000;
             background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
