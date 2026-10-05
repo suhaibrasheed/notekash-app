@@ -4330,12 +4330,50 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             return;
                         }
 
-                        // Case 2: Standard Paragraph Indentation (User Request)
+                        // Case 2: Standard Paragraph Indentation or X+Tab List Creation
                         const container = range.commonAncestorContainer;
                         const parentElement = container.nodeType === 3 ? container.parentNode : container;
                         const blockElement = parentElement.closest('p, div, h1, h2, h3, h4, h5, h6, blockquote, pre');
 
                         if (blockElement && blockElement.closest('#article-content')) {
+                            const blockText = blockElement.textContent.trim();
+                            const numListMatch = !e.shiftKey && blockText.match(/^(\d+)[\.\)]?$/);
+                            const bulletMatch = !e.shiftKey && blockText.match(/^([*\-])$/);
+
+                            // X+Tab: Number followed by Tab converts into an ordered list
+                            if (numListMatch) {
+                                e.preventDefault();
+                                blockElement.innerHTML = '<br>';
+                                App.util.placeCursor(blockElement, true);
+                                document.execCommand('insertOrderedList', false, null);
+                                const startNum = parseInt(numListMatch[1], 10);
+                                if (startNum > 1) {
+                                    setTimeout(() => {
+                                        const ol = window.getSelection().focusNode?.parentElement?.closest('ol');
+                                        if (ol) ol.start = startNum;
+                                    }, 0);
+                                }
+                                App.state.isArticleDirty = true;
+                                return;
+                            }
+
+                            // Bullet marker (* or -) followed by Tab converts into a bullet list
+                            if (bulletMatch) {
+                                e.preventDefault();
+                                blockElement.innerHTML = '<br>';
+                                App.util.placeCursor(blockElement, true);
+                                document.execCommand('insertUnorderedList', false, null);
+                                if (bulletMatch[1] === '-') {
+                                    setTimeout(() => {
+                                        const ul = window.getSelection().focusNode?.parentElement?.closest('ul');
+                                        if (ul) ul.className = 'bullet-hyphen';
+                                    }, 0);
+                                }
+                                App.state.isArticleDirty = true;
+                                return;
+                            }
+
+                            // Standard Paragraph Indentation
                             e.preventDefault();
 
                             const currentMargin = parseInt(window.getComputedStyle(blockElement).marginLeft) || 0;
@@ -4555,21 +4593,18 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             '>': () => document.execCommand('formatBlock', false, 'blockquote'),
                             '##': () => document.execCommand('formatBlock', false, 'h2')
                         };
-                        const listMatch = text.match(/(\d+)\.$/);
                         const action = shortcuts[trimmedText];
 
-                        if (action) {
+                        // Only trigger markdown shortcut when on an empty line (not inside a paragraph)
+                        const blockElement = textNode.parentElement?.closest('p, div, h1, h2, h3, h4, h5, h6, blockquote') || textNode.parentElement;
+                        const blockText = blockElement ? blockElement.textContent.trim() : trimmedText;
+
+                        if (action && blockText === trimmedText) {
                             e.preventDefault();
                             textNode.textContent = text.slice(0, text.length - trimmedText.length) + '\u00A0';
                             range.setStart(textNode, text.length - trimmedText.length + 1);
                             selection.removeAllRanges(); selection.addRange(range);
                             if (typeof action === 'string') document.execCommand(action, false); else action();
-                        } else if (listMatch) {
-                            e.preventDefault();
-                            textNode.textContent = text.slice(0, -listMatch[0].length) + '\u00A0';
-                            range.setStart(textNode, text.length - listMatch[0].length + 1);
-                            selection.removeAllRanges(); selection.addRange(range);
-                            document.execCommand('insertOrderedList', false);
                         }
                     }
                 },
