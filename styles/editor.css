@@ -1107,6 +1107,224 @@
             border-left-width: 5px !important;
         }
 
+        /* --- Library Search: Snippet Section & Interactive Snippet Tiles --- */
+        .search-snippet-section-header {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 0.25rem 0.45rem 0.25rem;
+            margin-top: 1.25rem;
+            margin-bottom: 0.25rem;
+            border-bottom: 1px solid var(--border-color);
+            user-select: none;
+        }
+
+        .search-snippet-header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 0.03em;
+        }
+
+        .search-snippet-header-title svg {
+            color: var(--primary-color);
+        }
+
+        .search-snippet-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .search-snippet-hint {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .search-snippet-loading-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.78rem;
+            color: var(--primary-color);
+            background: rgba(var(--primary-color-rgb), 0.08);
+            border: 1px solid rgba(var(--primary-color-rgb), 0.22);
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .search-snippet-loading-spinner {
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(var(--primary-color-rgb), 0.25);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+
+        .search-snippet-tile {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg, 14px);
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            position: relative;
+            content-visibility: auto;
+            contain-intrinsic-size: 1px 180px;
+        }
+
+        .search-snippet-tile:hover,
+        .search-snippet-tile:focus-visible {
+            transform: translateY(-3px);
+            border-color: var(--primary-color);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+            outline: none;
+        }
+
+        .search-snippet-tile.search-selected-card {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 0 15px 3px rgba(var(--primary-color-rgb), 0.5);
+            border: 2px solid var(--primary-color) !important;
+        }
+
+        .search-snippet-tile-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .search-snippet-tile-article-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            max-width: 72%;
+        }
+
+        .search-snippet-tile-body {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            max-height: 140px;
+            overflow: hidden;
+            position: relative;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+        }
+
+        .search-snippet-tile-body .snippet {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            border-left: 3px solid var(--primary-color);
+            padding-left: 8px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .search-snippet-tile-body .snippet .highlight-1,
+        .search-snippet-tile-body .snippet .highlight-2,
+        .search-snippet-tile-body .snippet .highlight-3,
+        .search-snippet-tile-body .snippet .highlight-4,
+        .search-snippet-tile-body .snippet .highlight-5,
+        .search-snippet-tile-body .snippet .highlight-6,
+        .search-snippet-tile-body .snippet .highlight-7 {
+            border-radius: 4px;
+            padding: 1px 3px;
+        }
+
+        .snippet-search-container {
+            display: contents;
+        }
+
+        @keyframes spotlightGlowPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(var(--primary-color-rgb, 255, 149, 0), 0.75);
+                outline: 2px solid var(--primary-color, #ff9500);
+            }
+            50% {
+                box-shadow: 0 0 26px 8px rgba(var(--primary-color-rgb, 255, 149, 0), 0.6);
+                outline: 3px solid var(--primary-color, #ff9500);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(var(--primary-color-rgb, 255, 149, 0), 0);
+                outline: 2px solid transparent;
+            }
+        }
+
+        .spotlight-key-focus {
+            animation: spotlightGlowPulse 2.5s ease-out !important;
+            border-radius: 4px;
+        }
+
+        .search-scanning-placeholder {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 2.5rem 1rem;
+            color: var(--text-secondary);
+            background: rgba(var(--primary-color-rgb), 0.02);
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
+            margin: 0.5rem 0;
+        }
+
+        .search-scanning-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        .search-scanning-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 0.88rem;
+        }
+
+        .search-scanning-text strong {
+            color: var(--text-primary);
+        }
+
+        .search-scanning-text span {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
         .card-category-badge {
             padding: 4px 10px;
             border-radius: 12px;
@@ -2923,21 +3141,60 @@
             display: none;
         }
 
+        /* ── Minimalist Polished Exit Orb (Fullscreen / Pro Presenter) ── */
         #focus-mode-toggle {
             position: fixed;
-            bottom: 1.1rem;
-            right: 1.5rem;
-            z-index: 1002;
+            bottom: 1.25rem;
+            right: 1.35rem;
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            padding: 0;
+            border-radius: 50%;
             display: none;
-            animation: fadeIn 0.3s;
+            align-items: center;
+            justify-content: center;
+            background: color-mix(in srgb, var(--bg-secondary) 75%, transparent);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid color-mix(in srgb, var(--border-color) 45%, transparent);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            z-index: 1002;
+            opacity: 0;
+            outline: none;
+            transition: opacity 0.25s ease, transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        /* Subtle minimalist core dot inside the orb (no cross icon) */
+        #focus-mode-toggle::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: color-mix(in srgb, var(--text-secondary) 65%, transparent);
+            transition: transform 0.2s ease, background 0.2s ease;
         }
 
         body.fullscreen-active #focus-mode-toggle {
-            display: block;
+            display: flex;
+            opacity: 0.45;
         }
 
-        #focus-mode-toggle.exit-active {
-            animation: slow-pulse 4s infinite;
+        #focus-mode-toggle:hover {
+            opacity: 1 !important;
+            transform: scale(1.12);
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 0 10px color-mix(in srgb, var(--primary-color) 35%, transparent);
+        }
+
+        #focus-mode-toggle:hover::after {
+            background: var(--primary-color);
+            transform: scale(1.2);
+        }
+
+        #focus-mode-toggle:active {
+            transform: scale(0.94);
         }
 
         @keyframes slow-pulse {
@@ -3709,12 +3966,12 @@
 
         #ai-magic-btn {
             color: var(--primary-color);
-            animation: ai-glow 4s infinite alternate ease-in-out;
-
+            transition: all 0.25s ease;
         }
 
         #ai-magic-btn:hover {
-            animation-play-state: paused;
+            box-shadow: 0 0 14px color-mix(in srgb, var(--primary-color) 40%, transparent);
+            border-color: var(--primary-color);
         }
 
         /* Changes for Bullet */
@@ -4665,8 +4922,7 @@
                     color-mix(in srgb, var(--primary-color) 80%, white) 50%,
                     color-mix(in srgb, var(--primary-color) 90%, white) 75%,
                     var(--primary-color) 100%);
-            background-size: 200% 100%;
-            animation: studyProgressFlow 3s linear infinite;
+            background-size: 100% 100%;
             box-shadow: 0 0 12px color-mix(in srgb, var(--primary-color) 40%, transparent);
             transition: width 0.45s cubic-bezier(0.19, 1, 0.22, 1);
             border-radius: 4px;
@@ -5424,8 +5680,8 @@
         }
 
         .focus-mode-overlay.controls-hidden .immersive-toggle-btn {
-            opacity: 0.5;
-            animation: slow-pulse 4s infinite;
+            opacity: 0.55;
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
         .focus-mode-overlay.controls-hidden .immersive-toggle-btn:hover {

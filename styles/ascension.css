@@ -404,8 +404,8 @@
             background-clip: text;
             background-clip: text;
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: witty-text-glow 6s linear infinite;
+            /* Battery optimization: One-shot entrance shimmer rather than infinite GPU rasterization */
+            animation: witty-text-glow 1.5s ease-out 1 forwards;
         }
 
         [data-theme="light"] .witty-gradient-text {

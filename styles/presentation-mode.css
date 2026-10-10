@@ -621,22 +621,22 @@
         .focus-mode-body .nk-accordion.spotlight-key-focus,
         .focus-mode-body .nk-accordion:focus {
             outline: none;
-            box-shadow: 0 0 0 2px var(--primary-color), 0 4px 12px rgba(0, 0, 0, 0.15);
-            animation: glow-focus 4.5s infinite alternate;
+            box-shadow: 0 0 0 2px var(--primary-color), 0 4px 16px color-mix(in srgb, var(--primary-color) 25%, transparent);
             border-color: var(--primary-color) !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .focus-mode-body .nk-mcq-block.spotlight-key-focus,
         .focus-mode-body .nk-mcq-block:focus {
             outline: none;
             box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 40%, transparent), 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .focus-mode-body .spotlight-key-focus,
         .focus-mode-body .snippet:focus,
         .focus-mode-body .snippet:hover {
             border: 2px solid var(--primary-color) !important;
-            animation: glow-focus 4.5s infinite alternate;
         }
 
         /* --- NEW: Cinematic Effects --- */

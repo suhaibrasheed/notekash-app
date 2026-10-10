@@ -52,7 +52,7 @@ export const settings = {
         jpegQuality: 0.9,
         imageFormat: 'jpeg', // 'jpeg' for compression, 'png' for reliability
         ocrThreshold: 128,
-        proPresenterMode: 'living-cell', // Options: living-cell | tidal-waves | deep-breath | neon-pulse | aurora-flow
+        proPresenterMode: 'living-cell', // Options: living-cell | liquid-glow | breathing-border | electric-flow | sleek-trace | zen-minimal
         audioBitrate: 32000,
         pdfTextViewFontSize: '1.1rem',
         pdfTextViewTheme: 'default',

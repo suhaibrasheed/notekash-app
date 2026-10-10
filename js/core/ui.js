@@ -277,9 +277,103 @@ export const ui = {
                     setTimeout(() => App.ui.filterAndRenderArticles(), 50);
                 },
 
-                filterAndRenderArticles() {
+                handleLibrarySearchInput(value) {
+                    // Abort any pending secondary snippet search immediately
+                    this._snippetSearchRunId = (this._snippetSearchRunId || 0) + 1;
+                    if (this._snippetSearchTimer) {
+                        clearTimeout(this._snippetSearchTimer);
+                        this._snippetSearchTimer = null;
+                    }
+
+                    // Cancel any pending title search animation frame
+                    if (this._titleSearchRaf) {
+                        cancelAnimationFrame(this._titleSearchRaf);
+                        this._titleSearchRaf = null;
+                    }
+
+                    // Schedule instant title filtering on requestAnimationFrame so typing in <input> has 0ms latency
+                    this._titleSearchRaf = requestAnimationFrame(() => {
+                        this._titleSearchRaf = null;
+                        this.filterAndRenderArticles({ instantTitleOnly: true });
+                    });
+                },
+
+                getArticleSnippets(article) {
+                    if (!article) return [];
+                    if (article.snippets && article._snippetsCachedUpdatedAt === article.updatedAt) {
+                        return article.snippets;
+                    }
+                    const content = article.content || '';
+                    if (!content) {
+                        article.snippets = [];
+                        article._snippetsCachedUpdatedAt = article.updatedAt;
+                        return [];
+                    }
+
+                    // Fast pre-check: does article contain ANY snippet markup?
+                    const hasSnippetMarkup = content.includes('highlight-') ||
+                        content.includes('==') ||
+                        content.includes('nk-text-tile') ||
+                        content.includes('mindmap-node') ||
+                        content.includes('cloze-flashcard') ||
+                        content.includes('nk-mcq') ||
+                        content.includes('nk-accordion') ||
+                        content.includes('nk-timeline');
+
+                    if (!hasSnippetMarkup) {
+                        article.snippets = [];
+                        article._snippetsCachedUpdatedAt = article.updatedAt;
+                        return [];
+                    }
+
+                    // Native snippet extraction (identical to All Snippets view & Cmd+K)
+                    let snippets = App.util.extractSnippets(article, ['highlight', 'mindmap', 'blocks', 'cloze', 'mcq'], true);
+                    if (Array.isArray(snippets)) {
+                        snippets = snippets.filter(s => s && s.html && !s.html.includes('class="rendered-tag"'));
+                    } else {
+                        snippets = [];
+                    }
+                    article.snippets = snippets;
+                    article._snippetsCachedUpdatedAt = article.updatedAt;
+                    return snippets;
+                },
+
+                getSnippetTileHTML(snippet, article) {
+                    const userCategories = App.settings.get('userCategories') || [];
+                    const categoryObj = userCategories.find(c => c.name === article.category) || { name: article.category, colorIndex: 0 };
+                    const catBgColor = App.util.getCategoryColor(categoryObj.colorIndex);
+
+                    const safeArticleTitle = App.util.escapeHtml(article.title || 'Untitled Note');
+                    const safeSnippetHtml = snippet.html || `<span class="highlight-1">${App.util.escapeHtml(snippet.text || '')}</span>`;
+                    const rawSnippetText = (snippet.text || '').replace(/\s+/g, ' ').trim();
+                    const snippetId = snippet.id || `snip-${App.util.cyrb53(rawSnippetText)}`;
+                    const safeSnippetTextAttr = App.util.escapeHtml(rawSnippetText);
+
+                    return `<div class="search-snippet-tile ui-card" tabindex="0" data-article-id="${article.id}" data-snippet-id="${snippetId}" data-snippet-text="${safeSnippetTextAttr}">
+                        <div class="search-snippet-tile-header">
+                            <span class="search-snippet-tile-article-title" title="${safeArticleTitle}">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity: 0.6; flex-shrink: 0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                ${safeArticleTitle}
+                            </span>
+                            <span class="card-category-badge category-pill" style="background-color: ${catBgColor}; padding: 2px 7px; font-size: 0.72rem; flex-shrink: 0;">${App.util.getCategoryDisplayName(categoryObj.name)}</span>
+                        </div>
+                        <div class="search-snippet-tile-body">
+                            <div class="snippet">${safeSnippetHtml}</div>
+                        </div>
+                    </div>`;
+                },
+
+                filterAndRenderArticles(options = {}) {
                     const grid = document.getElementById('article-grid');
                     if (!grid) return;
+
+                    // Clean up any pending snippet search job
+                    if (this._snippetSearchTimer) {
+                        clearTimeout(this._snippetSearchTimer);
+                        this._snippetSearchTimer = null;
+                    }
+                    this._snippetSearchRunId = (this._snippetSearchRunId || 0) + 1;
+                    const currentRunId = this._snippetSearchRunId;
 
                     const searchTerm = document.getElementById('search-input')?.value || '';
                     let articlesToDisplay = [...App.state.articles];
@@ -323,15 +417,15 @@ export const ui = {
                     const categoryMatch = currentSearchTerm.match(/^\*(\w*)\s*/);
                     if (categoryMatch) {
                         const prefix = categoryMatch[1].toLowerCase();
-                        const userCategories = App.settings.get('userCategories'); // Get the category objects
+                        const userCategories = App.settings.get('userCategories');
 
-                        if (prefix && userCategories) { // Add a check for userCategories
+                        if (prefix && userCategories) {
                             const matchingCategoryNames = userCategories
-                                .filter(catObj => // Filter the objects directly
+                                .filter(catObj =>
                                     catObj.name.toLowerCase().startsWith(prefix) ||
                                     (App.util.getCategoryDisplayName(catObj.name) || '').toLowerCase().startsWith(prefix)
                                 )
-                                .map(catObj => catObj.name); // Then get the names
+                                .map(catObj => catObj.name);
 
                             const matchingCategorySet = new Set(matchingCategoryNames);
                             if (matchingCategorySet.size > 0) {
@@ -347,106 +441,273 @@ export const ui = {
                         articlesToDisplay = articlesToDisplay.filter(a => a.category === activeCategory);
                     }
 
-                    if (currentSearchTerm) {
-                        // --- OPTIMIZATION: Global Fuse Caching + Intersection ---
-                        let keywordFilteredIds = null;
-                        const totalArticles = App.state.articles.length;
-
-                        // Rebuild Index if missing, dirty, or size changed (add/delete)
-                        if (!App.state.globalSearchIndex || App.state.searchIndexDirty || App.state.globalSearchIndex.size !== totalArticles) {
-                            const searchableData = App.state.articles.map(article => ({
-                                id: article.id,
-                                title: article.title,
-                                tags: (article.tags || []).join(' '),
-                                snippets: App.util.extractSnippets(article, 'highlight').map(s => s.text)
-                            }));
-
-                            App.state.globalSearchIndex = App.offline.safeFuse(searchableData, {
-                                keys: [{ name: 'title', weight: 0.6 }, { name: 'tags', weight: 0.3 }, { name: 'snippets', weight: 0.1 }],
-                                includeScore: true, threshold: 0.4
-                            });
-                            App.state.globalSearchIndex.size = totalArticles;
-                            App.state.searchIndexDirty = false;
-                        }
-
-                        const results = App.state.globalSearchIndex.search(currentSearchTerm);
-                        const filteredIds = new Set(results.map(r => r.item.id));
-                        articlesToDisplay = articlesToDisplay.filter(a => filteredIds.has(a.id));
-                    }
-
                     // Hide the "Searching..." toast if it exists
                     const searchingToast = document.getElementById('search-feedback-toast');
                     if (searchingToast) App.ui.hideToast(searchingToast);
 
+                    // --- CASE A: NON-KEYWORD SEARCH (Normal Library Browsing) ---
+                    if (!currentSearchTerm) {
+                        let finalHTML = '';
+
+                        if (!App.license.isPremium()) {
+                            const articlesUsed = App.state.articles.length;
+                            const articleLimit = App.config.sparkTierLimit;
+                            const percentageUsed = Math.min(100, Math.round((articlesUsed / articleLimit) * 100));
+
+                            finalHTML += `
+                            <div class="article-card library-premium-card" title="A message from the developer...">
+                                <div class="card-category-badge premium-badge">✨ Spark Tier</div>
+                                <h3 class="card-title">You've used ${percentageUsed}% Quota (${articlesUsed} of ${articleLimit} notes)</h3>
+                                <div class="card-footer premium-card-footer">
+                                    <div class="premium-progress-bar">
+                                        <div class="premium-progress" style="width: ${percentageUsed}%;"></div>
+                                    </div>
+                                    <span class="premium-cta-text">Click to see what's possible →</span>
+                                </div>
+                            </div>`;
+                        }
+
+                        if (articlesToDisplay.length === 0) {
+                            if (App.state.articles.length === 0) {
+                                finalHTML += `<div class="empty-state" style="grid-column: 1 / -1;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"/><path d="M12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+                                <h3>Your Second Brain Awaits!</h3>
+                                <p>Click the <strong>+</strong> button in the top right to create your first note.</p>
+                            </div>`;
+                            } else if (activeCategory !== 'All' && readCountFilter === null && !categoryMatch) {
+                                finalHTML += `<div class="empty-state" style="grid-column: 1 / -1;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                <h3>No Notes in ${App.util.escapeHtml(App.util.getCategoryDisplayName(activeCategory))}</h3>
+                                <p>Click <strong>+</strong> in the top header or assign existing notes to this category.</p>
+                            </div>`;
+                            } else {
+                                finalHTML += `<div class="empty-state" style="grid-column: 1 / -1;"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><h3>Ouch, No Results Found</h3><p>Try a different title, tag, or filter combination.</p></div>`;
+                            }
+                        }
+
+                        grid.innerHTML = finalHTML;
+                        App.state.libraryRender.filteredArticles = articlesToDisplay;
+                        App.state.libraryRender.currentIndex = 0;
+
+                        if (App.state.libraryObserver) App.state.libraryObserver.disconnect();
+
+                        if (articlesToDisplay.length > 0) {
+                            this.renderArticleBatch(20);
+
+                            const sentinel = document.getElementById('library-sentinel');
+                            if (sentinel) {
+                                App.state.libraryObserver = new IntersectionObserver((entries) => {
+                                    if (entries[0].isIntersecting && App.state.libraryRender.currentIndex < App.state.libraryRender.filteredArticles.length) {
+                                        this.renderArticleBatch(20);
+                                    }
+                                }, { rootMargin: '400px' });
+                                App.state.libraryObserver.observe(sentinel);
+                            }
+                        }
+
+                        const visibleCards = Array.from(grid.querySelectorAll('.article-card:not(.library-premium-card)'));
+                        const shouldHighlight = readCountFilter !== null || !!categoryMatch;
+                        visibleCards.forEach(card => card.classList.toggle('search-highlight-card', shouldHighlight));
+                        document.querySelectorAll('.search-selected-card').forEach(c => c.classList.remove('search-selected-card'));
+                        App.state.libraryRender.searchResults = visibleCards;
+                        App.state.libraryRender.selectedIndex = -1;
+                        if (shouldHighlight && visibleCards.length > 0) {
+                            App.state.libraryRender.selectedIndex = 0;
+                            visibleCards[0].classList.add('search-selected-card');
+                            if (document.activeElement.id === 'sort-filter') {
+                                visibleCards[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }
+                        return;
+                    }
+
+                    // --- CASE B: KEYWORD SEARCH (Title-First Instant Path + Async Snippets) ---
+                    const termLower = currentSearchTerm.toLowerCase();
+                    const terms = termLower.split(/\s+/).filter(Boolean);
+                    const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const wordBoundaryRegex = new RegExp(`\\b${escapeRegex(termLower)}\\b`, 'i');
+
+                    const titleMatches = [];
+                    const nonTitleArticles = [];
+
+                    for (const article of articlesToDisplay) {
+                        if (!article._titleLower) article._titleLower = (article.title || '').toLowerCase();
+                        const titleLower = article._titleLower;
+                        const tags = article.tags || [];
+
+                        const matchesTitleOrTags = terms.every(t =>
+                            titleLower.includes(t) ||
+                            tags.some(tag => (tag || '').toLowerCase().includes(t))
+                        );
+
+                        if (matchesTitleOrTags) {
+                            let rank = 0;
+                            if (titleLower === termLower) rank += 100;
+                            else if (titleLower.startsWith(termLower)) rank += 80;
+                            else if (wordBoundaryRegex.test(titleLower)) rank += 60;
+                            else if (titleLower.includes(termLower)) rank += 40;
+                            else rank += 20; // Tag match
+                            titleMatches.push({ article, rank });
+                        } else {
+                            nonTitleArticles.push(article);
+                        }
+                    }
+
+                    titleMatches.sort((a, b) => b.rank - a.rank);
+                    const sortedTitleArticles = titleMatches.map(m => m.article);
+
                     let finalHTML = '';
 
-                    if (!App.license.isPremium()) {
-                        const articlesUsed = App.state.articles.length;
-                        const articleLimit = App.config.sparkTierLimit;
-                        const percentageUsed = Math.min(100, Math.round((articlesUsed / articleLimit) * 100));
+                    // Title matches appear as NORMAL article cards (No extra headings or noise!)
+                    const maxTitleCards = 30;
+                    const renderedTitleArticles = sortedTitleArticles.slice(0, maxTitleCards);
+                    for (const article of renderedTitleArticles) {
+                        finalHTML += this.getArticleCardHTML(article);
+                    }
 
-                        finalHTML += `
-                        <div class="article-card library-premium-card" title="A message from the developer...">
-                            <div class="card-category-badge premium-badge">✨ Spark Tier</div>
-                            <h3 class="card-title">You've used ${percentageUsed}% Quota (${articlesUsed} of ${articleLimit} notes)</h3>
-                            <div class="card-footer premium-card-footer">
-                                <div class="premium-progress-bar">
-                                    <div class="premium-progress" style="width: ${percentageUsed}%;"></div>
+                    // Snippet search condition: ONLY run snippet search if query length >= 3
+                    const canSearchSnippets = currentSearchTerm.length >= 3;
+
+                    if (canSearchSnippets) {
+                        finalHTML += `<div id="snippet-search-container" class="snippet-search-container" style="grid-column: 1 / -1; width: 100%;">
+                            <div class="search-snippet-section-header" style="grid-column: 1 / -1; margin-top: ${sortedTitleArticles.length > 0 ? '1.5rem' : '0.5rem'};">
+                                <div class="search-snippet-header-title">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 1.555a2.5 2.5 0 1 1-.707.708L8 9.318l-1.66 1.555a2.5 2.5 0 1 1-.707-.708L7.19 8.61 3.5 3.5zM2 13a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0zm11 0a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0z"/></svg>
+                                    <span>Matching Snippets</span>
                                 </div>
-                                <span class="premium-cta-text">Click to see what's possible →</span>
+                                <div class="search-snippet-loading-pill">
+                                    <div class="search-snippet-loading-spinner"></div>
+                                    <span>Loading snippets...</span>
+                                </div>
                             </div>
                         </div>`;
+                    } else {
+                        finalHTML += `<div id="snippet-search-container" class="snippet-search-container" style="grid-column: 1 / -1; width: 100%;"></div>`;
                     }
 
-                    if (articlesToDisplay.length === 0) {
-                        if (App.state.articles.length === 0) {
-                            finalHTML += `<div class="empty-state" style="grid-column: 1 / -1;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"/><path d="M12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
-                            <h3>Your Second Brain Awaits!</h3>
-                            <p>Click the <strong>+</strong> button in the top right to create your first note.</p>
-                        </div>`;
-                        } else if (activeCategory !== 'All' && !currentSearchTerm && readCountFilter === null && !categoryMatch) {
-                            finalHTML += `<div class="empty-state" style="grid-column: 1 / -1;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                            <h3>No Notes in ${App.util.escapeHtml(App.util.getCategoryDisplayName(activeCategory))}</h3>
-                            <p>Click <strong>+</strong> in the top header or assign existing notes to this category.</p>
-                        </div>`;
-                        } else {
-                            finalHTML += `<div class="empty-state" style="grid-column: 1 / -1;"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><h3>Ouch, No Results Found</h3><p>Try a different title, tag, or filter combination.</p></div>`;
-                        }
-                    }
                     grid.innerHTML = finalHTML;
-                    App.state.libraryRender.filteredArticles = articlesToDisplay;
-                    App.state.libraryRender.currentIndex = 0;
-
                     if (App.state.libraryObserver) App.state.libraryObserver.disconnect();
 
-                    if (articlesToDisplay.length > 0) {
-                        this.renderArticleBatch(20);
-
-                        const sentinel = document.getElementById('library-sentinel');
-                        if (sentinel) {
-                            App.state.libraryObserver = new IntersectionObserver((entries) => {
-                                if (entries[0].isIntersecting && App.state.libraryRender.currentIndex < App.state.libraryRender.filteredArticles.length) {
-                                    this.renderArticleBatch(20);
-                                }
-                            }, { rootMargin: '400px' });
-                            App.state.libraryObserver.observe(sentinel);
-                        }
-                    }
-
-                    const visibleCards = Array.from(grid.querySelectorAll('.article-card:not(.library-premium-card)'));
-                    const shouldHighlight = !!currentSearchTerm || readCountFilter !== null || !!categoryMatch;
-                    visibleCards.forEach(card => card.classList.toggle('search-highlight-card', shouldHighlight));
+                    const visibleCards = Array.from(grid.querySelectorAll('.article-card:not(.library-premium-card), .search-snippet-tile'));
+                    visibleCards.forEach(card => card.classList.add('search-highlight-card'));
                     document.querySelectorAll('.search-selected-card').forEach(c => c.classList.remove('search-selected-card'));
                     App.state.libraryRender.searchResults = visibleCards;
                     App.state.libraryRender.selectedIndex = -1;
-                    if (shouldHighlight && visibleCards.length > 0) {
+
+                    if (visibleCards.length > 0) {
                         App.state.libraryRender.selectedIndex = 0;
                         visibleCards[0].classList.add('search-selected-card');
-                        if (document.activeElement.id === 'sort-filter') {
-                            visibleCards[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+
+                    // Secondary deep snippet search: ONLY runs when query length >= 3, and debounced to 300ms after user pauses typing
+                    if (canSearchSnippets && articlesToDisplay.length > 0) {
+                        this._snippetSearchTimer = setTimeout(() => {
+                            this.performSecondarySnippetSearch(currentSearchTerm, articlesToDisplay, currentRunId, sortedTitleArticles.length > 0);
+                        }, 300);
+                    } else if (!canSearchSnippets && sortedTitleArticles.length === 0) {
+                        const snippetContainer = document.getElementById('snippet-search-container');
+                        if (snippetContainer) {
+                            snippetContainer.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><h3>Ouch, No Results Found</h3><p>Type at least 3 characters to search note snippets, or try a different title.</p></div>`;
                         }
+                    }
+                },
+
+                async performSecondarySnippetSearch(searchTerm, candidateArticles, runId, hasTitleMatches) {
+                    if (this._snippetSearchRunId !== runId) return;
+
+                    const snippetContainer = document.getElementById('snippet-search-container');
+                    const grid = document.getElementById('article-grid');
+                    if (!grid || !snippetContainer) return;
+
+                    const terms = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+                    if (terms.length === 0) return;
+                    const matchingSnippets = [];
+
+                    const chunkSize = 15;
+                    for (let i = 0; i < candidateArticles.length; i += chunkSize) {
+                        // Immediately abort if user typed another character!
+                        if (this._snippetSearchRunId !== runId) return;
+
+                        const chunk = candidateArticles.slice(i, i + chunkSize);
+                        for (const article of chunk) {
+                            if (this._snippetSearchRunId !== runId) return;
+
+                            const content = article.content || '';
+                            if (!content) continue;
+
+                            // Fast string check: if note body does not contain all search terms, skip immediately!
+                            const contentLower = content.toLowerCase();
+                            if (!terms.every(t => contentLower.includes(t))) continue;
+
+                            // Fast markup check
+                            const hasSnippetMarkup = content.includes('highlight-') ||
+                                content.includes('==') ||
+                                content.includes('nk-text-tile') ||
+                                content.includes('mindmap-node') ||
+                                content.includes('cloze-flashcard') ||
+                                content.includes('nk-mcq') ||
+                                content.includes('nk-accordion') ||
+                                content.includes('nk-timeline');
+                            if (!hasSnippetMarkup) continue;
+
+                            // Scan ONLY curated snippets (highlights, textiles, mindmaps, clozes) - skip normal body text
+                            const snippets = this.getArticleSnippets(article);
+                            for (const snip of snippets) {
+                                if (!snip || !snip.text) continue;
+                                const snipTextLower = snip.text.toLowerCase();
+                                if (terms.every(t => snipTextLower.includes(t))) {
+                                    matchingSnippets.push({
+                                        snippet: snip,
+                                        article: article
+                                    });
+                                }
+                            }
+                        }
+
+                        // Yield to browser event loop so UI / keystrokes are NEVER blocked!
+                        if (i + chunkSize < candidateArticles.length) {
+                            await new Promise(resolve => setTimeout(resolve, 8));
+                        }
+                    }
+
+                    if (this._snippetSearchRunId !== runId) return;
+
+                    if (matchingSnippets.length > 0) {
+                        let snippetHTML = `
+                        <div class="search-snippet-section-header" style="grid-column: 1 / -1; margin-top: ${hasTitleMatches ? '1.5rem' : '0.5rem'};">
+                            <div class="search-snippet-header-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 1.555a2.5 2.5 0 1 1-.707.708L8 9.318l-1.66 1.555a2.5 2.5 0 1 1-.707-.708L7.19 8.61 3.5 3.5zM2 13a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0zm11 0a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0z"/></svg>
+                                <span>Matching Snippets</span>
+                                <span class="search-snippet-count">${matchingSnippets.length}</span>
+                            </div>
+                            <span class="search-snippet-hint">Click a snippet to jump directly into the note</span>
+                        </div>
+                        <div class="snippet-matches-grid" style="display: contents;">`;
+
+                        for (const item of matchingSnippets) {
+                            snippetHTML += this.getSnippetTileHTML(item.snippet, item.article);
+                        }
+                        snippetHTML += `</div>`;
+                        snippetContainer.innerHTML = snippetHTML;
+                    } else {
+                        if (hasTitleMatches) {
+                            snippetContainer.innerHTML = '';
+                        } else {
+                            snippetContainer.innerHTML = `
+                            <div class="empty-state" style="grid-column: 1 / -1;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <h3>Ouch, No Results Found</h3>
+                                <p>No titles or snippets matched "<strong>${App.util.escapeHtml(searchTerm)}</strong>".</p>
+                            </div>`;
+                        }
+                    }
+
+                    const visibleCards = Array.from(grid.querySelectorAll('.article-card:not(.library-premium-card), .search-snippet-tile'));
+                    visibleCards.forEach(card => card.classList.add('search-highlight-card'));
+                    App.state.libraryRender.searchResults = visibleCards;
+                    if (App.state.libraryRender.selectedIndex === -1 && visibleCards.length > 0) {
+                        App.state.libraryRender.selectedIndex = 0;
+                        visibleCards[0].classList.add('search-selected-card');
                     }
                 },
 
@@ -532,7 +793,6 @@ export const ui = {
                     const date = new Date(article.updatedAt);
                     const dateHTML = `<span class="card-date">${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>`;
 
-                    // UPDATED: Note the inline style for background-color and removal of data-category
                     return `<div class="article-card ui-card" tabindex="0" data-id="${article.id}" style="${borderStyle}">
                     <div class="card-header-info">
                         <div class="card-category-badge category-pill" style="background-color: ${backgroundColor};">${App.util.getCategoryDisplayName(categoryObj.name)}</div>
@@ -1086,10 +1346,15 @@ export const ui = {
                 },
 
                 async renderArticleView(container, data) {
-                    const { id, mode, articleObject, scrollToSnippetId, overrideContent, restoredScrollTop, isPreviewing } = data; // Added isPreviewing
+                    const { id, mode, articleObject, scrollToSnippetId, scrollToSnippetText, overrideContent, restoredScrollTop, isPreviewing } = data || {};
                     let article = articleObject ? articleObject : App.storage.getArticle(id);
 
                     if (!article) { App.router.navigateTo('library'); return; }
+
+                    const mainEl = document.querySelector('main');
+                    if (mainEl && typeof restoredScrollTop !== 'number' && !scrollToSnippetId && !scrollToSnippetText) {
+                        mainEl.scrollTop = 0;
+                    }
 
                     // ... (keep the existing content loading logic here) ...
                     if (article.content === undefined && !articleObject && !overrideContent) {
@@ -1148,21 +1413,147 @@ export const ui = {
                         }, 50);
                     }
 
-                    if (scrollToSnippetId) {
-                        setTimeout(() => {
-                            let targetElement = document.getElementById(scrollToSnippetId);
-                            // NEW: Check if it's a PDF pill
-                            if (!targetElement && scrollToSnippetId.startsWith('pdf_')) {
+                    if (scrollToSnippetId || scrollToSnippetText) {
+                        const scrollToSnippetInNote = (isFinalCheck = false) => {
+                            const contentDiv = document.getElementById('article-content');
+                            const mainEl = document.querySelector('main');
+                            if (!contentDiv || !mainEl) return false;
+
+                            let targetElement = null;
+
+                            // 1. Direct ID match
+                            if (scrollToSnippetId) {
+                                const el = document.getElementById(scrollToSnippetId);
+                                if (el && contentDiv.contains(el)) targetElement = el;
+                            }
+
+                            // 2. PDF Attachment Pill
+                            if (!targetElement && scrollToSnippetId && scrollToSnippetId.startsWith('pdf_')) {
                                 targetElement = document.querySelector(`.pdf-attachment-pill[data-pdf-id="${scrollToSnippetId}"]`);
                             }
-                            if (targetElement) {
-                                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                targetElement.style.transition = 'background-color 0.5s, box-shadow 0.5s, border-color 0.5s';
-                                targetElement.style.boxShadow = `0 0 15px 5px var(--hl-1-border)`;
-                                targetElement.style.borderColor = 'var(--hl-1-border)'; // For PDF pills
-                                setTimeout(() => { targetElement.style.boxShadow = ''; targetElement.style.borderColor = ''; }, 2500);
+
+                            // 3. Data-attribute match
+                            if (!targetElement && scrollToSnippetId) {
+                                try {
+                                    targetElement = contentDiv.querySelector(`[data-snippet-id="${CSS.escape(scrollToSnippetId)}"], [data-id="${CSS.escape(scrollToSnippetId)}"]`);
+                                } catch (e) {}
                             }
-                        }, 100);
+
+                            // 4. Scored text content match across all snippet candidate elements
+                            const cleanSnippet = (scrollToSnippetText || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                            if (!targetElement && cleanSnippet) {
+                                const candidates = contentDiv.querySelectorAll('.highlight-1, .highlight-2, .highlight-3, .highlight-4, .highlight-5, .highlight-6, .highlight-7, mark, [class*="highlight-"], .nk-text-tile, .mindmap-node, .cloze-flashcard, .nk-mcq-block, .nk-accordion, .nk-timeline-block, blockquote, p');
+                                let bestScore = 0;
+                                let bestCandidate = null;
+
+                                for (const el of candidates) {
+                                    const elTxt = (el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                                    if (!elTxt) continue;
+
+                                    let score = 0;
+                                    if (elTxt === cleanSnippet) {
+                                        score = 1000;
+                                    } else if (elTxt.includes(cleanSnippet)) {
+                                        score = 600 + Math.min(cleanSnippet.length, 100);
+                                    } else if (cleanSnippet.includes(elTxt) && elTxt.length >= 10) {
+                                        score = 400 + Math.min(elTxt.length, 80);
+                                    } else {
+                                        const prefix = cleanSnippet.slice(0, 35).trim();
+                                        if (prefix.length >= 12 && elTxt.includes(prefix)) {
+                                            score = 300 + prefix.length;
+                                        }
+                                    }
+
+                                    // Prefer specialized highlight/tile elements over generic outer containers
+                                    if (score > 0 && el.matches('.highlight-1, .highlight-2, .highlight-3, .highlight-4, .highlight-5, .highlight-6, .highlight-7, mark, [class*="highlight-"], .nk-text-tile')) {
+                                        score += 50;
+                                    }
+
+                                    if (score > bestScore) {
+                                        bestScore = score;
+                                        bestCandidate = el;
+                                    }
+                                }
+
+                                if (bestScore >= 50) {
+                                    targetElement = bestCandidate;
+                                }
+                            }
+
+                            // 5. Index-based match for generated snippet IDs (e.g. tile-..., snip-..., mcq-...)
+                            if (!targetElement && scrollToSnippetId) {
+                                const match = scrollToSnippetId.match(/^(snip|tile|mcq|accordion|timeline|chart|cloze|img)-.+?-(\d+)$/);
+                                if (match) {
+                                    const type = match[1];
+                                    const snipIndex = parseInt(match[2], 10);
+                                    let selector = '';
+                                    if (type === 'snip') selector = '.highlight-1, .highlight-2, .highlight-3, .highlight-4, .highlight-5, .highlight-6, .highlight-7, mark, [class*="highlight-"]';
+                                    else if (type === 'tile') selector = '.nk-text-tile';
+                                    else if (type === 'mcq') selector = '.nk-mcq-block';
+                                    else if (type === 'accordion') selector = '.nk-accordion';
+                                    else if (type === 'timeline') selector = '.nk-timeline-block';
+                                    else if (type === 'chart') selector = '.chart-container';
+                                    else if (type === 'cloze') selector = '.cloze-flashcard';
+                                    else if (type === 'img') selector = '.image-container.highlighted-image';
+
+                                    if (selector) {
+                                        const elements = contentDiv.querySelectorAll(selector);
+                                        if (elements && elements[snipIndex]) {
+                                            targetElement = elements[snipIndex];
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (targetElement) {
+                                // If inside a collapsed accordion, expand it first
+                                const parentAccordion = targetElement.closest('.nk-accordion');
+                                if (parentAccordion && !parentAccordion.classList.contains('is-open')) {
+                                    parentAccordion.classList.add('is-open');
+                                }
+
+                                // Calculate pixel offset directly inside mainEl (the actual scrolling container)
+                                const targetRect = targetElement.getBoundingClientRect();
+                                const mainRect = mainEl.getBoundingClientRect();
+                                const currentScroll = mainEl.scrollTop;
+                                const offsetFromMain = targetRect.top - mainRect.top;
+                                const targetScrollTop = currentScroll + offsetFromMain - (mainEl.clientHeight / 2) + (targetElement.clientHeight / 2);
+
+                                mainEl.scrollTo({
+                                    top: Math.max(0, targetScrollTop),
+                                    behavior: isFinalCheck ? 'auto' : 'smooth'
+                                });
+
+                                // Call scrollIntoView as native fallback
+                                try {
+                                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                } catch (e) {}
+
+                                // Visual pulse highlight
+                                targetElement.classList.add('spotlight-key-focus');
+                                targetElement.style.transition = 'all 0.4s ease';
+                                targetElement.style.boxShadow = '0 0 24px 8px var(--hl-1-border, #ff9500)';
+                                targetElement.style.outline = '2px solid var(--primary-color, #ff9500)';
+                                targetElement.style.borderRadius = '4px';
+
+                                setTimeout(() => {
+                                    targetElement.style.boxShadow = '';
+                                    targetElement.style.outline = '';
+                                    targetElement.classList.remove('spotlight-key-focus');
+                                }, 3000);
+
+                                return true;
+                            }
+                            return false;
+                        };
+
+                        // Staged execution: immediate after DOM paint, then alignment check once view fade-in finishes (320ms)
+                        setTimeout(() => {
+                            scrollToSnippetInNote(false);
+                            setTimeout(() => {
+                                scrollToSnippetInNote(true);
+                            }, 300);
+                        }, 60);
                     }
 
                     setTimeout(() => App.events.updateReadingProgress(), 100);
@@ -1294,12 +1685,21 @@ export const ui = {
                         App.events.updateDeckTileWidths(contentDiv);
                         App.events.normalizeStatCardColors(contentDiv);
 
+                        // Ensure all rendered snippets have deterministic ID matching extractSnippets
+                        contentDiv.querySelectorAll('.highlight-1, .highlight-2, .highlight-3, .highlight-4, .highlight-5, .highlight-6, .highlight-7, mark, [class*="highlight-"], .nk-text-tile, .mindmap-node, .cloze-flashcard').forEach(el => {
+                            if (!el.id) {
+                                const raw = (el.matches('.nk-text-tile') ? (el.querySelector('.nk-text-tile-content')?.textContent || el.textContent) : el.textContent || '').replace(/\s+/g, ' ').trim();
+                                if (raw) el.id = `snip-${App.util.cyrb53(raw)}`;
+                            }
+                        });
+
                         // RESET MCQ STATE: Remove previous answer states so users can re-interact with MCQs
                         contentDiv.querySelectorAll('.nk-mcq-block').forEach(mcqBlock => {
                             mcqBlock.removeAttribute('data-answered');
                             mcqBlock.removeAttribute('data-user-incorrect');
+                            mcqBlock.removeAttribute('data-evaluating');
                             mcqBlock.querySelectorAll('.nk-mcq-option').forEach(option => {
-                                option.classList.remove('correct', 'incorrect');
+                                option.classList.remove('correct', 'incorrect', 'is-holding', 'is-selecting', 'is-revealed');
                             });
                         });
 
@@ -2225,7 +2625,7 @@ export const ui = {
                     container.innerHTML = `<div class="study-view ${activeThemeClass}" role="dialog" aria-modal="true" aria-label="Study Session">
                 <div class="study-background" style="${backgroundStyle}"></div>
                 <div class="study-content-container">
-                    <div class="study-card" onclick="if (this.querySelector('.nk-mcq-block') && !this.querySelector('.nk-mcq-block[data-answered=true]')) return; this.classList.toggle('is-flipped')" tabindex="0" aria-label="Flashcard, press Space to flip">
+                    <div class="study-card" onclick="if (this.querySelector('.study-card-front .nk-mcq-block') && this.dataset.hasAnswered !== 'true') return; this.classList.toggle('is-flipped')" tabindex="0" aria-label="Flashcard, press Space to flip">
                         <div class="study-card-face study-card-front"><div class="study-card-content-box ${contentBoxClass}" style="border-color: ${borderColor};">${cardFront}</div></div>
                         <div class="study-card-face study-card-back"><div class="study-card-content-box" style="border-color: ${borderColor};">${cardBack}</div></div>
                     </div>
@@ -6065,7 +6465,8 @@ export const ui = {
                         { id: 'liquid-glow', name: '💧 Liquid Glow' },
                         { id: 'breathing-border', name: '🫁 Breathing Border' },
                         { id: 'electric-flow', name: '⚡ Phantom Wire' },
-                        { id: 'sleek-trace', name: '🎯 Sleek Trace' }
+                        { id: 'sleek-trace', name: '🎯 Sleek Trace' },
+                        { id: 'zen-minimal', name: '🍃 Zen Minimal' }
                     ];
                     const currentProPresenterMode = App.settings.get('proPresenterMode') || 'living-cell';
                     const isProPresenterLocked = !App.license.isPremium();

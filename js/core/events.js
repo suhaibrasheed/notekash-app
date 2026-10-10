@@ -687,6 +687,25 @@ export const events = {
                                         return;
                                     }
 
+                                    // Handle Snippet Tile Click
+                                    const snippetTile = e.target.closest('.search-snippet-tile');
+                                    if (snippetTile) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        const articleId = snippetTile.dataset.articleId;
+                                        const snippetId = snippetTile.dataset.snippetId;
+                                        const snippetText = snippetTile.dataset.snippetText || '';
+                                        if (articleId) {
+                                            App.router.navigateTo('article', {
+                                                id: articleId,
+                                                mode: 'read',
+                                                scrollToSnippetId: snippetId,
+                                                scrollToSnippetText: snippetText
+                                            });
+                                        }
+                                        return;
+                                    }
+
                                     // Handle Regular Cards
                                     const card = e.target.closest('.article-card');
                                     if (card) {
@@ -700,6 +719,11 @@ export const events = {
                                 // Accessibility for Delegation
                                 grid.addEventListener('keydown', (e) => {
                                     if (e.key === 'Enter') {
+                                        const snippetTile = e.target.closest('.search-snippet-tile');
+                                        if (snippetTile) {
+                                            snippetTile.click();
+                                            return;
+                                        }
                                         const card = e.target.closest('.article-card');
                                         if (card) {
                                             // Trigger click logic
@@ -713,26 +737,41 @@ export const events = {
                                 });
                             }
 
-                            setupDebouncedSearch('search-input', App.ui.filterAndRenderArticles);
-                            document.getElementById('sort-filter')?.addEventListener('change', (e) => App.events.changeLibrarySort(e));
+                            const searchInput = document.getElementById('search-input');
+                            if (searchInput) {
+                                searchInput.addEventListener('input', (e) => {
+                                    App.ui.handleLibrarySearchInput(e.target.value);
+                                });
 
-                            document.getElementById('search-input')?.addEventListener('keydown', (e) => {
-                                const { searchResults, selectedIndex } = App.state.libraryRender;
-                                if (!searchResults || searchResults.length === 0) return;
-                                let newIndex = selectedIndex;
-                                let handled = false;
-                                if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { newIndex = (selectedIndex + 1) % searchResults.length; handled = true; }
-                                else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { newIndex = (selectedIndex - 1 + searchResults.length) % searchResults.length; handled = true; }
-                                else if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    const selectedCard = searchResults[selectedIndex];
-                                    // With delegation, we can't just .click() because the listener is on the grid?
-                                    // Actually .click() propagates up, so the grid listener WILL catch it!
-                                    if (selectedCard) selectedCard.click();
-                                    return;
-                                }
-                                if (handled) { e.preventDefault(); if (selectedIndex > -1) searchResults[selectedIndex].classList.remove('search-selected-card'); searchResults[newIndex].classList.add('search-selected-card'); searchResults[newIndex].scrollIntoView({ behavior: 'smooth', block: 'center' }); App.state.libraryRender.selectedIndex = newIndex; }
-                            });
+                                searchInput.addEventListener('keydown', (e) => {
+                                    if (e.key === 'Escape') {
+                                        e.preventDefault();
+                                        searchInput.value = '';
+                                        App.ui.handleLibrarySearchInput('');
+                                        return;
+                                    }
+                                    const { searchResults, selectedIndex } = App.state.libraryRender;
+                                    if (!searchResults || searchResults.length === 0) return;
+                                    let newIndex = selectedIndex;
+                                    let handled = false;
+                                    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { newIndex = (selectedIndex + 1) % searchResults.length; handled = true; }
+                                    else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { newIndex = (selectedIndex - 1 + searchResults.length) % searchResults.length; handled = true; }
+                                    else if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const selectedCard = searchResults[selectedIndex];
+                                        if (selectedCard) selectedCard.click();
+                                        return;
+                                    }
+                                    if (handled) {
+                                        e.preventDefault();
+                                        if (selectedIndex > -1) searchResults[selectedIndex].classList.remove('search-selected-card');
+                                        searchResults[newIndex].classList.add('search-selected-card');
+                                        searchResults[newIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        App.state.libraryRender.selectedIndex = newIndex;
+                                    }
+                                });
+                            }
+                            document.getElementById('sort-filter')?.addEventListener('change', (e) => App.events.changeLibrarySort(e));
                             break;
                         case 'article':
                             const articleControls = document.getElementById('article-controls');
@@ -7329,18 +7368,17 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     const controlsBtn = document.querySelector('.read-mode-controls [data-action="toggleFocusMode"]');
                     const isWrite = App.state.currentMode === 'write';
 
-                    // NEW: Consistent Aesthetic Icons
-                    const maximizeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2M16 4h2a2 2 0 012 2v2M16 20h2a2 2 0 002-2v-2M12 9a3 3 0 100 6 3 3 0 000-6z" /></svg>`;
-                    const minimizeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>`;
-
-                    const newIcon = isFullscreen ? minimizeIcon : maximizeIcon;
+                    // Minimalist Micro Aesthetic Icons
+                    const maximizeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2M16 4h2a2 2 0 012 2v2M16 20h2a2 2 0 002-2v-2M12 9a3 3 0 100 6 3 3 0 000-6z" /></svg>`;
+                    const minimizeFloatingIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" /></svg>`;
+                    const minimizeControlsIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>`;
 
                     if (floatingBtn) {
                         floatingBtn.classList.toggle('exit-active', isFullscreen);
-                        floatingBtn.innerHTML = newIcon;
+                        floatingBtn.innerHTML = '';
                     }
                     if (controlsBtn) {
-                        controlsBtn.innerHTML = newIcon;
+                        controlsBtn.innerHTML = isFullscreen ? minimizeControlsIcon : maximizeIcon;
                     }
 
                     if (isFullscreen) {
@@ -7858,7 +7896,13 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         }
 
                         switch (e.key) {
-                            case ' ': e.preventDefault(); document.querySelector('.study-card')?.classList.toggle('is-flipped'); break;
+                            case ' ': {
+                                e.preventDefault();
+                                const sc = document.querySelector('.study-card');
+                                if (sc?.querySelector('.study-card-front .nk-mcq-block') && sc.dataset.hasAnswered !== 'true') return;
+                                sc?.classList.toggle('is-flipped');
+                                break;
+                            }
                             case 'ArrowLeft': this.prev(); break;
                             case 'ArrowRight': this.next(); break;
                             case 'c':
@@ -7871,10 +7915,13 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             case 'e':
                                 document.querySelector('.study-controls .btn-icon-nav[onclick*="toggleFontSize"]')?.click();
                                 break;
-                            case 'Enter':
+                            case 'Enter': {
                                 e.preventDefault();
-                                document.querySelector('.study-card')?.classList.toggle('is-flipped');
+                                const sc = document.querySelector('.study-card');
+                                if (sc?.querySelector('.study-card-front .nk-mcq-block') && sc.dataset.hasAnswered !== 'true') return;
+                                sc?.classList.toggle('is-flipped');
                                 break;
+                            }
                             case 'a': e.preventDefault(); this.rate('Again'); break;
                             case '5': this.rate('Again'); break;
                             case '4': this.rate('Hard'); break;
@@ -7886,91 +7933,117 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                 },
 
                 async handleMcqAnswer(event, isStudyMode = false) {
-                    const selectedOption = event.target.closest('.nk-mcq-option');
+                    let selectedOption = event?.target?.closest ? event.target.closest('.nk-mcq-option') : null;
+                    if (!selectedOption && event?.target?.querySelector) {
+                        selectedOption = event.target.querySelector('.nk-mcq-option');
+                    }
                     if (!selectedOption) return;
 
                     const mcqBlock = selectedOption.closest('.nk-mcq-block');
                     if (!mcqBlock) return;
 
+                    const studyCard = mcqBlock.closest('.study-card') || document.querySelector('.study-card');
+                    const isInStudyCard = isStudyMode || !!mcqBlock.closest('.study-card');
 
-                    event.preventDefault();
-                    event.stopPropagation();
+                    // If already answered in flashcard, don't re-evaluate; let click bubble to toggle flip
+                    if (isInStudyCard && studyCard && studyCard.dataset.hasAnswered === 'true') {
+                        return;
+                    }
+
+                    if (event?.preventDefault) event.preventDefault();
+                    if (event?.stopPropagation) event.stopPropagation();
+
+                    // Debounce: ignore clicks while evaluation hold is in progress
+                    if (mcqBlock.dataset.evaluating === 'true') return;
 
                     const isUserCorrect = selectedOption.dataset.isCorrect === 'true';
                     const quizType = mcqBlock.dataset.quizMode;
 
-                    if (quizType === 'mcq') {
+                    if (isInStudyCard && studyCard) {
+                        // ── FLASHCARD STUDY MODE MCQ ──
+                        // Front card holds & bubbles for 1.5s, then flips to reveal answer on back.
+                        // The front card remains completely as it was (answer NOT revealed).
+                        mcqBlock.dataset.evaluating = 'true';
+                        selectedOption.classList.add('is-selecting');
 
+                        // 1.5s Hold & Bubble on selected option
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+
+                        // STAGE 1: FRONT CARD PRESERVATION
+                        // Remove selecting state; keep front card clean & untouched (no .correct, no .incorrect, no explanation)
+                        selectedOption.classList.remove('is-selecting', 'is-holding');
+                        mcqBlock.removeAttribute('data-evaluating');
+                        mcqBlock.style.pointerEvents = 'none'; // Lock front options so clicks now toggle card flip
+
+                        // STAGE 2: BACK CARD REVEAL
+                        const backBlock = studyCard.querySelector('.study-card-back .nk-mcq-block');
+                        if (backBlock) {
+                            backBlock.dataset.answered = 'true';
+                            if (!isUserCorrect) {
+                                backBlock.dataset.userIncorrect = 'true';
+                            }
+                            const frontOptions = Array.from(mcqBlock.querySelectorAll('.nk-mcq-option'));
+                            const optIndex = frontOptions.indexOf(selectedOption);
+                            const backOptions = Array.from(backBlock.querySelectorAll('.nk-mcq-option'));
+                            const selectedInBack = optIndex > -1 ? backOptions[optIndex] : backOptions.find(o => o.textContent.trim() === selectedOption.textContent.trim());
+                            const correctInBack = backOptions.find(o => o.dataset.isCorrect === 'true');
+
+                            if (isUserCorrect) {
+                                if (selectedInBack) selectedInBack.classList.add('correct');
+                            } else {
+                                if (selectedInBack) selectedInBack.classList.add('incorrect');
+                                if (correctInBack) correctInBack.classList.add('correct');
+                            }
+                        }
+
+                        // STAGE 3: RECORD SRS / QUIZ STATS
+                        const card = App.state.studySession?.cards?.[App.state.studySession.currentIndex];
+                        if (card) {
+                            if (quizType === 'mcq') {
+                                await App.quiz.handleMcqAnswer(isUserCorrect, card);
+                            } else if (App.util?.sm2) {
+                                const rating = isUserCorrect ? 'Good' : 'Again';
+                                const updatedCardData = App.util.sm2.rateCard(card, rating);
+                                const article = App.storage.getArticle(card.articleId);
+                                if (article?.flashcards?.[card.id]) {
+                                    const newFlashcards = { ...article.flashcards, [card.id]: { ...article.flashcards[card.id], ...updatedCardData } };
+                                    await App.storage.updateArticle(article.id, { flashcards: newFlashcards });
+                                }
+                            }
+                        }
+
+                        // STAGE 4: FLIP TO BACK FACE WITH ANSWER REVEAL
+                        studyCard.dataset.hasAnswered = 'true';
+                        studyCard.classList.add('is-flipped');
+
+                        if (quizType === 'mcq') {
+                            setTimeout(() => {
+                                App.events.study.next();
+                            }, 3000);
+                        }
+
+                    } else {
+                        // ── INLINE MCQ (Read Mode / Focus Mode / Presentation) ──
                         if (mcqBlock.dataset.answered === 'true') return;
+
+                        mcqBlock.dataset.evaluating = 'true';
+                        selectedOption.classList.add('is-selecting');
+
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+
+                        selectedOption.classList.remove('is-selecting', 'is-holding');
+                        mcqBlock.removeAttribute('data-evaluating');
 
                         mcqBlock.dataset.answered = 'true';
                         if (!isUserCorrect) {
                             mcqBlock.dataset.userIncorrect = 'true';
                         }
-                        selectedOption.classList.add(isUserCorrect ? 'correct' : 'incorrect');
-                        if (!isUserCorrect) {
+
+                        if (isUserCorrect) {
+                            selectedOption.classList.add('correct');
+                        } else {
+                            selectedOption.classList.add('incorrect');
                             mcqBlock.querySelector('.nk-mcq-option[data-is-correct="true"]')?.classList.add('correct');
-                        }
-
-                        const card = App.state.studySession.cards[App.state.studySession.currentIndex];
-                        await App.quiz.handleMcqAnswer(isUserCorrect, card);
-
-                        // DEFINITIVE FIX: Auto-advance to the next question after 3 seconds
-                        setTimeout(() => {
-                            App.events.study.next();
-                        }, 3000);
-
-                    } else { // Read Mode, Presentation Mode, Classic Study
-                        const blocksToUpdate = isStudyMode ? document.querySelectorAll('.study-card-face .nk-mcq-block') : [mcqBlock];
-
-                        blocksToUpdate.forEach(block => {
-                            // RESET STATE for re-attempt
-                            block.removeAttribute('data-user-incorrect');
-                            block.querySelectorAll('.nk-mcq-option').forEach(opt => {
-                                opt.classList.remove('correct', 'incorrect');
-                            });
-
-                            block.dataset.answered = 'true';
-                            // Track incorrect answers for visual feedback
-                            if (!isUserCorrect) {
-                                block.dataset.userIncorrect = 'true';
-                            }
-                            const options = Array.from(block.querySelectorAll('.nk-mcq-option'));
-
-                            // IMPROVED MATCHING LOGIC (Fixes Bug #2)
-                            let selectedInBlock;
-                            if (block === mcqBlock) {
-                                // Direct match for Read Mode (Same Block)
-                                selectedInBlock = selectedOption;
-                            } else {
-                                // Fallback for Study Mode (Cloned Block): Match by Index
-                                const originalOptions = Array.from(mcqBlock.querySelectorAll('.nk-mcq-option'));
-                                const originalIndex = originalOptions.indexOf(selectedOption);
-                                if (originalIndex > -1 && options[originalIndex]) {
-                                    selectedInBlock = options[originalIndex];
-                                } else {
-                                    // Last resort: Text match (risky but fallback)
-                                    selectedInBlock = options.find(opt => opt.textContent === selectedOption.textContent);
-                                }
-                            }
-
-                            const correctInBlock = options.find(opt => opt.dataset.isCorrect === 'true');
-
-                            if (isUserCorrect) {
-                                if (selectedInBlock) selectedInBlock.classList.add('correct');
-                            } else {
-                                if (selectedInBlock) selectedInBlock.classList.add('incorrect');
-                                if (correctInBlock) correctInBlock.classList.add('correct');
-                            }
-                        });
-
-                        if (isStudyMode) {
-                            setTimeout(() => {
-                                const studyCard = document.querySelector('.study-card');
-                                if (studyCard && !studyCard.classList.contains('is-flipped')) {
-                                    studyCard.classList.add('is-flipped');
-                                }
-                            }, 3000);
                         }
                     }
                 },

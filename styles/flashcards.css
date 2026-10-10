@@ -930,8 +930,9 @@
             font-size: clamp(8rem, 20vw, 15rem);
             font-weight: 700;
             line-height: 1;
-            animation: zen-glow-pulse 13s ease-in-out infinite;
-            transition: color 0.5s ease;
+            text-shadow: 0 0 35px color-mix(in srgb, var(--zen-glow-color, var(--primary-color)) 35%, transparent),
+                         0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: color 0.5s ease, text-shadow 0.5s ease;
             color: var(--text-primary);
         }
 

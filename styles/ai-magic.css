@@ -49,7 +49,7 @@
             box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.35),
                 inset 0 1px 1px rgba(255, 255, 255, 0.1);
             animation: growInFromCenter 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                ai-border-glow 5s infinite alternate ease-in-out;
+                ai-border-glow 2s ease-out 1 forwards;
             overflow: hidden;
         }
 

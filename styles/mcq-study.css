@@ -1,3 +1,22 @@
+        /* --- MCQ Secondary Accent Variables (Aesthetic Deliberation & Selection) --- */
+        :root {
+            --mcq-secondary-accent: #6366f1;
+            --mcq-secondary-accent-glow: rgba(99, 102, 241, 0.25);
+            --mcq-secondary-accent-subtle: color-mix(in srgb, #6366f1 8%, var(--bg-secondary));
+        }
+
+        [data-theme="dark"] {
+            --mcq-secondary-accent: #818cf8;
+            --mcq-secondary-accent-glow: rgba(129, 140, 248, 0.28);
+            --mcq-secondary-accent-subtle: rgba(129, 140, 248, 0.09);
+        }
+
+        [data-theme="sepia"] {
+            --mcq-secondary-accent: #d97706;
+            --mcq-secondary-accent-glow: rgba(217, 119, 6, 0.22);
+            --mcq-secondary-accent-subtle: rgba(217, 119, 6, 0.08);
+        }
+
         /* --- MCQ Block Styles - Sleek, Lightweight & Dynamically Scaled --- */
         .nk-mcq-block {
             position: relative;
@@ -235,20 +254,16 @@
 
         /* --- Write Mode Specific Styles --- */
         body.write-mode .nk-mcq-option[data-is-correct="true"] .nk-mcq-option-radio {
-            background: var(--success-color);
-            border-color: var(--success-color);
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--success-color) 40%, transparent);
+            background:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.8 12.2L9.5 16.8Q13.8 11.2 19.4 6.6'/%3E%3C/svg%3E") no-repeat center center / 12px 12px,
+                linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--success-color) 40%, transparent),
+                        inset 0 1px 1.5px rgba(255, 255, 255, 0.45);
         }
 
         body.write-mode .nk-mcq-option[data-is-correct="true"] .nk-mcq-option-radio::after {
-            content: '✓';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            font-size: 0.7rem;
-            color: white;
-            font-weight: bold;
-            transform: translate(-50%, -50%);
+            display: none;
         }
 
         /* --- Read Mode & Presentation Mode Option Styles --- */
@@ -262,12 +277,16 @@
         }
 
         body.read-mode .nk-mcq-option,
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option {
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option,
+        .study-card-content-box .nk-mcq-block .nk-mcq-option {
             padding: 10px 14px;
-            border: 1px solid color-mix(in srgb, var(--border-color) 45%, transparent);
+            border: 1.5px solid color-mix(in srgb, var(--border-color) 45%, transparent);
             border-radius: 9px;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                        background 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             background: color-mix(in srgb, var(--bg-tertiary) 45%, var(--bg-secondary));
             position: relative;
             display: flex;
@@ -277,8 +296,10 @@
         }
 
         /* Sleek Radio Indicator */
-        body.read-mode .nk-mcq-option::before,
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option::before {
+        body.read-mode .nk-mcq-option:not(.correct):not(.incorrect)::before,
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option:not(.correct):not(.incorrect)::before,
+        .study-card-content-box .nk-mcq-block .nk-mcq-option:not(.correct):not(.incorrect)::before,
+        .nk-mcq-option:not(.correct):not(.incorrect)::before {
             content: '';
             width: 18px;
             height: 18px;
@@ -289,7 +310,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                        background 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
             flex-shrink: 0;
             box-sizing: border-box;
@@ -336,107 +360,157 @@
             opacity: 0.55;
         }
 
-        /* ── Visually Enticing Correct Answer Style ─────────────────── */
-        body.read-mode .nk-mcq-option.correct,
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct {
-            border: 1.5px solid color-mix(in srgb, var(--success-color) 85%, transparent);
+        /* ── MCQ Selection State: 1.5s Secondary Accent Hold & Bubble ── */
+        .nk-mcq-option.is-selecting,
+        .nk-mcq-option.is-holding {
+            border-color: var(--mcq-secondary-accent) !important;
+            background: var(--mcq-secondary-accent-subtle) !important;
+            transform: translateY(-1.5px) scale(1.008);
+            box-shadow: 0 0 0 3px var(--mcq-secondary-accent-glow),
+                        0 4px 14px color-mix(in srgb, var(--mcq-secondary-accent) 16%, transparent) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nk-mcq-option.is-selecting::before,
+        .nk-mcq-option.is-holding::before {
+            border-color: var(--mcq-secondary-accent) !important;
+            background: var(--mcq-secondary-accent) !important;
+            transform: scale(1.2);
+            box-shadow: 0 0 10px var(--mcq-secondary-accent-glow) !important;
+        }
+
+        .nk-mcq-option.is-selecting::after,
+        .nk-mcq-option.is-holding::after {
+            content: "";
+            position: absolute;
+            left: 21px;
+            top: 50%;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            pointer-events: none;
+            border: 1.5px solid color-mix(in srgb, var(--mcq-secondary-accent) 60%, transparent);
+            background: radial-gradient(circle, color-mix(in srgb, var(--mcq-secondary-accent) 25%, transparent) 0%, transparent 70%);
+            animation: mcqBubble 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+            z-index: 1;
+        }
+
+        .nk-mcq-option:not(.is-selecting):not(.is-holding)::after {
+            display: none !important;
+        }
+
+        @keyframes mcqBubble {
+            0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.95; }
+            100% { transform: translate(-50%, -50%) scale(9); opacity: 0; }
+        }
+
+        /* ── Revealed States: One-Shot Transitions & Static Settle ── */
+        .nk-mcq-option.correct {
+            border: 1.5px solid color-mix(in srgb, var(--success-color) 85%, transparent) !important;
             background: linear-gradient(135deg,
                     color-mix(in srgb, var(--success-color) 16%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--success-color) 6%, var(--bg-secondary)));
-            box-shadow: 0 0 16px color-mix(in srgb, var(--success-color) 22%, transparent),
-                inset 0 0 14px color-mix(in srgb, var(--success-color) 5%, transparent);
-            animation: mcqCorrectPulse 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    color-mix(in srgb, var(--success-color) 6%, var(--bg-secondary))) !important;
+            box-shadow: 0 0 16px color-mix(in srgb, var(--success-color) 22%, transparent) !important;
             opacity: 1 !important;
+            animation: mcqPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 1 forwards;
         }
 
         body.read-mode .nk-mcq-option.correct::before,
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct::before {
-            content: '✓';
-            width: 20px;
-            height: 20px;
-            min-width: 20px;
-            border: none;
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: #ffffff;
-            font-size: 0.72rem;
-            font-weight: 900;
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct::before,
+        .study-card-content-box .nk-mcq-block .nk-mcq-option.correct::before,
+        .nk-mcq-option.correct::before {
+            content: '' !important;
+            width: 20px !important;
+            height: 20px !important;
+            min-width: 20px !important;
+            border: none !important;
+            border-radius: 50% !important;
+            background:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.8 12.2L9.5 16.8Q13.8 11.2 19.4 6.6'/%3E%3C/svg%3E") no-repeat center center / 12px 12px,
+                linear-gradient(135deg, #10b981, #059669) !important;
             box-shadow: 0 0 10px rgba(16, 185, 129, 0.5),
-                inset 0 1px 1.5px rgba(255, 255, 255, 0.45);
-            transform: scale(1.08);
+                        inset 0 1px 1.5px rgba(255, 255, 255, 0.45) !important;
+            transform: scale(1.08) !important;
+            animation: mcqBadgePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 1 forwards !important;
+            z-index: 2 !important;
+            flex-shrink: 0 !important;
+            box-sizing: border-box !important;
         }
 
-        /* ── Visually Enticing Incorrect Answer Style ───────────────── */
-        body.read-mode .nk-mcq-option.incorrect,
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect {
-            border: 1.5px solid color-mix(in srgb, var(--danger-color) 85%, transparent);
+        .nk-mcq-option.incorrect {
+            border: 1.5px solid color-mix(in srgb, var(--danger-color) 85%, transparent) !important;
             background: linear-gradient(135deg,
                     color-mix(in srgb, var(--danger-color) 16%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--danger-color) 6%, var(--bg-secondary)));
-            box-shadow: 0 0 16px color-mix(in srgb, var(--danger-color) 22%, transparent),
-                inset 0 0 14px color-mix(in srgb, var(--danger-color) 5%, transparent);
-            animation: mcqIncorrectShake 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    color-mix(in srgb, var(--danger-color) 6%, var(--bg-secondary))) !important;
+            box-shadow: 0 0 16px color-mix(in srgb, var(--danger-color) 22%, transparent) !important;
             opacity: 1 !important;
+            animation: mcqShake 0.38s ease 1 forwards;
         }
 
         body.read-mode .nk-mcq-option.incorrect::before,
-        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect::before {
-            content: '×';
-            width: 20px;
-            height: 20px;
-            min-width: 20px;
-            border: none;
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: #ffffff;
-            font-size: 0.85rem;
-            font-weight: 900;
+        .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect::before,
+        .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect::before,
+        .nk-mcq-option.incorrect::before {
+            content: '' !important;
+            width: 20px !important;
+            height: 20px !important;
+            min-width: 20px !important;
+            border: none !important;
+            border-radius: 50% !important;
+            background:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.3 6.8L17.7 17.2M17.7 6.8L7.3 17.2'/%3E%3C/svg%3E") no-repeat center center / 11.5px 11.5px,
+                linear-gradient(135deg, #ef4444, #dc2626) !important;
             box-shadow: 0 0 10px rgba(239, 68, 68, 0.5),
-                inset 0 1px 1.5px rgba(255, 255, 255, 0.45);
-            transform: scale(1.08);
+                        inset 0 1px 1.5px rgba(255, 255, 255, 0.45) !important;
+            transform: scale(1.08) !important;
+            animation: mcqBadgePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 1 forwards !important;
+            z-index: 2 !important;
+            flex-shrink: 0 !important;
+            box-sizing: border-box !important;
         }
 
-        /* Dark Theme Specific Rich Glows */
-        [data-theme="dark"] body.read-mode .nk-mcq-option.correct,
-        [data-theme="dark"] .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct {
-            border-color: rgba(16, 185, 129, 0.7);
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(16, 185, 129, 0.05));
-            box-shadow: 0 0 18px rgba(16, 185, 129, 0.18), inset 0 0 14px rgba(16, 185, 129, 0.06);
+        @keyframes mcqBadgePop {
+            0% { transform: scale(0.5); opacity: 0.2; }
+            70% { transform: scale(1.18); opacity: 1; }
+            100% { transform: scale(1.08); opacity: 1; }
         }
 
-        [data-theme="dark"] body.read-mode .nk-mcq-option.incorrect,
-        [data-theme="dark"] .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect {
-            border-color: rgba(239, 68, 68, 0.7);
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.16), rgba(239, 68, 68, 0.05));
-            box-shadow: 0 0 18px rgba(239, 68, 68, 0.18), inset 0 0 14px rgba(239, 68, 68, 0.06);
+        [data-theme="dark"] .nk-mcq-option.correct {
+            border-color: rgba(16, 185, 129, 0.7) !important;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(16, 185, 129, 0.05)) !important;
+            box-shadow: 0 0 18px rgba(16, 185, 129, 0.18) !important;
         }
 
-        @keyframes mcqCorrectPulse {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.015);
-            }
-            100% {
-                transform: scale(1);
-            }
+        [data-theme="dark"] .nk-mcq-option.incorrect {
+            border-color: rgba(239, 68, 68, 0.7) !important;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.16), rgba(239, 68, 68, 0.05)) !important;
+            box-shadow: 0 0 18px rgba(239, 68, 68, 0.18) !important;
         }
 
-        @keyframes mcqIncorrectShake {
-            0%, 100% {
-                transform: translateX(0);
-            }
-            20% {
-                transform: translateX(-3px);
-            }
-            40% {
-                transform: translateX(3px);
-            }
-            60% {
-                transform: translateX(3px);
-            }
-            80% {
-                transform: translateX(2px);
-            }
+        @keyframes mcqPop {
+            0% { transform: scale(0.97); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes mcqShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-3px); }
+            40% { transform: translateX(3px); }
+            65% { transform: translateX(-1.5px); }
+            85% { transform: translateX(1px); }
+        }
+
+        /* ── Battery Optimization: 100% Static Settling on Answered MCQs ── */
+        .nk-mcq-block[data-answered="true"],
+        .nk-mcq-block[data-answered="true"] * {
+            animation-iteration-count: 1 !important;
+        }
+
+        .nk-mcq-block[data-answered="true"] .nk-mcq-option:hover {
+            transform: none !important;
+            cursor: default;
         }
 
         /* --- STUDY FLASHCARD MODE MCQ STYLING --- */
@@ -480,7 +554,7 @@
             gap: 12px;
         }
 
-        .study-card-content-box .nk-mcq-block .nk-mcq-option::before {
+        .study-card-content-box .nk-mcq-block .nk-mcq-option:not(.correct):not(.incorrect)::before {
             content: '';
             width: 18px;
             height: 18px;
@@ -511,62 +585,7 @@
             transform: translateY(-1px);
         }
 
-        .study-card-content-box .nk-mcq-block .nk-mcq-option.correct {
-            border: 1.5px solid color-mix(in srgb, var(--success-color) 85%, transparent);
-            background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--success-color) 16%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--success-color) 6%, var(--bg-secondary)));
-            box-shadow: 0 0 16px color-mix(in srgb, var(--success-color) 22%, transparent);
-        }
 
-        .study-card-content-box .nk-mcq-block .nk-mcq-option.correct::before {
-            content: '✓';
-            width: 20px;
-            height: 20px;
-            min-width: 20px;
-            background: linear-gradient(135deg, #10b981, #059669);
-            border: none;
-            color: white;
-            font-size: 0.72rem;
-            font-weight: 900;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5), inset 0 1px 1.5px rgba(255, 255, 255, 0.45);
-            transform: scale(1.08);
-        }
-
-        .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect {
-            border: 1.5px solid color-mix(in srgb, var(--danger-color) 85%, transparent);
-            background: linear-gradient(135deg,
-                    color-mix(in srgb, var(--danger-color) 16%, var(--bg-secondary)),
-                    color-mix(in srgb, var(--danger-color) 6%, var(--bg-secondary)));
-            box-shadow: 0 0 16px color-mix(in srgb, var(--danger-color) 22%, transparent);
-        }
-
-        .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect::before {
-            content: '×';
-            width: 20px;
-            height: 20px;
-            min-width: 20px;
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            border: none;
-            color: white;
-            font-size: 0.85rem;
-            font-weight: 900;
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5), inset 0 1px 1.5px rgba(255, 255, 255, 0.45);
-            transform: scale(1.08);
-        }
-
-        .study-card-content-box .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
-            margin-top: 0.9rem;
-            padding: 0.85rem 1.25rem;
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.09), rgba(34, 197, 94, 0.03));
-            border: 1px solid rgba(34, 197, 94, 0.25);
-            border-left: 3.5px solid #22c55e;
-            border-radius: 10px;
-            font-size: 0.9em;
-            line-height: 1.55;
-            color: var(--text-primary);
-            box-shadow: 0 2px 10px rgba(34, 197, 94, 0.05);
-        }
 
         /* ── NOTEKASH GREEN-TEXTILE INSPIRED EXPLANATION BLOCK ───────── */
         .nk-mcq-explanation {
@@ -638,10 +657,9 @@
             opacity: 0.3;
         }
 
-        /* Read Mode & Focus Mode Reveal State */
-        body.read-mode .nk-mcq-block[data-answered="true"] .nk-mcq-explanation,
-        .focus-mode-overlay .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
-            max-height: 800px;
+        /* MCQ Explanation Reveal State (Smooth unroll via hardware-accelerated CSS transition) */
+        .nk-mcq-block[data-answered="true"] .nk-mcq-explanation {
+            max-height: 1200px;
             opacity: 1;
             transform: translateY(0);
             margin-top: 0.9rem;
@@ -1359,7 +1377,8 @@
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: witty-text-glow 5s linear infinite;
+            /* Battery optimization: Single entrance shimmer rather than continuous infinite GPU rasterization */
+            animation: witty-text-glow 1.5s ease-out 1 forwards;
             cursor: default;
         }
 

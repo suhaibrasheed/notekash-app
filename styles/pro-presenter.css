@@ -588,6 +588,140 @@
             animation: sonicSpikeInner 8s ease-in-out infinite;
         }
 
+        /* ==========================================================================
+           PRO PRESENTER — ZEN MINIMAL (Mode 6 — Battery Saver & Executive Class)
+           Minimal screen resources, featherlight hairline perimeter aura, ultra-slow
+           30s calm drift, non-flickering precision cursor, 0% idle GPU footprint.
+        /* ==========================================================================
+           PRO PRESENTER — ZEN MINIMAL (Mode 6 — Maximum Battery Preservation)
+           Pure stillness for 28+ seconds. Synchronized 30s ambient heartbeat (1.5s
+           gentle luminescence) giving pro-presenter aura with zero battery drain.
+           Strictly non-flickering, non-breathing, zero-repaint precision cursor.
+           ========================================================================== */
+        body.is-pro-presenter-active[data-pro-presenter-mode="zen-minimal"] .pro-presenter-wave-overlay,
+        [data-pro-presenter-mode="zen-minimal"] .pro-presenter-wave-overlay {
+            overflow: hidden;
+            inset: 6px !important;
+            border-radius: 16px !important;
+            background: transparent !important;
+            border: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+            box-shadow:
+                inset 0 0 0 1px color-mix(in srgb, var(--primary-color) 6%, transparent),
+                inset 0 0 14px color-mix(in srgb, var(--primary-color) 2%, transparent) !important;
+            /* 30s cycle: 28 seconds completely static, 1.5s gentle ambient breathe */
+            animation: zenFramePulse30s 30s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+        }
+
+        /* Suppress pseudo-elements entirely in Zen Minimal to eliminate GPU layer compositing */
+        body.is-pro-presenter-active[data-pro-presenter-mode="zen-minimal"] .pro-presenter-wave-overlay::before,
+        body.is-pro-presenter-active[data-pro-presenter-mode="zen-minimal"] .pro-presenter-wave-overlay::after,
+        [data-pro-presenter-mode="zen-minimal"] .pro-presenter-wave-overlay::before,
+        [data-pro-presenter-mode="zen-minimal"] .pro-presenter-wave-overlay::after {
+            display: none !important;
+            animation: none !important;
+        }
+
+        @keyframes zenFramePulse30s {
+            0%, 93% {
+                opacity: 0.38;
+                border-color: color-mix(in srgb, var(--primary-color) 20%, transparent);
+                box-shadow:
+                    inset 0 0 0 1px color-mix(in srgb, var(--primary-color) 6%, transparent),
+                    inset 0 0 14px color-mix(in srgb, var(--primary-color) 2%, transparent);
+            }
+            96.5% {
+                opacity: 0.85;
+                border-color: color-mix(in srgb, var(--primary-color) 50%, transparent);
+                box-shadow:
+                    inset 0 0 0 1px color-mix(in srgb, var(--primary-color) 15%, transparent),
+                    inset 0 0 28px color-mix(in srgb, var(--primary-color) 12%, transparent);
+            }
+            100% {
+                opacity: 0.38;
+                border-color: color-mix(in srgb, var(--primary-color) 20%, transparent);
+                box-shadow:
+                    inset 0 0 0 1px color-mix(in srgb, var(--primary-color) 6%, transparent),
+                    inset 0 0 14px color-mix(in srgb, var(--primary-color) 2%, transparent);
+            }
+        }
+
+        /* ── Zen Minimal Cursor: Absolute Zero Flicker & Zero Repaints ── */
+        body.is-pro-presenter-active[data-pro-presenter-mode="zen-minimal"] .pro-presenter-cursor-glow,
+        [data-pro-presenter-mode="zen-minimal"] .pro-presenter-cursor-glow {
+            animation: none !important; /* Zero infinite breathing / zero repaints */
+            width: 14px !important;
+            height: 14px !important;
+            background: color-mix(in srgb, var(--text-primary) 18%, transparent) !important;
+            border: 1.5px solid var(--text-primary) !important;
+            border-radius: 50% !important;
+            box-shadow: 0 0 0 1px color-mix(in srgb, var(--bg-primary) 50%, transparent),
+                        0 0 8px color-mix(in srgb, var(--primary-color) 40%, transparent) !important;
+            backdrop-filter: blur(2px) !important;
+            -webkit-backdrop-filter: blur(2px) !important;
+            transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+        }
+
+        body.is-pro-presenter-active[data-pro-presenter-mode="zen-minimal"] .pro-presenter-cursor-glow.is-clicking,
+        [data-pro-presenter-mode="zen-minimal"] .pro-presenter-cursor-glow.is-clicking {
+            transform: translate(-50%, -50%) scale(0.78) !important;
+            background: var(--text-primary) !important;
+            border-color: var(--text-primary) !important;
+            box-shadow: 0 0 12px color-mix(in srgb, var(--primary-color) 65%, transparent) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        /* ── Zen Minimal Watermark: 30-Second Ambient Heartbeat ── */
+        body.is-pro-presenter-active[data-pro-presenter-mode="zen-minimal"] .pro-presenter-watermark,
+        [data-pro-presenter-mode="zen-minimal"] .pro-presenter-watermark {
+            opacity: 0.35 !important;
+            transform: translateY(0) !important;
+            border-color: color-mix(in srgb, var(--border-color) 20%, transparent) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            /* 30s cycle: 28 seconds completely static, 1.5s gentle sheen */
+            animation: zenWatermarkPulse30s 30s ease-in-out infinite !important;
+        }
+
+        @keyframes zenWatermarkPulse30s {
+            0%, 93% {
+                opacity: 0.35;
+                text-shadow: none;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+                border-color: color-mix(in srgb, var(--border-color) 20%, transparent);
+            }
+            96.5% {
+                opacity: 0.75;
+                text-shadow: 0 0 8px color-mix(in srgb, var(--primary-color) 70%, transparent);
+                box-shadow: 0 0 12px color-mix(in srgb, var(--primary-color) 35%, transparent);
+                border-color: color-mix(in srgb, var(--primary-color) 45%, transparent);
+            }
+            100% {
+                opacity: 0.35;
+                text-shadow: none;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+                border-color: color-mix(in srgb, var(--border-color) 20%, transparent);
+            }
+        }
+
+        /* ── Zen Minimal Progress Bar: Pure Static Performance ── */
+        body.is-pro-presenter-active[data-pro-presenter-mode="zen-minimal"] .pro-presenter-progress-bar,
+        [data-pro-presenter-mode="zen-minimal"] .pro-presenter-progress-bar {
+            animation: none !important;
+            background: var(--primary-color) !important;
+            box-shadow: 0 0 8px color-mix(in srgb, var(--primary-color) 30%, transparent) !important;
+        }
+
+        body.is-pro-presenter-active[data-pro-presenter-mode="zen-minimal"] .pro-presenter-progress-bar::before,
+        body.is-pro-presenter-active[data-pro-presenter-mode="zen-minimal"] .pro-presenter-progress-bar::after,
+        body.is-pro-presenter-active[data-pro-presenter-mode="zen-minimal"] .pro-presenter-progress-bar-tip,
+        [data-pro-presenter-mode="zen-minimal"] .pro-presenter-progress-bar::before,
+        [data-pro-presenter-mode="zen-minimal"] .pro-presenter-progress-bar::after,
+        [data-pro-presenter-mode="zen-minimal"] .pro-presenter-progress-bar-tip {
+            animation: none !important;
+            display: none !important;
+        }
+
         /* ── Sleek Trace: cursor spotlight layer ── */
         .sleek-trace-spotlight {
             position: fixed;
@@ -633,7 +767,6 @@
             -webkit-backdrop-filter: blur(6px);
             opacity: 0;
             will-change: transform, left, top;
-            animation: proCursorBreathing 2.4s ease-in-out infinite;
         }
 
         /* Trail particle removed as per user request */
@@ -681,9 +814,16 @@
 
 
 
-        body.is-pro-presenter-active .pro-presenter-cursor-glow {
+        body.is-pro-presenter-active:not([data-pro-presenter-mode="zen-minimal"]) .pro-presenter-cursor-glow {
             opacity: 0.88;
             visibility: visible;
+            animation: proCursorBreathing 2.4s ease-in-out infinite;
+        }
+
+        body.is-pro-presenter-active[data-pro-presenter-mode="zen-minimal"] .pro-presenter-cursor-glow {
+            opacity: 0.88;
+            visibility: visible;
+            animation: none !important;
         }
 
         /* Ensure default cursor returns immediately on exit */
@@ -711,7 +851,7 @@
         body.is-pro-presenter-active .focus-mode-body .snippet:hover,
         body.is-pro-presenter-active .focus-mode-body .nk-text-tile:hover,
         body.is-pro-presenter-active .focus-mode-body table:hover,
-        body.is-pro-presenter-active .focus-mode-body .nk-mcq-block:hover,
+        body.is-pro-presenter-active .focus-mode-body .nk-mcq-block:not([data-answered="true"]):hover,
         body.is-pro-presenter-active .focus-mode-body .nk-accordion:hover {
             transform: scale(1.005);
             /* Subtler non-directional lift */
@@ -783,7 +923,6 @@
                     color-mix(in srgb, var(--primary-color) 15%, transparent) 90%,
                     transparent 100%);
             background-size: 200% 100%;
-            animation: proProgressFluid 12s linear infinite;
             width: 0%;
             box-shadow:
                 0 0 20px color-mix(in srgb, var(--primary-color) 40%, transparent),
@@ -793,6 +932,10 @@
             position: relative;
             border-radius: 0 4px 4px 0;
             overflow: visible;
+        }
+
+        body.is-pro-presenter-active:not([data-pro-presenter-mode="zen-minimal"]) .pro-presenter-progress-bar {
+            animation: proProgressFluid 12s linear infinite;
         }
 
         /* Shimmering liquid overlay */
@@ -807,10 +950,13 @@
                     rgba(255, 255, 255, 0) 70%,
                     transparent 100%);
             background-size: 200% 100%;
-            animation: proProgressShimmer 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
             mix-blend-mode: overlay;
             filter: blur(2px);
             opacity: 0.5;
+        }
+
+        body.is-pro-presenter-active:not([data-pro-presenter-mode="zen-minimal"]) .pro-presenter-progress-bar::before {
+            animation: proProgressShimmer 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
         }
 
         /* The Comet Tip */
@@ -830,6 +976,9 @@
                 0 0 60px 12px color-mix(in srgb, var(--primary-color) 20%, transparent);
             filter: blur(0.5px);
             z-index: 2;
+        }
+
+        body.is-pro-presenter-active:not([data-pro-presenter-mode="zen-minimal"]) .pro-presenter-progress-bar::after {
             animation: proProgressTipPulse 6s ease-in-out infinite;
         }
 
@@ -892,7 +1041,7 @@
             border: 1px solid color-mix(in srgb, var(--border-color) 20%, transparent);
         }
 
-        body.is-pro-presenter-active .pro-presenter-watermark {
+        body.is-pro-presenter-active:not([data-pro-presenter-mode="zen-minimal"]) .pro-presenter-watermark {
             opacity: 0.6;
             transform: translateY(0);
             animation: proWatermarkBreathe 4s ease-in-out infinite;
@@ -921,23 +1070,17 @@
                             from { box-shadow: 0 0 8px -4px var(--primary-color); border-color: var(--primary-color); }
                             to { box-shadow: 0 0 20px 2px color-mix(in srgb, var(--primary-color) 40%, transparent); border-color: color-mix(in srgb, var(--primary-color) 70%, transparent); }
                         }
-                        @keyframes gradient-pan {
-                            0% { background-position: 0% 50%; }
-                            50% { background-position: 100% 50%; }
-                            100% { background-position: 0% 50%; }
-                        }
                         .migration-card-glowing {
                             border: 1.5px solid var(--primary-color);
-                            animation: migration-card-glow 2.5s infinite alternate ease-in-out;
+                            box-shadow: 0 0 14px color-mix(in srgb, var(--primary-color) 30%, transparent);
                         }
                         .migration-title-gradient {
                             background: linear-gradient(45deg, #FF8C42, #FFD05A, #00A896, #A2E869, #05A387);
-                            background-size: 250% 250%;
+                            background-size: 150% 150%;
                             background-clip: text;
                             -webkit-background-clip: text;
                             background-clip: text;
                             -webkit-text-fill-color: transparent;
-                            animation: gradient-pan 10s ease infinite;
                         }
                         .migration-cancel-btn-styled {
                             background-color: transparent;

@@ -873,7 +873,7 @@ export const util = {
 
                     const selectors = {
                         cloze: '.cloze-flashcard',
-                        highlight: '.highlight-1, .highlight-2, .highlight-3, .highlight-4, .highlight-5, .highlight-6',
+                        highlight: '.highlight-1, .highlight-2, .highlight-3, .highlight-4, .highlight-5, .highlight-6, .highlight-7, mark, [class*="highlight-"]',
                         mindmap: '.mindmap-node',
                         image: '.image-container.highlighted-image',
                         textile: '.nk-text-tile',
@@ -938,9 +938,10 @@ export const util = {
                             }
 
                             else if (node.matches(selectors.textile)) {
-                                const snippetId = node.id || `tile-${src.id}-${index}`;
+                                const rawTxt = (node.querySelector('.nk-text-tile-content')?.textContent || node.textContent || "").trim();
+                                const snippetId = node.id || `snip-${App.util.cyrb53(rawTxt)}`;
                                 if (!node.id) node.id = snippetId;
-                                snippetObject = { id: snippetId, html: node.outerHTML, text: (node.querySelector('.nk-text-tile-content')?.textContent || "").trim(), articleId: src.id, type: 'snippet' };
+                                snippetObject = { id: snippetId, html: node.outerHTML, text: rawTxt, articleId: src.id, type: 'snippet' };
                             }
                             else if (node.matches(selectors.image)) {
                                 const img = node.querySelector('img');
@@ -974,8 +975,10 @@ export const util = {
                                 snippetObject = { id: snippetId, html: node.outerHTML, text: (node.textContent || "").trim(), articleId: src.id, type: 'mindmap', level: parseInt(node.getAttribute('data-level')) || 1 };
                             }
                             else if (node.matches(selectors.highlight)) {
-                                const snippetId = node.id || `snip-${src.id}-${index}`;
-                                snippetObject = { id: snippetId, html: node.outerHTML, text: (node.textContent || "").trim(), articleId: src.id, type: 'snippet' };
+                                const rawTxt = (node.textContent || "").trim();
+                                const snippetId = node.id || `snip-${App.util.cyrb53(rawTxt)}`;
+                                if (!node.id) node.id = snippetId;
+                                snippetObject = { id: snippetId, html: node.outerHTML, text: rawTxt, articleId: src.id, type: 'snippet' };
                             }
 
                             if (snippetObject) {
@@ -1070,18 +1073,18 @@ export const util = {
                     });
                     const protectedMath = App.util.protectMathSegments(maskedText);
 
-                    const createSnippetId = () => `snip-${crypto.randomUUID().slice(0, 12)}`;
+                    const createSnippetId = (content) => `snip-${App.util.cyrb53(content || '')}`;
                     let processedHtml = protectedMath.text
                         .replace(/^\s*>\s*(.*)/gm, '<blockquote>$1</blockquote>')
                         .replace(/^\s*---\s*$/gm, '<hr>')
                         .replace(/\*\*(.*?)\*\*/g, '<i>$1</i>').replace(/\*([^*]+)\*/g, '<b>$1</b>')
 
                         .replace(/__(.*?)__/g, '<span class="text-underline">$1</span>').replace(/~~(.*?)~~/g, '<del>$1</del>')
-                        .replace(/==(.*?)==g/g, `<span class="highlight-2" id="${createSnippetId()}">$1</span>`).replace(/==(.*?)==b/g, `<span class="highlight-3" id="${createSnippetId()}">$1</span>`)
-                        .replace(/==(.*?)==r/g, `<span class="highlight-4" id="${createSnippetId()}">$1</span>`).replace(/==(.*?)==p/g, `<span class="highlight-5" id="${createSnippetId()}">$1</span>`)
-                        .replace(/==(.*?)==c/g, `<span class="highlight-6" id="${createSnippetId()}">$1</span>`).replace(/==(.*?)==m/g, `<span class="highlight-7" id="${createSnippetId()}">$1</span>`).replace(/==(.*?)==/g, `<span class="highlight-1" id="${createSnippetId()}">$1</span>`)
-                        .replace(/::(.*?)_r::/g, `<span class="text-red" id="${createSnippetId()}">$1</span>`).replace(/::(.*?)_g::/g, `<span class="text-green" id="${createSnippetId()}">$1</span>`)
-                        .replace(/::(.*?)_b::/g, `<span class="text-blue" id="${createSnippetId()}">$1</span>`).replace(/::(.*?)_m::/g, `<span class="text-magenta" id="${createSnippetId()}">$1</span>`);
+                        .replace(/==(.*?)==g/g, (m, c) => `<span class="highlight-2" id="${createSnippetId(c)}">${c}</span>`).replace(/==(.*?)==b/g, (m, c) => `<span class="highlight-3" id="${createSnippetId(c)}">${c}</span>`)
+                        .replace(/==(.*?)==r/g, (m, c) => `<span class="highlight-4" id="${createSnippetId(c)}">${c}</span>`).replace(/==(.*?)==p/g, (m, c) => `<span class="highlight-5" id="${createSnippetId(c)}">${c}</span>`)
+                        .replace(/==(.*?)==c/g, (m, c) => `<span class="highlight-6" id="${createSnippetId(c)}">${c}</span>`).replace(/==(.*?)==m/g, (m, c) => `<span class="highlight-7" id="${createSnippetId(c)}">${c}</span>`).replace(/==(.*?)==/g, (m, c) => `<span class="highlight-1" id="${createSnippetId(c)}">${c}</span>`)
+                        .replace(/::(.*?)_r::/g, (m, c) => `<span class="text-red" id="${createSnippetId(c)}">${c}</span>`).replace(/::(.*?)_g::/g, (m, c) => `<span class="text-green" id="${createSnippetId(c)}">${c}</span>`)
+                        .replace(/::(.*?)_b::/g, (m, c) => `<span class="text-blue" id="${createSnippetId(c)}">${c}</span>`).replace(/::(.*?)_m::/g, (m, c) => `<span class="text-magenta" id="${createSnippetId(c)}">${c}</span>`);
 
                     processedHtml = App.util.restoreMathSegments(processedHtml, protectedMath.tokens);
                     // Restore tags

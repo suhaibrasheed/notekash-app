@@ -379,6 +379,17 @@
             font-size: 0.8rem;
         }
 
+        body.mobile-view .search-snippet-section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            padding: 0.5rem 0.2rem;
+        }
+
+        body.mobile-view .search-snippet-hint {
+            font-size: 0.75rem;
+        }
+
         body.mobile-view .category-filters {
             width: 100%;
             flex-wrap: wrap;
