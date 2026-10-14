@@ -253,6 +253,12 @@
         }
 
         /* --- Write Mode Specific Styles --- */
+        body.write-mode .nk-mcq-option::before,
+        body.write-mode .nk-mcq-option::after {
+            content: none !important;
+            display: none !important;
+        }
+
         body.write-mode .nk-mcq-option[data-is-correct="true"] .nk-mcq-option-radio {
             background:
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.8 12.2L9.5 16.8Q13.8 11.2 19.4 6.6'/%3E%3C/svg%3E") no-repeat center center / 12px 12px,
@@ -299,7 +305,7 @@
         body.read-mode .nk-mcq-option:not(.correct):not(.incorrect)::before,
         .focus-mode-overlay .nk-mcq-block .nk-mcq-option:not(.correct):not(.incorrect)::before,
         .study-card-content-box .nk-mcq-block .nk-mcq-option:not(.correct):not(.incorrect)::before,
-        .nk-mcq-option:not(.correct):not(.incorrect)::before {
+        body:not(.write-mode) .nk-mcq-option:not(.correct):not(.incorrect)::before {
             content: '';
             width: 18px;
             height: 18px;
@@ -419,7 +425,7 @@
         body.read-mode .nk-mcq-option.correct::before,
         .focus-mode-overlay .nk-mcq-block .nk-mcq-option.correct::before,
         .study-card-content-box .nk-mcq-block .nk-mcq-option.correct::before,
-        .nk-mcq-option.correct::before {
+        body:not(.write-mode) .nk-mcq-option.correct::before {
             content: '' !important;
             width: 20px !important;
             height: 20px !important;
@@ -451,7 +457,7 @@
         body.read-mode .nk-mcq-option.incorrect::before,
         .focus-mode-overlay .nk-mcq-block .nk-mcq-option.incorrect::before,
         .study-card-content-box .nk-mcq-block .nk-mcq-option.incorrect::before,
-        .nk-mcq-option.incorrect::before {
+        body:not(.write-mode) .nk-mcq-option.incorrect::before {
             content: '' !important;
             width: 20px !important;
             height: 20px !important;
