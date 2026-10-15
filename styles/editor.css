@@ -889,6 +889,272 @@
             gap: 16px;
         }
 
+        .library-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .library-title-row {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .library-vault-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            line-height: 1;
+            color: inherit;
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), filter 0.22s ease, opacity 0.2s ease;
+            opacity: 0.95;
+            flex-shrink: 0;
+            transform: translateY(-1px);
+        }
+
+        .library-vault-btn:hover {
+            transform: scale(1.08) translateY(-2px);
+            opacity: 1;
+            filter: drop-shadow(0 3px 14px rgba(224, 180, 83, 0.5));
+        }
+
+        .library-vault-btn:active {
+            transform: scale(0.96) translateY(0);
+        }
+
+        .library-vault-btn .vault-sigil-icon {
+            width: 38px;
+            height: 38px;
+            display: block;
+            filter: drop-shadow(0 1px 4px rgba(230, 132, 94, 0.2));
+        }
+
+        /* Theme-aware SVG gradient stops matching the library title gradient */
+        .vault-grad-stop-1 { stop-color: #E0B453; }
+        .vault-grad-stop-2 { stop-color: #E6845E; }
+        .vault-grad-stop-3 { stop-color: #C159A1; }
+
+        [data-theme="light"] .vault-grad-stop-1 { stop-color: #FF8C42; }
+        [data-theme="light"] .vault-grad-stop-2 { stop-color: #FFD05A; }
+        [data-theme="light"] .vault-grad-stop-3 { stop-color: #00A896; }
+
+        [data-theme="dark"] .vault-grad-stop-1 { stop-color: #E0B453; }
+        [data-theme="dark"] .vault-grad-stop-2 { stop-color: #E6845E; }
+        [data-theme="dark"] .vault-grad-stop-3 { stop-color: #C159A1; }
+
+        [data-theme="sepia"] .vault-grad-stop-1 { stop-color: #8c6d46; }
+        [data-theme="sepia"] .vault-grad-stop-2 { stop-color: #7d5930; }
+        [data-theme="sepia"] .vault-grad-stop-3 { stop-color: #704214; }
+
+        /* Storage & Sync Modal Grid */
+        .storage-vault-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 14px;
+        }
+
+        .vault-card {
+            background: color-mix(in srgb, var(--bg-secondary) 80%, transparent);
+            border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+            border-radius: 10px;
+            padding: 10px 14px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 56px;
+            transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+            box-sizing: border-box;
+        }
+
+        .vault-card.active {
+            background: color-mix(in srgb, var(--primary-color) 10%, var(--bg-secondary));
+            border: 1.5px solid var(--primary-color);
+            box-shadow: 0 2px 10px color-mix(in srgb, var(--primary-color) 14%, transparent);
+        }
+
+        .vault-card.vault-card-switchable {
+            cursor: pointer;
+        }
+
+        .vault-card.vault-card-switchable:hover {
+            transform: translateY(-1px);
+            border-color: color-mix(in srgb, var(--primary-color) 60%, var(--border-color));
+            background: var(--bg-tertiary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .vault-card.vault-card-connect {
+            border: 1.5px dashed color-mix(in srgb, var(--border-color) 80%, transparent);
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .vault-card.vault-card-connect:hover {
+            border-color: var(--primary-color);
+            background: color-mix(in srgb, var(--primary-color) 6%, transparent);
+            transform: translateY(-1px);
+        }
+
+        .vault-card-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .vault-card-icon {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+        }
+
+        .vault-card-body {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            gap: 2px;
+        }
+
+        .vault-card-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .vault-card-meta {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .vault-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .vault-badge-active {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.74rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 6px;
+            background: color-mix(in srgb, var(--primary-color) 16%, transparent);
+            color: var(--primary-color);
+            border: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
+            white-space: nowrap;
+        }
+
+        .vault-switch-pill {
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 3px 10px;
+            border-radius: 6px;
+            background: color-mix(in srgb, var(--bg-tertiary) 80%, transparent);
+            border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .vault-card-switchable:hover .vault-switch-pill {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            background: color-mix(in srgb, var(--primary-color) 14%, transparent);
+        }
+
+        .vault-card-trash-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            opacity: 0.5;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vault-card-trash-btn:hover {
+            opacity: 1;
+            color: var(--danger-color, #ef4444);
+            background: color-mix(in srgb, #ef4444 14%, transparent);
+        }
+
+        .vault-backup-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: color-mix(in srgb, var(--bg-tertiary) 45%, transparent);
+            border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
+            border-radius: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .vault-backup-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vault-backup-info i {
+            font-size: 1.15rem;
+            color: var(--primary-color);
+            opacity: 0.85;
+        }
+
+        .vault-backup-title {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .vault-backup-sub {
+            font-size: 0.74rem;
+            color: var(--text-secondary);
+        }
+
+        .vault-backup-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
         .library-title {
             font-family: var(--font-display);
             font-size: 3rem;
@@ -2431,6 +2697,77 @@
             letter-spacing: -0.02em;
             border-bottom: none !important;
             padding-bottom: 0 !important;
+        }
+
+        .settings-sidebar-footer {
+            margin-top: auto;
+            padding-top: 0.85rem;
+            border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+        }
+
+        .settings-sidebar-user {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: color-mix(in srgb, var(--bg-primary) 70%, transparent);
+            border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+            font-size: 0.82rem;
+            transition: all 0.2s ease;
+        }
+
+        .settings-sidebar-user.not-signed-in {
+            cursor: pointer;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .settings-sidebar-user.not-signed-in:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+        }
+
+        .settings-sidebar-user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .settings-sidebar-user-info i {
+            font-size: 0.95rem;
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        .user-email-text {
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        .settings-sidebar-signout-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 3px 6px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .settings-sidebar-signout-btn:hover {
+            color: var(--danger-color, #ef4444);
+            background: color-mix(in srgb, #ef4444 12%, transparent);
         }
 
         .settings-sidebar-nav {

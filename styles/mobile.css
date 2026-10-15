@@ -355,6 +355,11 @@
             font-size: 2.5rem;
         }
 
+        body.mobile-view .library-vault-btn .vault-sigil-icon {
+            width: 32px;
+            height: 32px;
+        }
+
         body.mobile-view .search-and-filter-bar {
             display: flex;
             flex-direction: row;
@@ -763,8 +768,7 @@
                 stroke: currentColor;
             }
 
-            /* Hide matching header buttons on mobile to avoid clutter */
-            body.mobile-view #settings-btn,
+            /* Hide matching header buttons on mobile to avoid clutter (Settings kept visible for 3-left 3-right symmetry) */
             body.mobile-view #global-search-btn,
             body.mobile-view .mobile-header-more-btn {
                 display: none !important;

@@ -64,6 +64,8 @@ export const ui = {
                     let choicesHTML = '';
 
                     if (permissionState === 'prompt') {
+                        const folderNameStr = data?.folderName || (App.state.directoryHandle ? App.state.directoryHandle.name : '');
+                        const folderSubtext = folderNameStr ? ` '<b>${App.util.escapeHtml(folderNameStr)}</b>'` : 'your previously selected folder';
                         choicesHTML = `
                         <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-top: 0;">
                             <div class="welcome-card recommended single-card" id="resume-btn" onclick="App.events.requestStoredPermission()">
@@ -71,7 +73,7 @@ export const ui = {
                                     <div class="card-icon">${resumeIcon}</div>
                                     <h3 class="card-title">Resume Session</h3>
                                 </div>
-                                <p class="card-description">Grant access to your previously selected folder to continue where you left off.</p>
+                                <p class="card-description">Grant access to ${folderSubtext} to continue where you left off.</p>
                             </div>
                             <div class="welcome-prompt-alternatives">
                                 <a href="#" onclick="event.preventDefault(); App.events.selectDirectory(true)">Choose a New Folder</a>
@@ -239,11 +241,50 @@ export const ui = {
                     }).join('');
 
                     const libraryTitle = App.util.escapeHtml(App.settings.get('libraryTitle') || 'My Library');
+                    const isFolderActive = Boolean(App.state.directoryHandle);
+                    const currentFolderName = isFolderActive ? App.state.directoryHandle.name : null;
+                    const vaultTooltip = isFolderActive
+                        ? `Storage: '${App.util.escapeHtml(currentFolderName)}' • Click to switch or manage`
+                        : `Storage: Browser Database • Click to switch or manage`;
+
+                    const vaultBtnHTML = `
+                        <button class="library-vault-btn" onclick="App.ui.showStorageModal()" title="${vaultTooltip}" aria-label="Storage settings">
+                            <svg class="vault-sigil-icon" viewBox="0 0 36 36" width="38" height="38" fill="none" stroke="url(#vault-title-gradient)" stroke-linecap="round" stroke-linejoin="round">
+                                <defs>
+                                    <linearGradient id="vault-title-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop class="vault-grad-stop-1" offset="0%" />
+                                        <stop class="vault-grad-stop-2" offset="50%" />
+                                        <stop class="vault-grad-stop-3" offset="100%" />
+                                    </linearGradient>
+                                </defs>
+                                <!-- Back Folder Flap with rounded Tab -->
+                                <path d="M 4 11 V 7.5 a 2.5 2.5 0 0 1 2.5 -2.5 h 7 a 2 2 0 0 1 1.6 .8 L 17 8 a 1.5 1.5 0 0 0 1.1 .5 H 29.5 a 2.5 2.5 0 0 1 2.5 2.5 v 6" stroke-width="2" opacity="0.6" />
+                                
+                                <!-- Layered Notebook Page hint inside -->
+                                <path d="M 8.5 7.5 h 19 a 2 2 0 0 1 2 2 v 4" stroke-width="1.6" opacity="0.4" />
+
+                                <!-- Clean Front Folder Flap with gentle gradient wash -->
+                                <path d="M 3.5 13.5 h 29 l -2.3 16.5 a 2.5 2.5 0 0 1 -2.5 2.2 H 8.3 a 2.5 2.5 0 0 1 -2.5 -2.2 L 3.5 13.5 z" fill="url(#vault-title-gradient)" fill-opacity="0.14" stroke-width="2" />
+                                
+                                <!-- Fluid Flame of Inspiration -->
+                                <path d="M 18 16.5 C 19.5 18.5 19.2 20.2 18.5 21.2 C 20.5 22.2 22.5 24.2 22.5 26.5 C 22.5 29 20.5 30.8 18 30.8 C 15.5 30.8 13.5 29 13.5 26.5 C 13.5 23.5 16 21 17.2 19 C 17.2 20.2 17.8 21.2 18.8 21.8 C 17.5 19.8 17.2 18 18 16.5 Z" fill="url(#vault-title-gradient)" fill-opacity="0.45" stroke-width="1.8" />
+                                
+                                <!-- Luminous 4-Point Celestial Star Spark inside the flame -->
+                                <path d="M 18 24.2 Q 18 26.5 16 26.5 Q 18 26.5 18 28.8 Q 18 26.5 20 26.5 Q 18 26.5 18 24.2 Z" fill="url(#vault-title-gradient)" stroke="none" />
+                                
+                                <!-- Satellite Idea Spark (Top Right) -->
+                                <path d="M 24 14.5 Q 24 16 22.8 16 Q 24 16 24 17.5 Q 24 16 25.2 16 Q 24 16 24 14.5 Z" fill="url(#vault-title-gradient)" stroke="none" />
+                            </svg>
+                        </button>
+                    `;
 
                     container.innerHTML = `
                     <div class="library-main">
                         <div class="library-header">
-                            <h1 class="library-title">${libraryTitle}</h1>
+                            <div class="library-title-row">
+                                ${vaultBtnHTML}
+                                <h1 class="library-title">${libraryTitle}</h1>
+                            </div>
                         </div>
                         <div class="search-and-filter-bar">
                             <div class="search-bar-container">
@@ -6047,11 +6088,33 @@ export const ui = {
                     }
                 },
 
+                getCurrentUserEmail() {
+                    if (App.state._cachedSession?.user?.email) {
+                        return App.state._cachedSession.user.email;
+                    }
+                    try {
+                        const raw = localStorage.getItem('notekash-auth-token');
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            const user = parsed?.user || parsed?.currentSession?.user;
+                            if (user?.email) return user.email;
+                        }
+                        for (let i = 0; i < localStorage.length; i++) {
+                            const key = localStorage.key(i);
+                            if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+                                const val = JSON.parse(localStorage.getItem(key));
+                                if (val?.user?.email) return val.user.email;
+                            }
+                        }
+                    } catch (e) {}
+                    return null;
+                },
+
                 getSettingsLayoutHTML(activeTabId, title, contentHTML) {
                     const isPremium = App.license.isPremium();
                     const navItems = [
-                        { id: 'appearance', icon: 'fa-palette', label: 'Appearance Model', action: 'showAppearanceModal', isLocked: false },
                         { id: 'profile', icon: 'fa-circle-user', label: 'Profile & Account', action: 'showLicenseModal', isLocked: false },
+                        { id: 'appearance', icon: 'fa-palette', label: 'Appearance Model', action: 'showAppearanceModal', isLocked: false },
                         { id: 'categories', icon: 'fa-folder-tree', label: 'Category Manager', action: 'showCategoryManagerModal', isLocked: false },
                         { id: 'storage', icon: 'fa-database', label: 'Storage & Sync', action: 'showStorageModal', isLocked: false },
                         { id: 'audio', icon: 'fa-microphone-lines', label: 'Audio & Scribe', action: 'showAudioSettingsModal', isLocked: false },
@@ -6074,6 +6137,25 @@ export const ui = {
                         `;
                     }).join('');
 
+                    const userEmail = App.ui.getCurrentUserEmail();
+                    const accountStatusHTML = userEmail ? `
+                        <div class="settings-sidebar-user signed-in">
+                            <div class="settings-sidebar-user-info" title="${App.util.escapeHtml(userEmail)}">
+                                <i class="fa-solid fa-circle-user"></i>
+                                <span class="user-email-text">${App.util.escapeHtml(userEmail)}</span>
+                            </div>
+                            <button class="settings-sidebar-signout-btn" onclick="event.stopPropagation(); App.ui.handleSignOut();" title="Sign Out">Sign Out</button>
+                        </div>
+                    ` : `
+                        <a class="settings-sidebar-user not-signed-in" onclick="App.ui.closeModal(); window.location.href='./login.html';" title="Sign In or Sign Up">
+                            <div class="settings-sidebar-user-info">
+                                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                                <span>Sign In</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right" style="font-size: 0.75rem; opacity: 0.5;"></i>
+                        </a>
+                    `;
+
                     const sidebarHTML = `
                         <div class="settings-sidebar">
                             <div class="settings-sidebar-header">
@@ -6082,6 +6164,9 @@ export const ui = {
                             <nav class="settings-sidebar-nav">
                                 ${sidebarNavHTML}
                             </nav>
+                            <div class="settings-sidebar-footer">
+                                ${accountStatusHTML}
+                            </div>
                         </div>
                     `;
 
@@ -6101,15 +6186,15 @@ export const ui = {
 
                 showSettingsModal() {
                     if (window.innerWidth > 768) {
-                        App.ui.showAppearanceModal();
+                        App.ui.showLicenseModal();
                         return;
                     }
 
                     const isPremium = App.license.isPremium();
 
                     const navItems = [
-                        { id: 'appearance', icon: 'fa-palette', label: 'Appearance Model', action: 'showAppearanceModal', isLocked: false },
                         { id: 'profile', icon: 'fa-circle-user', label: 'Profile & Account', action: 'showLicenseModal', isLocked: false },
+                        { id: 'appearance', icon: 'fa-palette', label: 'Appearance Model', action: 'showAppearanceModal', isLocked: false },
                         { id: 'categories', icon: 'fa-folder-tree', label: 'Category Manager', action: 'showCategoryManagerModal', isLocked: false },
                         { id: 'storage', icon: 'fa-database', label: 'Storage & Sync', action: 'showStorageModal', isLocked: false },
                         { id: 'audio', icon: 'fa-microphone-lines', label: 'Audio & Scribe', action: 'showAudioSettingsModal', isLocked: false },
@@ -6128,6 +6213,25 @@ export const ui = {
                     </a>
                 `).join('');
 
+                    const userEmail = App.ui.getCurrentUserEmail();
+                    const accountStatusHTML = userEmail ? `
+                        <div class="settings-sidebar-user signed-in">
+                            <div class="settings-sidebar-user-info" title="${App.util.escapeHtml(userEmail)}">
+                                <i class="fa-solid fa-circle-user"></i>
+                                <span class="user-email-text">${App.util.escapeHtml(userEmail)}</span>
+                            </div>
+                            <button class="settings-sidebar-signout-btn" onclick="event.stopPropagation(); App.ui.handleSignOut();" title="Sign Out">Sign Out</button>
+                        </div>
+                    ` : `
+                        <a class="settings-sidebar-user not-signed-in" onclick="App.ui.closeModal(); window.location.href='./login.html';" title="Sign In or Sign Up">
+                            <div class="settings-sidebar-user-info">
+                                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                                <span>Sign In</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right" style="font-size: 0.75rem; opacity: 0.5;"></i>
+                        </a>
+                    `;
+
                     const modalHTML = `
                     <div class="modal-backdrop" onclick="if(event.target === this) App.ui.closeModal()">
                         <div class="modal-content ui-card" style="max-width: 420px; border-radius: 20px; padding: 2rem; background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));" onclick="event.stopPropagation()">
@@ -6135,6 +6239,9 @@ export const ui = {
                             <nav class="settings-nav">
                                 ${navItemsHTML}
                             </nav>
+                            <div class="settings-mobile-account-footer" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                ${accountStatusHTML}
+                            </div>
                             <div class="modal-buttons" style="margin-top: 1.25rem; border: none; padding: 0;">
                                 <button class="btn btn-secondary" onclick="App.ui.closeModal()" style="width: 100%; padding: 10px; font-weight: 600; border-radius: 12px;">Close</button>
                             </div>
@@ -6930,6 +7037,90 @@ export const ui = {
                         cloudSyncHTML = step1_ApiKeyHTML + step2_ConnectHTML + step3_EnableHTML + step4_ManualSyncHTML + helpGuideHTML;
                     }
 
+                    let recentFolders = [];
+                    try {
+                        recentFolders = await App.indexedDB.getRecentFolders();
+                    } catch (e) {
+                        recentFolders = [];
+                    }
+
+                    const currentFolderName = App.state.directoryHandle ? App.state.directoryHandle.name : null;
+                    const otherFolders = recentFolders.filter(f => f && f.name && f.name !== currentFolderName);
+
+                    // Build vault grid cards with compact horizontal layout (no wasted void)
+                    const activeFolderCardHTML = currentFolderName ? `
+                        <div class="vault-card active">
+                            <div class="vault-card-main">
+                                <div class="vault-card-icon"><i class="fa-solid fa-folder"></i></div>
+                                <div class="vault-card-body">
+                                    <div class="vault-card-title" title="${App.util.escapeHtml(currentFolderName)}">${App.util.escapeHtml(currentFolderName)}</div>
+                                    <div class="vault-card-meta">Local Directory • Auto-saved</div>
+                                </div>
+                            </div>
+                            <div class="vault-card-actions">
+                                <span class="vault-badge-active">Active</span>
+                            </div>
+                        </div>
+                    ` : '';
+
+                    const browserCardHTML = !currentFolderName ? `
+                        <div class="vault-card active">
+                            <div class="vault-card-main">
+                                <div class="vault-card-icon"><i class="fa-solid fa-database"></i></div>
+                                <div class="vault-card-body">
+                                    <div class="vault-card-title">Browser Storage</div>
+                                    <div class="vault-card-meta">IndexedDB • Local database</div>
+                                </div>
+                            </div>
+                            <div class="vault-card-actions">
+                                <span class="vault-badge-active">Active</span>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="vault-card vault-card-switchable" onclick="App.ui.closeModal(); App.events.useBrowserStorage();" title="Switch to Browser Storage">
+                            <div class="vault-card-main">
+                                <div class="vault-card-icon"><i class="fa-solid fa-database"></i></div>
+                                <div class="vault-card-body">
+                                    <div class="vault-card-title">Browser Storage</div>
+                                    <div class="vault-card-meta">IndexedDB • Inactive</div>
+                                </div>
+                            </div>
+                            <div class="vault-card-actions">
+                                <span class="vault-switch-pill">Switch</span>
+                            </div>
+                        </div>
+                    `;
+
+                    const otherFolderCardsHTML = otherFolders.map(f => `
+                        <div class="vault-card vault-card-switchable" onclick="App.events.switchFolder(this.dataset.folder)" data-folder="${App.util.escapeHtml(f.name)}" title="Switch to folder: '${App.util.escapeHtml(f.name)}'">
+                            <div class="vault-card-main">
+                                <div class="vault-card-icon"><i class="fa-regular fa-folder"></i></div>
+                                <div class="vault-card-body">
+                                    <div class="vault-card-title" title="${App.util.escapeHtml(f.name)}">${App.util.escapeHtml(f.name)}</div>
+                                    <div class="vault-card-meta">Recent Folder</div>
+                                </div>
+                            </div>
+                            <div class="vault-card-actions">
+                                <button class="vault-card-trash-btn" onclick="event.stopPropagation(); App.events.removeRecentFolder(this.dataset.folder)" data-folder="${App.util.escapeHtml(f.name)}" title="Remove from recents">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                                <span class="vault-switch-pill">Switch</span>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    const connectCardHTML = `
+                        <div class="vault-card vault-card-connect" onclick="App.ui.closeModal(); App.events.selectDirectory(true);" title="Open or connect another folder">
+                            <div class="vault-card-main">
+                                <div class="vault-card-icon"><i class="fa-solid fa-folder-plus"></i></div>
+                                <div class="vault-card-body">
+                                    <div class="vault-card-title">Connect Folder...</div>
+                                    <div class="vault-card-meta">Pick local directory</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
                     // --- 3. ASSEMBLE THE FINAL MODAL ---
                     const modalHTML = `
                     <div class="modal-backdrop" onclick="if(event.target === this) App.ui.closeModal()">
@@ -6937,16 +7128,24 @@ export const ui = {
                             ${App.ui.getSettingsLayoutHTML('storage', 'Storage & Sync', `
 
                             <div class="settings-section">
-                                <h4><i class="fa-solid fa-folder-open"></i> Local Storage</h4>
-                                <div class="settings-item">
-                                    <div class="settings-label"><b>Notes Folder</b><small>${App.state.directoryHandle ? `Using folder: '${App.state.directoryHandle.name}'` : 'Using Browser Storage.'}</small></div>
-                                    <button class="btn btn-secondary" onclick="App.ui.closeModal(); App.router.navigateTo('welcome');">Change</button>
+                                <h4><i class="fa-solid fa-hard-drive"></i> Storage Locations</h4>
+                                <div class="storage-vault-grid">
+                                    ${activeFolderCardHTML}
+                                    ${browserCardHTML}
+                                    ${otherFolderCardsHTML}
+                                    ${connectCardHTML}
                                 </div>
-                                <div class="settings-item">
-                                    <div class="settings-label"><b>Backup</b><small>Save or Restore your Note or All Data files.</small></div>
-                                    <div style="display:flex; gap: 8px;">
-                                        <button class="btn btn-secondary" onclick="App.events.triggerZipImport()">Import</button>
-                                        <button class="btn btn-secondary" onclick="App.services.backup.exportToZip()">Export</button>
+                                <div class="vault-backup-strip">
+                                    <div class="vault-backup-info">
+                                        <i class="fa-solid fa-file-zipper"></i>
+                                        <div>
+                                            <div class="vault-backup-title">Backup & Restore</div>
+                                            <div class="vault-backup-sub">Save or restore your notes as a ZIP archive.</div>
+                                        </div>
+                                    </div>
+                                    <div class="vault-backup-actions">
+                                        <button class="btn btn-secondary btn-sm" onclick="App.events.triggerZipImport()"><i class="fa-solid fa-file-import"></i> Import</button>
+                                        <button class="btn btn-secondary btn-sm" onclick="App.services.backup.exportToZip()"><i class="fa-solid fa-file-export"></i> Export</button>
                                     </div>
                                 </div>
                             </div>

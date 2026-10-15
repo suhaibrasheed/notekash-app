@@ -489,7 +489,8 @@ const App = {
         } else if (!App.isSplitIframeMode) {
           this.ui.applyTheme(App.settings.get('theme') || 'sepia', true);
           this.ui.applyFontSettings();
-          this.checkAndNavigate('welcome', { permissionState: permissionStatus });
+          const effectivePermission = permissionStatus === 'denied' ? 'denied' : 'prompt';
+          this.checkAndNavigate('welcome', { permissionState: effectivePermission, folderName: savedHandle.name });
           document.dispatchEvent(new CustomEvent('nk:ready', { detail: { skip: true } }));
         }
       } else {

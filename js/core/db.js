@@ -53,6 +53,34 @@ export const indexedDBModule = {
             req.onsuccess = () => resolve(req.result);
             req.onerror = () => reject(req.error);
         });
+    },
+    async getRecentFolders() {
+        try {
+            const res = await this.getHandle('recentFolders');
+            return Array.isArray(res) ? res : [];
+        } catch (e) {
+            return [];
+        }
+    },
+    async saveRecentFolder(handle) {
+        if (!handle || !handle.name) return;
+        try {
+            const list = await this.getRecentFolders();
+            const filtered = list.filter(item => item && item.name && item.name !== handle.name);
+            filtered.unshift({ name: handle.name, handle: handle, lastUsed: Date.now() });
+            await this.setHandle('recentFolders', filtered.slice(0, 8));
+        } catch (e) {
+            console.warn('[NoteKash] Could not save recent folder handle:', e);
+        }
+    },
+    async removeRecentFolder(folderName) {
+        try {
+            const list = await this.getRecentFolders();
+            const filtered = list.filter(item => item && item.name !== folderName);
+            await this.setHandle('recentFolders', filtered);
+        } catch (e) {
+            console.warn('[NoteKash] Could not remove recent folder:', e);
+        }
     }
 };
 

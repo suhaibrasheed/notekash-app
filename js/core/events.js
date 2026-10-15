@@ -2448,6 +2448,21 @@ export const events = {
                     if (App.state.studySession.isActive) App.events.study.handleKeyboard(e);
                 },
 
+                async activateDirectorySession(handle) {
+                    App.state.isInitialLoadComplete = false;
+                    App.state.isHydrated = false;
+                    App.state.articles = [];
+
+                    App.state.directoryHandle = handle;
+                    App.state.storageMode = 'fileSystem';
+                    await App.indexedDB.setHandle('directory', handle);
+                    await App.indexedDB.saveRecentFolder(handle);
+                    await App.settings.set('lastStorageMode', 'fileSystem');
+                    await App.util.requestDurableStorage();
+
+                    await App._startFileSystemSession();
+                },
+
                 async selectDirectory(isChange = false) {
                     if ('showDirectoryPicker' in window) {
                         try {
@@ -2461,24 +2476,11 @@ export const events = {
                                     return;
                                 }
 
-
                                 this.transitionToLibrary(async () => {
-                                    App.state.isInitialLoadComplete = false;
-                                    App.state.isHydrated = false;
-                                    App.state.articles = [];
-
-                                    await App.settings.set('lastStorageMode', 'fileSystem');
-                                    App.state.directoryHandle = handle;
-                                    await App.indexedDB.setHandle('directory', handle);
-                                    await App.util.requestDurableStorage();
-                                    App.state.storageMode = 'fileSystem';
-
-                                    await App.settings.load();
-                                    App.ui.applyTheme(App.settings.get('theme'));
-
-                                    await App.loadInitialData();
-                                    App.router.navigateTo('library');
-
+                                    await this.activateDirectorySession(handle);
+                                    if (isChange && App.ui && typeof App.ui.closeModal === 'function') {
+                                        App.ui.closeModal();
+                                    }
                                     App.ui.showToast(`Switched to Folder Mode: '${handle.name}' selected.`, { type: 'success' });
                                 });
                             } else {
@@ -2495,16 +2497,20 @@ export const events = {
                     }
                 },
 
-                async requestStoredPermission() {
-                    if (!App.state.directoryHandle) {
-                        App.ui.showToast("No folder handle found. Please select a new folder.", { type: 'error' });
+                async requestStoredPermission(targetHandle = null) {
+                    const handle = targetHandle || App.state.directoryHandle;
+                    if (!handle) {
+                        App.ui.showToast("No folder handle found. Please select a folder.", { type: 'error' });
                         App.router.navigateTo('welcome', { permissionState: 'none' });
                         return;
                     }
                     try {
-                        const permission = await App.state.directoryHandle.requestPermission({ mode: 'readwrite' });
+                        const permission = await handle.requestPermission({ mode: 'readwrite' });
                         if (permission === 'granted') {
-                            window.location.reload();
+                            this.transitionToLibrary(async () => {
+                                await this.activateDirectorySession(handle);
+                                App.ui.showToast(`Resumed Session: '${handle.name}'`, { type: 'success' });
+                            });
                         } else {
                             App.ui.showToast("Permission was denied. Please select the folder again.", { type: 'error' });
                             App.router.navigateTo('welcome', { permissionState: 'denied' });
@@ -2512,8 +2518,58 @@ export const events = {
                     } catch (err) {
                         if (err.name !== 'AbortError') {
                             console.error("Error requesting permission:", err);
-                            App.ui.showToast("Could not get permission for the folder.", { type: 'error' });
+                            App.ui.showToast("Could not access the folder. Please select it again.", { type: 'error' });
+                            App.router.navigateTo('welcome', { permissionState: 'none' });
                         }
+                    }
+                },
+
+                async switchFolder(folderName) {
+                    if (!folderName) return;
+                    try {
+                        const recent = await App.indexedDB.getRecentFolders();
+                        const target = recent.find(f => f.name === folderName);
+                        if (!target || !target.handle) {
+                            App.ui.showToast(`Folder '${folderName}' not found. Please choose a folder.`, { type: 'warning' });
+                            this.selectDirectory(true);
+                            return;
+                        }
+
+                        let hasPermission = false;
+                        try {
+                            if (typeof target.handle.queryPermission === 'function') {
+                                hasPermission = (await target.handle.queryPermission({ mode: 'readwrite' })) === 'granted';
+                            }
+                        } catch (e) {
+                            hasPermission = false;
+                        }
+
+                        if (!hasPermission) {
+                            const req = await target.handle.requestPermission({ mode: 'readwrite' });
+                            if (req !== 'granted') {
+                                App.ui.showToast(`Permission denied for '${folderName}'.`, { type: 'error' });
+                                return;
+                            }
+                        }
+
+                        this.transitionToLibrary(async () => {
+                            await this.activateDirectorySession(target.handle);
+                            if (App.ui && typeof App.ui.closeModal === 'function') {
+                                App.ui.closeModal();
+                            }
+                            App.ui.showToast(`Switched to folder: '${target.handle.name}'`, { type: 'success' });
+                        });
+                    } catch (err) {
+                        console.error('Error switching folder:', err);
+                        App.ui.showToast(`Could not switch to '${folderName}'.`, { type: 'error' });
+                    }
+                },
+
+                async removeRecentFolder(folderName) {
+                    await App.indexedDB.removeRecentFolder(folderName);
+                    App.ui.showToast(`Removed '${folderName}' from recent folders.`, { type: 'info' });
+                    if (document.getElementById('settings-modal-content') || document.querySelector('.settings-modal-container')) {
+                        App.ui.showStorageModal();
                     }
                 },
                 async createNewArticle() {
