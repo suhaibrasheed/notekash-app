@@ -13,6 +13,10 @@
             box-shadow: inset 0 0 120px color-mix(in srgb, var(--primary-color) 8%, transparent);
         }
 
+        body.is-pro-presenter-active {
+            --primary-color: var(--pro-presenter-accent, var(--primary-color));
+        }
+
         body.is-pro-presenter-active .pro-presenter-wave-overlay {
             opacity: 1;
         }

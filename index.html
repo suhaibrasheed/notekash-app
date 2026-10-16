@@ -468,6 +468,13 @@
                 var o = document.getElementById('nk-shell-loader');
                 if (!o) return;
 
+                // Eradicate shell loader immediately in split iframe mode (0ms delay)
+                if (window.location.search.indexOf('splitMode=iframe') !== -1) {
+                    o.style.display = 'none';
+                    if (o.parentNode) o.parentNode.removeChild(o);
+                    return;
+                }
+
                 var showTime = Date.now();
                 var dismissed = false;
                 var TARGET_SPLASH_TIME = 1650; // Smooth 1.65s ambient display

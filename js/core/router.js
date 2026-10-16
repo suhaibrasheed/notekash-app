@@ -168,6 +168,16 @@ export const router = {
                     : (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (fn) => setTimeout(fn, 0));
                 requestFrame(() => {
                     App.ui.hideViewTransition();
+                    try {
+                        if (window.parent && window.parent !== window) {
+                            if (window.parent.App?.splitScreen?.syncChildState) {
+                                window.parent.App.splitScreen.syncChildState(window);
+                            }
+                            if (window.parent.App?.splitScreen?.notifyIframeReady) {
+                                window.parent.App.splitScreen.notifyIframeReady(window);
+                            }
+                        }
+                    } catch (e) {}
                 });
             }
         }

@@ -2959,7 +2959,7 @@ export const ui = {
                     }, 500);
 
                     const aiMagicToggle2 = document.getElementById('ai-magic-toggle');
-                    if (aiMagicToggle2) aiMagicToggle2.style.display = 'flex';
+                    if (aiMagicToggle2) aiMagicToggle2.style.display = 'none';
 
                     let overlay = document.getElementById('focus-mode-overlay');
                     if (!overlay) {
@@ -2968,15 +2968,12 @@ export const ui = {
                         document.body.appendChild(overlay);
                     }
 
-                    overlay.className = `focus-mode-overlay ${session.isStageMode ? 'stage-mode-active' : ''} ${session.activeTheme && session.activeTheme !== 'default' ? 'ambiance-' + session.activeTheme : ''}`;
+                    // Unified Presentation Mode always has stage-mode-active
+                    overlay.className = `focus-mode-overlay stage-mode-active ${session.activeTheme && session.activeTheme !== 'default' ? 'ambiance-' + session.activeTheme : ''}`;
                     if (session.isProPresenterActive) {
                         overlay.classList.add('is-pro-presenter-active');
-                    }
-
-                    // SYNC: Apply ambiance theme to body so Pro Presenter elements on body inherit theme variables
-                    document.body.className = document.body.className.replace(/\bambiance-\S+/g, '').trim();
-                    if (session.activeTheme && session.activeTheme !== 'default') {
-                        document.body.classList.add(`ambiance-${session.activeTheme}`);
+                        const primaryColor = getComputedStyle(overlay).getPropertyValue('--primary-color');
+                        if (primaryColor) document.body.style.setProperty('--pro-presenter-accent', primaryColor);
                     }
 
                     const highlightsVisible = App.settings.get('categoryHighlightsVisible') !== false;
@@ -3012,9 +3009,7 @@ export const ui = {
                                     finalHtml = `<div>${accordionWithTabindex}</div>`;
                                 }
                                 if (item.type === 'video') {
-                                    // Ensure video is not contenteditable and has focusability
                                     finalHtml = finalHtml.replace('class="nk-video-embed"', 'class="nk-video-embed" tabindex="0"');
-                                    // Wrapper for layout preservation
                                     return `<div class="snippet video-snippet-wrapper" style="width: 100%; display: flex; justify-content: center; background: transparent; padding: 0;">${finalHtml}</div>`;
                                 }
                                 return finalHtml;
@@ -3041,7 +3036,10 @@ export const ui = {
                     // Toggle Overlay Classes
                     if (overlay) {
                         overlay.classList.toggle('articulator-active', sigmaMode === 'article');
-                        overlay.classList.remove('sigma-web'); // Ensure web class is gone
+                        overlay.classList.remove('sigma-web');
+                        const isTitleVisible = App.settings.get('presentationTitleVisible') !== false;
+                        session.isTitleVisible = isTitleVisible;
+                        overlay.classList.toggle('title-hidden', !isTitleVisible);
                     }
 
                     overlay.innerHTML = `
@@ -3054,103 +3052,107 @@ export const ui = {
                         ${contentHTML}
                     </div>
                 </div>
-                <div class="focus-mode-controls" id="focus-controls-container"></div>`;
+                <div class="stage-mode-controls" id="focus-controls-container"></div>
+                <button id="immersive-exit-btn" onclick="App.events.toggleFocusModeControls()" title="Exit Immersive Mode (F)">
+                    ${App.util.icons.compress}
+                </button>`;
 
                     overlay.querySelectorAll('canvas[data-chart-config]').forEach(canvas => {
                         App.ui.renderChartOnCanvas(canvas);
                     });
                     App.util.renderMathInElement(overlay.querySelector('.focus-mode-body'));
 
-                    // Pro Presenter: Refresh listeners/re-bind scroll if active
-                    if (session.isProPresenterActive && App.events.presentation?._initProPresenter) {
-                        setTimeout(() => App.events.presentation._initProPresenter(), 50);
+                    const bodyEl = overlay.querySelector('.focus-mode-body');
+                    // BUG 4 FIX: Synchronously prepare Bento layouts and List Build animations before measuring
+                    if (bodyEl && sigmaMode === 'presentation') {
+                        this._prepareStageModeBentoLayouts(bodyEl);
+                        this._prepareListBuildAnimations(bodyEl);
+                        if (session.use2DCamera) {
+                            this._prepare2DCameraViewport(bodyEl);
+                        }
                     }
 
-                    if (session.isStageMode) {
-                        setTimeout(() => {
-                            const bodyEl = overlay.querySelector('.focus-mode-body');
-                            if (bodyEl) {
-                                const sigmaMode = session.sigmaMode || 'presentation';
+                    // Render dock controls immediately
+                    this.renderFocusModeControls();
 
-                                // STAGE MODE INNOVATIONS (only for Sigma Presentation mode)
-                                if (sigmaMode === 'presentation') {
-                                    // Innovation 1: Prepare Bento layouts
-                                    this._prepareStageModeBentoLayouts(bodyEl);
+                    // Measure scrollStops, setup canvas, and configure observers in requestAnimationFrame
+                    requestAnimationFrame(() => {
+                        if (!overlay.parentNode) return;
+                        const bodyEl = overlay.querySelector('.focus-mode-body');
+                        if (!bodyEl) return;
 
-                                    // Innovation 2: Prepare list build animations
-                                    this._prepareListBuildAnimations(bodyEl);
+                        // Use camera map if available, otherwise calculate scroll stops
+                        if (session.cameraMap && session.cameraMap.positions.length > 0) {
+                            session.scrollStops = session.cameraMap.positions.map((_, i) => i);
+                            this._navigate2DCamera(bodyEl, 0, 0);
+                        } else {
+                            session.scrollStops = this._calculateScrollStops(bodyEl);
+                            const targetTop = session.scrollStops[session.currentSlideIndex] || 0;
+                            bodyEl.scrollTo({ top: targetTop, behavior: 'auto' });
+                        }
 
-                                    // Innovation 3: 2D Camera viewport (optional feature flag)
-                                    // Enable by setting session.use2DCamera = true before entering Stage Mode
-                                    if (session.use2DCamera) {
-                                        this._prepare2DCameraViewport(bodyEl);
-                                    }
+                        // Set canvas dimensions to match body scroll bounds accurately
+                        const canvas = overlay.querySelector('#annotation-canvas');
+                        if (canvas) {
+                            canvas.width = bodyEl.offsetWidth;
+                            canvas.height = bodyEl.scrollHeight;
+                        }
+
+                        // Smart blur & IntersectionObserver
+                        const allElements = bodyEl.querySelectorAll('.snippet, .nk-mcq-block, .nk-timeline-block, .chart-container, .nk-accordion, .nk-text-tile, .stage-bento-split, .stage-bento-split-alt, .stage-hero-image');
+                        const totalItems = allElements.length;
+
+                        if (totalItems <= 3 || session.scrollStops.length <= 1) {
+                            bodyEl.classList.add('smart-blur-disabled');
+                        }
+
+                        const observer = new IntersectionObserver((entries) => {
+                            let visibleCount = 0;
+                            entries.forEach(entry => {
+                                const isVisible = entry.isIntersecting;
+                                entry.target.classList.toggle('is-visible', isVisible);
+                                if (isVisible) visibleCount++;
+                                if (isVisible && session.isCinematicActive && !entry.target.querySelector('img')) {
+                                    App.events.typewriter.setup(entry.target);
+                                } else if (!isVisible && entry.target === App.events.typewriter.currentSnippet) {
+                                    App.events.typewriter.reset();
                                 }
+                            });
 
-                                // Use camera map if available, otherwise use scroll stops
-                                if (session.cameraMap && session.cameraMap.positions.length > 0) {
-                                    session.scrollStops = session.cameraMap.positions.map((_, i) => i);
-                                    this._navigate2DCamera(bodyEl, 0, 0);
-                                } else {
-                                    session.scrollStops = this._calculateScrollStops(bodyEl);
-                                    bodyEl.scrollTo({ top: session.scrollStops[session.currentSlideIndex], behavior: 'auto' });
-                                }
-
-                                // Get all observable elements for smart blur logic
-                                const allElements = bodyEl.querySelectorAll('.snippet, .nk-mcq-block, .nk-timeline-block, .chart-container, .nk-accordion, .nk-text-tile, .stage-bento-split, .stage-bento-split-alt, .stage-hero-image');
-                                const totalItems = allElements.length;
-
-                                // Smart blur: If very few items or only one slide, disable blur
-                                if (totalItems <= 3 || session.scrollStops.length <= 1) {
-                                    bodyEl.classList.add('smart-blur-disabled');
-                                }
-
-                                const observer = new IntersectionObserver((entries) => {
-                                    let visibleCount = 0;
-                                    entries.forEach(entry => {
-                                        const isVisible = entry.isIntersecting;
-                                        entry.target.classList.toggle('is-visible', isVisible);
-                                        if (isVisible) visibleCount++;
-                                        if (isVisible && session.isCinematicActive && !entry.target.querySelector('img')) {
-                                            App.events.typewriter.setup(entry.target);
-                                        } else if (!isVisible && entry.target === App.events.typewriter.currentSnippet) {
-                                            App.events.typewriter.reset();
-                                        }
-                                    });
-
-                                    // Smart blur: Check if all or most items are visible
-                                    const allVisibleItems = bodyEl.querySelectorAll('.is-visible').length;
-                                    if (allVisibleItems >= totalItems || totalItems <= 3) {
-                                        bodyEl.classList.add('smart-blur-disabled');
-                                    } else {
-                                        bodyEl.classList.remove('smart-blur-disabled');
-                                    }
-                                }, { root: bodyEl, threshold: 0.8 });
-
-                                allElements.forEach(el => observer.observe(el));
+                            const allVisibleItems = bodyEl.querySelectorAll('.is-visible').length;
+                            if (allVisibleItems >= totalItems || totalItems <= 3) {
+                                bodyEl.classList.add('smart-blur-disabled');
+                            } else {
+                                bodyEl.classList.remove('smart-blur-disabled');
                             }
-                            this.renderFocusModeControls();
-                            // Fix: Initialize video players in Stage Mode
-                            App.util.initPlyr(bodyEl);
-                        }, 100);
-                    } else {
+                        }, { root: bodyEl, threshold: 0.2 });
+
+                        allElements.forEach(el => observer.observe(el));
+
+                        // Initialize video players
+                        App.util.initPlyr(bodyEl);
+
+                        // Re-render controls once scrollStops are computed
                         this.renderFocusModeControls();
-                    }
+                    });
 
                     overlay.addEventListener('click', App.events.handleContentClick);
-                    const bodyEl = overlay.querySelector('.focus-mode-body');
                     if (bodyEl) {
-                        const canvas = overlay.querySelector('#annotation-canvas');
-                        canvas.width = bodyEl.offsetWidth;
-                        canvas.height = bodyEl.scrollHeight;
-                        bodyEl.addEventListener('scroll', () => { if (App.annotationEngine.state.isActive && App.annotationEngine.state.context === 'focus') App.annotationEngine.redrawPageAnnotations(); });
-                        bodyEl.addEventListener('mouseover', App.events.handleSpotlight);
-                        bodyEl.addEventListener('mouseout', App.events.handleSpotlight);
+                        bodyEl.addEventListener('scroll', () => {
+                            const canvas = overlay.querySelector('#annotation-canvas');
+                            if (canvas && (canvas.height !== bodyEl.scrollHeight || canvas.width !== bodyEl.offsetWidth)) {
+                                canvas.width = bodyEl.offsetWidth;
+                                canvas.height = bodyEl.scrollHeight;
+                            }
+                            if (App.annotationEngine.state.isActive && App.annotationEngine.state.context === 'focus') {
+                                App.annotationEngine.redrawPageAnnotations();
+                            }
+                        });
                     }
                     overlay.querySelector('.focus-mode-content').focus();
 
-                    // RE-INIT PRO PRESENTER if active (Ensures elements and listeners are correct for new layout)
-                    if (session.isProPresenterActive) {
+                    // RE-INIT PRO PRESENTER if active
+                    if (session.isProPresenterActive && App.events.presentation?._initProPresenter) {
                         App.events.presentation._initProPresenter();
                     }
 
@@ -3171,132 +3173,193 @@ export const ui = {
                     const container = document.getElementById('focus-controls-container');
                     if (!container) return;
 
+                    // Preserve active state of popovers across re-renders
+                    const wasViewActive = container.querySelector('.stage-view-menu-container')?.classList.contains('active');
+                    const wasMoreActive = container.querySelector('.stage-more-menu-container')?.classList.contains('active');
+
                     const isPremium = App.license.isPremium();
-                    const premiumLockClass = App.license.isPremium() ? '' : 'premium-feature-locked';
-
-                    let controlsHTML = '';
-                    const isStageMode = session.isStageMode;
+                    const premiumLockClass = isPremium ? '' : 'premium-feature-locked';
                     const highlightsVisible = App.settings.get('categoryHighlightsVisible') !== false;
-                    const themeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69z"/></svg>`;
-                    const stageModeToggleIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM8 17H6v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></svg>`;
-                    const highlighterIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 012.829-5.185l7.423-2.119a2.25 2.25 0 001.624-1.624l2.119-7.423a4.5 4.5 0 015.185-2.829l2.846.813L15.904 9.813a2.25 2.25 0 00-1.624 1.624l-2.119 7.423z" /><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 16.5h2.25a2.25 2.25 0 002.25-2.25V6.75" /></svg>`;
+                    const fontSize = App.settings.get('focusModeFontSize') || '1.1rem';
+                    const sigmaMode = session.sigmaMode || 'presentation';
+                    const activeTheme = session.activeTheme || 'default';
+                    const themeDisplayName = activeTheme.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-                    if (isStageMode) {
+                    const highlighterIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 012.829-5.185l7.423-2.119a2.25 2.25 0 001.624-1.624l2.119-7.423a4.5 4.5 0 015.185-2.829l2.846.813L15.904 9.813a2.25 2.25 0 00-1.624 1.624l-2.119 7.423z" /><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 16.5h2.25a2.25 2.25 0 002.25-2.25V6.75" /></svg>`;
+                    const sigmaIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" class="sigma-icon" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v2H7.66l6.63 6-6.63 6H19v2H5v-2l7-7-7-7V4z"/></svg>`;
+                    const themeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69z"/></svg>`;
+                    const cinematicIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 6 3 3 3-3 3 3 3-3 3 3 3-3"/><path d="M2 12l3 3 3-3 3 3 3-3 3 3 3-3"/><path d="M2 18l3 3 3-3 3 3 3-3 3 3 3-3"/></svg>`;
+                    const aiIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2.35M10.15 6.344l-1.493-1.493M6.344 10.15l-2.187-2.187M3 12h2.35M6.344 13.85l-2.187 2.187M10.15 17.656l-1.493 1.493M12 21v-2.35M13.85 17.656l1.493 1.493M17.656 13.85l2.187 2.187M21 12h-2.35M17.656 10.15l2.187-2.187M13.85 6.344l1.493-1.493"/><circle cx="12" cy="12" r="2.35"/></svg>`;
+
+                    const cinematicActive = session.isCinematicActive;
+                    const cinematicOnClick = isPremium ? "App.events.presentation.toggleCinematicMotion(this)" : "App.ui.showToast('Cinematic Reveal is a Premium feature.', 'info')";
+                    const annotationOnClick = isPremium ? "App.annotationEngine.toggle('focus')" : "App.ui.showToast('Live Annotation is a Premium feature.', 'info')";
+                    const exportOnClick = isPremium ? "App.events.exportCurrentSlide()" : "App.ui.showToast('Copying slides is a Premium feature.', 'info')";
+
+                    const isAnnotationActive = App.annotationEngine?.state?.isActive && App.annotationEngine?.state?.context === 'focus';
+                    const isLaserActive = document.querySelector('.focus-mode-overlay.laser-active') !== null;
+                    const isAiActive = App.ui.aiMagicModal?.state?.isOpen && App.ui.aiMagicModal?.state?.mode === 'viewer';
+
+                    container.className = 'stage-mode-controls';
+
+                    // Article Navigation (placed in View Popover to avoid toolbar clutter)
+                    let articleNavPopupHTML = '';
+                    if (session.articles && session.articles.length > 1) {
+                        articleNavPopupHTML = `
+                            <div class="stage-stepper-group" title="Navigate Notes (Shift+← / Shift+→)">
+                                <button class="btn-icon stepper-btn" onclick="App.events.navigateFocusMode(-1)" title="Previous Note (Shift+←)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" /></svg>
+                                </button>
+                                <span class="stage-article-counter" title="Current Note">${session.currentIndex + 1}/${session.articles.length}</span>
+                                <button class="btn-icon stepper-btn" onclick="App.events.navigateFocusMode(1)" title="Next Note (Shift+→)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" /></svg>
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    // Cluster 1: Slide Navigation Only (Distraction-Free)
+                    let slideProgressHTML = '';
+                    if (sigmaMode === 'article') {
+                        slideProgressHTML = `<div class="stage-progress-indicator" title="Full Note View (Scrollable)"><span class="stage-mode-icon-pill" title="Full Note View">${sigmaIcon}</span></div>`;
+                    } else {
                         const slideCount = session.scrollStops ? session.scrollStops.length : 0;
                         let progressDots = '';
-
                         if (slideCount <= 4) {
                             progressDots = Array.from({ length: slideCount }, (_, i) =>
-                                `<div class="progress-dot ${i === session.currentSlideIndex ? 'active' : ''}" onclick="App.state.focusSession.currentSlideIndex=${i}; App.events.navigateStageSlide(0);"></div>`
+                                `<div class="progress-dot ${i === session.currentSlideIndex ? 'active' : ''}" onclick="App.state.focusSession.currentSlideIndex=${i}; App.events.navigateStageSlide(0);" title="Slide ${i + 1}"></div>`
                             ).join('');
                         } else {
                             const isFirst = session.currentSlideIndex === 0;
                             const isLast = session.currentSlideIndex === slideCount - 1;
                             const isMiddle = !isFirst && !isLast;
-
-                            progressDots += `<div class="progress-dot ${isFirst ? 'active' : ''}" onclick="App.state.focusSession.currentSlideIndex=0; App.events.navigateStageSlide(0);"></div>`;
-                            progressDots += `<div class="progress-dot ${isMiddle ? 'active' : ''}" onclick="App.state.focusSession.currentSlideIndex=${Math.floor((slideCount - 1) / 2)}; App.events.navigateStageSlide(0);"></div>`;
-                            progressDots += `<div class="progress-dot ${isLast ? 'active' : ''}" onclick="App.state.focusSession.currentSlideIndex=${slideCount - 1}; App.events.navigateStageSlide(0);"></div>`;
+                            progressDots += `<div class="progress-dot ${isFirst ? 'active' : ''}" onclick="App.state.focusSession.currentSlideIndex=0; App.events.navigateStageSlide(0);" title="Slide 1"></div>`;
+                            progressDots += `<div class="progress-dot ${isMiddle ? 'active' : ''}" onclick="App.state.focusSession.currentSlideIndex=${Math.floor((slideCount - 1) / 2)}; App.events.navigateStageSlide(0);" title="Slide ${Math.floor((slideCount - 1) / 2) + 1}"></div>`;
+                            progressDots += `<div class="progress-dot ${isLast ? 'active' : ''}" onclick="App.state.focusSession.currentSlideIndex=${slideCount - 1}; App.events.navigateStageSlide(0);" title="Slide ${slideCount}"></div>`;
                         }
-
-                        container.className = 'stage-mode-controls';
-
-                        // --- NEW: Icons for Stage Mode More Menu ---
-                        const sigmaMode = session.sigmaMode || 'presentation';
-                        const sigmaIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" class="sigma-icon" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v2H7.66l6.63 6-6.63 6H19v2H5v-2l7-7-7-7V4z"/></svg>`;
-                        const isActive = sigmaMode !== 'presentation';
-                        const moreIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>`;
-                        const cinematicIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 6 3 3 3-3 3 3 3-3 3 3 3-3"/><path d="M2 12l3 3 3-3 3 3 3-3 3 3 3-3"/><path d="M2 18l3 3 3-3 3 3 3-3 3 3 3-3"/></svg>`;
-
-                        const cinematicActive = session.isCinematicActive;
-                        const cinematicOnClick = isPremium ? "App.events.presentation.toggleCinematicMotion(this)" : "App.ui.showToast('Cinematic Reveal is a Premium feature.', 'info')";
-                        const annotationOnClick = isPremium ? "App.annotationEngine.toggle('focus')" : "App.ui.showToast('Live Annotation is a Premium feature.', 'info')";
-                        const exportOnClick = isPremium ? "App.events.exportCurrentSlide()" : "App.ui.showToast('Copying slides is a Premium feature.', 'info')";
-
-
-                        controlsHTML = `
-                    <button class="btn-icon" onclick="App.events.navigateStageSlide(-1)" title="Previous Slide (←)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></button>
-                    <div class="stage-progress-indicator" title="Jump to slide">${progressDots}</div>
-                    <button class="btn-icon" onclick="App.events.navigateStageSlide(1)" title="Next Slide (→)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg></button>
-                    <div class="control-divider"></div>
-                    
-                    <button class="btn-icon" id="teleprompter-toggle-btn" onclick="App.events.presentation.toggleTeleprompter()" title="Toggle Teleprompter (i)">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 3h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM4 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1v-1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h1V2H4z"/><path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg>
-                    </button>
-                    <button class="btn-icon ${highlightsVisible ? 'active' : ''}" onclick="App.events.toggleStageModeHighlights(this)" title="Toggle Highlight Colors (H)">${highlighterIcon}</button>
-
-                    <div class="${premiumLockClass}">
-                        <button class="btn-icon ${cinematicActive ? 'active' : ''}" onclick="${cinematicOnClick}" title="Toggle Cinematic Reveal">${cinematicIcon}</button>
-                    </div>
-                <div class="${premiumLockClass}">
-                        <button class="btn-icon annotation-btn" onclick="${annotationOnClick}" title="Toggle Annotation (D)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
-                        </button>
-                    </div>
-                    
-                    
-                    <div class="stage-more-menu-container">
-                        <button class="btn-icon" title="More Options" onclick="this.closest('.stage-more-menu-container').classList.toggle('active')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="7" height="7" rx="2" />
-                                <rect x="14" y="3" width="7" height="7" rx="2" />
-                                <rect x="14" y="14" width="7" height="7" rx="2" />
-                                <rect x="3" y="14" width="7" height="7" rx="2" />
-                            </svg>
-                        </button>
-                        <div class="stage-more-popup">
-                             <!-- Mobile-only duplicates of hidden toolbar buttons -->
-                             <button class="btn-icon mobile-only-option" onclick="App.events.presentation.toggleTeleprompter()" title="Toggle Teleprompter (i)">
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 3h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM4 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1v-1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h1V2H4z"/><path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg>
-                             </button>
-                             <button class="btn-icon mobile-only-option ${highlightsVisible ? 'active' : ''}" onclick="App.events.toggleStageModeHighlights(this)" title="Toggle Highlight Colors (H)">${highlighterIcon}</button>
-                
-                             <!-- Regular More Options items -->
-                             <button id="focus-mode-immersive-toggle" class="btn-icon" onclick="App.events.toggleFocusModeControls()" title="Toggle Immersive Mode (F)">${App.util.icons.expand}</button>
-                             <div class="${premiumLockClass}" style="display: contents;">
-                                <button class="btn-icon" onclick="${exportOnClick}" title="Screenshot (P)">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" /></svg>
-                                </button>
-                                <button class="btn-icon ${session.isProPresenterActive ? 'active' : ''}" id="pro-presenter-toggle-btn" onclick="App.events.presentation.toggleProPresenter()" title="Pro Presenter Mode">
-                                    ${App.util.icons.proPresent}
-                                </button>
-                             </div>
-                             <button class="btn-icon" id="laser-pointer-toggle" title="Toggle Laser Pointer (L)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25a8.25 8.25 0 00-8.25 8.25c0 1.721.576 3.322 1.568 4.675A8.25 8.25 0 0012 21.75a8.25 8.25 0 008.25-8.25c0-4.556-3.694-8.25-8.25-8.25z" /></svg></button>
-                             <button class="btn-icon" onclick="App.events.annotation.toggleWhiteboard()" title="Whiteboard (W)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line></svg></button>
-                             <button class="btn-icon ${isActive ? 'active' : ''}" onclick="App.events.toggleSigmaMode(this)" title="Sigma Mode: Pres -> Article -> Web">${sigmaIcon}</button>
-                             <button class="btn-icon" onclick="App.events.stageTimer.toggle()" title="Stage Timer (T)" style="animation: fadeIn 0.3s ease 0.1s both;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></button>
-                        </div>
-                    </div>
-
-                    <button class="btn-icon" onclick="App.events.toggleStageMode()" title="Exit Stage Mode (Esc)">${stageModeToggleIcon}</button>
-                    <!-- Top Right Exit Immersive Button -->
-                    <button id="immersive-exit-btn" onclick="App.events.toggleFocusModeControls()" title="Exit Immersive Mode (F)">
-                        ${App.util.icons.compress}
-                    </button>
-                `;
-                    } else { // Standard Focus Mode
-                        const fontSize = App.settings.get('focusModeFontSize') || '1.1rem';
-                        const isControlsHidden = document.querySelector('.focus-mode-overlay')?.classList.contains('controls-hidden');
-                        const stageModeToggleIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z" /></svg>`;
-                        container.className = 'focus-mode-controls';
-                        controlsHTML = `
-                    <button id="focus-mode-immersive-toggle" class="btn-icon immersive-toggle-btn" onclick="App.events.toggleFocusModeControls()" title="${isControlsHidden ? 'Show Controls' : 'Hide Controls'}">${isControlsHidden ? App.util.icons.compress : App.util.icons.expand}</button>    
-                    <button class="btn-icon" onclick="App.events.toggleStageMode()" title="Enter Stage Mode">${stageModeToggleIcon}</button>
-                    <button class="btn-icon" onclick="App.events.presentation.cycleAmbiance()" oncontextmenu="event.preventDefault(); App.events.presentation.cycleAmbiance(true);" title="Cycle Ambiance (C, Right-click to go back)">${themeIcon}</button>
-
-                    <button id="focus-font-size-btn" class="btn-icon" onclick="App.events.toggleFocusModeFontSize(this)" title="Cycle Font Size (F)"><span style="font-weight: 700; font-size: 1rem;">${fontSize.replace('rem', '')}</span></button>
-                    <button class="btn-icon ${highlightsVisible ? 'active' : ''}" onclick="App.events.toggleFocusModeHighlights(this)" title="Toggle Highlight Colors (s)">${highlighterIcon}</button>
-                    <button class="btn-icon" onclick="App.events.navigateFocusMode(-1)" title="Previous Article (←)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></button>
-                    <button class="btn-icon" onclick="App.events.navigateFocusMode(1)" title="Next Article (→)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg></button>
-                    <button class="btn-icon btn-danger" onclick="App.events.exitFocusMode()" title="Exit Focus Mode (Esc)">${App.util.icons.close}</button>
-                    
-                `;
+                        slideProgressHTML = `<div class="stage-progress-indicator" title="Jump to slide">${progressDots}</div>`;
                     }
-                    container.innerHTML = controlsHTML;
-                    const laserToggle = document.getElementById('laser-pointer-toggle');
-                    if (laserToggle) {
-                        laserToggle.onclick = () => App.events.toggleSharedLaser('stage');
-                        laserToggle.classList.toggle('active', document.querySelector('.focus-mode-overlay.laser-active') !== null);
+
+                    container.innerHTML = `
+                        <!-- Cluster 1: Slide Navigation Only (Distraction-Free) -->
+                        <button class="btn-icon" onclick="App.events.navigateStageSlide(-1)" title="Previous Slide (←)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                        </button>
+                        ${slideProgressHTML}
+                        <button class="btn-icon" onclick="App.events.navigateStageSlide(1)" title="Next Slide / Reveal (→ or Space)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                        </button>
+
+                        <div class="control-divider"></div>
+
+                        <!-- Cluster 2: Primary Presenter Actions (Teleprompter, Laser, AI) -->
+                        <button class="btn-icon ${session.teleprompterActive ? 'active' : ''}" id="teleprompter-toggle-btn" onclick="App.events.presentation.toggleTeleprompter()" title="Teleprompter (I)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="6" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="14" y2="12"/></svg>
+                        </button>
+
+                        <button class="btn-icon ${isLaserActive ? 'active' : ''}" id="laser-pointer-toggle" onclick="App.events.toggleSharedLaser('stage')" title="Laser Pointer (L)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25a8.25 8.25 0 00-8.25 8.25c0 1.721.576 3.322 1.568 4.675A8.25 8.25 0 0012 21.75a8.25 8.25 0 008.25-8.25c0-4.556-3.694-8.25-8.25-8.25z" /></svg>
+                        </button>
+
+                        <button class="btn-icon ${isAiActive ? 'active' : ''}" id="presentation-ai-btn" onclick="App.ui.aiMagicModal.openAsViewer('presentation')" title="AI Co-Pilot (A)">
+                            ${aiIcon}
+                        </button>
+
+                        <div class="control-divider"></div>
+
+                        <!-- Cluster 3: Appearance & Presenter Tools Popovers -->
+                        <!-- Popover A: View & Deck (🎨) -->
+                        <div class="stage-view-menu-container">
+                            <button class="btn-icon" title="View & Deck Settings (🎨)" onclick="const more = this.closest('.stage-mode-controls').querySelector('.stage-more-menu-container'); if (more) more.classList.remove('active'); this.closest('.stage-view-menu-container').classList.toggle('active')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.5 17.5 2 12 2z"/></svg>
+                            </button>
+                            <div class="stage-view-popup">
+                                ${articleNavPopupHTML}
+                                <button class="btn-icon ${sigmaMode === 'article' ? 'active' : ''}" onclick="App.events.toggleSigmaMode(this)" title="Switch View: ${sigmaMode === 'article' ? 'Full Note' : 'Slides'} (S)">
+                                    ${sigmaIcon}
+                                </button>
+                                <div class="stage-stepper-group" title="Font Size (E)">
+                                    <button class="btn-icon stepper-btn" onclick="App.events.adjustFocusModeFontSize(-1)" title="Decrease Font Size">-</button>
+                                    <button id="focus-font-size-btn" class="btn-icon stepper-val" onclick="App.events.toggleFocusModeFontSize(this)" title="Cycle Font Size (E)"><span style="font-weight: 700; font-size: 0.85rem;">${fontSize.replace('rem', '')}</span></button>
+                                    <button class="btn-icon stepper-btn" onclick="App.events.adjustFocusModeFontSize(1)" title="Increase Font Size">+</button>
+                                </div>
+                                <button class="btn-icon theme-pill ${activeTheme !== 'default' ? 'active' : ''}" onclick="App.events.presentation.handleAmbianceClick(event)" ondblclick="App.events.presentation.resetAmbiance(event)" title="Ambiance Theme: ${themeDisplayName} (Click to cycle, Double-click to reset) (C)">
+                                    ${themeIcon}
+                                </button>
+                                <button id="stage-highlight-toggle-btn" class="btn-icon ${highlightsVisible ? 'active' : ''}" onclick="App.events.toggleStageModeHighlights(this)" title="Toggle Highlight Colors (H)">${highlighterIcon}</button>
+                                <div class="${premiumLockClass}" style="display: contents;">
+                                    <button id="cinematic-toggle-btn" class="btn-icon ${cinematicActive ? 'active' : ''}" onclick="${cinematicOnClick}" title="Cinematic Reveal (G)">${cinematicIcon}</button>
+                                </div>
+                                <button class="btn-icon ${session.use2DCamera ? 'active' : ''}" onclick="App.events.toggle2DCameraMode(this)" title="2D Camera Motion (${session.use2DCamera ? 'Enabled' : 'Disabled'})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Popover B: Presenter Tools (⊞) -->
+                        <div class="stage-more-menu-container">
+                            <button class="btn-icon" title="Presenter Tools (⊞)" onclick="const view = this.closest('.stage-mode-controls').querySelector('.stage-view-menu-container'); if (view) view.classList.remove('active'); this.closest('.stage-more-menu-container').classList.toggle('active')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7" rx="2" />
+                                    <rect x="14" y="3" width="7" height="7" rx="2" />
+                                    <rect x="14" y="14" width="7" height="7" rx="2" />
+                                    <rect x="3" y="14" width="7" height="7" rx="2" />
+                                </svg>
+                            </button>
+                            <div class="stage-more-popup">
+                                <!-- Mobile-only quick buttons -->
+                                <button class="btn-icon mobile-only-option" onclick="App.events.presentation.toggleTeleprompter()" title="Teleprompter (I)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="6" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="14" y2="12"/></svg>
+                                </button>
+
+                                <!-- Live Annotation (Moved to Tools Popover) -->
+                                <div class="${premiumLockClass}" style="display: contents;">
+                                    <button class="btn-icon annotation-btn ${isAnnotationActive ? 'active' : ''}" onclick="${annotationOnClick}" title="Live Annotation (D)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                                    </button>
+                                </div>
+
+                                <!-- Pin / Unpin Note Title (Toggle Full Immersive) -->
+                                <button class="btn-icon ${session.isTitleVisible !== false ? 'active' : ''}" onclick="App.events.presentation.toggleTitleVisibility()" title="${session.isTitleVisible !== false ? 'Hide Note Title (Full Immersive) (U)' : 'Pin Note Title (U)'}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path></svg>
+                                </button>
+
+                                <!-- Presenter Tools items -->
+                                <button class="btn-icon" onclick="App.events.stageTimer.toggle()" title="Stage Timer (T)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                </button>
+                                <button class="btn-icon" onclick="App.events.annotation.toggleWhiteboard()" title="Whiteboard (W)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line></svg>
+                                </button>
+                                <div class="${premiumLockClass}" style="display: contents;">
+                                    <button class="btn-icon ${session.isProPresenterActive ? 'active' : ''}" id="pro-presenter-toggle-btn" onclick="App.events.presentation.toggleProPresenter()" title="Pro Presenter Mode">
+                                        ${App.util.icons.proPresent}
+                                    </button>
+                                    <button class="btn-icon" onclick="${exportOnClick}" title="Screenshot Slide (P)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" /></svg>
+                                    </button>
+                                </div>
+                                <button class="btn-icon" onclick="document.querySelector('.focus-mode-overlay')?.classList.toggle('blackout-active')" title="Blackout Screen (B)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="currentColor"/></svg>
+                                </button>
+                                <button id="focus-mode-immersive-toggle" class="btn-icon" onclick="App.events.toggleFocusModeControls()" title="Toggle Immersive Mode (F)">${App.util.icons.expand}</button>
+                            </div>
+                        </div>
+
+                        <div class="control-divider"></div>
+
+                        <!-- Cluster 4: Single-Step Exit (✕) -->
+                        <button class="btn-icon btn-danger" onclick="App.events.exitFocusMode()" title="Exit Presentation (Esc)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    `;
+
+                    // Restore popover states so user interactions are not interrupted
+                    if (wasViewActive) {
+                        container.querySelector('.stage-view-menu-container')?.classList.add('active');
+                    }
+                    if (wasMoreActive) {
+                        container.querySelector('.stage-more-menu-container')?.classList.add('active');
                     }
                 },
 
@@ -4284,9 +4347,10 @@ export const ui = {
 
                     openAsViewer(context) {
                         if (this.state.isOpen && this.state.mode === 'viewer') {
-                            // Already open as viewer, just toggle
-                            this.closeViewer();
-                            return;
+                            if (this.state.viewerContext === context) {
+                                this.closeViewer();
+                                return;
+                            }
                         }
                         if (this.state.isOpen && this.state.mode === 'modal') this.close();
 
@@ -4294,7 +4358,11 @@ export const ui = {
                         this.state.mode = 'viewer';
                         this.state.viewerContext = context;
 
-                        const pageBadge = context === 'pdf' ? `<span class="ai-viewer-context-badge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-weight: 600; border: 1px solid rgba(59, 130, 246, 0.25);">p. ${App.pdf?.state?.pageNum || 1}</span>` : '';
+                        const pageBadge = context === 'pdf' 
+                            ? `<span class="ai-viewer-context-badge">p. ${App.pdf?.state?.pageNum || 1}</span>` 
+                            : (context === 'presentation' 
+                                ? `<span class="ai-viewer-context-badge" id="ai-viewer-slide-badge">Slide ${(App.state.focusSession?.currentSlideIndex || 0) + 1}</span>` 
+                                : '');
 
                         const panelHTML = `
                         <div class="ai-magic-viewer-panel">
@@ -4345,6 +4413,10 @@ export const ui = {
                         this._addViewerListeners();
                         document.addEventListener('keydown', this._handleKeyDown, true);
 
+                        // Highlight toolbar button if in presentation mode
+                        const presBtn = document.getElementById('presentation-ai-btn');
+                        if (presBtn) presBtn.classList.add('active');
+
                         // Auto-focus the input
                         setTimeout(() => document.getElementById('ai-viewer-input')?.focus(), 100);
                     },
@@ -4353,10 +4425,20 @@ export const ui = {
                         if (!this.state.isOpen || this.state.mode !== 'viewer') return;
                         this.state.isOpen = false;
                         this.state.mode = 'modal';
+                        const presBtn = document.getElementById('presentation-ai-btn');
+                        if (presBtn) presBtn.classList.remove('active');
                         document.getElementById('modal-container').innerHTML = '';
                         document.removeEventListener('keydown', this._handleKeyDown, true);
                         if (!this.state.isPinned) {
                             this.state.viewerHistory = [];
+                        }
+                    },
+
+                    updateViewerSlide(slideNum) {
+                        if (!this.state.isOpen || this.state.mode !== 'viewer' || this.state.viewerContext !== 'presentation') return;
+                        const badge = document.getElementById('ai-viewer-slide-badge') || document.querySelector('.ai-viewer-context-badge');
+                        if (badge) {
+                            badge.textContent = `Slide ${slideNum}`;
                         }
                     },
 
@@ -4413,16 +4495,62 @@ export const ui = {
                                 }
 
                                 return contextParts.join('\n\n');
+                            } else if (this.state.viewerContext === 'presentation') {
+                                const session = App.state.focusSession;
+                                const currentArticle = session?.articles?.[session.currentIndex] || App.storage?.getArticle(App.state?.activeArticleId);
+                                const articleTitle = currentArticle?.title || 'Current Note';
+                                const slideNum = (session?.currentSlideIndex || 0) + 1;
+                                const totalSlides = session?.scrollStops?.length || 1;
+
+                                const contextParts = [`[Presentation: "${articleTitle}" | Slide ${slideNum} of ${totalSlides}]`];
+
+                                // 1. Active text selection
+                                const selection = window.getSelection()?.toString().trim();
+                                if (selection && selection.length > 2) {
+                                    contextParts.push(`User Active Selection / Focus:\n"${selection.replace(/\s+/g, ' ').slice(0, 1000)}"`);
+                                    return contextParts.join('\n\n');
+                                }
+
+                                // 2. Currently spotlighted block
+                                const spotlightEl = document.querySelector('.focus-mode-body .spotlight-key-focus');
+                                if (spotlightEl && spotlightEl.textContent.trim()) {
+                                    contextParts.push(`Spotlight / Focused Element:\n${spotlightEl.textContent.replace(/\s+/g, ' ').trim().slice(0, 1200)}`);
+                                    return contextParts.join('\n\n');
+                                }
+
+                                // 3. Currently visible slide blocks
+                                const visibleBlocks = Array.from(document.querySelectorAll('.focus-mode-body .is-visible'));
+                                if (visibleBlocks.length > 0) {
+                                    const visibleText = visibleBlocks
+                                        .map(el => el.textContent.replace(/\s+/g, ' ').trim())
+                                        .filter(t => t.length > 0)
+                                        .join('\n\n');
+                                    if (visibleText) {
+                                        const excerpt = visibleText.length > 1500 ? visibleText.slice(0, 1500) + '... [slide excerpt]' : visibleText;
+                                        contextParts.push(`Active Slide Content:\n${excerpt}`);
+                                        return contextParts.join('\n\n');
+                                    }
+                                }
+
+                                // 4. Fallback: current article content / title
+                                if (currentArticle) {
+                                    const raw = currentArticle.content || currentArticle.title || '';
+                                    const clean = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                                    const excerpt = clean.length > 1500 ? clean.slice(0, 1500) + '... [note excerpt]' : clean;
+                                    contextParts.push(`Note Content:\n${excerpt || '[No text available]'}`);
+                                    return contextParts.join('\n\n');
+                                }
+
+                                return '[Presentation mode - no content available]';
                             } else if (this.state.viewerContext === 'category' || this.state.viewerContext === 'mindmap' || this.state.viewerContext === 'visual-map') {
                                 return `[${this.state.viewerContext.toUpperCase()} VIEW] The user is currently exploring their notes in the ${this.state.viewerContext} view. Provide a helpful conceptual explanation.`;
                             } else {
-                                // Presentation / Focus mode: get current slide content
+                                // Generic fallback
                                 const overlay = document.getElementById('focus-mode-overlay');
                                 if (overlay) {
                                     const body = overlay.querySelector('.focus-mode-body');
                                     if (body && body.textContent.trim()) return body.textContent.trim();
                                 }
-                                // Fallback
                                 const session = App.state.focusSession;
                                 if (session?.isActive && session.articles?.[session.currentIndex]) {
                                     const article = session.articles[session.currentIndex];
@@ -7310,6 +7438,37 @@ export const ui = {
                             <li><b>Flip Card:</b> <kbd>Spacebar</kbd></li>
                             <li><b>Previous / Next Card:</b> <kbd>←</kbd> / <kbd>→</kbd></li>
                             <li><b>Rate Again/Hard/Hold/Good/Easy:</b> <kbd>A</kbd> / <kbd>4</kbd> / <kbd>3</kbd> / <kbd>2</kbd> / <kbd>1</kbd></li>
+                        </ul><hr>
+                        <h4>Presentation Mode</h4>
+                        <ul>
+                            <li><b>Next Slide / Reveal:</b> <kbd>Spacebar</kbd> or <kbd>→</kbd></li>
+                            <li><b>Previous Slide:</b> <kbd>←</kbd></li>
+                            <li><b>Next / Previous Note in Category:</b> <kbd>Shift</kbd> + <kbd>→</kbd> / <kbd>Shift</kbd> + <kbd>←</kbd></li>
+                            <li><b>Switch View (Slides vs Full Note):</b> <kbd>S</kbd></li>
+                            <li><b>Cycle Font Size:</b> <kbd>E</kbd> (or <kbd>-</kbd> / <kbd>+</kbd> in popover by 0.1)</li>
+                            <li><b>Cycle Ambiance Theme:</b> <kbd>C</kbd> (<kbd>Shift</kbd> + <kbd>C</kbd> to cycle backward, double-click droplet to reset)</li>
+                            <li><b>Toggle Highlight Colors:</b> <kbd>H</kbd></li>
+                            <li><b>Cinematic Reveal Mode:</b> <kbd>G</kbd></li>
+                            <li><b>Teleprompter Mode:</b> <kbd>I</kbd> (<kbd>+</kbd> / <kbd>-</kbd> to adjust font size)</li>
+                            <li><b>Laser Pointer:</b> <kbd>L</kbd> (Draws glowing trails; works over blank screen too)</li>
+                            <li><b>AI Co-Pilot:</b> <kbd>A</kbd> (Scoped to current slide & note content)</li>
+                            <li><b>Live Annotations:</b> <kbd>D</kbd> (<kbd>R</kbd> Rect, <kbd>E</kbd> Eraser, <kbd>T</kbd> Thickness, <kbd>C</kbd> Color, <kbd>X</kbd> Clear)</li>
+                            <li><b>Stage Countdown Timer:</b> <kbd>T</kbd></li>
+                            <li><b>Whiteboard:</b> <kbd>W</kbd></li>
+                            <li><b>Screenshot Slide:</b> <kbd>P</kbd></li>
+                            <li><b>Blackout Blank Screen:</b> <kbd>B</kbd> (Draw explanations with laser or pen on clean screen)</li>
+                            <li><b>Pin / Unpin Note Title:</b> <kbd>U</kbd> (Toggle full immersive view)</li>
+                            <li><b>Toggle Immersive Mode (Hide Toolbar):</b> <kbd>F</kbd></li>
+                            <li><b>Dismiss / Exit Presentation:</b> <kbd>Esc</kbd></li>
+                        </ul><hr>
+                        <h4>Read Mode & PDF Tools</h4>
+                        <ul>
+                            <li><b>Scroll Down / Up:</b> <kbd>Spacebar</kbd> / <kbd>Shift</kbd>+<kbd>Spacebar</kbd></li>
+                            <li><b>Edit Note:</b> <kbd>E</kbd></li>
+                            <li><b>Launch Presentation Mode:</b> <kbd>F</kbd></li>
+                            <li><b>Laser Pointer in Read Mode:</b> <kbd>L</kbd></li>
+                            <li><b>PDF Annotation Tool:</b> <kbd>A</kbd></li>
+                            <li><b>PDF Drawing Tools:</b> <kbd>P</kbd> Pen, <kbd>R</kbd> Rect, <kbd>E</kbd> Eraser, <kbd>L</kbd> Laser, <kbd>Z</kbd> Undo</li>
                         </ul>
                     </div>`;
 

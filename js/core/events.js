@@ -1004,16 +1004,12 @@ export const events = {
                         }
 
                         div.innerHTML = `
-                            <svg class="stage-timer-progress-svg" viewBox="0 0 100 100">
-                                <circle class="stage-timer-progress-bg" cx="50" cy="50" r="45"></circle>
-                                <circle class="stage-timer-progress-fg" cx="50" cy="50" r="45" transform="rotate(-90 50 50)"></circle>
-                            </svg>
-                            <span class="stage-timer-label" style="z-index: 1;">TIMER</span>
-                            <div id="stage-timer-display-visual" class="stage-timer-display-visual" style="z-index: 1;"></div>
-                            <input type="number" id="stage-timer-input" class="stage-timer-input" value="${this.state.duration}" min="1" max="999" style="z-index: 1;" />
-                            <div class="stage-timer-status" id="stage-timer-status" style="z-index: 1;">
+                            <span class="stage-timer-label">TIMER</span>
+                            <div id="stage-timer-display-visual" class="stage-timer-display-visual"></div>
+                            <input type="number" id="stage-timer-input" class="stage-timer-input" value="${this.state.duration}" min="1" max="999" />
+                            <div class="stage-timer-status" id="stage-timer-status">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/></svg> 
-                                <span>Click to Start</span>
+                                <span>Let's Start</span>
                             </div>
                         `;
                         overlay.appendChild(div);
@@ -1068,7 +1064,7 @@ export const events = {
                             this.state.timeLeft = val;
                             localStorage.setItem('nk-stage-timer-duration', val.toString());
 
-                            this.updateStatusText('Ready');
+                            this.updateStatusText("Let's Start");
                         };
 
                         input.onkeydown = (e) => {
@@ -1216,20 +1212,14 @@ export const events = {
 
                     updateProgress() {
                         const widget = document.getElementById('stage-timer-widget');
-                        const progressCircle = widget?.querySelector('.stage-timer-progress-fg');
+                        if (!widget || this.state.duration <= 0) return;
 
-                        if (progressCircle && this.state.duration > 0) {
-                            const percent = this.state.timeLeft / this.state.duration;
-                            const circumference = 283;
-                            const offset = circumference - (percent * circumference);
-                            progressCircle.style.strokeDashoffset = offset;
-
-                            // Critical state (last 25%)
-                            if (percent <= 0.25) {
-                                widget.classList.add('critical');
-                            } else {
-                                widget.classList.remove('critical');
-                            }
+                        const percent = this.state.timeLeft / this.state.duration;
+                        // Critical state (last 25%)
+                        if (percent <= 0.25) {
+                            widget.classList.add('critical');
+                        } else {
+                            widget.classList.remove('critical');
                         }
                     },
 
@@ -1254,13 +1244,9 @@ export const events = {
                         widget?.classList.remove('finished');
                         widget?.classList.remove('critical');
 
-                        // Reset ring
-                        const progressCircle = widget?.querySelector('.stage-timer-progress-fg');
-                        if (progressCircle) progressCircle.style.strokeDashoffset = 0;
-
                         const label = widget?.querySelector('.stage-timer-label');
                         if (label) label.textContent = 'TIMER';
-                        this.updateStatusText('Ready');
+                        this.updateStatusText("Let's Start");
                     },
 
                     finish() {
@@ -1282,10 +1268,6 @@ export const events = {
 
                         // Set Bottom Text
                         if (status) status.textContent = "TIME'S UP";
-
-                        // Ensure ring is empty
-                        const progressCircle = widget?.querySelector('.stage-timer-progress-fg');
-                        if (progressCircle) progressCircle.style.strokeDashoffset = 283;
 
                         // Keep visual visible but change style slightly via class
                         if (visual) {
@@ -1375,7 +1357,7 @@ export const events = {
 
                         let icon = '';
                         if (text === 'Running') icon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/></svg>`;
-                        else if (text === 'Ready' || text === 'Paused') icon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/></svg>`;
+                        else if (text === 'Ready' || text === 'Paused' || text === "Let's Start") icon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/></svg>`;
                         else if (text === 'Time\'s Up!' || text === 'Done') icon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>`;
                         else icon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/></svg>`;
 
@@ -1386,194 +1368,6 @@ export const events = {
                         } else {
                             el.innerHTML = `${icon} <span>${text}</span>`;
                             el.style.justifyContent = '';
-                        }
-                    }
-                },
-                presentation: {
-                    state: { duration: 10, timeLeft: 10, interval: null, isRunning: false },
-
-                    toggle() {
-                        const overlay = document.getElementById('focus-mode-overlay');
-                        if (!overlay) return;
-
-                        let widget = document.getElementById('stage-timer-widget');
-                        if (!widget) {
-                            this.render(overlay);
-                            widget = document.getElementById('stage-timer-widget');
-                            void widget.offsetWidth;
-                            widget.classList.add('visible');
-                        } else {
-                            if (widget.classList.contains('hidden')) {
-                                widget.classList.remove('hidden');
-                                widget.style.display = 'flex';
-                                requestAnimationFrame(() => {
-                                    widget.style.opacity = '1';
-                                    widget.style.transform = 'scale(1)';
-                                });
-                            } else {
-                                widget.style.opacity = '0';
-                                widget.style.transform = 'scale(0.9)';
-                                setTimeout(() => {
-                                    widget.classList.add('hidden');
-                                    widget.style.display = 'none';
-                                }, 300);
-                            }
-                        }
-                    },
-
-                    render(overlay) {
-                        const div = document.createElement('div');
-                        div.id = 'stage-timer-widget';
-                        div.className = 'stage-timer-widget';
-                        div.innerHTML = `
-                             <div class="stage-timer-header">
-                                <span class="stage-timer-label">Timer</span>
-                                <div class="stage-timer-presets">
-                                    <div class="stage-timer-preset" onclick="App.events.stageTimer.setDuration(10)">10s</div>
-                                    <div class="stage-timer-preset" onclick="App.events.stageTimer.setDuration(30)">30s</div>
-                                    <div class="stage-timer-preset" onclick="App.events.stageTimer.setDuration(60)">1m</div>
-                                </div>
-                            </div>
-                            <div class="stage-timer-display" id="stage-timer-display">10</div>
-                            <div class="stage-timer-controls">
-                                <button class="stage-timer-btn" onclick="App.events.stageTimer.reset()" title="Reset" id="stage-timer-reset-btn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                                </button>
-                                <button class="stage-timer-btn primary" id="stage-timer-action-btn" onclick="App.events.stageTimer.toggleRun()">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
-                                </button>
-                            </div>
-                        `;
-                        overlay.appendChild(div);
-                        this.updateDisplay();
-                    },
-
-                    setDuration(seconds) {
-                        this.stop();
-                        this.state.duration = seconds;
-                        this.state.timeLeft = seconds;
-                        this.updateDisplay();
-                    },
-
-                    toggleRun() {
-                        if (this.state.isRunning) {
-                            this.stop();
-                        } else {
-                            this.start();
-                        }
-                    },
-
-                    start() {
-                        if (this.state.timeLeft <= 0) this.state.timeLeft = this.state.duration;
-                        this.state.isRunning = true;
-                        this.updateBtnState();
-
-                        // Play a soft start sound? Maybe not needed.
-                        if (this.state.interval) clearInterval(this.state.interval);
-
-                        this.state.interval = setInterval(() => {
-                            this.state.timeLeft--;
-                            this.updateDisplay(true); // pass true to animate
-
-                            if (this.state.timeLeft <= 0) {
-                                this.finish();
-                            }
-                        }, 1000);
-                    },
-
-                    stop() {
-                        this.state.isRunning = false;
-                        if (this.state.interval) clearInterval(this.state.interval);
-                        this.state.interval = null;
-                        this.updateBtnState();
-                    },
-
-                    reset() {
-                        this.stop();
-                        this.state.timeLeft = this.state.duration;
-                        this.updateDisplay(); // no animation on reset
-                    },
-
-                    finish() {
-                        this.stop();
-                        this.playCompletionSound();
-
-                        // Aesthetic completion effect
-                        const display = document.getElementById('stage-timer-display');
-                        const widget = document.getElementById('stage-timer-widget');
-                        if (widget) {
-                            widget.style.boxShadow = '0 0 40px rgba(var(--danger-color-rgb), 0.5), 0 20px 25px -5px rgba(0, 0, 0, 0.1)';
-                            widget.style.borderColor = 'var(--danger-color)';
-
-                            const oldColor = display.style.color;
-                            display.style.color = 'var(--danger-color)';
-
-                            // Pulse animation for widget
-                            widget.animate([
-                                { transform: 'scale(1)' },
-                                { transform: 'scale(1.05)' },
-                                { transform: 'scale(1)' }
-                            ], { duration: 300, iterations: 2 });
-
-                            setTimeout(() => {
-                                widget.style.boxShadow = '';
-                                widget.style.borderColor = '';
-                                display.style.color = oldColor;
-                            }, 2500);
-                        }
-                    },
-
-                    playCompletionSound() {
-                        try {
-                            const AudioContext = window.AudioContext || window.webkitAudioContext;
-                            if (!AudioContext) return;
-                            const ctx = new AudioContext();
-
-                            const playTone = (freq, type, duration, delay, vol = 0.2) => {
-                                const osc = ctx.createOscillator();
-                                const gain = ctx.createGain();
-                                osc.connect(gain);
-                                gain.connect(ctx.destination);
-                                osc.type = type;
-                                osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
-                                gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
-                                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + duration);
-                                osc.start(ctx.currentTime + delay);
-                                osc.stop(ctx.currentTime + delay + duration);
-                            };
-
-                            // "Beep Beep" - Pleasant but alert
-                            // E5 then E5
-                            playTone(659.25, 'sine', 0.15, 0, 0.3);
-                            setTimeout(() => playTone(659.25, 'sine', 0.4, 0), 200);
-
-                        } catch (e) { console.error("Audio error", e); }
-                    },
-
-                    updateDisplay(animate = false) {
-                        const el = document.getElementById('stage-timer-display');
-                        if (!el) return;
-
-                        el.textContent = this.state.timeLeft;
-
-                        if (animate && this.state.timeLeft > 0) {
-                            el.classList.remove('animate');
-                            void el.offsetWidth; // force reflow
-                            el.classList.add('animate');
-                        }
-                    },
-
-                    updateBtnState() {
-                        const btn = document.getElementById('stage-timer-action-btn');
-                        if (!btn) return;
-                        if (this.state.isRunning) {
-                            // Pause/Stop icon
-                            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>`;
-                            btn.title = "Stop";
-                        } else {
-                            // Play icon
-                            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>`;
-                            btn.title = "Start";
                         }
                     }
                 },
@@ -1724,9 +1518,7 @@ export const events = {
                                 // unless we explicitly want to intercept for components.
                                 const overlay = document.getElementById('focus-mode-overlay');
                                 if (!overlay) return;
-                                const scrollEl = App.state.focusSession?.isStageMode ?
-                                    overlay.querySelector('.focus-mode-content') :
-                                    overlay.querySelector('.focus-mode-body');
+                                const scrollEl = overlay.querySelector('.focus-mode-body');
                                 if (scrollEl) {
                                     scrollEl.scrollTop += e.deltaY;
                                 }
@@ -1768,12 +1560,17 @@ export const events = {
                         }
 
                         // Scroll Progress Listener (Always update to new scrollEl)
-                        // STAGE MODE FIX: In stage mode, .focus-mode-content scrolls. In snippets/sigma mode, .focus-mode-body scrolls.
+                        // In Focus/Stage presentation mode, .focus-mode-body is the authoritative scroll container.
                         // READ MODE: Root documentElement scrolls.
                         const overlay = document.getElementById('focus-mode-overlay');
                         const scrollEl = overlay ?
-                            (App.state.focusSession?.isStageMode ? overlay.querySelector('.focus-mode-content') : overlay.querySelector('.focus-mode-body')) :
+                            overlay.querySelector('.focus-mode-body') :
                             document.documentElement;
+
+                        if (overlay) {
+                            const primaryColor = getComputedStyle(overlay).getPropertyValue('--primary-color');
+                            if (primaryColor) document.body.style.setProperty('--pro-presenter-accent', primaryColor);
+                        }
 
                         if (scrollEl) {
                             // Cleanup old scroll listener if exists on a different element
@@ -1823,6 +1620,7 @@ export const events = {
 
                         // Clean up body ambiance and specific mode data
                         document.body.className = document.body.className.replace(/\bambiance-\S+/g, '').trim();
+                        document.body.style.removeProperty('--pro-presenter-accent');
                         document.body.removeAttribute('data-pro-presenter-mode');
 
                         state.elements = {};
@@ -1859,7 +1657,7 @@ export const events = {
                             : (currentIndex + 1) % this.themes.length;
                         const newTheme = this.themes[nextIndex];
 
-                        // Manually remove any old theme classes
+                        // Manually remove any old theme classes from overlay ONLY
                         overlay.className = overlay.className.replace(/\bambiance-\S+/g, '').trim();
 
                         if (newTheme !== 'default') {
@@ -1868,18 +1666,32 @@ export const events = {
 
                         session.activeTheme = newTheme;
 
+                        // CRITICAL: NEVER add ambiance-* to document.body!
+                        // If Pro Presenter is active, pass theme accent via scoped custom property
+                        if (session.isProPresenterActive) {
+                            const primaryColor = getComputedStyle(overlay).getPropertyValue('--primary-color');
+                            if (primaryColor) document.body.style.setProperty('--pro-presenter-accent', primaryColor);
+                        }
+
                         const themeName = newTheme.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                         App.ui.showToast(`${themeName}`, { type: 'info', duration: 1500 });
 
-                        // SYNC BODY THEME (Persistence for Pro Presenter)
-                        document.body.className = document.body.className.replace(/\bambiance-\S+/g, '').trim();
-                        if (newTheme !== 'default') {
-                            document.body.classList.add(`ambiance-${newTheme}`);
-                        }
+                        // Keep View & Deck Settings popup open so presenter can interact smoothly
+                        const viewMenu = overlay.querySelector('.stage-view-menu-container');
+                        if (viewMenu) viewMenu.classList.add('active');
+
+                        App.ui.renderFocusModeControls();
+
+                        const updatedViewMenu = overlay.querySelector('.stage-view-menu-container');
+                        if (updatedViewMenu) updatedViewMenu.classList.add('active');
                     },
 
                     // This function now correctly resets the theme using direct, reliable logic.
-                    resetAmbiance() {
+                    resetAmbiance(e) {
+                        if (e && e.stopPropagation) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                        }
                         const session = App.state.focusSession;
                         if (!session.isActive) return;
 
@@ -1889,10 +1701,38 @@ export const events = {
                         overlay.className = overlay.className.replace(/\bambiance-\S+/g, '').trim();
                         session.activeTheme = 'default';
 
+                        // CRITICAL: Clean up scoped accent and body classes
+                        document.body.style.removeProperty('--pro-presenter-accent');
+                        document.body.className = document.body.className.replace(/\bambiance-\S+/g, '').trim();
+
                         App.ui.showToast('Theme reset to default', { type: 'success', duration: 2000 });
 
-                        // SYNC BODY THEME
-                        document.body.className = document.body.className.replace(/\bambiance-\S+/g, '').trim();
+                        // Keep View & Deck Settings popup open so presenter can interact smoothly
+                        const viewMenu = overlay.querySelector('.stage-view-menu-container');
+                        if (viewMenu) viewMenu.classList.add('active');
+
+                        App.ui.renderFocusModeControls();
+
+                        const updatedViewMenu = overlay.querySelector('.stage-view-menu-container');
+                        if (updatedViewMenu) updatedViewMenu.classList.add('active');
+                    },
+
+                    _ambianceClickTimeout: null,
+                    handleAmbianceClick(e) {
+                        if (e && e.stopPropagation) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                        }
+                        if (this._ambianceClickTimeout) {
+                            clearTimeout(this._ambianceClickTimeout);
+                            this._ambianceClickTimeout = null;
+                            this.resetAmbiance(e);
+                            return;
+                        }
+                        this._ambianceClickTimeout = setTimeout(() => {
+                            this.cycleAmbiance();
+                            this._ambianceClickTimeout = null;
+                        }, 220);
                     },
 
                     toggleCinematicMotion(buttonEl) {
@@ -2138,6 +1978,20 @@ export const events = {
                             }
                         }, 100);
                     },
+
+                    toggleTitleVisibility() {
+                        const session = App.state.focusSession;
+                        if (!session.isActive) return;
+
+                        const overlay = document.getElementById('focus-mode-overlay');
+                        if (!overlay) return;
+
+                        session.isTitleVisible = session.isTitleVisible === false ? true : false;
+                        overlay.classList.toggle('title-hidden', !session.isTitleVisible);
+                        App.settings.set('presentationTitleVisible', session.isTitleVisible);
+                        App.ui.showToast(session.isTitleVisible ? 'Note title shown' : 'Note title hidden (Full Immersive)', { type: 'info', duration: 1500 });
+                        App.ui.renderFocusModeControls();
+                    },
                 },
 
                 // --- Annotation Namespace for Stage Mode ---
@@ -2380,22 +2234,31 @@ export const events = {
                     }
 
                     if (e.key === 'Escape') {
-                        if (document.body.classList.contains('canvas-focus-mode')) {
+                        if (isModalOpen) App.ui.closeModal();
+                        else if (App.splitScreen && App.splitScreen.state && App.splitScreen.state.isActive) {
+                            App.splitScreen.deactivate();
+                            e.preventDefault();
+                            return;
+                        }
+                        else if (document.body.classList.contains('canvas-focus-mode')) {
                             App.events.toggleCanvasFocusMode();
                             e.preventDefault();
                             return;
                         }
 
-                        if (isModalOpen) App.ui.closeModal();
                         else if (App.state.isFullscreen) App.events.toggleFocusMode();
                         else if (App.state.studySession.isActive) App.events.study.exit();
                         else if (activeViewId && activeViewId !== 'library') App.router.navigateTo('library');
                     }
                     if (e.altKey && e.key.toLowerCase() === 'a') {
                         e.preventDefault();
+                        if (App.state.focusSession?.isActive) {
+                            App.ui.aiMagicModal.openAsViewer('presentation');
+                            return;
+                        }
                         const aiToggle = document.getElementById('ai-magic-toggle');
                         if (aiToggle && aiToggle.style.display !== 'none') {
-                            const ctx = document.body.classList.contains('pdf-viewer-active') ? 'pdf' : document.body.classList.contains('focus-mode-active') ? 'presentation' : (activeViewId || 'general');
+                            const ctx = document.body.classList.contains('pdf-viewer-active') ? 'pdf' : (activeViewId || 'general');
                             App.ui.aiMagicModal.openAsViewer(ctx);
                         } else if (activeViewId === 'library' || activeViewId === 'article') {
                             App.ui.aiMagicModal.open();
@@ -2405,6 +2268,7 @@ export const events = {
                     // ... (The rest of the function remains identical) ...
                     if (cmdKey && e.key.toLowerCase() === 'k') { e.preventDefault(); App.globalSearch.openSearch(); }
                     if (e.altKey && e.shiftKey && e.key.toLowerCase() === 'n') { e.preventDefault(); if (!document.getElementById('new-article-btn').disabled) App.events.createNewArticle(); }
+                    if (e.altKey && e.key.toLowerCase() === 's' && !cmdKey && !e.shiftKey) { e.preventDefault(); App.splitScreen.toggle(); return; }
                     if (cmdKey && e.key.toLowerCase() === 's') { if (App.state.currentMode === 'write') { e.preventDefault(); App.events.saveArticle(false); } }
                     if (e.altKey && e.key.toLowerCase() === 'o' && !cmdKey && !e.shiftKey) { const isWelcomeActive = document.getElementById('welcome-view')?.classList.contains('active'); const isLibraryActive = document.getElementById('library-view')?.classList.contains('active'); if (isWelcomeActive || isLibraryActive) { e.preventDefault(); App.events.selectDirectory(true); } }
                     if (e.key.toLowerCase() === 's' && !cmdKey && !e.altKey && !e.shiftKey && !isEditable) {
@@ -3443,6 +3307,17 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     } else if (App.state.selectedImageContainer && !target.closest('.image-container, .nk-visual-flashcard, #image-toolbar, .btn-icon')) {
                         // Clicked away from image: deselect
                         App.events.deselectImage();
+                    }
+
+                    // Close presentation popovers if clicking outside them
+                    if (App.state.focusSession?.isActive && !target.closest('.stage-view-menu-container, .stage-more-menu-container')) {
+                        const overlay = document.getElementById('focus-mode-overlay');
+                        overlay?.querySelectorAll('.stage-view-menu-container.active, .stage-more-menu-container.active').forEach(el => el.classList.remove('active'));
+
+                        // Dismiss blackout screen on click if neither laser nor annotation is currently active
+                        if (overlay?.classList.contains('blackout-active') && !overlay.classList.contains('laser-active') && !App.annotationEngine?.state?.isActive) {
+                            overlay.classList.remove('blackout-active');
+                        }
                     }
 
                     // --- FLASHCARD REVISION IN READ MODE: Reveal / Hide Cloze Flashcard ---
@@ -7402,17 +7277,8 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
 
                 handleSpotlight(event) {
-                    if (!event.altKey) return;
-                    const bodyEl = document.querySelector('.focus-mode-body');
-                    if (!bodyEl || !bodyEl.classList.contains('spotlight-active')) return;
-
-                    const targetSnippet = event.target.closest('.snippet, .nk-mcq-block');
-
-                    if (event.type === 'mouseover' && targetSnippet) {
-                        targetSnippet.classList.add('spotlight');
-                    } else if (event.type === 'mouseout' && targetSnippet) {
-                        targetSnippet.classList.remove('spotlight');
-                    }
+                    // Disabled: prevent modifier keys or mouse from blurring/dimming presentation
+                    return;
                 },
 
 
@@ -8867,13 +8733,19 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         isActive: true,
                         articles: sortedArticles,
                         currentIndex: initialIndex,
-                        isStageMode: false,
+                        isStageMode: true,
+                        sigmaMode: 'presentation',
+                        use2DCamera: false,
                         currentSlideIndex: 0,
                         scrollStops: [],
                         activeTheme: 'default',
                         isCinematicActive: false,
+                        isProPresenterActive: false,
                         teleprompterActive: false,
+                        teleprompterSize: 30,
+                        teleprompterFontSize: 1.1,
                         annotations: {},
+                        sigmaAnnotations: {},
                     };
 
                     // PREPARE CURRENT ARTICLE IMMEDIATELY
@@ -8881,6 +8753,8 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
 
                     App.ui.renderFocusMode();
                     document.addEventListener('keydown', this.handleFocusModeKeyDown);
+                    document.addEventListener('keyup', this.handleFocusModeKeyUp);
+                    window.addEventListener('blur', this._onFocusWindowBlur);
                     document.body.style.overflow = 'hidden';
                 },
 
@@ -8902,19 +8776,27 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         isActive: true,
                         articles: candidateArticles,
                         currentIndex: 0,
-                        isStageMode: false,
+                        isStageMode: true,
+                        sigmaMode: 'presentation',
+                        use2DCamera: false,
                         currentSlideIndex: 0,
                         scrollStops: [],
                         activeTheme: 'default',
                         isCinematicActive: false,
+                        isProPresenterActive: false,
                         teleprompterActive: false,
+                        teleprompterSize: 30,
+                        teleprompterFontSize: 1.1,
                         annotations: {},
+                        sigmaAnnotations: {},
                     };
 
                     this.prepareFocusArticle(0);
 
                     App.ui.renderFocusMode();
                     document.addEventListener('keydown', this.handleFocusModeKeyDown);
+                    document.addEventListener('keyup', this.handleFocusModeKeyUp);
+                    window.addEventListener('blur', this._onFocusWindowBlur);
                     document.body.style.overflow = 'hidden';
                 },
 
@@ -8993,6 +8875,11 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         App.events.presentation.toggleProPresenter();
                     }
 
+                    // Close AI Viewer if open in presentation mode
+                    if (App.ui.aiMagicModal?.state?.isOpen && App.ui.aiMagicModal?.state?.viewerContext === 'presentation') {
+                        App.ui.aiMagicModal.closeViewer();
+                    }
+
                     const aiMagicToggle = document.getElementById('ai-magic-toggle');
                     if (aiMagicToggle) aiMagicToggle.style.display = 'none';
                     // NEW: Save annotations before closing
@@ -9019,6 +8906,9 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     App.state.focusSession.isActive = false;
                     const overlay = document.getElementById('focus-mode-overlay');
                     if (overlay) {
+                        if (overlay.classList.contains('laser-active')) {
+                            App.events.toggleSharedLaser('stage');
+                        }
                         overlay.removeEventListener('click', App.events.handleContentClick);
                         const bodyEl = overlay.querySelector('.focus-mode-body');
                         if (bodyEl) {
@@ -9028,55 +8918,46 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         overlay.remove();
                     }
                     document.removeEventListener('keydown', this.handleFocusModeKeyDown);
+                    document.removeEventListener('keyup', this.handleFocusModeKeyUp);
+                    window.removeEventListener('blur', this._onFocusWindowBlur);
 
                     // MEMORY OP: Aggressively clear session data
                     App.state.focusSession.articles = [];
                     App.util.freeMemory();
 
+                    // CRITICAL: Unconditionally strip ambiance-* and pro-presenter custom property from body
+                    document.body.className = document.body.className.replace(/\bambiance-\S+/g, '').trim();
+                    document.body.style.removeProperty('--pro-presenter-accent');
                     document.body.style.overflow = '';
                 },
 
 
                 navigateFocusMode(direction) {
-                    const { articles, currentIndex } = App.state.focusSession;
-                    if (!articles) return;
+                    const session = App.state.focusSession;
+                    const { articles, currentIndex } = session;
+                    if (!articles || articles.length === 0) return;
                     const newIndex = currentIndex + direction;
 
                     if (newIndex >= 0 && newIndex < articles.length) {
-                        App.state.focusSession.currentIndex = newIndex;
+                        session.currentIndex = newIndex;
+                        session.currentSlideIndex = 0;
+                        this.prepareFocusArticle(newIndex);
                         App.ui.renderFocusMode();
+                        App.ui.aiMagicModal?.updateViewerSlide(1);
                     }
                 },
 
                 toggleStageMode() {
-                    const session = App.state.focusSession;
-
-                    // Clean up innovations when exiting Stage Mode
-                    if (session.isStageMode) {
-                        const bodyEl = document.querySelector('.focus-mode-body');
-                        if (bodyEl) {
-                            // Innovation 1: Cleanup Bento layouts
-                            App.ui._cleanupStageModeBentoLayouts(bodyEl);
-
-                            // Innovation 3: Cleanup 2D camera viewport
-                            App.ui._cleanup2DCameraViewport(bodyEl);
-                        }
-                    }
-
-                    session.isStageMode = !session.isStageMode;
-                    session.currentSlideIndex = 0;
-                    session.scrollStops = [];
-                    App.ui.renderFocusMode();
+                    return this.toggleSigmaMode();
                 },
 
                 navigateStageSlide(direction) {
                     const session = App.state.focusSession;
-                    if (!session.isActive || !session.isStageMode) return;
+                    if (!session.isActive) return;
 
-                    // --- NEW: SIGMA ARTICLE NAVIGATION ---
+                    // --- SIGMA ARTICLE NAVIGATION ---
                     if (session.sigmaMode === 'article') {
-                        const body = document.querySelector('.focus-mode-overlay .focus-mode-content') ||
-                            document.querySelector('.focus-mode-body');
+                        const body = document.querySelector('.focus-mode-body');
                         const overlay = document.querySelector('.focus-mode-overlay');
                         if (body && overlay) {
                             const scrollAmount = window.innerHeight * 0.8; // Scroll 80% of screen height
@@ -9100,8 +8981,6 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         return; // Stop here, do not do slide navigation
                     }
 
-                    const newIndex = session.currentSlideIndex + direction;
-
                     // INNOVATION 2: List Build Animation
                     // When moving forward, check if there are hidden list items to reveal first
                     if (direction > 0) {
@@ -9114,7 +8993,17 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         }
                     }
 
-                    if (newIndex >= 0 && newIndex < session.scrollStops.length) {
+                    const newIndex = session.currentSlideIndex + direction;
+
+                    // BONUS POLISH: When on last slide and moving forward, advance to next article
+                    if (direction > 0 && session.scrollStops && newIndex >= session.scrollStops.length) {
+                        if (session.articles && session.articles.length > 1 && session.currentIndex < session.articles.length - 1) {
+                            this.navigateFocusMode(1);
+                            return;
+                        }
+                    }
+
+                    if (session.scrollStops && newIndex >= 0 && newIndex < session.scrollStops.length) {
                         session.currentSlideIndex = newIndex;
 
                         const body = document.querySelector('.focus-mode-body');
@@ -9139,6 +9028,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             }
                         }
                         App.ui.renderFocusModeControls();
+                        App.ui.aiMagicModal?.updateViewerSlide(newIndex + 1);
                         setTimeout(() => {
                             const container = document.querySelector('.focus-mode-body');
                             if (!container) return;
@@ -9212,7 +9102,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             borderRadius: '50%',
                             boxShadow: '0 0 8px #ff0055, 0 0 16px #ff0055',
                             pointerEvents: 'none',
-                            zIndex: context === 'pdf' ? '25550' : '2147483647',
+                            zIndex: context === 'pdf' ? '25550' : '2147483640',
                             display: 'none',
                             transform: 'translate(-50%, -50%)',
                             transition: 'transform 0.035s linear, box-shadow 0.2s ease, background 0.2s ease'
@@ -9230,7 +9120,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                             width: '100%',
                             height: '100%',
                             pointerEvents: 'none',
-                            zIndex: context === 'pdf' ? '25500' : '2147483646'
+                            zIndex: context === 'pdf' ? '25500' : '2147483639'
                         });
                         overlay.appendChild(laserCanvas);
 
@@ -9281,7 +9171,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         laserCanvas.style.pointerEvents = context === 'stage' ? 'none' : 'auto';
                         laserCanvas.style.cursor = 'none';
                         const eventTarget = context === 'stage'
-                            ? (overlay.querySelector('.focus-mode-content') || overlay)
+                            ? overlay
                             : laserCanvas;
 
                         if (context === 'stage') document.getElementById('laser-pointer-toggle')?.classList.add('active');
@@ -9369,6 +9259,13 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         // Event Handlers
                         const isOverToolbar = (target) => {
                             return target && target.closest && (
+                                target.closest('.stage-mode-controls') ||
+                                target.closest('.stage-view-popup') ||
+                                target.closest('.stage-more-popup') ||
+                                target.closest('#annotation-toolbar') ||
+                                target.closest('#teleprompter-controls') ||
+                                target.closest('#immersive-exit-btn') ||
+                                target.closest('.ai-magic-viewer-panel') ||
                                 target.closest('#pdf-annotation-toolbar') ||
                                 target.closest('.pdf-compact-toolbar') ||
                                 target.closest('.pdf-viewer-header') ||
@@ -9406,7 +9303,7 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         const wheelHandler = (e) => {
                             // Manual scroll relay to fix locked scrolling in laser mode
                             const scrollTarget = context === 'stage'
-                                ? eventTarget
+                                ? (overlay.querySelector('.focus-mode-body') || overlay)
                                 : (context === 'pdf'
                                     ? (document.querySelector('.pdf-viewer-canvas-wrapper') || overlay)
                                     : (document.querySelector('main') || document.scrollingElement || document.documentElement || document.body));
@@ -9560,11 +9457,12 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     }
                     const session = App.state.focusSession;
                     if (!session.isActive) return;
+                    const isAnnotationActive = App.annotationEngine?.state?.isActive && App.annotationEngine?.state?.context === 'focus';
 
+                    // Ensure spotlight-active never dims presentation on modifier keys
                     const bodyEl = document.querySelector('.focus-mode-body');
-                    if (bodyEl) {
-                        bodyEl.classList.toggle('spotlight-active', e.altKey);
-                        if (!e.altKey) { bodyEl.querySelector('.spotlight')?.classList.remove('spotlight'); }
+                    if (bodyEl && bodyEl.classList.contains('spotlight-active')) {
+                        bodyEl.classList.remove('spotlight-active');
                     }
 
                     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -9607,141 +9505,212 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                         return; // Arrow key action is handled.
                     }
 
-                    // --- Handle all other keys ---
-                    if (session.isStageMode) {
-                        const stageKeys = [' ', 'arrowright', 'pagedown', 'arrowleft', 'pageup', 'enter', 'a', 'b', 'd', 'c', 'l', 'w', 'p', 'escape', 'g', 'h', 'f'];
-                        if (stageKeys.includes(e.key.toLowerCase())) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }
+                    // --- Unified Keyboard Shortcut Handler ---
+                    const interceptedKeys = [' ', 'arrowright', 'pagedown', 'arrowleft', 'pageup', 'enter', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'l', 'p', 'r', 's', 't', 'w', 'x', '+', '=', '-', 'escape'];
+                    if (interceptedKeys.includes(e.key.toLowerCase())) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
 
-                        switch (e.key.toLowerCase()) {
-                            case ' ': case 'arrowright': case 'pagedown': App.events.navigateStageSlide(1); break;
-                            case 'arrowleft': case 'pageup': App.events.navigateStageSlide(-1); break;
-                            case 'enter':
-                                const focusedEl = document.querySelector('.spotlight-key-focus');
-                                if (focusedEl) {
-                                    const accordionTrigger = focusedEl.querySelector('.nk-accordion-trigger');
-                                    if (accordionTrigger) {
-                                        accordionTrigger.click();
-                                    }
-                                    else if (focusedEl.classList.contains('nk-mcq-block')) {
-                                        App.events.handleMcqAnswer({ target: focusedEl }, false);
-                                    }
-                                    else if (focusedEl.classList.contains('snippet')) {
-                                        focusedEl.click();
-                                    }
+                    switch (e.key.toLowerCase()) {
+                        case ' ':
+                        case 'arrowright':
+                        case 'pagedown':
+                            if (e.shiftKey && e.key === 'ArrowRight') {
+                                App.events.navigateFocusMode(1);
+                            } else {
+                                App.events.navigateStageSlide(1);
+                            }
+                            break;
+
+                        case 'arrowleft':
+                        case 'pageup':
+                            if (e.shiftKey && e.key === 'ArrowLeft') {
+                                App.events.navigateFocusMode(-1);
+                            } else {
+                                App.events.navigateStageSlide(-1);
+                            }
+                            break;
+
+                        case 'enter':
+                            const focusedEl = document.querySelector('.spotlight-key-focus');
+                            if (focusedEl) {
+                                const accordionTrigger = focusedEl.querySelector('.nk-accordion-trigger');
+                                if (accordionTrigger) {
+                                    accordionTrigger.click();
+                                } else if (focusedEl.classList.contains('nk-mcq-block')) {
+                                    App.events.handleMcqAnswer({ target: focusedEl }, false);
+                                } else if (focusedEl.classList.contains('snippet')) {
+                                    focusedEl.click();
                                 }
-                                break;
-                            case 's': App.events.toggleStageMode(); break;
-                            case 'b': document.querySelector('.focus-mode-overlay')?.classList.toggle('blackout-active'); break;
-                            // LOCKED FEATURES
-                            case 'd': // Annotation
-                                if (!App.license.isPremium()) App.ui.showAscensionModal();
-                                else App.annotationEngine.toggle('focus');
-                                break;
-                            case 'p': // Screenshot
-                                if (!App.license.isPremium()) App.ui.showAscensionModal();
-                                else App.events.exportCurrentSlide();
-                                break;
-                            case 'f': App.events.toggleFocusModeControls(); break;
-                            case 'g': // Cinematic Reveal
-                                if (!App.license.isPremium()) App.ui.showAscensionModal();
-                                else App.events.presentation.toggleCinematicMotion(document.querySelector('.stage-mode-controls .btn-icon[onclick*="toggleCinematicMotion"]'));
-                                break;
-                            case 'r': if (isAnnotationActive) App.annotationEngine.setTool('rect'); break;
-                            case 'e': if (isAnnotationActive) App.annotationEngine.setTool('eraser'); break;
-                            case 'x': App.events.annotation.clear(); break;
-                            case 'c':
-                                if (isAnnotationActive) App.annotationEngine.cycleColor();
-                                else App.events.presentation.cycleAmbiance();
-                                break;
-                            case 't': // NEW SHORTCUT
-                                if (isAnnotationActive) App.annotationEngine.cycleThickness();
-                                break;
-                            case 'l': App.events.toggleSharedLaser('stage'); break;
-                            case 'w': App.events.annotation.toggleWhiteboard(document.querySelector('#annotation-toolbar .btn-icon[onclick*="toggleWhiteboard"]')); break;
+                            }
+                            break;
 
-                            case 'h': document.querySelector('.stage-mode-controls .btn-icon[onclick*="toggleStageModeHighlights"]')?.click(); break;
-                            case 'a': App.ui.aiMagicModal.open(); break;
-                            case 'i': App.events.presentation.toggleTeleprompter(); break;
-                            case '+':
-                            case '=':
-                                App.events.presentation.adjustTeleprompterFont(0.1);
-                                break;
-                            case '-':
-                                App.events.presentation.adjustTeleprompterFont(-0.1);
-                                break;
+                        case 'a':
+                            App.ui.aiMagicModal.openAsViewer('presentation');
+                            break;
 
-                            case 'escape':
-                                const overlay = document.querySelector('.focus-mode-overlay');
-                                if (overlay?.classList.contains('annotation-active')) App.events.annotation.toggle();
-                                else if (overlay?.classList.contains('laser-active')) App.events.toggleSharedLaser('stage');
-                                else if (overlay?.classList.contains('blackout-active')) overlay.classList.remove('blackout-active');
-                                else App.events.toggleStageMode();
-                                break;
-                        }
-                    } else { // Standard Focus Mode
-                        const standardKeys = ['enter', 'escape', 'pagedown', 'pageup', 'arrowright', 'arrowleft', 'h', 's'];
-                        if (standardKeys.includes(e.key.toLowerCase())) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }
-                        switch (e.key.toLowerCase()) {
-                            case 'c': App.events.presentation.cycleAmbiance(); break; // Cycle Color
-                            case 'e': // Font Size
+                        case 'b':
+                            document.querySelector('.focus-mode-overlay')?.classList.toggle('blackout-active');
+                            break;
+
+                        case 'c':
+                            if (isAnnotationActive) {
+                                App.annotationEngine.cycleColor();
+                            } else {
+                                App.events.presentation.cycleAmbiance(e.shiftKey);
+                            }
+                            break;
+
+                        case 'd':
+                            if (!App.license.isPremium()) App.ui.showAscensionModal();
+                            else App.annotationEngine.toggle('focus');
+                            break;
+
+                        case 'e':
+                            if (isAnnotationActive) {
+                                App.annotationEngine.setTool('eraser');
+                            } else {
                                 const fontBtn = document.getElementById('focus-font-size-btn');
-                                if (fontBtn) App.events.toggleFocusModeFontSize(fontBtn);
-                                break;
-                            case 'f': App.events.toggleFocusModeControls(); break;
-                            case 'enter':
-                                const focusedEl = document.querySelector('.spotlight-key-focus');
-                                if (focusedEl) {
-                                    const accordionTrigger = focusedEl.querySelector('.nk-accordion-trigger');
-                                    if (accordionTrigger) {
-                                        accordionTrigger.click();
-                                    }
-                                    else if (focusedEl.classList.contains('nk-mcq-block')) {
-                                        App.events.handleMcqAnswer({ target: focusedEl }, false);
-                                    }
-                                    else if (focusedEl.classList.contains('snippet')) {
-                                        focusedEl.click();
-                                    }
-                                }
-                                break;
-                            case 'escape': App.events.exitFocusMode(); break;
-                            case 'pagedown': case 'arrowright': App.events.navigateFocusMode(1); break;
-                            case 'pageup': case 'arrowleft': App.events.navigateFocusMode(-1); break;
-                            case 'h': document.querySelector('.focus-mode-controls .btn-icon[onclick*="toggleFocusModeHighlights"]')?.click(); break;
-                            case 's': App.events.toggleStageMode(); break;
-                            case 'a': App.ui.aiMagicModal.open(); break;
+                                App.events.toggleFocusModeFontSize(fontBtn);
+                            }
+                            break;
+
+                        case 'f':
+                            App.events.toggleFocusModeControls();
+                            break;
+
+                        case 'g':
+                            if (!App.license.isPremium()) App.ui.showAscensionModal();
+                            else {
+                                const cinematicBtn = document.getElementById('cinematic-toggle-btn') || document.querySelector('.stage-mode-controls .btn-icon[onclick*="toggleCinematicMotion"]');
+                                App.events.presentation.toggleCinematicMotion(cinematicBtn);
+                            }
+                            break;
+
+                        case 'h':
+                            const highlightBtn = document.getElementById('stage-highlight-toggle-btn') || document.querySelector('.stage-mode-controls .btn-icon[onclick*="Highlights"]');
+                            App.events.toggleStageModeHighlights(highlightBtn);
+                            break;
+
+                        case 'i':
+                            App.events.presentation.toggleTeleprompter();
+                            break;
+
+                        case 'l':
+                            App.events.toggleSharedLaser('stage');
+                            break;
+
+                        case 'p':
+                            if (!App.license.isPremium()) App.ui.showAscensionModal();
+                            else App.events.exportCurrentSlide();
+                            break;
+
+                        case 'r':
+                            if (isAnnotationActive) App.annotationEngine.setTool('rect');
+                            break;
+
+                        case 's':
+                            App.events.toggleSigmaMode();
+                            break;
+
+                        case 't':
+                            if (isAnnotationActive) App.annotationEngine.cycleThickness();
+                            else App.events.stageTimer.toggle();
+                            break;
+
+                        case 'u':
+                            App.events.presentation.toggleTitleVisibility();
+                            break;
+
+                        case 'w':
+                            App.events.annotation.toggleWhiteboard();
+                            break;
+
+                        case 'x':
+                            if (isAnnotationActive) App.events.annotation.clear();
+                            break;
+
+                        case '+':
+                        case '=':
+                            App.events.presentation.adjustTeleprompterFont(0.1);
+                            break;
+
+                        case '-':
+                            App.events.presentation.adjustTeleprompterFont(-0.1);
+                            break;
+
+                        case 'escape':
+                            const overlay = document.querySelector('.focus-mode-overlay');
+                            const activePopup = overlay?.querySelector('.stage-more-menu-container.active, .stage-view-menu-container.active');
+                            if (activePopup) {
+                                activePopup.classList.remove('active');
+                            } else if (App.ui.aiMagicModal?.state?.isOpen && App.ui.aiMagicModal?.state?.mode === 'viewer') {
+                                App.ui.aiMagicModal.closeViewer();
+                            } else if (overlay?.classList.contains('annotation-active')) {
+                                App.events.annotation.toggle();
+                            } else if (overlay?.classList.contains('laser-active')) {
+                                App.events.toggleSharedLaser('stage');
+                            } else if (overlay?.classList.contains('blackout-active')) {
+                                overlay.classList.remove('blackout-active');
+                            } else if (overlay?.classList.contains('controls-hidden')) {
+                                App.events.toggleFocusModeControls();
+                            } else {
+                                App.events.exitFocusMode();
+                            }
+                            break;
+                    }
+                },
+
+                handleFocusModeKeyUp(e) {
+                    if (e.key === 'Alt' || e.key === 'Meta' || e.key === 'Control' || e.key === 'Shift') {
+                        const bodyEl = document.querySelector('.focus-mode-body');
+                        if (bodyEl) {
+                            bodyEl.classList.remove('spotlight-active');
+                            bodyEl.querySelectorAll('.spotlight').forEach(s => s.classList.remove('spotlight'));
                         }
                     }
                 },
 
-
+                _onFocusWindowBlur() {
+                    const bodyEl = document.querySelector('.focus-mode-body');
+                    if (bodyEl) {
+                        bodyEl.classList.remove('spotlight-active');
+                        bodyEl.querySelectorAll('.spotlight').forEach(s => s.classList.remove('spotlight'));
+                    }
+                },
 
                 toggleSnippetVisibility(event) {
                     const snippet = event.currentTarget;
                     snippet.classList.toggle('is-hidden');
                 },
+
                 toggleFocusModeFontSize(button) {
-                    const fontSizes = ['0.85rem', '1rem', '1.2rem', '1.4rem', '1.6rem', '1.8rem', '2.0rem', '2.2rem', '2.4rem', '2.6rem', '2.8rem', '3rem'];
+                    this.adjustFocusModeFontSize(1, button);
+                },
+
+                adjustFocusModeFontSize(direction = 1, button) {
                     const body = document.querySelector('.focus-mode-body');
-                    if (!body || !button) return;
+                    const btn = button || document.getElementById('focus-font-size-btn');
 
-                    // RATIONALE: Reading the current size from settings is more reliable than calculating from the DOM.
-                    const currentSize = App.settings.get('focusModeFontSize') || '1.1rem';
-                    const currentIndex = fontSizes.indexOf(currentSize);
+                    const currentSizeStr = App.settings.get('focusModeFontSize') || '1.1rem';
+                    let currentVal = parseFloat(currentSizeStr);
+                    if (isNaN(currentVal)) currentVal = 1.1;
 
-                    const nextIndex = (currentIndex + 1) % fontSizes.length;
-                    const newSize = fontSizes[nextIndex];
+                    let nextVal = Math.round((currentVal + direction * 0.1) * 10) / 10;
+                    if (nextVal < 0.7) nextVal = 0.7;
+                    if (nextVal > 3.0) nextVal = direction > 0 ? 0.8 : 3.0;
 
-                    // RATIONALE: We now update the CSS variable instead of the style directly. This is the correct pattern.
-                    body.style.setProperty('--focus-mode-font-size', newSize);
-                    button.querySelector('span').textContent = newSize.replace('rem', '');
+                    const newSize = `${nextVal.toFixed(1)}rem`;
+
+                    if (body) body.style.setProperty('--focus-mode-font-size', newSize);
+                    if (btn) {
+                        const span = btn.querySelector('span') || btn;
+                        span.textContent = nextVal.toFixed(1);
+                    }
                     App.settings.set('focusModeFontSize', newSize);
                 },
+
                 toggleFocusModeControls() {
                     const overlay = document.querySelector('.focus-mode-overlay');
                     if (!overlay) return;
@@ -9749,35 +9718,41 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     const isHidden = overlay.classList.toggle('controls-hidden');
                     const toggleBtn = document.getElementById('focus-mode-immersive-toggle');
 
-
-
                     if (toggleBtn) {
                         toggleBtn.title = isHidden ? 'Show Controls' : 'Hide Controls';
-                        // Update icon if it is the standard focus mode button (which has svg content)
                         if (toggleBtn.querySelector('svg')) {
                             toggleBtn.innerHTML = isHidden ? App.util.icons.compress : App.util.icons.expand;
                         }
                     }
 
-                    // Minified toast
-                    if (isHidden) App.ui.showToast('Immersive(f)', 'info');
+                    if (isHidden) App.ui.showToast('Immersive (F)', 'info', 1200);
                 },
 
                 toggleFocusModeHighlights(button) {
                     const body = document.querySelector('.focus-mode-body');
-                    if (!body || !button) return;
+                    if (!body) return;
                     const isHiding = body.classList.toggle('hide-snippet-colors');
-                    button.classList.toggle('active', !isHiding);
+                    const buttons = document.querySelectorAll('.stage-mode-controls .btn-icon[onclick*="Highlights"], #stage-highlight-toggle-btn');
+                    buttons.forEach(b => b.classList.toggle('active', !isHiding));
+                    if (button) button.classList.toggle('active', !isHiding);
                     App.settings.set('categoryHighlightsVisible', !isHiding);
                 },
 
                 toggleStageModeHighlights(button) {
-                    const body = document.querySelector('.focus-mode-body');
-                    if (!body || !button) return;
+                    this.toggleFocusModeHighlights(button);
+                },
 
-                    const isHiding = body.classList.toggle('hide-snippet-colors');
-                    button.classList.toggle('active', !isHiding);
-                    App.settings.set('categoryHighlightsVisible', !isHiding);
+                toggle2DCameraMode(buttonEl) {
+                    const session = App.state.focusSession;
+                    if (!session || !session.isActive) return;
+                    session.use2DCamera = !session.use2DCamera;
+                    if (!session.use2DCamera) {
+                        const bodyEl = document.querySelector('.focus-mode-body');
+                        if (bodyEl) App.ui._cleanup2DCameraViewport(bodyEl);
+                        session.cameraMap = null;
+                    }
+                    App.ui.renderFocusMode();
+                    App.ui.showToast(`2D Camera ${session.use2DCamera ? 'Enabled' : 'Disabled'}`, 'info', 1500);
                 },
 
                 toggleSigmaMode(button) {

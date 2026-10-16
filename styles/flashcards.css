@@ -287,229 +287,292 @@
             display: none;
         }
 
-        /* --- NEW: Presentation/Reader Ambiance Themes --- */
-        /* Gallery 1: High-Energy Brights */
+        /* --- NEW: Presentation/Reader Ambiance Themes (Curated & Audited by Color Theory) --- */
+        /* Gallery 1: High-Energy Brights (Light Palettes) */
         .ambiance-lime-ink {
-            --bg-primary: #dfffbf;
-            --bg-primary-rgb: 223, 255, 191;
-            --text-primary: #1a1a1a;
-            --primary-color: #007bff;
+            --bg-primary: #f2fadc;
+            --bg-primary-rgb: 242, 250, 220;
+            --text-primary: #121c13;
+            --text-primary-rgb: 18, 28, 19;
+            --primary-color: #0284c7;
+            --primary-color-rgb: 2, 132, 199;
         }
 
         .ambiance-goldenrod-pad {
-            --bg-primary: #ffea7f;
-            --bg-primary-rgb: 255, 234, 127;
-            --text-primary: #0d3b66;
-            --primary-color: #e11d48;
+            --bg-primary: #fef6dc;
+            --bg-primary-rgb: 254, 246, 220;
+            --text-primary: #182232;
+            --text-primary-rgb: 24, 34, 50;
+            --primary-color: #c2410c;
+            --primary-color-rgb: 194, 65, 12;
         }
 
         .ambiance-mint-chip {
-            --bg-primary: #e6fff1;
-            --bg-primary-rgb: 230, 255, 241;
-            --text-primary: #3e2723;
-            --primary-color: #71ffaf;
+            --bg-primary: #eaf8f0;
+            --bg-primary-rgb: 234, 248, 240;
+            --text-primary: #24140e;
+            --text-primary-rgb: 36, 20, 14;
+            --primary-color: #059669;
+            --primary-color-rgb: 5, 150, 105;
         }
 
         .ambiance-aqua-sky {
-            --bg-primary: #cffafe;
-            --bg-primary-rgb: 207, 250, 254;
-            --text-primary: #0c2d48;
-            --primary-color: #f97316;
+            --bg-primary: #e0f7fa;
+            --bg-primary-rgb: 224, 247, 250;
+            --text-primary: #082f49;
+            --text-primary-rgb: 8, 47, 73;
+            --primary-color: #ea580c;
+            --primary-color-rgb: 234, 88, 12;
         }
 
         .ambiance-peach-sorbet {
-            --bg-primary: #ffeadb;
-            --bg-primary-rgb: 255, 234, 219;
-            --text-primary: #5c001f;
-            --primary-color: #14b8a6;
+            --bg-primary: #fdf0e7;
+            --bg-primary-rgb: 253, 240, 231;
+            --text-primary: #4c1122;
+            --text-primary-rgb: 76, 17, 34;
+            --primary-color: #0d9488;
+            --primary-color-rgb: 13, 148, 136;
         }
 
         .ambiance-powder-snow {
-            --bg-primary: #f9fafb;
-            --bg-primary-rgb: 249, 250, 251;
-            --text-primary: #000000;
-            --primary-color: #3b82f6;
+            --bg-primary: #f8fafc;
+            --bg-primary-rgb: 248, 250, 252;
+            --text-primary: #0f172a;
+            --text-primary-rgb: 15, 23, 42;
+            --primary-color: #2563eb;
+            --primary-color-rgb: 37, 99, 235;
         }
 
         /* Gallery 2: Sophisticated Darks */
         .ambiance-terminal {
-            --bg-primary: #000000;
-            --bg-primary-rgb: 0, 0, 0;
-            --text-primary: #ffc107;
-            --primary-color: #23e000;
+            --bg-primary: #0a0e14;
+            --bg-primary-rgb: 10, 14, 20;
+            --text-primary: #ffb454;
+            --text-primary-rgb: 255, 180, 84;
+            --primary-color: #39e58c;
+            --primary-color-rgb: 57, 229, 140;
         }
 
         .ambiance-crimson-night {
-            --bg-primary: #5c0000;
-            --bg-primary-rgb: 92, 0, 0;
-            --text-primary: #fdf6e3;
-            --primary-color: #d4af37;
+            --bg-primary: #1f0709;
+            --bg-primary-rgb: 31, 7, 9;
+            --text-primary: #fce7f3;
+            --text-primary-rgb: 252, 231, 243;
+            --primary-color: #fb7185;
+            --primary-color-rgb: 251, 113, 133;
         }
 
         .ambiance-royal-indigo {
-            --bg-primary: #2c005c;
-            --bg-primary-rgb: 44, 0, 92;
-            --text-primary: #ffffff;
-            --primary-color: #e83e8c;
+            --bg-primary: #0f0a1c;
+            --bg-primary-rgb: 15, 10, 28;
+            --text-primary: #ede9fe;
+            --text-primary-rgb: 237, 233, 254;
+            --primary-color: #a855f7;
+            --primary-color-rgb: 168, 85, 247;
         }
 
         .ambiance-emerald-tablet {
-            --bg-primary: #013220;
-            --bg-primary-rgb: 1, 50, 32;
-            --text-primary: #fff2c5;
-            --primary-color: #858585;
+            --bg-primary: #041a13;
+            --bg-primary-rgb: 4, 26, 19;
+            --text-primary: #ecfdf5;
+            --text-primary-rgb: 236, 253, 245;
+            --primary-color: #10b981;
+            --primary-color-rgb: 16, 185, 129;
         }
 
         .ambiance-obsidian-ruby {
-            --bg-primary: #720072;
-            --bg-primary-rgb: 27, 23, 23;
-            --text-primary: #fff0f5;
-            --primary-color: #1b1717;
+            --bg-primary: #120e12;
+            --bg-primary-rgb: 18, 14, 18;
+            --text-primary: #ffe4e6;
+            --text-primary-rgb: 255, 228, 230;
+            --primary-color: #f43f5e;
+            --primary-color-rgb: 244, 63, 94;
         }
 
         .ambiance-blueprint {
-            --bg-primary: #0c2d48;
-            --bg-primary-rgb: 12, 45, 72;
-            --text-primary: #afeeee;
-            --primary-color: #103e65;
+            --bg-primary: #071927;
+            --bg-primary-rgb: 7, 25, 39;
+            --text-primary: #e0f2fe;
+            --text-primary-rgb: 224, 242, 254;
+            --primary-color: #38bdf8;
+            --primary-color-rgb: 56, 189, 248;
         }
 
         .ambiance-midnight-sun {
-            --bg-primary: #222222;
-            --bg-primary-rgb: 34, 34, 34;
-            --text-primary: #ffa467;
-            --primary-color: #2fabe4;
+            --bg-primary: #11141a;
+            --bg-primary-rgb: 17, 20, 26;
+            --text-primary: #fdba74;
+            --text-primary-rgb: 253, 186, 116;
+            --primary-color: #38bdf8;
+            --primary-color-rgb: 56, 189, 248;
         }
 
         /* Gallery 3: Natural & Earthy Tones */
         .ambiance-evergreen {
-            --bg-primary: #f5f5dc;
-            --bg-primary-rgb: 245, 245, 220;
-            --text-primary: #004225;
-            --primary-color: #cc5500;
+            --bg-primary: #f4f3ea;
+            --bg-primary-rgb: 244, 243, 234;
+            --text-primary: #113322;
+            --text-primary-rgb: 17, 51, 34;
+            --primary-color: #c2410c;
+            --primary-color-rgb: 194, 65, 12;
         }
 
         .ambiance-clay-sky {
-            --bg-primary: #f0a6dd;
-            --bg-primary-rgb: 233, 150, 122;
-            --text-primary: #2c3e50;
-            --primary-color: #e7d748;
+            --bg-primary: #f8ede3;
+            --bg-primary-rgb: 248, 237, 227;
+            --text-primary: #292524;
+            --text-primary-rgb: 41, 37, 36;
+            --primary-color: #0284c7;
+            --primary-color-rgb: 2, 132, 199;
         }
 
         .ambiance-sandstone-agave {
-            --bg-primary: #f0e6d2;
-            --bg-primary-rgb: 240, 230, 210;
-            --text-primary: #354e3c;
-            --primary-color: #5c4033;
+            --bg-primary: #f4ecdf;
+            --bg-primary-rgb: 244, 236, 223;
+            --text-primary: #1f382b;
+            --text-primary-rgb: 31, 56, 43;
+            --primary-color: #92400e;
+            --primary-color-rgb: 146, 64, 14;
         }
 
         .ambiance-stone-moss {
-            --bg-primary: #dddddd;
-            --bg-primary-rgb: 211, 211, 211;
-            --text-primary: #1e172a;
-            --primary-color: #483d8b;
+            --bg-primary: #e5e7eb;
+            --bg-primary-rgb: 229, 231, 235;
+            --text-primary: #111827;
+            --text-primary-rgb: 17, 24, 39;
+            --primary-color: #15803d;
+            --primary-color-rgb: 21, 128, 61;
         }
 
         .ambiance-mahogany {
-            --bg-primary: #3d0c02;
-            --bg-primary-rgb: 61, 12, 2;
-            --text-primary: #f3e5ab;
-            --primary-color: #ffbf00;
+            --bg-primary: #1c0a06;
+            --bg-primary-rgb: 28, 10, 6;
+            --text-primary: #fef3c7;
+            --text-primary-rgb: 254, 243, 199;
+            --primary-color: #f59e0b;
+            --primary-color-rgb: 245, 158, 11;
         }
 
         .ambiance-riverbed {
-            --bg-primary: #2e2b29;
-            --bg-primary-rgb: 74, 68, 65;
-            --text-primary: #c2c1ba;
-            --primary-color: #008080;
+            --bg-primary: #181716;
+            --bg-primary-rgb: 24, 23, 22;
+            --text-primary: #e2e1dc;
+            --text-primary-rgb: 226, 225, 220;
+            --primary-color: #14b8a6;
+            --primary-color-rgb: 20, 184, 166;
         }
 
         .ambiance-matrix {
-            --bg-primary: #000000;
-            --bg-primary-rgb: 0, 0, 0;
-            --text-primary: #00FF41;
-            --primary-color: #00eb3c;
+            --bg-primary: #020603;
+            --bg-primary-rgb: 2, 6, 3;
+            --text-primary: #00ff66;
+            --text-primary-rgb: 0, 255, 102;
+            --primary-color: #22c55e;
+            --primary-color-rgb: 34, 197, 94;
         }
 
         /* Gallery 4: Monochromatic & Minimalist */
         .ambiance-rosewater {
-            --bg-primary: #fff0f5;
-            --bg-primary-rgb: 255, 240, 245;
-            --text-primary: #720072;
-            --primary-color: #dc143c;
+            --bg-primary: #fdf2f4;
+            --bg-primary-rgb: 253, 242, 244;
+            --text-primary: #4a044e;
+            --text-primary-rgb: 74, 4, 78;
+            --primary-color: #e11d48;
+            --primary-color-rgb: 225, 29, 72;
         }
 
         .ambiance-azure-depth {
-            --bg-primary: #003153;
-            --bg-primary-rgb: 0, 49, 83;
-            --text-primary: #e0ffff;
-            --primary-color: #7a7a7a;
+            --bg-primary: #031726;
+            --bg-primary-rgb: 3, 23, 38;
+            --text-primary: #e0f2fe;
+            --text-primary-rgb: 224, 242, 254;
+            --primary-color: #38bdf8;
+            --primary-color-rgb: 56, 189, 248;
         }
 
         .ambiance-olive-grove {
-            --bg-primary: #3d402e;
-            --bg-primary-rgb: 61, 64, 46;
-            --text-primary: #c9c5ac;
-            --primary-color: #cfb53b;
+            --bg-primary: #171a12;
+            --bg-primary-rgb: 23, 26, 18;
+            --text-primary: #dbe4ce;
+            --text-primary-rgb: 219, 228, 206;
+            --primary-color: #84cc16;
+            --primary-color-rgb: 132, 204, 22;
         }
 
         .ambiance-sterling {
-            --bg-primary: #e0e0e0;
-            --bg-primary-rgb: 224, 224, 224;
-            --text-primary: #2c3840;
-            --primary-color: #b22222;
+            --bg-primary: #e2e8f0;
+            --bg-primary-rgb: 226, 232, 240;
+            --text-primary: #0f172a;
+            --text-primary-rgb: 15, 23, 42;
+            --primary-color: #dc2626;
+            --primary-color-rgb: 220, 38, 38;
         }
 
         .ambiance-greyscale {
-            --bg-primary: #f0f0f0;
-            --bg-primary-rgb: 240, 240, 240;
-            --text-primary: #333333;
-            --primary-color: #000000;
+            --bg-primary: #f4f4f5;
+            --bg-primary-rgb: 244, 244, 245;
+            --text-primary: #18181b;
+            --text-primary-rgb: 24, 24, 27;
+            --primary-color: #52525b;
+            --primary-color-rgb: 82, 82, 91;
         }
 
-        /* Gallery 5: New Expansion */
+        /* Gallery 5: Cosmic & Atmospheric Expansion */
         .ambiance-neon-abyss {
-            --bg-primary: #0a0a0f;
-            --bg-primary-rgb: 10, 10, 15;
-            --text-primary: #00ffcc;
-            --primary-color: #ff00ff;
+            --bg-primary: #08070d;
+            --bg-primary-rgb: 8, 7, 13;
+            --text-primary: #22d3ee;
+            --text-primary-rgb: 34, 211, 238;
+            --primary-color: #f43f5e;
+            --primary-color-rgb: 244, 63, 94;
         }
 
         .ambiance-solar-eclipse {
-            --bg-primary: #120a06;
-            --bg-primary-rgb: 18, 10, 6;
-            --text-primary: #ffcc00;
-            --primary-color: #ff4500;
+            --bg-primary: #0d0907;
+            --bg-primary-rgb: 13, 9, 7;
+            --text-primary: #fde047;
+            --text-primary-rgb: 253, 224, 71;
+            --primary-color: #ea580c;
+            --primary-color-rgb: 234, 88, 12;
         }
 
         .ambiance-deep-ocean {
-            --bg-primary: #021a24;
-            --bg-primary-rgb: 2, 26, 36;
-            --text-primary: #bfebff;
-            --primary-color: #00ffcc;
+            --bg-primary: #03141f;
+            --bg-primary-rgb: 3, 20, 31;
+            --text-primary: #cffafe;
+            --text-primary-rgb: 207, 250, 254;
+            --primary-color: #06b6d4;
+            --primary-color-rgb: 6, 182, 212;
         }
 
         .ambiance-cloud-nine {
-            --bg-primary: #f0f8ff;
-            --bg-primary-rgb: 240, 248, 255;
-            --text-primary: #004b73;
-            --primary-color: #00bfff;
+            --bg-primary: #f0f7ff;
+            --bg-primary-rgb: 240, 247, 255;
+            --text-primary: #0c4a6e;
+            --text-primary-rgb: 12, 74, 110;
+            --primary-color: #0284c7;
+            --primary-color-rgb: 2, 132, 199;
         }
 
-        /* This rule makes sure the themes apply correctly in all four contexts */
+        /* Unified Ambiance Container Core Variables & Scoped Theming */
         .focus-mode-overlay[class*="ambiance-"],
         #pdf-viewer-container[class*="ambiance-"],
         .article-view-wrapper[class*="ambiance-"],
-        .study-view[class*="ambiance-"] {
-            --bg-secondary: var(--bg-primary);
+        .study-view[class*="ambiance-"],
+        .zen-mode-overlay[class*="ambiance-"] {
+            --bg-secondary: color-mix(in srgb, var(--text-primary) 5%, var(--bg-primary));
             --bg-tertiary: color-mix(in srgb, var(--text-primary) 10%, var(--bg-primary));
-            --border-color: color-mix(in srgb, var(--text-primary) 20%, var(--bg-primary));
+            --border-color: color-mix(in srgb, var(--text-primary) 15%, var(--bg-primary));
+            --cloze-bg: color-mix(in srgb, var(--primary-color) 12%, transparent);
+            --cloze-border: color-mix(in srgb, var(--primary-color) 32%, transparent);
+            --cloze-hidden-text: var(--primary-color);
+            --cloze-revealed-text: var(--text-primary);
             background-color: var(--bg-primary);
             color: var(--text-primary);
-            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+            transition: background-color 0.35s ease, color 0.35s ease;
         }
 
-        /* Scoped overrides for themed views */
+        /* Scoped overrides for title & card wrappers */
         .focus-mode-overlay[class*="ambiance-"] .focus-mode-title,
         .article-view-wrapper[class*="ambiance-"] .article-title-input {
             background: none;
@@ -532,35 +595,196 @@
             background: none;
         }
 
-        /* This rule makes sure the themes apply correctly in all four contexts */
-        .focus-mode-overlay[class*="ambiance-"],
-        #pdf-viewer-container[class*="ambiance-"],
-        .article-view-wrapper[class*="ambiance-"],
-        .study-view[class*="ambiance-"],
-        .zen-mode-overlay[class*="ambiance-"] {
-            --bg-secondary: var(--bg-primary);
-            --bg-tertiary: color-mix(in srgb, var(--text-primary) 10%, var(--bg-primary));
-            --border-color: color-mix(in srgb, var(--text-primary) 20%, var(--bg-primary));
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            transition: background-color 0.4s ease, color 0.4s ease;
+        /* --- Presentation Stage Timer Ambiance Sensitivity --- */
+        .focus-mode-overlay[class*="ambiance-"] .stage-timer-widget {
+            background: color-mix(in srgb, var(--bg-primary) 24%, transparent) !important;
+            border: 1px solid color-mix(in srgb, var(--text-primary) 20%, transparent) !important;
+            box-shadow: 0 10px 32px -4px rgba(0, 0, 0, 0.25), inset 0 1px 1px 0 color-mix(in srgb, var(--text-primary) 18%, transparent) !important;
+            color: var(--text-primary) !important;
+            backdrop-filter: blur(2.5px) !important;
+            -webkit-backdrop-filter: blur(2.5px) !important;
         }
 
-        /* Scoped overrides for themed views */
-        .focus-mode-overlay[class*="ambiance-"] .focus-mode-title,
-        .article-view-wrapper[class*="ambiance-"] .article-title-input {
-            background: none;
-            -webkit-background-clip: unset;
-            -webkit-text-fill-color: unset;
-            color: var(--text-primary);
+        .focus-mode-overlay[class*="ambiance-"] .stage-timer-widget:hover {
+            background: color-mix(in srgb, var(--bg-primary) 32%, transparent) !important;
+            border-color: color-mix(in srgb, var(--text-primary) 32%, transparent) !important;
+            transform: translateY(-2px) scale(1.02);
         }
 
-        .article-view-wrapper[class*="ambiance-"] .article-container.ui-card {
-            background-color: transparent;
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
-            box-shadow: none;
-            border: none;
+        .focus-mode-overlay[class*="ambiance-"] .stage-timer-display-visual,
+        .focus-mode-overlay[class*="ambiance-"] .stage-timer-input {
+            color: var(--text-primary) !important;
+            text-shadow: none !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] .stage-timer-label {
+            color: color-mix(in srgb, var(--text-primary) 70%, transparent) !important;
+            text-shadow: none !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] .stage-timer-status {
+            color: color-mix(in srgb, var(--text-primary) 75%, transparent) !important;
+            text-shadow: none !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] .stage-timer-widget.running {
+            border-color: var(--primary-color) !important;
+            border-width: 1.5px !important;
+            box-shadow:
+                0 10px 32px -4px rgba(0, 0, 0, 0.28),
+                0 0 18px -2px color-mix(in srgb, var(--primary-color) 45%, transparent),
+                inset 0 1px 1px 0 color-mix(in srgb, var(--primary-color) 35%, transparent) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] .stage-timer-widget.running .stage-timer-display-visual {
+            color: var(--text-primary) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] .stage-timer-input:hover,
+        .focus-mode-overlay[class*="ambiance-"] .stage-timer-input:focus {
+            color: var(--primary-color) !important;
+        }
+
+        /* --- Teleprompter Sidebar Ambiance Sensitivity --- */
+        .focus-mode-overlay[class*="ambiance-"] #teleprompter-sidebar {
+            background-color: color-mix(in srgb, var(--bg-primary) 85%, transparent) !important;
+            border-right: 1px solid color-mix(in srgb, var(--text-primary) 15%, transparent) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] #teleprompter-sidebar :is(h1, h2, h3, h4, h5, h6, b, strong) {
+            color: var(--text-primary) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] #teleprompter-sidebar blockquote {
+            border-left-color: var(--primary-color) !important;
+            background: color-mix(in srgb, var(--primary-color) 8%, transparent) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] #teleprompter-sidebar::-webkit-scrollbar-thumb {
+            background: color-mix(in srgb, var(--text-primary) 25%, transparent) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] #teleprompter-sidebar::-webkit-scrollbar-thumb:hover {
+            background: color-mix(in srgb, var(--primary-color) 60%, transparent) !important;
+        }
+
+        /* --- Presentation MCQ & Textile Harmony --- */
+        .focus-mode-overlay[class*="ambiance-"] .nk-mcq-block,
+        .article-view-wrapper[class*="ambiance-"] .nk-mcq-block {
+            background-color: color-mix(in srgb, var(--text-primary) 4%, var(--bg-primary)) !important;
+            border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent) !important;
+            border-left: 3.5px solid var(--primary-color) !important;
+            color: var(--text-primary) !important;
+            box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] .nk-mcq-block .nk-mcq-option,
+        .article-view-wrapper[class*="ambiance-"] .nk-mcq-block .nk-mcq-option {
+            background-color: color-mix(in srgb, var(--text-primary) 2%, var(--bg-primary)) !important;
+            border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] .nk-mcq-block .nk-mcq-option:hover,
+        .article-view-wrapper[class*="ambiance-"] .nk-mcq-block .nk-mcq-option:hover {
+            background-color: color-mix(in srgb, var(--primary-color) 12%, var(--bg-primary)) !important;
+            border-color: var(--primary-color) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] .nk-text-tile:not([class*="color-"]),
+        .article-view-wrapper[class*="ambiance-"] .nk-text-tile:not([class*="color-"]) {
+            background-color: color-mix(in srgb, var(--text-primary) 4%, var(--bg-primary)) !important;
+            border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent) !important;
+            border-left: 3.5px solid var(--primary-color) !important;
+            color: var(--text-primary) !important;
+        }
+
+        /* --- Study Flashcard Mode Ambiance Sensitivity --- */
+        .study-view[class*="ambiance-"] {
+            background-color: var(--bg-primary) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .study-view[class*="ambiance-"] .study-card-content-box {
+            background-color: color-mix(in srgb, var(--text-primary) 4.5%, var(--bg-primary)) !important;
+            border: 1.5px solid color-mix(in srgb, var(--text-primary) 16%, transparent) !important;
+            box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.28), 0 0 1px color-mix(in srgb, var(--text-primary) 22%, transparent) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .study-view[class*="ambiance-"] .study-controls-container {
+            background-color: color-mix(in srgb, var(--bg-primary) 85%, transparent) !important;
+            border-top: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+        }
+
+        .study-view[class*="ambiance-"] .study-progress-bar {
+            background-color: color-mix(in srgb, var(--text-primary) 12%, var(--bg-primary)) !important;
+        }
+
+        .study-view[class*="ambiance-"] .study-progress-bar::-webkit-progress-bar {
+            background-color: color-mix(in srgb, var(--text-primary) 12%, var(--bg-primary)) !important;
+        }
+
+        .study-view[class*="ambiance-"] .study-progress-bar::-webkit-progress-value {
+            background: linear-gradient(90deg,
+                var(--primary-color) 0%,
+                color-mix(in srgb, var(--primary-color) 80%, white) 50%,
+                var(--primary-color) 100%) !important;
+            box-shadow: 0 0 12px color-mix(in srgb, var(--primary-color) 50%, transparent) !important;
+        }
+
+        .study-view[class*="ambiance-"] .study-progress-counter {
+            color: color-mix(in srgb, var(--text-primary) 70%, transparent) !important;
+        }
+
+        .study-view[class*="ambiance-"] .cloze-revealed-wrapper {
+            background: linear-gradient(180deg,
+                color-mix(in srgb, var(--primary-color) 22%, transparent) 0%,
+                color-mix(in srgb, var(--primary-color) 8%, transparent) 100%) !important;
+            border-color: color-mix(in srgb, var(--primary-color) 35%, transparent) !important;
+            box-shadow: 0 4px 16px color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+        }
+
+        .study-view[class*="ambiance-"] .cloze-revealed {
+            color: var(--primary-color) !important;
+            text-shadow: 0 0 10px color-mix(in srgb, var(--primary-color) 40%, transparent) !important;
+        }
+
+        /* Ensure presentation toolbar & popovers never inherit ambiance overrides */
+        .focus-mode-overlay[class*="ambiance-"] .stage-mode-controls,
+        .focus-mode-overlay[class*="ambiance-"] .stage-more-popup,
+        .focus-mode-overlay[class*="ambiance-"] .stage-view-popup,
+        .focus-mode-overlay[class*="ambiance-"] #annotation-toolbar,
+        .focus-mode-overlay[class*="ambiance-"] #teleprompter-controls {
+            background: var(--dock-bg) !important;
+            border-color: var(--dock-border) !important;
+            color: var(--dock-text) !important;
+            box-shadow: var(--dock-shadow) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] .stage-mode-controls .btn-icon,
+        .focus-mode-overlay[class*="ambiance-"] .stage-more-popup .btn-icon,
+        .focus-mode-overlay[class*="ambiance-"] .stage-view-popup .btn-icon,
+        .focus-mode-overlay[class*="ambiance-"] #annotation-toolbar .btn-icon,
+        .focus-mode-overlay[class*="ambiance-"] #annotation-toolbar .tool-btn,
+        .focus-mode-overlay[class*="ambiance-"] #teleprompter-controls .btn-icon {
+            color: var(--dock-text) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] .stage-mode-controls .btn-icon:hover,
+        .focus-mode-overlay[class*="ambiance-"] .stage-more-popup .btn-icon:hover,
+        .focus-mode-overlay[class*="ambiance-"] .stage-view-popup .btn-icon:hover,
+        .focus-mode-overlay[class*="ambiance-"] #annotation-toolbar .btn-icon:hover,
+        .focus-mode-overlay[class*="ambiance-"] #annotation-toolbar .tool-btn:hover,
+        .focus-mode-overlay[class*="ambiance-"] #teleprompter-controls .btn-icon:hover {
+            background-color: var(--dock-btn-hover) !important;
+        }
+
+        .focus-mode-overlay[class*="ambiance-"] .stage-mode-controls .control-divider {
+            background-color: var(--dock-divider) !important;
         }
 
 

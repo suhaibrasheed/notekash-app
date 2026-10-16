@@ -6,7 +6,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            z-index: 900;
+            z-index: 2000;
             background: var(--bg-primary);
         }
 
@@ -72,7 +72,10 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 4px center;
-            max-width: 100px;
+            max-width: 200px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         .split-panel-header select:hover {
@@ -644,6 +647,30 @@
             color: var(--text-on-primary);
         }
 
+        .split-panel-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .split-action-btn {
+            background: transparent;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: var(--text-tertiary);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .split-action-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
         /* Header button active state */
         #split-screen-btn.split-active {
             color: var(--primary-color);
@@ -651,17 +678,28 @@
             border-radius: var(--border-radius);
         }
 
-        /* Hide host header and make split screen take full window estate */
-        body.split-screen-active header {
+        /* Hide host header and floating controls so split screen has full, clean window estate */
+        body.split-screen-active header,
+        body.split-screen-active #article-controls,
+        body.split-screen-active .article-controls,
+        body.split-screen-active #annotation-toolbar,
+        body.split-screen-active #selection-toolbar,
+        body.split-screen-active #image-toolbar,
+        body.split-screen-active .floating-nav-container,
+        body.split-screen-active #the-line-container,
+        body.split-screen-active #nk-find-bar,
+        body.split-screen-active #focus-mode-toggle {
             display: none !important;
         }
 
         body.split-screen-active #split-screen-overlay {
             top: 0 !important;
+            z-index: 2000 !important;
         }
 
-        /* Hide header in split iframe mode */
-        body.split-iframe-mode header {
+        /* Hide header in split iframe mode and eradicate shell loader */
+        body.split-iframe-mode header,
+        body.split-iframe-mode #nk-shell-loader {
             display: none !important;
         }
 
@@ -677,6 +715,152 @@
         body.split-iframe-mode .floating-nav-trigger,
         body.split-iframe-mode .floating-nav-menu {
             display: none !important;
+        }
+
+        /* Single window mode styles */
+        #split-screen-overlay.single-window-mode #split-panel-left {
+            flex: 1 1 100% !important;
+            border-right: none !important;
+        }
+
+        #split-screen-overlay.single-window-mode .split-resize-handle,
+        #split-screen-overlay.single-window-mode #split-panel-right {
+            display: none !important;
+        }
+
+        /* Split Screen Ambient Panel Loader */
+        .split-panel-loader {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .split-panel-loader.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .split-loader-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg, 12px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+            max-width: 85%;
+            text-align: center;
+        }
+
+        .split-loader-spinner {
+            width: 28px;
+            height: 28px;
+            border: 2.5px solid color-mix(in srgb, var(--primary-color) 25%, transparent);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: split-spin 0.65s linear infinite;
+        }
+
+        @keyframes split-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .split-loader-text {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            letter-spacing: 0.2px;
+        }
+
+        /* Seamless view & mode transitions inside split iframe panels */
+        body.split-iframe-mode #nk-view-transition-overlay {
+            background: var(--bg-primary) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            z-index: 999999 !important;
+        }
+
+        body.split-iframe-mode #nk-view-transition-overlay.transition-active {
+            opacity: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 12px !important;
+        }
+
+        body.split-iframe-mode #nk-view-transition-overlay .nk-transition-spinner {
+            width: 28px !important;
+            height: 28px !important;
+            border-width: 2.5px !important;
+            border-color: color-mix(in srgb, var(--primary-color) 25%, transparent) !important;
+            border-top-color: var(--primary-color) !important;
+            opacity: 1 !important;
+        }
+
+        body.split-iframe-mode #nk-view-transition-overlay::after {
+            content: "Switching mode...";
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: 0.3px;
+            background: var(--bg-secondary);
+            padding: 6px 14px;
+            border-radius: var(--border-radius, 8px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        body.split-iframe-mode #nk-view-transition-overlay.transition-active::after {
+            opacity: 1;
+        }
+
+        /* Enhanced view transitions for main window to prevent blank flash */
+        #nk-view-transition-overlay.transition-active {
+            background: color-mix(in srgb, var(--bg-primary) 85%, transparent) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+        }
+
+        .split-scratchpad-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 15%, transparent), color-mix(in srgb, var(--accent-color, #d4a373) 10%, transparent));
+            border: 1px dashed var(--primary-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .split-scratchpad-card:hover {
+            background: linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 25%, transparent), color-mix(in srgb, var(--accent-color, #d4a373) 20%, transparent));
+            border-style: solid;
+            transform: translateY(-1px);
+        }
+
+        .split-scratchpad-card svg {
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        .split-scratchpad-card span {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
         /* Compact toolbar for split iframe mode (use mobile-like layout) */
@@ -5847,26 +6031,64 @@
             /* Ensure it doesn't overflow */
         }
 
-        /* --- SIGMA MODE: FULL WIDTH --- */
-        .focus-mode-overlay.sigma-mode-article .focus-mode-body {
-            padding: 0;
-            max-width: 100%;
-            width: 100%;
+        /* --- SIGMA MODE: FULL WIDTH & STREAMLINED PADDING --- */
+        .focus-mode-overlay.sigma-mode-article .focus-mode-content {
+            max-width: 98vw !important;
+            width: 100% !important;
+            padding-left: 0.25rem !important;
+            padding-right: 0.25rem !important;
         }
 
-        /* Prevent selection during laser mode */
+        .focus-mode-overlay.sigma-mode-article .focus-mode-body,
+        .focus-mode-overlay.stage-mode-active.sigma-mode-article .focus-mode-body {
+            padding: 0.25rem 0.6rem 64px 0.6rem !important;
+            max-width: min(97vw, 1560px) !important;
+            width: 100% !important;
+        }
+
+        /* Prevent selection during laser mode, but preserve cursor and clicks on controls */
         .laser-active,
-        .laser-active * {
+        .laser-active *:not(.stage-mode-controls, .stage-mode-controls *, .stage-view-popup, .stage-view-popup *, .stage-more-popup, .stage-more-popup *, #annotation-toolbar, #annotation-toolbar *, #teleprompter-controls, #teleprompter-controls *, #immersive-exit-btn, .ai-magic-viewer-panel, .ai-magic-viewer-panel *) {
             user-select: none;
             -webkit-user-select: none;
             cursor: none !important;
         }
 
+        .laser-active .stage-mode-controls,
+        .laser-active .stage-view-popup,
+        .laser-active .stage-more-popup,
+        .laser-active #annotation-toolbar,
+        .laser-active #teleprompter-controls,
+        .laser-active #immersive-exit-btn,
+        .laser-active .ai-magic-viewer-panel {
+            z-index: 2147483647 !important;
+            user-select: auto;
+            -webkit-user-select: auto;
+            cursor: default !important;
+        }
+
+        .laser-active .stage-mode-controls .btn-icon,
+        .laser-active .stage-mode-controls button,
+        .laser-active .stage-view-popup button,
+        .laser-active .stage-more-popup button,
+        .laser-active #annotation-toolbar button,
+        .laser-active #teleprompter-controls button,
+        .laser-active #immersive-exit-btn,
+        .laser-active .ai-magic-viewer-panel button,
+        .laser-active .ai-magic-viewer-panel .btn-icon {
+            cursor: pointer !important;
+        }
+
+        .laser-active .ai-magic-viewer-panel input,
+        .laser-active .ai-magic-viewer-panel textarea {
+            cursor: text !important;
+        }
+
         .focus-mode-overlay.sigma-mode-article .focus-mode-body>* {
             max-width: 100% !important;
             box-sizing: border-box;
-            padding-left: 1.5rem;
-            padding-right: 1.5rem;
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
         }
 
         /* Style the scrollbar to be less obtrusive and match the app's theme. */
@@ -5923,7 +6145,59 @@
             display: flex;
             width: 100%;
             max-width: 100% !important;
-            margin: 0;
+            margin: 0.35rem 0 !important;
+            padding: 0.65rem 1rem !important;
+            border-radius: 10px !important;
+            box-sizing: border-box !important;
+        }
+
+        .focus-mode-body .snippet:has(.nk-text-tile) {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0.25rem 0 !important;
+            padding: 0 !important;
+        }
+
+        .focus-mode-body .nk-text-tile-content {
+            white-space: normal !important;
+            word-break: normal !important;
+            overflow-wrap: break-word !important;
+            line-height: 1.55 !important;
+        }
+
+        .focus-mode-body .nk-text-tile-content p,
+        .focus-mode-body .nk-text-tile-content div {
+            margin: 0.35rem 0 !important;
+            line-height: 1.55 !important;
+        }
+
+        .focus-mode-body .nk-text-tile-content p:first-child,
+        .focus-mode-body .nk-text-tile-content div:first-child {
+            margin-top: 0 !important;
+        }
+
+        .focus-mode-body .nk-text-tile-content p:last-child,
+        .focus-mode-body .nk-text-tile-content div:last-child {
+            margin-bottom: 0 !important;
+        }
+
+        /* Eliminate ghost paragraphs and excessive line breaks in presentation mode */
+        .focus-mode-body p:empty,
+        .focus-mode-body div:empty,
+        .focus-mode-body p:has(> br:only-child),
+        .focus-mode-body div:has(> br:only-child) {
+            display: none !important;
+        }
+
+        .focus-mode-body ul,
+        .focus-mode-body ol {
+            margin: 0.35rem 0 !important;
+            padding-left: 1.5rem !important;
+        }
+
+        .focus-mode-body li {
+            margin: 0.2rem 0 !important;
+            line-height: 1.5 !important;
         }
 
         .focus-mode-body .snippet:focus,
@@ -6073,13 +6347,13 @@
 
         /* --- G. Stage Presentation Mode ("Smart Scroll") --- */
         .focus-mode-overlay.stage-mode-active .focus-mode-content {
-            overflow-y: auto;
-            display: block;
+            display: flex;
+            flex-direction: column;
             height: 100%;
-            scrollbar-width: none;
+            overflow: hidden;
             width: 100%;
             max-width: 100%;
-            padding: 2rem 0;
+            padding: 0.25rem 0 0 0;
         }
 
         .focus-mode-overlay.stage-mode-active .focus-mode-content::-webkit-scrollbar {
@@ -6088,23 +6362,28 @@
 
         .focus-mode-overlay.stage-mode-active .focus-mode-title {
             position: static;
-            margin-bottom: 2rem;
-            margin-top: 1rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.4rem;
+            padding-bottom: 0.25rem;
+            font-size: 1.25rem;
+            line-height: 1.25;
             flex-shrink: 0;
             text-align: center;
         }
 
         .focus-mode-overlay.stage-mode-active .focus-mode-body {
+            flex: 1;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
             scroll-behavior: smooth;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-            overflow: visible;
-            height: auto;
-            display: block;
-            margin: 0 auto;
+            position: relative;
             max-width: 1400px;
-            padding-left: 1.5rem;
-            padding-right: 1.5rem;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0.25rem 1.5rem 64px 1.5rem;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
 
         .focus-mode-overlay.stage-mode-active .focus-mode-body::-webkit-scrollbar {
@@ -6115,48 +6394,115 @@
             display: none;
         }
 
-        .focus-mode-overlay.stage-mode-active .snippet {
-            opacity: 0.3;
+        /* Default Presentation Mode: Whatever comes to screen is fully crisp and unblurred */
+        .focus-mode-overlay.stage-mode-active:not(.cinematic-active) .snippet,
+        .focus-mode-overlay.stage-mode-active:not(.cinematic-active) .nk-mcq-block,
+        .focus-mode-overlay.stage-mode-active:not(.cinematic-active) .nk-accordion,
+        .focus-mode-overlay.stage-mode-active:not(.cinematic-active) .nk-text-tile,
+        .focus-mode-overlay.stage-mode-active:not(.cinematic-active) .nk-timeline-block,
+        .focus-mode-overlay.stage-mode-active:not(.cinematic-active) .chart-container {
+            opacity: 1 !important;
+            filter: none !important;
+        }
+
+        /* Cinematic Mode: Progressive reveal & spotlight fading */
+        .focus-mode-overlay.stage-mode-active.cinematic-active .snippet {
+            opacity: 0.25;
             transition: opacity 0.4s ease-in-out;
         }
 
-        .focus-mode-overlay.stage-mode-active .snippet.is-visible {
+        .focus-mode-overlay.stage-mode-active.cinematic-active .snippet.is-visible {
             opacity: 1.0;
         }
 
-        /* FIX: Prevent large objects from fading in Stage Mode */
-        .focus-mode-overlay.stage-mode-active .snippet:has(.nk-mcq-block),
-        .focus-mode-overlay.stage-mode-active .snippet:has(.nk-accordion),
-        .focus-mode-overlay.stage-mode-active .snippet:has(table),
-        .focus-mode-overlay.stage-mode-active .nk-mcq-block,
-        .focus-mode-overlay.stage-mode-active .nk-accordion {
-            opacity: 1 !important;
+        /* Title Pinning / Unpinning (Full Immersive Reading) */
+        .focus-mode-overlay.title-hidden .focus-mode-title {
+            display: none !important;
+        }
+
+        .focus-mode-overlay.title-hidden .focus-mode-content {
+            padding-top: 0.75rem !important;
+        }
+
+        /* Blackout Screen: Support drawing Laser and Annotations over blank screen */
+        .focus-mode-overlay.blackout-active #blackout-screen {
+            opacity: 1;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .focus-mode-overlay.blackout-active .focus-mode-title,
+        .focus-mode-overlay.blackout-active .focus-mode-body > *:not(#annotation-canvas) {
+            visibility: hidden !important;
+        }
+
+        .focus-mode-overlay.blackout-active .focus-mode-body {
+            background: #000000 !important;
+        }
+
+        .focus-mode-overlay.blackout-active #annotation-canvas {
+            z-index: 100 !important;
+            visibility: visible !important;
+        }
+
+        /* Presentation Dock Theme Isolation & Variables */
+        .stage-mode-controls,
+        .stage-view-popup,
+        .stage-more-popup,
+        #annotation-toolbar,
+        #teleprompter-controls {
+            --dock-bg: rgba(255, 255, 255, 0.92);
+            --dock-border: rgba(0, 0, 0, 0.12);
+            --dock-text: #1e293b;
+            --dock-text-muted: #64748b;
+            --dock-btn-hover: rgba(0, 0, 0, 0.07);
+            --dock-btn-active: rgba(0, 0, 0, 0.14);
+            --dock-divider: rgba(0, 0, 0, 0.12);
+            --dock-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        html[data-theme="dark"] .stage-mode-controls,
+        html[data-theme="dark"] .stage-view-popup,
+        html[data-theme="dark"] .stage-more-popup,
+        html[data-theme="dark"] #annotation-toolbar,
+        html[data-theme="dark"] #teleprompter-controls {
+            --dock-bg: rgba(15, 23, 42, 0.92);
+            --dock-border: rgba(255, 255, 255, 0.16);
+            --dock-text: #f8fafc;
+            --dock-text-muted: #94a3b8;
+            --dock-btn-hover: rgba(255, 255, 255, 0.09);
+            --dock-btn-active: rgba(255, 255, 255, 0.18);
+            --dock-divider: rgba(255, 255, 255, 0.16);
+            --dock-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
         }
 
         .stage-mode-controls {
             position: fixed;
             bottom: 1rem;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) translateY(2px);
             display: flex;
             align-items: center;
             gap: 0.25rem;
             padding: 5px 8px;
             border-radius: var(--border-radius-lg);
-            background-color: rgba(var(--bg-secondary-rgb), 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-lg);
-            transition: opacity 0.3s ease-in-out;
-            opacity: 0;
+            background: var(--dock-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--dock-border);
+            box-shadow: var(--dock-shadow);
+            color: var(--dock-text);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            opacity: 0.32;
             z-index: 20001;
         }
 
-        /*  Only show controls on hover if annotation isn't active */
-        .focus-mode-overlay.stage-mode-active:not(.annotation-active):hover .stage-mode-controls,
-        .focus-mode-overlay.stage-mode-active .stage-mode-controls:hover {
+        /* Auto-dimming: restore full opacity on hover, focus-within, or active popover */
+        .stage-mode-controls:hover,
+        .stage-mode-controls:focus-within,
+        .stage-mode-controls:has(.stage-more-menu-container.active, .stage-view-menu-container.active) {
             opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
 
         .focus-mode-overlay.stage-mode-active {
@@ -6175,52 +6521,58 @@
             filter: none !important;
         }
 
-
-
-        /* More Menu */
+        /* Popover Containers */
+        .stage-view-menu-container,
         .stage-more-menu-container {
             position: relative;
             display: inline-flex;
             align-items: center;
         }
 
+        /* Popover Panels (View & Tools) */
+        .stage-view-popup,
         .stage-more-popup {
             position: absolute;
-            bottom: 120%;
+            bottom: calc(100% + 10px);
             left: 50%;
-            transform: translateX(-50%) translateY(10px);
-            background-color: rgba(var(--bg-secondary-rgb), 0.9);
+            transform: translateX(-50%) translateY(8px);
+            background: var(--dock-bg);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--dock-border);
             border-radius: var(--border-radius-lg);
-            padding: 0.5rem;
+            padding: 6px 8px;
             display: flex;
             flex-direction: row;
-            gap: 0.5rem;
-            box-shadow: var(--shadow-xl);
+            align-items: center;
+            gap: 6px;
+            box-shadow: var(--dock-shadow);
             opacity: 0;
             pointer-events: none;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 20002;
             min-width: max-content;
+            color: var(--dock-text);
         }
 
-        /* FIX: Restrict hover behavior to devices that support it, to prevent sticky hover on mobile */
-        @media (hover: hover) {
-            .stage-more-menu-container:hover .stage-more-popup {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-                pointer-events: all;
-            }
-        }
-
+        .stage-view-menu-container.active .stage-view-popup,
         .stage-more-menu-container.active .stage-more-popup {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
             pointer-events: all;
         }
 
+        .stage-view-popup::before,
+        .stage-more-popup::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            height: 14px;
+        }
+
+        .stage-view-popup::after,
         .stage-more-popup::after {
             content: '';
             position: absolute;
@@ -6229,27 +6581,124 @@
             transform: translateX(-50%);
             border-width: 6px;
             border-style: solid;
-            border-color: rgba(var(--bg-secondary-rgb), 0.9) transparent transparent transparent;
+            border-color: var(--dock-border) transparent transparent transparent;
         }
 
         .stage-mode-controls .btn-icon,
-        .stage-mode-controls .toggle-switch {
+        .stage-view-popup .btn-icon,
+        .stage-more-popup .btn-icon {
             width: 34px;
             height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: var(--dock-text);
+            border-radius: var(--border-radius);
+            transition: all 0.15s ease;
         }
 
-        .stage-mode-controls .btn-icon svg {
-            width: 20px;
-            height: 20px;
+        .stage-mode-controls .btn-icon:hover,
+        .stage-view-popup .btn-icon:hover,
+        .stage-more-popup .btn-icon:hover {
+            background-color: var(--dock-btn-hover);
+            color: var(--dock-text);
         }
 
+        .stage-mode-controls .btn-icon.active,
+        .stage-view-popup .btn-icon.active,
+        .stage-more-popup .btn-icon.active {
+            background-color: var(--dock-btn-active);
+            color: var(--primary-color);
+        }
+
+        .stage-mode-controls .btn-icon svg,
+        .stage-view-popup .btn-icon svg,
+        .stage-more-popup .btn-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+        }
+
+        .stage-mode-controls .control-divider {
+            width: 1px;
+            height: 18px;
+            background-color: var(--dock-divider);
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
+        /* Stepper group inside View popup */
+        .stage-stepper-group {
+            display: inline-flex;
+            align-items: center;
+            background: var(--dock-btn-hover);
+            border: 1px solid var(--dock-border);
+            border-radius: var(--border-radius);
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .stage-stepper-group .btn-icon {
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            border-radius: 4px;
+            color: var(--dock-text);
+        }
+
+        .stage-stepper-group .stepper-val {
+            width: auto;
+            padding: 0 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .stage-stepper-group .theme-pill {
+            width: auto;
+            padding: 0 4px;
+        }
+
+        /* AI Co-Pilot Button - Consistent Borderless Dock Styling */
+        #presentation-ai-btn {
+            border: none;
+            background: transparent;
+        }
+
+        #presentation-ai-btn:hover {
+            background-color: var(--dock-btn-hover);
+            color: var(--dock-text);
+        }
+
+        #presentation-ai-btn.active {
+            background-color: var(--dock-btn-active) !important;
+            color: var(--primary-color) !important;
+        }
+
+        /* Deck Counter & Article Pill */
+        .stage-article-counter {
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: var(--dock-text-muted);
+            font-variant-numeric: tabular-nums;
+            user-select: none;
+            padding: 0 4px;
+        }
+
+        .stage-article-pill {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            background: rgba(var(--primary-color-rgb), 0.15);
+            color: var(--primary-color);
+            letter-spacing: 0.02em;
+            user-select: none;
+            white-space: nowrap;
+        }
 
         .stage-snippet-counter {
             font-weight: 500;
-            color: var(--text-secondary);
+            color: var(--dock-text-muted);
             font-variant-numeric: tabular-nums;
             user-select: none;
             padding: 0 4px;
@@ -6284,20 +6733,33 @@
             transform: scale(1.4);
         }
 
+        .stage-mode-icon-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            color: var(--primary-color);
+            user-select: none;
+        }
+        .stage-mode-icon-pill svg {
+            width: 16px;
+            height: 16px;
+        }
+
         /* --- Mobile Responsive Presentation Mode Controls --- */
         @media (max-width: 612px) {
 
-            /* Stage Mode Mobile Fixes - Compact Layout */
+            /* Stage Mode Mobile Fixes - Compact Layout with Pure Icons */
             .stage-mode-controls {
                 max-width: calc(100vw - 1rem);
-                padding: 6px 10px;
-                gap: 4px;
+                padding: 4px 6px;
+                gap: 3px;
                 bottom: 0.75rem;
                 left: 50%;
                 transform: translateX(-50%);
                 flex-wrap: nowrap;
                 overflow: visible;
-                /* Don't cut off More Options popup */
             }
 
             .stage-mode-controls .btn-icon,
@@ -6314,22 +6776,32 @@
             }
 
             .stage-mode-controls .control-divider {
-                margin: 0 3px;
-                height: 20px;
+                margin: 0 2px;
+                height: 18px;
             }
 
-            /* Hide these on mobile - they'll be in More Options */
-            .stage-mode-controls>.premium-feature-locked,
-            .stage-mode-controls>#teleprompter-toggle-btn,
-            .stage-mode-controls>button[title*="Highlight"] {
+            /* Hide progress dots, counters, and text pills on mobile to keep dock ultra-compact */
+            .stage-mode-controls .stage-progress-indicator,
+            .stage-mode-controls .stage-article-counter,
+            .stage-mode-controls .stage-article-pill,
+            .stage-mode-controls .stage-mode-icon-pill {
                 display: none !important;
             }
 
-            /* Ensure More Options container is visible and well-positioned */
+            /* Hide teleprompter on mobile dock (it's inside More Tools popup) */
+            .stage-mode-controls > #teleprompter-toggle-btn,
+            .stage-mode-controls > .premium-feature-locked,
+            .stage-mode-controls > button[title*="Highlight"] {
+                display: none !important;
+            }
+
+            /* Ensure Popovers containers are visible and well-positioned on mobile */
+            .stage-mode-controls .stage-view-menu-container,
             .stage-mode-controls .stage-more-menu-container {
                 position: static;
             }
 
+            .stage-mode-controls .stage-view-popup,
             .stage-mode-controls .stage-more-popup {
                 bottom: calc(100% + 10px);
                 right: auto;
@@ -6341,9 +6813,10 @@
                 gap: 6px;
                 padding: 10px;
                 justify-content: center;
-                max-width: calc(100vw - 2rem);
+                max-width: calc(100vw - 1.5rem);
             }
 
+            .stage-view-popup::after,
             .stage-more-popup::after {
                 display: none;
             }
@@ -6574,10 +7047,10 @@
         .focus-mode-overlay.stage-mode-active .focus-mode-body .image-container,
         .focus-mode-overlay.sigma-mode-article .focus-mode-body .image-container {
             display: block;
-            padding: 1rem;
-            max-height: 70vh;
+            padding: 0.5rem;
+            max-height: 54vh;
             max-width: 85vw;
-            margin: 1rem auto;
+            margin: 0.5rem auto;
             position: relative !important;
             padding-top: 0 !important;
             height: auto !important;
@@ -6586,7 +7059,7 @@
         .focus-mode-overlay.stage-mode-active .focus-mode-body .image-container img,
         .focus-mode-overlay.sigma-mode-article .focus-mode-body .image-container img {
             max-width: 85vw;
-            max-height: 65vh;
+            max-height: 52vh;
             object-fit: contain !important;
             border-radius: var(--border-radius-lg);
             display: block;

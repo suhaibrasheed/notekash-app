@@ -241,115 +241,88 @@
             opacity: 1;
         }
 
-        /* Smooth scroll with enhanced easing for article mode */
+        /* Smooth scroll with enhanced easing for article mode and expanded canvas padding */
         .focus-mode-overlay.sigma-mode-article .focus-mode-body {
             scroll-behavior: smooth;
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
+            max-width: min(97vw, 1560px) !important;
+        }
+
+        .focus-mode-overlay.sigma-mode-article .focus-mode-body > * {
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
         }
 
         /* Stage Mode Timer - Premium 3D & Aesthetic */
+        /* Stage Mode Timer - Premium Glassmorphic & Sleek */
         .stage-timer-widget {
             position: fixed;
             top: 70px;
             right: 20px;
-            background: rgba(var(--bg-secondary-rgb), 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1.5px solid rgba(var(--primary-color-rgb), 0.25);
-            border-radius: 22px;
-            padding: 1.1rem;
+            background: rgba(18, 22, 28, 0.22);
+            background: color-mix(in srgb, var(--bg-secondary, #12161c) 22%, transparent);
+            backdrop-filter: blur(2.5px);
+            -webkit-backdrop-filter: blur(2.5px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 20px;
+            padding: 10px 8px 9px 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+            justify-content: space-between;
             box-shadow:
-                0 8px 16px -4px rgba(0, 0, 0, 0.1),
-                0 4px 8px -2px rgba(0, 0, 0, 0.06),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.15),
-                0 0 0 0 rgba(var(--primary-color-rgb), 0);
+                0 10px 32px -4px rgba(0, 0, 0, 0.35),
+                inset 0 1px 1px 0 rgba(255, 255, 255, 0.28),
+                inset 0 -1px 1px 0 rgba(0, 0, 0, 0.1);
             z-index: 10001;
-            width: 135px;
-            height: 135px;
+            width: 118px;
+            height: 118px;
+            box-sizing: border-box;
             color: var(--text-primary);
-            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.3s ease,
-                transform 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             cursor: grab;
             overflow: hidden;
             user-select: none;
         }
 
         .stage-timer-widget:hover {
-            transform: translateY(-3px) scale(1.03);
-            background: rgba(var(--bg-secondary-rgb), 0.95);
+            transform: translateY(-2px) scale(1.02);
+            background: rgba(18, 22, 28, 0.28);
+            background: color-mix(in srgb, var(--bg-secondary, #12161c) 28%, transparent);
+            border-color: rgba(255, 255, 255, 0.32);
             box-shadow:
-                0 12px 28px -6px rgba(var(--primary-color-rgb), 0.3),
-                0 8px 16px -4px rgba(0, 0, 0, 0.15),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.2),
-                0 0 20px rgba(var(--primary-color-rgb), 0.15);
-            border-color: rgba(var(--primary-color-rgb), 0.5);
-        }
-
-        /* SVG Progress Bar */
-        .stage-timer-progress-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            overflow: visible;
-        }
-
-        .stage-timer-progress-bg {
-            fill: none;
-            stroke: rgba(var(--text-primary-rgb), 0.1);
-            stroke-width: 4;
-        }
-
-        .stage-timer-progress-fg {
-            fill: none;
-            stroke: var(--primary-color);
-            stroke-width: 4;
-            stroke-linecap: round;
-            stroke-dasharray: 283;
-            stroke-dashoffset: 0;
-            transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
-            transform-origin: 50% 50%;
-        }
-
-        .stage-timer-widget.critical .stage-timer-progress-fg {
-            stroke: var(--danger-color);
-            filter: drop-shadow(0 0 4px rgba(var(--danger-color-rgb), 0.5));
+                0 12px 36px -4px rgba(0, 0, 0, 0.42),
+                inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.32);
         }
 
         .stage-timer-widget.critical .stage-timer-display-visual,
         .stage-timer-widget.critical .stage-timer-input {
-            color: var(--danger-color);
+            color: var(--danger-color, #ff5252);
+            text-shadow: 0 2px 12px rgba(var(--danger-color-rgb, 255, 82, 82), 0.7), 0 0 3px rgba(0, 0, 0, 0.95);
         }
 
         .stage-timer-widget.running {
-            border-color: var(--primary-color);
-            border-width: 2px;
+            border-color: color-mix(in srgb, var(--primary-color) 70%, rgba(255, 255, 255, 0.35));
+            border-width: 1.5px;
+            background: rgba(18, 22, 28, 0.24);
+            background: color-mix(in srgb, var(--bg-secondary, #12161c) 24%, transparent);
             box-shadow:
-                0 12px 32px -8px rgba(var(--primary-color-rgb), 0.4),
-                0 0 0 1px rgba(var(--primary-color-rgb), 0.4);
-            background: rgba(var(--bg-secondary-rgb), 0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+                0 10px 32px -4px rgba(0, 0, 0, 0.38),
+                0 0 18px -2px rgba(var(--primary-color-rgb), 0.36),
+                inset 0 1px 1px 0 rgba(255, 255, 255, 0.3);
             animation: timer-pulse-soft 3s ease-in-out infinite;
-            transform-style: preserve-3d;
-            perspective: 1000px;
         }
 
         .stage-timer-widget.finished {
-            border-color: var(--danger-color);
-            border-width: 2px;
-            background: rgba(var(--bg-secondary-rgb), 0.95);
+            border-color: var(--danger-color, #ff5252);
+            border-width: 1.5px;
+            background: rgba(18, 22, 28, 0.28);
+            background: color-mix(in srgb, var(--bg-secondary, #12161c) 28%, transparent);
             box-shadow:
-                0 12px 32px -8px rgba(var(--danger-color-rgb), 0.5),
-                0 0 0 1px rgba(var(--danger-color-rgb), 0.5);
+                0 10px 32px -4px rgba(var(--danger-color-rgb, 255, 82, 82), 0.45),
+                0 0 16px -2px rgba(var(--danger-color-rgb, 255, 82, 82), 0.35),
+                inset 0 1px 1px 0 rgba(255, 255, 255, 0.3);
             animation: timer-finished-glow 2s ease-in-out infinite;
         }
 
@@ -358,43 +331,32 @@
             transform: translateY(0) !important;
         }
 
-        .stage-timer-widget.finished .stage-timer-progress-fg {
-            stroke: var(--danger-color);
-            stroke-dashoffset: 283;
-        }
-
         .stage-timer-widget.finished .stage-timer-display-visual,
         .stage-timer-widget.finished .stage-timer-label,
         .stage-timer-widget.finished .stage-timer-status,
         .stage-timer-widget.finished .stage-timer-input {
-            color: var(--danger-color) !important;
-            text-shadow: 0 2px 10px rgba(var(--danger-color-rgb), 0.25);
-        }
-
-        .stage-timer-widget.running .stage-timer-label {
-            opacity: 0;
-            transform: translateY(-5px);
-            pointer-events: none;
+            color: var(--danger-color, #ff5252) !important;
+            text-shadow: 0 2px 10px rgba(var(--danger-color-rgb, 255, 82, 82), 0.4);
         }
 
         .stage-timer-widget .stage-timer-label {
             transition: all 0.3s ease;
         }
 
-        /* 3D Visual Display Container */
+        /* Visual Display Container */
         .stage-timer-display-visual {
             display: none;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            font-size: 4rem;
+            font-family: var(--font-display, 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif);
+            font-size: 2.85rem;
             font-weight: 800;
             line-height: 1;
-            color: var(--primary-color);
+            color: #ffffff;
             text-align: center;
             width: 100%;
-            height: 64px;
+            height: 48px;
             perspective: 800px;
             transform-style: preserve-3d;
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.95);
             letter-spacing: -0.02em;
             font-variant-numeric: tabular-nums;
         }
@@ -435,15 +397,17 @@
             0%,
             100% {
                 box-shadow:
-                    0 12px 32px -8px rgba(var(--primary-color-rgb), 0.4),
-                    0 0 0 1px rgba(var(--primary-color-rgb), 0.4);
+                    0 10px 32px -4px rgba(0, 0, 0, 0.4),
+                    0 0 16px -2px rgba(var(--primary-color-rgb), 0.35),
+                    inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
                 transform: scale(1);
             }
 
             50% {
                 box-shadow:
-                    0 15px 40px -8px rgba(var(--primary-color-rgb), 0.5),
-                    0 0 0 1px rgba(var(--primary-color-rgb), 0.6);
+                    0 12px 38px -4px rgba(0, 0, 0, 0.5),
+                    0 0 20px -1px rgba(var(--primary-color-rgb), 0.5),
+                    inset 0 1px 1px 0 rgba(255, 255, 255, 0.3);
                 transform: scale(1.02);
             }
         }
@@ -454,15 +418,17 @@
             100% {
                 transform: scale(1);
                 box-shadow:
-                    0 12px 32px -8px rgba(var(--danger-color-rgb), 0.5),
-                    0 0 0 2px rgba(var(--danger-color-rgb), 0.6);
+                    0 10px 32px -4px rgba(var(--danger-color-rgb), 0.45),
+                    0 0 16px -2px rgba(var(--danger-color-rgb), 0.35),
+                    inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
             }
 
             50% {
-                transform: scale(1.03);
+                transform: scale(1.02);
                 box-shadow:
-                    0 15px 40px -8px rgba(var(--danger-color-rgb), 0.6),
-                    0 0 0 3px rgba(var(--danger-color-rgb), 0.4);
+                    0 12px 38px -4px rgba(var(--danger-color-rgb), 0.55),
+                    0 0 22px 0 rgba(var(--danger-color-rgb), 0.5),
+                    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.35);
             }
         }
 
@@ -474,31 +440,33 @@
         }
 
         .stage-timer-label {
-            font-size: 0.65rem;
+            font-size: 0.62rem;
             opacity: 0.8;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 2.2px;
             font-weight: 700;
-            color: var(--text-secondary);
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
         }
 
         .stage-timer-input {
-            font-family: var(--font-display), sans-serif;
-            font-size: 4rem;
+            font-family: var(--font-display, 'Segoe UI', Roboto, sans-serif);
+            font-size: 2.85rem;
             font-weight: 800;
             line-height: 1;
             font-variant-numeric: tabular-nums;
-            color: var(--text-primary);
+            color: #ffffff;
             background: transparent;
             border: none;
             text-align: center;
             width: 100%;
+            height: 48px;
             outline: none;
             padding: 0;
             margin: 0;
             cursor: pointer;
-            /* Pointer to indicate clickable */
-            transition: opacity 0.2s ease, text-shadow 0.2s ease;
+            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.95);
+            transition: opacity 0.2s ease, text-shadow 0.2s ease, color 0.2s ease;
         }
 
         .stage-timer-input:hover {
@@ -522,16 +490,19 @@
         }
 
         .stage-timer-status {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-            opacity: 0;
-            transform: translateY(5px);
+            font-size: 0.74rem;
+            color: rgba(255, 255, 255, 0.82);
+            font-weight: 600;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+            opacity: 0.82;
+            transform: translateY(0);
             transition: all 0.2s ease;
-            height: 1rem;
+            height: 1.1rem;
             display: flex;
             align-items: center;
-            gap: 4px;
+            justify-content: center;
+            white-space: nowrap;
+            gap: 5px;
         }
 
         .stage-timer-widget:hover .stage-timer-status,
@@ -540,48 +511,6 @@
             transform: translateY(0);
         }
 
-        /* Ring around timer - Visual only */
-        .stage-timer-ring {
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            width: calc(100% + 6px);
-            height: calc(100% + 6px);
-            pointer-events: none;
-            border-radius: 24px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .stage-timer-widget.running .stage-timer-ring {
-            opacity: 0;
-        }
-
-        .stage-timer-widget.finished .stage-timer-ring {
-            opacity: 0.9;
-            background: conic-gradient(from 0deg,
-                    var(--danger-color),
-                    rgba(var(--danger-color-rgb), 0.4),
-                    transparent,
-                    rgba(var(--danger-color-rgb), 0.4),
-                    var(--danger-color));
-            animation: timer-ring-rotate 2s linear infinite;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude;
-            padding: 2.5px;
-        }
-
-        @keyframes timer-ring-rotate {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
 
         .laser-pointer {
             position: fixed;
@@ -694,7 +623,7 @@
             width: 100%;
             height: 100%;
             background: #000;
-            z-index: 20002;
+            z-index: 5;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease-in-out;
@@ -702,20 +631,17 @@
 
         .focus-mode-overlay.blackout-active #blackout-screen {
             opacity: 1;
-            pointer-events: auto;
+            pointer-events: none;
         }
 
-        /* --- NEW: Spotlight Effect --- */
-        .focus-mode-body.spotlight-active .snippet.is-visible:not(.spotlight),
-        .focus-mode-body.spotlight-active .nk-mcq-block.is-visible:not(.spotlight) {
-            opacity: 0.1 !important;
-            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+        /* --- Spotlight Effect (Preserves full opacity; modifiers never dim presentation) --- */
+        .focus-mode-body.spotlight-active .snippet.is-visible,
+        .focus-mode-body.spotlight-active .nk-mcq-block.is-visible {
+            opacity: 1 !important;
         }
 
         .focus-mode-body .is-visible.spotlight {
             opacity: 1 !important;
-            transform: scale(1.03);
-            box-shadow: 0 0 25px rgba(var(--primary-color-rgb), 0.5);
         }
 
         /* --- NEW: Live Annotation --- */
@@ -896,13 +822,14 @@
             display: none;
             align-items: center;
             gap: 4px;
-            padding: 4px;
-            background-color: rgba(var(--bg-secondary-rgb), 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid var(--border-color);
+            padding: 4px 6px;
+            background: var(--dock-bg, rgba(var(--bg-secondary-rgb), 0.7));
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--dock-border, var(--border-color));
             border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow);
+            box-shadow: var(--dock-shadow, var(--shadow));
+            color: var(--dock-text, var(--text-primary));
         }
 
         /* Only show the controls when the teleprompter is active */
@@ -913,7 +840,13 @@
         #teleprompter-controls .btn-icon {
             width: 32px;
             height: 32px;
-            background-color: var(--bg-tertiary);
+            color: var(--dock-text, var(--text-primary));
+            border-radius: var(--border-radius);
+            transition: all 0.15s ease;
+        }
+
+        #teleprompter-controls .btn-icon:hover {
+            background-color: var(--dock-btn-hover, var(--bg-tertiary));
         }
 
         /* --- NEW: Teleprompter Resizer Handle --- */
@@ -961,18 +894,29 @@
             align-items: center;
             gap: 8px;
             padding: 8px;
-            background-color: rgba(var(--bg-secondary-rgb), 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
+            background: var(--dock-bg, rgba(var(--bg-secondary-rgb), 0.8));
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--dock-border, var(--border-color));
             border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-lg);
+            box-shadow: var(--dock-shadow, var(--shadow-lg));
+            color: var(--dock-text, var(--text-primary));
             z-index: 20004;
             animation: slideUp 0.3s ease;
         }
 
+        #annotation-toolbar .tool-btn {
+            color: var(--dock-text, var(--text-primary));
+            border-radius: var(--border-radius);
+            transition: all 0.15s ease;
+        }
+
+        #annotation-toolbar .tool-btn:hover {
+            background-color: var(--dock-btn-hover, var(--bg-tertiary));
+        }
+
         #annotation-toolbar .tool-btn.active {
-            background-color: var(--bg-tertiary);
+            background-color: var(--dock-btn-active, var(--bg-tertiary));
             color: var(--primary-color);
         }
 
@@ -980,7 +924,7 @@
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            border: 2px solid var(--border-color);
+            border: 2px solid var(--dock-border, var(--border-color));
             cursor: pointer;
             transition: transform 0.2s ease;
         }
@@ -997,6 +941,11 @@
         #annotation-toolbar .btn-icon {
             width: 32px;
             height: 32px;
+            color: var(--dock-text, var(--text-primary));
+        }
+
+        #annotation-toolbar .btn-icon:hover {
+            background-color: var(--dock-btn-hover, var(--bg-tertiary));
         }
 
 
