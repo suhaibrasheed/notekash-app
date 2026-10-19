@@ -28,8 +28,9 @@ export const router = {
         }
 
         const isPricingRequested = (typeof window !== 'undefined') ? window.location.hash === '#pricing' : false;
+        const isInternalArticleTransition = (viewId === 'article' && document.body.classList.contains('view-article') && (!data?.id || data?.id === App.state.activeArticleId));
 
-        if (typeof window !== 'undefined' && window.App && App.ui) {
+        if (typeof window !== 'undefined' && window.App && App.ui && !isInternalArticleTransition) {
             if (App.ui.showViewTransition) App.ui.showViewTransition();
             if (App.ui.startLoadingProgress) App.ui.startLoadingProgress();
         }
@@ -82,7 +83,9 @@ export const router = {
             App.ui.aiMagicModal.closeViewer(); // Automatically close the viewer when navigating away
         }
 
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        if (!isInternalArticleTransition) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        }
         const view = document.getElementById(`${viewId}-view`);
 
         const mainEl = document.querySelector('main');

@@ -2458,14 +2458,22 @@ export const events = {
                     // Navigate to the editor, passing the temporary object directly.
                     App.router.navigateTo('article', { articleObject: tempArticle, mode: 'write' });
                 },
-                switchToMode(mode) {
+                switchToMode(mode, options = {}) {
                     if (mode === 'write') {
                         const article = App.storage.getArticle(App.state.activeArticleId);
                         if (article && article.isReadOnly) {
                             return App.ui.showToast('Creator has disabled editing for this note', { type: 'warning' });
                         }
                     }
-                    App.router.navigateTo('article', { id: App.state.activeArticleId, mode });
+                    const scrollState = (options && options.scrollState !== undefined)
+                        ? options.scrollState
+                        : (App.ui?.captureArticleScrollState ? App.ui.captureArticleScrollState() : null);
+
+                    App.router.navigateTo('article', {
+                        id: App.state.activeArticleId,
+                        mode,
+                        ...(scrollState || {})
+                    });
                 },
 
                 toggleCanvasFocusMode() {
@@ -2501,6 +2509,11 @@ export const events = {
 
                     // --- OPTIMIZATION: Hash-based "Virtual Save" ---
                     const { content: newContent, switchToRead = false, isAutosave = false, force = false } = options;
+
+                    // Seamless Mode Switch: Capture exact scroll & cursor spatial anchor BEFORE any save mutations
+                    const scrollState = (switchToRead && App.ui?.captureArticleScrollState)
+                        ? App.ui.captureArticleScrollState()
+                        : null;
 
                     let savingToast = null;
                     if (switchToRead) {
@@ -2693,7 +2706,7 @@ export const events = {
                             if (switchToRead) {
                                 await App.contentTools.updateTagsIndex();
                                 App.contentTools.buildDataCache(savedArticle.id);
-                                this.switchToMode('read');
+                                this.switchToMode('read', { scrollState });
                                 if (savingToast) App.ui.hideToast(savingToast);
                                 if (!isAutosave) App.ui.showToast('Saved!', { type: 'success' });
                             } else if (!isAutosave) {

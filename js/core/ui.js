@@ -1386,14 +1386,238 @@ export const ui = {
                     App.ui.closeModal();
                 },
 
+                captureArticleScrollState() {
+                    const mainEl = document.querySelector('main');
+                    const contentDiv = document.getElementById('article-content');
+                    if (!mainEl || !contentDiv) return null;
+
+                    const scrollTop = mainEl.scrollTop;
+                    const maxScroll = mainEl.scrollHeight - mainEl.clientHeight;
+                    const scrollRatio = maxScroll > 0 ? (scrollTop / maxScroll) : 0;
+
+                    // If user is at or near the very top of the article, preserve clean 0
+                    if (scrollTop < 15) {
+                        return { restoredScrollTop: 0, scrollRatio: 0, scrollAnchor: null };
+                    }
+
+                    const mainRect = mainEl.getBoundingClientRect();
+                    let anchorEl = null;
+                    let isFromSelection = false;
+
+                    // Strategy 1: Active selection/caret in Write mode
+                    if (App.state.currentMode === 'write') {
+                        const selection = window.getSelection();
+                        if (selection && selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+                            let node = range.startContainer;
+                            if (node) {
+                                if (node.nodeType === 3) node = node.parentElement;
+                                while (node && node !== contentDiv && node.parentElement !== contentDiv) {
+                                    node = node.parentElement;
+                                }
+                                if (node && node !== contentDiv && contentDiv.contains(node)) {
+                                    anchorEl = node;
+                                    isFromSelection = true;
+                                }
+                            }
+                        }
+                    }
+
+                    // Strategy 2: Topmost visible block in viewport
+                    if (!anchorEl) {
+                        const targetViewportY = mainRect.top + Math.min(100, Math.max(30, mainRect.height * 0.15));
+                        const children = Array.from(contentDiv.children).filter(child => child.offsetHeight > 0);
+
+                        for (const child of children) {
+                            const rect = child.getBoundingClientRect();
+                            if (rect.bottom >= targetViewportY) {
+                                anchorEl = child;
+                                break;
+                            }
+                        }
+                        if (!anchorEl && children.length > 0) {
+                            anchorEl = children[children.length - 1];
+                        }
+                    }
+
+                    if (!anchorEl) {
+                        return { restoredScrollTop: scrollTop, scrollRatio, scrollAnchor: null };
+                    }
+
+                    const allChildren = Array.from(contentDiv.children);
+                    const blockIndex = allChildren.indexOf(anchorEl);
+                    const anchorRect = anchorEl.getBoundingClientRect();
+                    const offsetInViewport = anchorRect.top - mainRect.top;
+
+                    // Helper to normalize formatting tokens so snippets match across mode transforms
+                    const cleanForMatching = (str) => (str || '')
+                        .replace(/c\d+::/g, '')
+                        .replace(/[$={}[\]\\#*`]/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .toLowerCase();
+
+                    // Extract clean invariant text snippet (first 60 non-whitespace characters)
+                    const rawSnippet = (anchorEl.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+                    const textSnippet = cleanForMatching(rawSnippet);
+
+                    return {
+                        restoredScrollTop: scrollTop,
+                        scrollRatio,
+                        scrollAnchor: {
+                            textSnippet: textSnippet || null,
+                            blockIndex: blockIndex >= 0 ? blockIndex : null,
+                            offsetInViewport,
+                            isFromSelection
+                        }
+                    };
+                },
+
+                restoreArticleScrollState(scrollState, mode) {
+                    if (!scrollState) return;
+                    const { restoredScrollTop, scrollRatio, scrollAnchor } = scrollState;
+                    const mainEl = document.querySelector('main');
+                    if (!mainEl) return;
+
+                    if (restoredScrollTop === 0 && !scrollAnchor) {
+                        mainEl.scrollTop = 0;
+                        return;
+                    }
+
+                    const cleanForMatching = (str) => (str || '')
+                        .replace(/c\d+::/g, '')
+                        .replace(/[$={}[\]\\#*`]/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .toLowerCase();
+
+                    const performAlignment = (isFinal = false) => {
+                        const contentDiv = document.getElementById('article-content');
+                        if (!contentDiv || !mainEl) return;
+
+                        const mainRect = mainEl.getBoundingClientRect();
+                        let targetEl = null;
+
+                        if (scrollAnchor) {
+                            const children = Array.from(contentDiv.children);
+
+                            // 1. Text snippet matching (highest fidelity across mode transforms)
+                            if (scrollAnchor.textSnippet && scrollAnchor.textSnippet.length >= 6) {
+                                const targetSnippet = scrollAnchor.textSnippet;
+                                let bestScore = 0;
+                                let bestEl = null;
+
+                                for (let i = 0; i < children.length; i++) {
+                                    const child = children[i];
+                                    const childClean = cleanForMatching(child.textContent);
+                                    if (!childClean) continue;
+
+                                    let score = 0;
+                                    if (childClean === targetSnippet) {
+                                        score = 1000;
+                                    } else if (childClean.startsWith(targetSnippet) || targetSnippet.startsWith(childClean.slice(0, 40))) {
+                                        score = 900;
+                                    } else if (childClean.includes(targetSnippet) || targetSnippet.includes(childClean)) {
+                                        score = 800;
+                                    } else {
+                                        const targetWords = targetSnippet.split(' ').filter(Boolean).slice(0, 5).join(' ');
+                                        if (targetWords.length >= 8 && childClean.includes(targetWords)) {
+                                            score = 600;
+                                        } else {
+                                            const prefix = targetSnippet.slice(0, 20).trim();
+                                            if (prefix.length >= 8 && childClean.includes(prefix)) {
+                                                score = 500;
+                                            }
+                                        }
+                                    }
+
+                                    // Tie-breaker: closeness to original blockIndex
+                                    if (score > 0 && typeof scrollAnchor.blockIndex === 'number') {
+                                        const dist = Math.abs(i - scrollAnchor.blockIndex);
+                                        score -= dist * 2;
+                                    }
+
+                                    if (score > bestScore) {
+                                        bestScore = score;
+                                        bestEl = child;
+                                        if (bestScore >= 950) break;
+                                    }
+                                }
+
+                                if (bestEl && bestScore >= 400) {
+                                    targetEl = bestEl;
+                                }
+                            }
+
+                            // 2. Block index matching fallback
+                            if (!targetEl && typeof scrollAnchor.blockIndex === 'number') {
+                                if (children[scrollAnchor.blockIndex]) {
+                                    targetEl = children[scrollAnchor.blockIndex];
+                                }
+                            }
+                        }
+
+                        if (targetEl) {
+                            const targetRect = targetEl.getBoundingClientRect();
+                            const currentOffsetInViewport = targetRect.top - mainRect.top;
+                            const desiredOffset = (scrollAnchor && typeof scrollAnchor.offsetInViewport === 'number')
+                                ? scrollAnchor.offsetInViewport
+                                : 80;
+                            const delta = currentOffsetInViewport - desiredOffset;
+                            mainEl.scrollTop += delta;
+
+                            // In Write Mode: If transition was from an active user cursor, place cursor at the block
+                            if (isFinal && mode === 'write' && scrollAnchor && scrollAnchor.isFromSelection) {
+                                try {
+                                    if (document.activeElement !== contentDiv && !contentDiv.contains(document.activeElement)) {
+                                        App.util.placeCursor(targetEl, false);
+                                    }
+                                } catch (e) {}
+                            }
+                        } else if (typeof restoredScrollTop === 'number') {
+                            mainEl.scrollTop = restoredScrollTop;
+                        } else if (typeof scrollRatio === 'number' && scrollRatio > 0) {
+                            const maxScroll = mainEl.scrollHeight - mainEl.clientHeight;
+                            if (maxScroll > 0) {
+                                mainEl.scrollTop = Math.round(scrollRatio * maxScroll);
+                            }
+                        }
+                    };
+
+                    // Staged 3-Phase Execution for rock-solid stability against KaTeX / Plyr reflows
+                    performAlignment(false);
+
+                    setTimeout(() => {
+                        performAlignment(false);
+                        setTimeout(() => {
+                            performAlignment(true);
+                        }, 150);
+                    }, 70);
+
+                    // Re-align on image loads if images expand asynchronously
+                    const contentDiv = document.getElementById('article-content');
+                    if (contentDiv) {
+                        const images = contentDiv.querySelectorAll('img');
+                        if (images.length > 0) {
+                            const onImgLoad = () => performAlignment(false);
+                            images.forEach(img => {
+                                if (!img.complete) {
+                                    img.addEventListener('load', onImgLoad, { once: true });
+                                }
+                            });
+                        }
+                    }
+                },
+
                 async renderArticleView(container, data) {
-                    const { id, mode, articleObject, scrollToSnippetId, scrollToSnippetText, overrideContent, restoredScrollTop, isPreviewing } = data || {};
+                    const { id, mode, articleObject, scrollToSnippetId, scrollToSnippetText, overrideContent, restoredScrollTop, scrollAnchor, scrollRatio, isPreviewing } = data || {};
                     let article = articleObject ? articleObject : App.storage.getArticle(id);
 
                     if (!article) { App.router.navigateTo('library'); return; }
 
                     const mainEl = document.querySelector('main');
-                    if (mainEl && typeof restoredScrollTop !== 'number' && !scrollToSnippetId && !scrollToSnippetText) {
+                    const hasRestoredScroll = typeof restoredScrollTop === 'number' || !!scrollAnchor || typeof scrollRatio === 'number';
+                    if (mainEl && !hasRestoredScroll && !scrollToSnippetId && !scrollToSnippetText) {
                         mainEl.scrollTop = 0;
                     }
 
@@ -1421,7 +1645,7 @@ export const ui = {
 
                     const finalContent = overrideContent ?? article.content;
 
-                    container.innerHTML = `<div class="article-view-wrapper">
+                    container.innerHTML = `<div class="article-view-wrapper${hasRestoredScroll ? ' mode-transitioning' : ''}">
                 <div class="article-container ui-card">
                     <div class="article-tags-display"></div>
                     <input type="text" class="article-title-input" value="${App.util.escapeHtml(article.title)}" id="article-title" readonly>
@@ -1447,11 +1671,8 @@ export const ui = {
                     this.renderArticleControls(article);
                     this.updateArticleViewForMode({ ...article, content: finalContent });
 
-                    if (typeof restoredScrollTop === 'number') {
-                        setTimeout(() => {
-                            const mainEl = document.querySelector('main');
-                            if (mainEl) mainEl.scrollTop = restoredScrollTop;
-                        }, 50);
+                    if (hasRestoredScroll) {
+                        this.restoreArticleScrollState({ restoredScrollTop, scrollAnchor, scrollRatio }, mode);
                     }
 
                     if (scrollToSnippetId || scrollToSnippetText) {
