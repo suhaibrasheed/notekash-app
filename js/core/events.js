@@ -4116,12 +4116,13 @@ await App.storage.updateArticle(id, { readCount: newCount, readHistory: newHisto
                     }
                     const range = sel.getRangeAt(0);
                     const parent = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
-                    const textSpan = parent?.closest('span[class*="text-"]:not([class*="nk-text"])');
-                    const unboldSpan = parent?.closest('.unbold');
+                    const textSpan = parent?.closest('[class*="text-"]:not([class*="nk-text"]):not(#article-content)');
+                    const unboldSpan = parent?.closest('.unbold, .font-normal');
 
                     if (unboldSpan) {
                         // Already unbolded -> re-bold by removing unbold
-                        unboldSpan.classList.remove('unbold');
+                        unboldSpan.classList.remove('unbold', 'font-normal');
+                        if (unboldSpan.style.fontWeight) unboldSpan.style.fontWeight = '';
                         if (unboldSpan.classList.length === 0 && !unboldSpan.style.cssText && unboldSpan.tagName === 'SPAN') {
                             App.util.unwrapNode(unboldSpan);
                         }

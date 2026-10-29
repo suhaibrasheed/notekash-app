@@ -2017,6 +2017,7 @@
 
         #article-content :is(h1, h2, h3, h4, h5, h6) {
             font-family: var(--article-font-family) !important;
+            font-weight: 700;
             font-size: revert !important;
             line-height: 1.3 !important;
         }
@@ -2270,43 +2271,43 @@
             border-color: var(--hl-7-border);
         }
 
-        /* Text Color Styles (Weight 550 by default for perfectly balanced visual prominence) */
-        .text-red {
+        /* Text Color Styles (Bold by default; user can unbold via formatting tools) */
+        .text-red, [class*="text-red"], #article-content .text-red {
             color: var(--text-red);
-            font-weight: 550;
+            font-weight: 700;
         }
 
-        .text-green {
+        .text-green, [class*="text-green"], #article-content .text-green {
             color: var(--text-green);
-            font-weight: 550;
+            font-weight: 700;
         }
 
-        .text-blue {
+        .text-blue, [class*="text-blue"], #article-content .text-blue {
             color: var(--text-blue);
-            font-weight: 550;
+            font-weight: 700;
         }
 
-        .text-magenta {
+        .text-magenta, [class*="text-magenta"], #article-content .text-magenta {
             color: var(--text-magenta);
-            font-weight: 550;
+            font-weight: 700;
         }
 
-        .text-orange {
+        .text-orange, [class*="text-orange"], #article-content .text-orange {
             color: var(--text-orange);
-            font-weight: 550;
+            font-weight: 700;
         }
 
-        .text-teal {
+        .text-teal, [class*="text-teal"], #article-content .text-teal {
             color: var(--text-teal);
-            font-weight: 550;
+            font-weight: 700;
         }
 
-        .text-slate {
+        .text-slate, [class*="text-slate"], #article-content .text-slate {
             color: var(--text-slate);
-            font-weight: 550;
+            font-weight: 700;
         }
 
-        /* Unbold override support for text colors and formatted text */
+        /* Unbold override support for text colors, headings, and formatted text */
         .unbold,
         .font-normal,
         span.unbold,
@@ -2320,7 +2321,15 @@
         [class*="text-"] [style*="font-weight: normal"],
         [class*="text-"] [style*="font-weight: 400"],
         [style*="font-weight: normal"] [class*="text-"],
-        [style*="font-weight: 400"] [class*="text-"] {
+        [style*="font-weight: 400"] [class*="text-"],
+        #article-content :is(h1, h2, h3, h4, h5, h6).unbold,
+        #article-content :is(h1, h2, h3, h4, h5, h6) .unbold,
+        #article-content :is(h1, h2, h3, h4, h5, h6).font-normal,
+        #article-content :is(h1, h2, h3, h4, h5, h6) .font-normal,
+        #article-content :is(h1, h2, h3, h4, h5, h6)[style*="font-weight: normal"],
+        #article-content :is(h1, h2, h3, h4, h5, h6) [style*="font-weight: normal"],
+        #article-content :is(h1, h2, h3, h4, h5, h6)[style*="font-weight: 400"],
+        #article-content :is(h1, h2, h3, h4, h5, h6) [style*="font-weight: 400"] {
             font-weight: 400 !important;
         }
 
